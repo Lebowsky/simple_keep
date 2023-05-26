@@ -6,6 +6,8 @@ from requests.auth import HTTPBasicAuth
 import ui_barcodes
 
 import ui_global
+from hs_services import HsService
+from db_services import DocService
 from ui_global import get_query_result
 
 def replase_gs_in_res(struct):
@@ -103,7 +105,7 @@ def json_to_sqlite_query(data):
     'RS_doc_types', 'RS_goods', 'RS_properties', 'RS_units', 'RS_types_goods', 'RS_series', 'RS_countragents',
     'RS_warehouses', 'RS_price_types', 'RS_cells', 'RS_barcodes', 'RS_prices', 'RS_doc_types', 'RS_docs',
     'RS_docs_table', 'RS_docs_barcodes', 'RS_adr_docs', 'RS_adr_docs_table') #,, 'RS_barc_flow'
-    table_for_delete = ('RS_docs_table', 'RS_docs_barcodes')  #, 'RS_barc_flow'
+    table_for_delete = ('RS_docs_table', 'RS_docs_barcodes, RS_adr_docs_table')  #, 'RS_barc_flow'
     doc_id_list = []
     for table_name in table_list:
         if data.get(table_name) is None:
@@ -179,8 +181,8 @@ def get_all_changes_from_database(doc_list=''):
             sql_error = True
             #error_pool.append(e.args[0])
             return {'Error':e.args[0]}
-    if len(res) == 0:
-        return None
+    # if len(res) == 0:
+    #     return None
 
     for item in res:
         filtered_list = [d for d in res_docs_table if d['id_doc'] == item['id_doc']]
@@ -191,8 +193,33 @@ def get_all_changes_from_database(doc_list=''):
 
         filtered_list = [d for d in res_flow if d['id_doc'] == item['id_doc']]
         item['RS_barc_flow'] = filtered_list
+    #Адресное хранение
+    try:
+        qtext = f'''
+        SELECT * FROM RS_adr_docs WHERE id_doc in ({doc_list})'''
+        res_adr = ui_global.get_query_result(qtext,None,True)
+        qtext = f'''
+            SELECT * FROM RS_adr_docs_table WHERE id_doc in ({doc_list})'''# in (
+            #SELECT id_doc FROM RS_docs WHERE verified is Null)'''
+        res_adr_docs_table = ui_global.get_query_result(qtext,None,True)
 
-    return json.dumps(res)
+    except Exception as e:
+            sql_error = True
+            #error_pool.append(e.args[0])
+            return {'Error':e.args[0]}
+    # if len(res) == 0:
+    #     return None
+
+    for item in res_adr:
+        filtered_list = [d for d in res_adr_docs_table if d['id_doc'] == item['id_doc']]
+        item['RS_adr_docs_table'] = filtered_list
+
+
+
+    if len(res) + len(res_adr) == 0:
+        return None
+
+    return json.dumps(res + res_adr)
 
 
 def post_changes_to_server(doc_list , htpparams):
@@ -223,6 +250,37 @@ def post_changes_to_server(doc_list , htpparams):
     return answer
 
 
+def post_goods_to_server(doc_id, http_params):
+    hs_service = HsService(http_params)
+    doc_service = DocService(doc_id)
+
+    res = doc_service.get_last_edited_goods(to_json=False)
+
+    if isinstance(res, dict) and res.get('Error'):
+        answer = {'empty': True, 'Error': res.get('Error')}
+        return answer
+    elif res:
+        hs_service.send_documents(res)
+        if not res or (isinstance(res, dict) and res.get('Error')):
+            answer = {'empty': True, 'Error': res.get('Error')}
+            return answer
+        else:
+            doc_service.update_sent_data(res)
+
+    timer_server_load_data(http_params)
+
+
+def timer_server_load_data(http_params):
+    hs_service = HsService(http_params)
+    doc_service = DocService('')
+
+    docs_data = hs_service.get_data()
+    if docs_data.get('data'):
+        try:
+            doc_service.update_data_from_json(docs_data['data'])
+        except Exception as e:
+            raise e
+            # return {'empty': True, 'Error': e.args[0]}
 
 
 #

@@ -504,7 +504,9 @@ def get_doc_details_query(isAdr = False, curCell = False):
             '''
 
         if curCell:
-            query_text = query_text + ' and id_cell=?'
+            query_text = query_text + '''
+             and (id_cell=? OR id_cell="" OR id_cell is Null)
+            '''
 
         query_text = query_text + ' ORDER BY RS_cells.name, RS_adr_docs_table.last_updated DESC'
 
