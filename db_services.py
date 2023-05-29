@@ -48,7 +48,6 @@ class DocService:
         else:
             self.update_nsi(data)
 
-
     def update_docs(self, data):
         doc_ids = ','.join([f'"{item.get("id_doc")}"' for item in data['RS_docs']])
 
@@ -77,41 +76,6 @@ class DocService:
                 self._get_query_result(query)
             except Exception as e:
                 raise e
-
-        # if result['status_code'] == 200:
-
-    #     if result.get('batch') is not None:
-    #         rs_settings.put('batch', result.get('batch'),True)
-    #         rs_settings.put('number_of_received','0', True)
-    #
-    #     if result.get('res_for_sql') is not None:
-    #
-    #         if rs_settings.get('batch') is not None:  #Мы выполняем пакет загрузки, данные разбиты на несколько файлов, их количество в batch
-    #             number_of_received = 0 if rs_settings.get('number_of_received')== 'not found' else int(rs_settings.get('number_of_received'))
-    #             total_received = int(rs_settings.get('batch'))
-    #             number_of_received =+1
-    #         else:
-    #             total_received = None
-    #
-    #         sql_error = False
-    #         error_pool = []
-    #         for key in result['res_for_sql']:
-    #             try:
-    #                 ui_global.get_query_result(key)
-    #                 # return 'ok'
-    #             except Exception as e:
-    #                 sql_error = True
-    #                 error_pool.append(e.args[0])
-    #
-    #
-    #         if total_received:
-    #             hashMap.put('toast', 'Идет загрузка большого объема данных. Получено '+ str(number_of_received*50000) + 'из, примерно '+ str(total_received*50000))
-    #             rs_settings.put('number_of_received',str(number_of_received), True)
-    #
-    #         if sql_error:
-    #             rs_settings.put('error_log', str(error_pool), True)
-    #             hashMap.put('toast', 'При загрузке были ошибки. Проверьте их в настройках (кнопка посмотреть ошибки)')
-
 
     def update_sent_data(self, data):
         if data:
@@ -192,4 +156,11 @@ class DocService:
     def _get_query_result(query_text, return_dict=False):
         return get_query_result(query_text, return_dict=return_dict)
 
+    def set_doc_value(self, key, value):
+        query = f'''
+            UPDATE RS_docs
+            SET {key} = {value}
+            WHERE id_doc = "{self.doc_id}"
+            '''
 
+        self._get_query_result(query)

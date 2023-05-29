@@ -78,6 +78,9 @@ class HashMap:
         else:
             self.hash_map.put(key, str(value))
 
+    def containsKey(self, key):
+        return self.hash_map.containsKey(key)
+
 
 def json_to_sqlite_query(data):
     table_list = (
