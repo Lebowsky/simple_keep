@@ -1,3 +1,4 @@
+import db_services
 from ru.travelfood.simple_ui import SimpleUtilites as suClass
 
 import ui_barcodes
@@ -15,6 +16,7 @@ import importlib
 from java import jclass
 import http_exchange
 from requests.auth import HTTPBasicAuth
+import ui_utils
 from ui_utils import HashMap
 
 noClass = jclass("ru.travelfood.simple_ui.NoSQL")
@@ -24,6 +26,8 @@ importlib.reload(ui_csv)
 importlib.reload(ui_global)
 importlib.reload(ui_form_data)
 importlib.reload(database_init_queryes)
+importlib.reload(ui_utils)
+importlib.reload(db_services)
 
 
 # -----
@@ -224,6 +228,30 @@ def refill_docs_list(filter=''):
     return json.dumps(doc_list)
 
 
+def refill_docs_list_new(_filter=''):
+    query_text = ui_form_data.get_doc_query(_filter)
+
+    if _filter == '' or _filter == 'Все':
+        results = ui_global.get_query_result(query_text, return_dict=True)
+    else:
+        results = ui_global.get_query_result(query_text, (_filter,), return_dict=True)
+
+    table_data = []
+
+    for record in results:
+        table_data.append({
+            'key': record['id_doc'],
+            'type': record['doc_type'],
+            'number': record['doc_n'],
+            'data': record['doc_date'],
+            'warehouse': record['RS_warehouse'],
+            'countragent': record['RS_countragent'],
+            'add_mark_selection': record['add_mark_selection']
+        })
+
+    return ui_form_data.get_doc_card_new(rs_settings, table_data)
+
+
 def docs_on_start(hashMap, _files=None, _data=None):
     # Заполним поле фильтра по виду документов
     result = ui_global.get_query_result(ui_form_data.get_doc_type_query())
@@ -248,6 +276,30 @@ def docs_on_start(hashMap, _files=None, _data=None):
     hashMap.put("docCards", ls)
 
     return hashMap
+
+
+@HashMap()
+def docs_on_start_new(hash_map: HashMap):
+    result = ui_global.get_query_result(ui_form_data.get_doc_type_query())
+    if not hash_map.get('doc_type_select'):
+        doc_type_list = ['Все']
+        for record in result:
+            doc_type_list.append(record[0])
+        hash_map.put('doc_type_select', ';'.join(doc_type_list))
+
+    # Если Вызов экрана из меню плиток - обработаем
+    if hash_map.containsKey('selected_tile_key'):
+        tile_key = hash_map.get('selected_tile_key')
+        if tile_key:
+            hash_map.put('doc_type_click', tile_key)
+            hash_map.put('selected_tile_key', '')
+
+    # Перезаполним список документов
+    if not hash_map.get('doc_type_click'):
+        ls = refill_docs_list_new()
+    else:
+        ls = refill_docs_list_new(hash_map.get('doc_type_click'))
+    hash_map.put("docCards", ls)
 
 
 def doc_details_on_start(hashMap, _files=None, _data=None):
@@ -355,6 +407,67 @@ def doc_details_on_start(hashMap, _files=None, _data=None):
     hashMap.put("doc_goods", json.dumps(doc_detail_list))
 
     return hashMap
+
+
+@HashMap()
+def doc_details_on_start_new(hash_map):
+    id_doc = hash_map.get('id_doc')
+    use_series, use_properties, *constants = ui_global.get_constants()
+    add_labels = [
+        key for key, value in
+        {'series_name': use_series, 'properties_name': use_properties}.items()
+        if str(value) in ['1', 'true']
+    ]
+
+    hash_map.put('use_properties', use_properties)
+
+    query_text = ui_form_data.get_doc_details_query()
+    doc_details = ui_global.get_query_result(query_text, (id_doc,), True)
+    cards_data = []
+    have_zero_plan = False
+
+    if doc_details:
+        for record in doc_details:
+            pic = '#f02a' if record['IsDone'] != 0 else '#f00c'
+            if record['qtty'] == 0 and record['qtty_plan'] == 0:
+                pic = ''
+
+            cards_data.append({
+                'key': str(record['id']),
+                'good_name': str(record['good_name']),
+                'id_good': str(record['id_good']),
+                'id_properties': str(record['id_properties']),
+                'properties_name': str(record['properties_name'] or ''),
+                'id_series': str(record['id_series']),
+                'series_name': str(record['series_name'] or ''),
+                'id_unit': str(record['id_unit']),
+                'units_name': str(record['units_name'] or ''),
+                'code_art': 'Код: ' + str(record['code']),
+
+                'qtty': str(record['qtty'] if record['qtty'] is not None else 0),
+                'qtty_plan': str(record['qtty_plan'] if record['qtty_plan'] is not None else 0),
+                'price': str(record['price'] if record['price'] is not None else 0),
+                'price_name': str(record['price_name'] or ''),
+                'picture': pic
+            })
+            have_zero_plan = True
+
+    doc_goods = ui_form_data.get_doc_detail_cards_new(rs_settings, cards_data, add_labels=add_labels)
+    hash_map.put("doc_goods", doc_goods)
+
+    have_qtty_plan = sum([item['qtty_plan'] or 0 for item in doc_details]) > 0
+
+    qtext = ui_form_data.get_have_mark_codes_query()
+    res = list(ui_global.get_query_result(qtext, {'id_doc': id_doc, 'is_plan': '1'}))
+    have_mark_plan = res and res[0][0] > 0
+
+    res = list(ui_global.get_query_result('SELECT control from RS_docs  WHERE id_doc = ?', (id_doc,)))
+    control = res and res[0][0] not in (0, '0', 'false', 'False', None)
+
+    hash_map.put('have_zero_plan', str(have_zero_plan))
+    hash_map.put('have_qtty_plan', str(have_qtty_plan))
+    hash_map.put('have_mark_plan', str(have_mark_plan))
+    hash_map.put('control', str(control))
 
 
 def doc_adr_details_on_start(hashMap, _files=None, _data=None):
@@ -684,6 +797,17 @@ def docs_on_select(hashMap, _files=None, _data=None):
 
         # hashMap.put('ShowScreen', 'Новый документ')
     return hashMap
+
+
+@HashMap()
+def docs_on_select_CardsClick(hash_map):
+    id_doc = hash_map['id_doc']
+    service = db_services.DocService(id_doc)
+
+    try:
+        service.set_doc_value('verified', '1')
+    except Exception as e:
+        hash_map.error_log(e.args[0])
 
 
 def doc_details_listener(hashMap, _files=None, _data=None):
