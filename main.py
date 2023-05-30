@@ -939,6 +939,49 @@ def doc_details_listener(hashMap, _files=None, _data=None):
     return hashMap
 
 
+@HashMap()
+def doc_details_listener_new(hash_map):
+    listener = hash_map['listener']
+
+    if listener == "CardsClick":
+        pass
+    elif listener == "btn_barcodes":
+        hash_map.put("ShowDialog", "ВвестиШтрихкод")
+    elif listener == 'barcode' or hash_map.get("event") == "onResultPositive":
+        doc = ui_global.Rs_doc
+        doc.id_doc = hash_map.get('id_doc')
+
+        if hash_map.get("event") == "onResultPositive":
+            barcode = hash_map.get('fld_barcode')
+        else:
+            barcode = hash_map.get('barcode_camera')
+
+        have_qtty_plan = hash_map.get('have_qtty_plan')
+        have_zero_plan = hash_map.get('have_zero_plan')
+        have_mark_plan = hash_map.get('have_mark_plan')
+        control = hash_map.get('control')
+        res = doc.process_the_barcode(doc, barcode
+                                      , eval(have_qtty_plan), eval(have_zero_plan), eval(control), eval(have_mark_plan))
+        if res is None:
+            hash_map.put('scanned_barcode', barcode)
+            hash_map.put('ShowScreen', 'Ошибка сканера')
+        elif res['Error']:
+            if res['Error'] == 'AlreadyScanned':
+                hash_map.put('barcode', json.dumps({'barcode': res['Barcode'], 'doc_info': res['doc_info']}))
+                hash_map.put('ShowScreen', 'Удаление штрихкода')
+            elif res['Error'] == 'QuantityPlanReached':
+                hash_map.put('toast', res['Descr'])
+            elif res['Error'] == 'Zero_plan_error':
+                hash_map.put('toast', res['Descr'])
+            else:
+                hash_map.put('toast', res['Descr'])
+        else:
+            hash_map.put('toast', 'Товар добавлен в документ')
+            hash_map.put('barcode_scanned', 'true')
+    elif listener in ['ON_BACK_PRESSED', 'BACK_BUTTON']:
+        hash_map.put("ShowScreen", "Документы")
+
+
 def delete_barcode_screen_start(hashMap, _files=None, _data=None):
     # Находим ID документа
     barcode_data = json.loads(hashMap.get('barcode'))['barcode']
@@ -1992,7 +2035,8 @@ def get_table_cards(table_name: str, filter_fields=list(), filter_value=''):
 
     return json.dumps(cards)
 
-@HashMap(debug=True)
+
+@HashMap()
 def doc_details_barcode_scanned(hash_map: HashMap):
     if hash_map['barcode_scanned'] == 'true':
         doc = ui_global.Rs_doc
