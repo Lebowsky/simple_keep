@@ -254,14 +254,33 @@ def post_goods_to_server(doc_id, http_params):
     hs_service = HsService(http_params)
     doc_service = DocService(doc_id)
 
-    res = doc_service.get_last_edited_goods(to_json=True)
+    res = doc_service.get_last_edited_goods(to_json=False)
 
     if isinstance(res, dict) and res.get('Error'):
         answer = {'empty': True, 'Error': res.get('Error')}
         return answer
+    elif res:
+        hs_service.send_documents(res)
+        if not res or (isinstance(res, dict) and res.get('Error')):
+            answer = {'empty': True, 'Error': res.get('Error')}
+            return answer
+        else:
+            doc_service.update_sent_data(res)
 
-    answer = hs_service.send_documents(res)
-    return answer
+    timer_server_load_data(http_params)
+
+
+def timer_server_load_data(http_params):
+    hs_service = HsService(http_params)
+    doc_service = DocService('')
+
+    docs_data = hs_service.get_data()
+    if docs_data.get('data'):
+        try:
+            doc_service.update_data_from_json(docs_data['data'])
+        except Exception as e:
+            raise e
+            # return {'empty': True, 'Error': e.args[0]}
 
 
 #
