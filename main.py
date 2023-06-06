@@ -33,18 +33,15 @@ importlib.reload(db_services)
 # -----
 # 0100608940553886215,iPGSQpBt!&B
 def settings_on_start(hashMap, _files=None, _data=None):
-    # hashMap.put('toast','обновились')
     app_on_start(hashMap)
     s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
     try:
         s.connect(("8.8.8.8", 80))
         aa = (s.getsockname()[0])
-        # aa = hashMap.get('ip_adr')
         hashMap.put('ip_adr', aa)
-        # hashMap.put('toast', aa)
     except:
         hashMap.put('ip_adr', 'нет сети')
-    # app_on_start(hashMap)
+
     # Значения констант и настроек
     res = ui_global.get_constants()
     if res:
