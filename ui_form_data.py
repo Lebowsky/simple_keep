@@ -1,5 +1,5 @@
 import json
-import widgets
+
 
 def get_doc_card(settings_global, AddMenu=''):
     doc_list = {"customcards": {
@@ -50,7 +50,7 @@ def get_doc_card(settings_global, AddMenu=''):
                         {
                             "type": "PopupMenuButton",
                             "show_by_condition": "",
-                            "Value": f"Удалить;Подтвердить;Очистить данные пересчета;Сканировать штрихкоды потоком{AddMenu}",
+                            "Value": f"Удалить;Подтвердить;Очистить данные пересчета{AddMenu}",  #;Сканировать штрихкоды потоком
                             "NoRefresh": False,
                             "document_type": "",
                             "mask": "",
@@ -124,55 +124,6 @@ def get_doc_card(settings_global, AddMenu=''):
     }}
 
     return doc_list
-
-
-def get_doc_card_new(settings_global, table_data):
-    options = {
-            'search_enabled': True,
-            'save_position': True
-       }
-    doc_list = widgets.CustomCards(
-        widgets.LinearLayout(
-            widgets.LinearLayout(
-                widgets.TextView(
-                    weight=8,
-                    width='match_parent',
-                    Value='@type',
-                    gravity_horizontal='right',
-                    TextSize=settings_global.get("TitleTextSize"),
-                ),
-                widgets.PopupMenuButton(
-                    weight=2,
-                    Value='Удалить',
-                    Variable="menu_delete"
-                ),
-                orientation='horizontal',
-                width='match_parent'
-            ),
-            widgets.LinearLayout(
-                widgets.TextView(
-                    Value='@number',
-                    TextBold=True,
-                    TextSize=settings_global.get('CardTitleTextSize')
-                )
-            ),
-            widgets.LinearLayout(
-                widgets.TextView(
-                    Value='@countragent',
-                    TextSize=settings_global.get('CardDateTextSize')
-                ),
-                widgets.TextView(
-                    Value='@warehouse',
-                    TextSize=settings_global.get('CardDateTextSize')
-                )
-            ),
-            width="match_parent"
-        ),
-        options,
-        table_data
-    )
-
-    return doc_list.to_json()
 
 
 def get_doc_query(arg=''):
@@ -370,7 +321,8 @@ def fields_alias_dict():
         'production_date':{'name':'Дата производства', 'text_size':'CardTextSize', "TextBold": False},
         'use_mark':{'name':'Использовать маркировку', 'text_size':'CardTextSize', "TextBold": False},
         'nominator':{'name':'Номинатор', 'text_size':'CardTextSize', "TextBold": True},
-        'denominator':{'name':'Деноминатор', 'text_size':'CardTextSize', "TextBold": True}
+        'denominator':{'name':'Деноминатор', 'text_size':'CardTextSize', "TextBold": True},
+        'log': {'name': 'Ошибка', 'text_size': 'CardTextSize', "TextBold": False}
         }
 
 
@@ -520,20 +472,20 @@ def get_doc_details_query(isAdr = False, curCell = False):
             RS_adr_docs_table.id,
             RS_adr_docs_table.id_doc,
             RS_adr_docs_table.id_good,
-            RS_goods.name as good_name,
-            RS_goods.code,
-            RS_goods.art,
-            RS_adr_docs_table.id_properties,
-            RS_properties.name as properties_name,
-            RS_adr_docs_table.id_series,
-            RS_series.name as series_name,
-            RS_adr_docs_table.id_unit,
-            RS_units.name as units_name,
-            RS_adr_docs_table.qtty,
-            RS_adr_docs_table.qtty_plan,
+            ifnull(RS_goods.name, :NullValue) as good_name,
+            ifnull(RS_goods.code, :EmptyString) as code,
+            ifnull(RS_goods.art, :EmptyString) as art,
+            ifnull(RS_adr_docs_table.id_properties, :EmptyString) as id_properties,
+            ifnull(RS_properties.name, :EmptyString) as properties_name,
+            ifnull(RS_adr_docs_table.id_series, :EmptyString) as id_series,
+            ifnull(RS_series.name, :EmptyString) as series_name,
+            ifnull(RS_adr_docs_table.id_unit, :EmptyString) as id_unit,
+            ifnull(RS_units.name, :EmptyString) as units_name,
+            RS_adr_docs_table.qtty as qtty,
+            RS_adr_docs_table.qtty_plan as qtty_plan,
             RS_adr_docs_table.qtty_plan - RS_adr_docs_table.qtty as IsDone,
-            RS_adr_docs_table.id_cell as id_cell,
-            RS_cells.name as cell_name
+            ifnull(RS_adr_docs_table.id_cell, :EmptyString) as id_cell,
+            ifnull(RS_cells.name, :NullValue) as cell_name
             
             
             FROM RS_adr_docs_table 
@@ -549,11 +501,14 @@ def get_doc_details_query(isAdr = False, curCell = False):
             LEFT JOIN RS_cells
             ON RS_cells.id=RS_adr_docs_table.id_cell
 
-            WHERE id_doc = ? and table_type = ?
+            WHERE id_doc = :id_doc and table_type = :table_type
+            
             '''
 
         if curCell:
-            query_text = query_text + ' and id_cell=?'
+            query_text = query_text + '''
+             and (id_cell=:current_cell OR id_cell="" OR id_cell is Null)
+            '''
 
         query_text = query_text + ' ORDER BY RS_cells.name, RS_adr_docs_table.last_updated DESC'
 
@@ -830,94 +785,6 @@ def get_doc_detail_cards(use_series, use_properties, settings_global, isAdr = Fa
         pass
 
     return list
-
-
-def get_doc_detail_cards_new(settings_global, cards_data: list, add_labels: list = []):
-    goods_text_size = settings_global.get('goodsTextSize')
-    options = {
-        "search_enabled": True,
-        "save_position": True
-    }
-
-    header = widgets.LinearLayout(
-        orientation='horizontal',
-        height='match_parent',
-        width='match_parent',
-    )
-
-    # series_name, properties_name, cell_name
-    for label in add_labels:
-        header.append(
-            widgets.TextView(Value=f'@{label}', TextSize=settings_global.get('SeriesPropertiesTextSize')),
-        )
-
-    header.append(
-        widgets.TextView(
-            Value='@good_name',
-            TextBold=True,
-            TextSize=settings_global.get('GoodsCardTitleTextSize'),
-            weight='1'
-        ),
-        widgets.TextView(
-            Value='@picture',
-            TextSize='25',
-            TextColor='#DB7093',
-            BackgroundColor="#FFFFFF",
-            weight=1,
-            height=25,
-        ),
-    )
-
-    code_art = widgets.TextView(Value='@code_art', TextSize=settings_global.get('goodsTextSize'))
-    unit_name = widgets.TextView(Value='@unit_name', TextSize=settings_global.get('goodsTextSize'))
-    footer = widgets.LinearLayout(
-        widgets.LinearLayout(
-            widgets.TextView(Value='План', TextSize=goods_text_size),
-            widgets.TextView(Value='@qtty_plan', TextSize=goods_text_size),
-            width='match_parent',
-            weight=1,
-        ),
-        widgets.LinearLayout(
-            widgets.TextView(Value='Факт', TextSize=goods_text_size),
-            widgets.TextView(Value='@qtty', TextSize=goods_text_size),
-            width='match_parent',
-            weight=1,
-        ),
-        widgets.LinearLayout(
-            widgets.TextView(Value='Цена', TextSize=goods_text_size),
-            widgets.TextView(Value='@price', TextSize=goods_text_size),
-            width='match_parent',
-            weight=1,
-        ),
-        height='match_parent',
-        width='match_parent',
-        orientation='horizontal',
-        weight=1,
-    )
-
-    detail_cards = widgets.CustomCards(
-        widgets.LinearLayout(
-            widgets.LinearLayout(
-                widgets.LinearLayout(
-                    header,
-                    code_art,
-                    unit_name,
-                    footer,
-                    width='match_parent',
-                    weight='1'
-                ),
-                height='match_parent',
-                width='match_parent',
-                orientation='horizontal'
-            ),
-            height='match_parent',
-            width='match_parent'
-        ),
-        options=options,
-        cardsdata=cards_data
-    )
-
-    return detail_cards.to_json()
 
 
 def get_doc_barc_flow_query():
@@ -1569,7 +1436,6 @@ class ModernField:
             ret["password"] = self.password
 
         return json.dumps(ret)
-
 
 
 # http_settings = {'url':'192', 'user':'AMD', 'pass':'123'}
