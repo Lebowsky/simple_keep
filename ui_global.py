@@ -346,13 +346,13 @@ class Rs_doc():
             #     qtext = 'DELETE FROM RS_docs_table  WHERE id = ?'
             #     get_query_result(qtext, (el['id'],))
             # else:
-            qtext = 'UPDATE RS_docs_table SET qtty=qtty+?, last_updated = ?  WHERE id = ?'
-            get_query_result(qtext, (qtty,  datetime.now().strftime("%y-%m-%d %H:%M:%S"), el['id']))
+            qtext = 'UPDATE RS_docs_table SET qtty=qtty+?, last_updated = ?, sent = 0  WHERE id = ?'
+            get_query_result(qtext, (qtty,  datetime.now().strftime("%Y-%m-%d %H:%M:%S"), el['id']))
         else:  # Такой строки нет, надо добавить
-            qtext = 'REPLACE INTO RS_docs_table(id_doc, id_good, id_properties,id_series, id_unit, qtty, price, id_price, is_plan) VALUES (?,?,?,?,?,?,?,?,?)'
+            qtext = 'REPLACE INTO RS_docs_table(id_doc, id_good, id_properties,id_series, id_unit, qtty, price, id_price, is_plan, sent) VALUES (?,?,?,?,?,?,?,?,?,?)'
             get_query_result(qtext, (
                 self.id_doc, elem_for_add['id_good'], elem_for_add['id_property'], elem_for_add['id_series'],
-                elem_for_add.get('id_unit'), qtty, 0, '', 'False'))
+                elem_for_add.get('id_unit'), qtty, 0, '', 'False', 0))
 
         return res
 
@@ -629,7 +629,7 @@ class Rs_adr_doc():
             #     get_query_result(qtext, (el['id'],))
             # else:
             qtext = 'UPDATE RS_adr_docs_table SET qtty=qtty+?, last_updated = ?, id_cell = ?  WHERE id = ?'
-            get_query_result(qtext, (qtty,  datetime.now().strftime("%y-%m-%d %H:%M:%S"),cell_id, el['id']))
+            get_query_result(qtext, (qtty,  datetime.now().strftime("%Y-%m-%d %H:%M:%S"),cell_id, el['id']))
         else:  # Такой строки нет, надо добавить
             qtext = 'REPLACE INTO RS_adr_docs_table(id_doc, id_good, id_properties,id_series, id_unit, qtty, is_plan, id_cell, table_type) VALUES (?,?,?,?,?,?,?,?,?)'
             get_query_result(qtext, (

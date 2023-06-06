@@ -1,3 +1,4 @@
+import db_services
 from ru.travelfood.simple_ui import SimpleUtilites as suClass
 
 import ui_barcodes
@@ -30,6 +31,8 @@ importlib.reload(ui_form_data)
 importlib.reload(database_init_queryes)
 importlib.reload(http_exchange)
 importlib.reload(ui_utils)
+importlib.reload(db_services)
+
 
 # -----
 # 0100608940553886215,iPGSQpBt!&B
@@ -217,6 +220,30 @@ def refill_docs_list(filter=''):
     return json.dumps(doc_list)
 
 
+def refill_docs_list_new(_filter=''):
+    query_text = ui_form_data.get_doc_query(_filter)
+
+    if _filter == '' or _filter == 'Все':
+        results = ui_global.get_query_result(query_text, return_dict=True)
+    else:
+        results = ui_global.get_query_result(query_text, (_filter,), return_dict=True)
+
+    table_data = []
+
+    for record in results:
+        table_data.append({
+            'key': record['id_doc'],
+            'type': record['doc_type'],
+            'number': record['doc_n'],
+            'data': record['doc_date'],
+            'warehouse': record['RS_warehouse'],
+            'countragent': record['RS_countragent'],
+            'add_mark_selection': record['add_mark_selection']
+        })
+
+    return ui_form_data.get_doc_card_new(rs_settings, table_data)
+
+
 def docs_on_start(hashMap, _files=None, _data=None):
     # Заполним поле фильтра по виду документов
     result = ui_global.get_query_result(ui_form_data.get_doc_type_query())
@@ -241,6 +268,30 @@ def docs_on_start(hashMap, _files=None, _data=None):
     hashMap.put("docCards", ls)
 
     return hashMap
+
+
+@HashMap()
+def docs_on_start_new(hash_map: HashMap):
+    result = ui_global.get_query_result(ui_form_data.get_doc_type_query())
+    if not hash_map.get('doc_type_select'):
+        doc_type_list = ['Все']
+        for record in result:
+            doc_type_list.append(record[0])
+        hash_map.put('doc_type_select', ';'.join(doc_type_list))
+
+    # Если Вызов экрана из меню плиток - обработаем
+    if hash_map.containsKey('selected_tile_key'):
+        tile_key = hash_map.get('selected_tile_key')
+        if tile_key:
+            hash_map.put('doc_type_click', tile_key)
+            hash_map.put('selected_tile_key', '')
+
+    # Перезаполним список документов
+    if not hash_map.get('doc_type_click'):
+        ls = refill_docs_list_new()
+    else:
+        ls = refill_docs_list_new(hash_map.get('doc_type_click'))
+    hash_map.put("docCards", ls)
 
 
 def doc_details_on_start(hashMap, _files=None, _data=None):
@@ -350,6 +401,67 @@ def doc_details_on_start(hashMap, _files=None, _data=None):
     hashMap.put("doc_goods", json.dumps(doc_detail_list))
 
     return hashMap
+
+
+@HashMap()
+def doc_details_on_start_new(hash_map):
+    id_doc = hash_map.get('id_doc')
+    use_series, use_properties, *constants = ui_global.get_constants()
+    add_labels = [
+        key for key, value in
+        {'series_name': use_series, 'properties_name': use_properties}.items()
+        if str(value) in ['1', 'true']
+    ]
+
+    hash_map.put('use_properties', use_properties)
+
+    query_text = ui_form_data.get_doc_details_query()
+    doc_details = ui_global.get_query_result(query_text, (id_doc,), True)
+    cards_data = []
+    have_zero_plan = False
+
+    if doc_details:
+        for record in doc_details:
+            pic = '#f02a' if record['IsDone'] != 0 else '#f00c'
+            if record['qtty'] == 0 and record['qtty_plan'] == 0:
+                pic = ''
+
+            cards_data.append({
+                'key': str(record['id']),
+                'good_name': str(record['good_name']),
+                'id_good': str(record['id_good']),
+                'id_properties': str(record['id_properties']),
+                'properties_name': str(record['properties_name'] or ''),
+                'id_series': str(record['id_series']),
+                'series_name': str(record['series_name'] or ''),
+                'id_unit': str(record['id_unit']),
+                'units_name': str(record['units_name'] or ''),
+                'code_art': 'Код: ' + str(record['code']),
+
+                'qtty': str(record['qtty'] if record['qtty'] is not None else 0),
+                'qtty_plan': str(record['qtty_plan'] if record['qtty_plan'] is not None else 0),
+                'price': str(record['price'] if record['price'] is not None else 0),
+                'price_name': str(record['price_name'] or ''),
+                'picture': pic
+            })
+            have_zero_plan = True
+
+    doc_goods = ui_form_data.get_doc_detail_cards_new(rs_settings, cards_data, add_labels=add_labels)
+    hash_map.put("doc_goods", doc_goods)
+
+    have_qtty_plan = sum([item['qtty_plan'] or 0 for item in doc_details]) > 0
+
+    qtext = ui_form_data.get_have_mark_codes_query()
+    res = list(ui_global.get_query_result(qtext, {'id_doc': id_doc, 'is_plan': '1'}))
+    have_mark_plan = res and res[0][0] > 0
+
+    res = list(ui_global.get_query_result('SELECT control from RS_docs  WHERE id_doc = ?', (id_doc,)))
+    control = res and res[0][0] not in (0, '0', 'false', 'False', None)
+
+    hash_map.put('have_zero_plan', str(have_zero_plan))
+    hash_map.put('have_qtty_plan', str(have_qtty_plan))
+    hash_map.put('have_mark_plan', str(have_mark_plan))
+    hash_map.put('control', str(control))
 
 
 def doc_adr_details_on_start(hashMap, _files=None, _data=None):
@@ -741,6 +853,17 @@ def docs_on_select(hashMap, _files=None, _data=None):
     return hashMap
 
 
+@HashMap()
+def docs_on_select_CardsClick(hash_map):
+    id_doc = hash_map['id_doc']
+    service = db_services.DocService(id_doc)
+
+    try:
+        service.set_doc_value('verified', '1')
+    except Exception as e:
+        hash_map.error_log(e.args[0])
+
+
 def doc_details_listener(hashMap, _files=None, _data=None):
     # Находим ID документа
     # current_str = hashMap.get("selected_card_position")
@@ -853,24 +976,25 @@ def doc_details_listener(hashMap, _files=None, _data=None):
                 hashMap.put('toast', res['Descr'] )  #+ ' '+ res['Barcode']
         else:
             hashMap.put('toast', 'Товар добавлен в документ')
+            hashMap.put('barcode_scanned', 'true')
         # hashMap.put('toast','1')
         #-------------------------------------------------- Временно
-        url = get_http_settings(hashMap)
-        qtext = '''SELECT id_doc FROM RS_docs WHERE verified = 1'''
-        res = ui_global.get_query_result(qtext, None, True)
-
-        if res:
-            doc_list = []
-            for el in res:
-                doc_list.append('"' + el['id_doc'] + '"')
-            doc_in_str = ','.join(doc_list)
-            # htpparams = {'username':hashMap.get('onlineUser'), 'password':hashMap.get('onlinePass'), 'url':url}
-            answer = http_exchange.post_changes_to_server(doc_in_str, url)
-            if answer.get('Error') is not None:
-                ui_global.write_error_on_log(str(answer.get('Error')))
-
-            qtext = f'UPDATE RS_docs SET sent = 1  WHERE id_doc in ({doc_in_str}) '
-            ui_global.get_query_result(qtext, None, False)
+        # url = get_http_settings(hashMap)
+        # qtext = '''SELECT id_doc FROM RS_docs WHERE verified = 1'''
+        # res = ui_global.get_query_result(qtext, None, True)
+        #
+        # if res:
+        #     doc_list = []
+        #     for el in res:
+        #         doc_list.append('"' + el['id_doc'] + '"')
+        #     doc_in_str = ','.join(doc_list)
+        #     # htpparams = {'username':hashMap.get('onlineUser'), 'password':hashMap.get('onlinePass'), 'url':url}
+        #     answer = http_exchange.post_changes_to_server(doc_in_str, url)
+        #     if answer.get('Error') is not None:
+        #         rs_settings.put('error_log', str(answer.get('Error')), True)
+        #
+        #     qtext = f'UPDATE RS_docs SET sent = 1  WHERE id_doc in ({doc_in_str}) '
+        #     ui_global.get_query_result(qtext, None, False)
         # ---------------------------------------------------------
     elif listener == 'btn_doc_mark_verified':
         doc = ui_global.Rs_doc
@@ -897,6 +1021,49 @@ def doc_details_listener(hashMap, _files=None, _data=None):
         hashMap.remove('rows_filter')
         hashMap.put('RefreshScreen','')
     return hashMap
+
+
+@HashMap()
+def doc_details_listener_new(hash_map):
+    listener = hash_map['listener']
+
+    if listener == "CardsClick":
+        pass
+    elif listener == "btn_barcodes":
+        hash_map.put("ShowDialog", "ВвестиШтрихкод")
+    elif listener == 'barcode' or hash_map.get("event") == "onResultPositive":
+        doc = ui_global.Rs_doc
+        doc.id_doc = hash_map.get('id_doc')
+
+        if hash_map.get("event") == "onResultPositive":
+            barcode = hash_map.get('fld_barcode')
+        else:
+            barcode = hash_map.get('barcode_camera')
+
+        have_qtty_plan = hash_map.get('have_qtty_plan')
+        have_zero_plan = hash_map.get('have_zero_plan')
+        have_mark_plan = hash_map.get('have_mark_plan')
+        control = hash_map.get('control')
+        res = doc.process_the_barcode(doc, barcode
+                                      , eval(have_qtty_plan), eval(have_zero_plan), eval(control), eval(have_mark_plan))
+        if res is None:
+            hash_map.put('scanned_barcode', barcode)
+            hash_map.put('ShowScreen', 'Ошибка сканера')
+        elif res['Error']:
+            if res['Error'] == 'AlreadyScanned':
+                hash_map.put('barcode', json.dumps({'barcode': res['Barcode'], 'doc_info': res['doc_info']}))
+                hash_map.put('ShowScreen', 'Удаление штрихкода')
+            elif res['Error'] == 'QuantityPlanReached':
+                hash_map.put('toast', res['Descr'])
+            elif res['Error'] == 'Zero_plan_error':
+                hash_map.put('toast', res['Descr'])
+            else:
+                hash_map.put('toast', res['Descr'])
+        else:
+            hash_map.put('toast', 'Товар добавлен в документ')
+            hash_map.put('barcode_scanned', 'true')
+    elif listener in ['ON_BACK_PRESSED', 'BACK_BUTTON']:
+        hash_map.put("ShowScreen", "Документы")
 
 
 def delete_barcode_screen_start(hashMap, _files=None, _data=None):
@@ -2019,53 +2186,58 @@ def timer_update(hashMap,  _files=None, _data=None):
     url = get_http_settings(hashMap)
     #url = 'http://192.168.1.77/NSI/hs/simple_accounting/data'
 
-    #hashMap.put('toast', 'Обмен') #url)
-    try:
-        result = http_exchange.server_load_data(url)
-    except:
-        raise 'Ошибка запроса к HTTP'
-    if result['status_code'] ==200:
-        if result.get('batch') is not None:
-            rs_settings.put('batch', result.get('batch'),True)
-            rs_settings.put('number_of_received','0', True)
-
-        if result.get('res_for_sql') is not None:
-
-            if rs_settings.get('batch') is not None:  #Мы выполняем пакет загрузки, данные разбиты на несколько файлов, их количество в batch
-                number_of_received = 0 if rs_settings.get('number_of_received')== 'not found' else int(rs_settings.get('number_of_received'))
-                total_received = int(rs_settings.get('batch'))
-                number_of_received =+1
-            else:
-                total_received = None
-
-            sql_error = False
-            error_pool = []
-            for key in result['res_for_sql']:
-                try:
-                    ui_global.get_query_result(key)
-                    # return 'ok'
-                except Exception as e:
-                    sql_error = True
-                    error_pool.append(e.args[0])
+    # hashMap.put('toast', 'Обмен') #url)
+    result = http_exchange.timer_server_load_data(url)
+    # if result.get('Error'):
+    #     hashMap.put('error_log', )
 
 
-            if total_received:
-                hashMap.put('toast', 'Идет загрузка большого объема данных. Получено '+ str(number_of_received*50000) + 'из, примерно '+ str(total_received*50000))
-                rs_settings.put('number_of_received',str(number_of_received), True)
-
-            if sql_error:
-                ui_global.write_error_on_log(str(error_pool))
-                hashMap.put('toast', 'При загрузке были ошибки. Проверьте их в настройках (кнопка посмотреть ошибки)')
-        if hashMap.get('current_screen_name') == 'Документы':
-            #hashMap.put('toast', 'Документы')
-            docs_on_start(hashMap)
-        #tiles_on_start(hashMap)
-            docs_adr_on_start(hashMap)
-            hashMap.put('RefreshScreen','')
-
-    else:
-
-        hashMap.put('toast', str(result['error_pool']))
+    # try:
+    #     result = http_exchange.server_load_data(url)
+    # except:
+    #     raise 'Ошибка запроса к HTTP'
+    # if result['status_code'] ==200:
+    #     if result.get('batch') is not None:
+    #         rs_settings.put('batch', result.get('batch'),True)
+    #         rs_settings.put('number_of_received','0', True)
+    #
+    #     if result.get('res_for_sql') is not None:
+    #
+    #         if rs_settings.get('batch') is not None:  #Мы выполняем пакет загрузки, данные разбиты на несколько файлов, их количество в batch
+    #             number_of_received = 0 if rs_settings.get('number_of_received')== 'not found' else int(rs_settings.get('number_of_received'))
+    #             total_received = int(rs_settings.get('batch'))
+    #             number_of_received =+1
+    #         else:
+    #             total_received = None
+    #
+    #         sql_error = False
+    #         error_pool = []
+    #         for key in result['res_for_sql']:
+    #             try:
+    #                 ui_global.get_query_result(key)
+    #                 # return 'ok'
+    #             except Exception as e:
+    #                 sql_error = True
+    #                 error_pool.append(e.args[0])
+    #
+    #
+    #         if total_received:
+    #             hashMap.put('toast', 'Идет загрузка большого объема данных. Получено '+ str(number_of_received*50000) + 'из, примерно '+ str(total_received*50000))
+    #             rs_settings.put('number_of_received',str(number_of_received), True)
+    #
+    #         if sql_error:
+    #             rs_settings.put('error_log', str(error_pool), True)
+    #             hashMap.put('toast', 'При загрузке были ошибки. Проверьте их в настройках (кнопка посмотреть ошибки)')
+    #     if hashMap.get('current_screen_name') == 'Документы':
+    #         hashMap.put('toast', 'Документы')
+    #         #docs_on_start(hashMap)
+    #     #tiles_on_start(hashMap)
+    #         docs_adr_on_start(hashMap)
+    #         hashMap.put('RefreshScreen','')
+    #
+    # else:
+    #
+    #     hashMap.put('toast', str(result['error_pool']))
 
     qtext = '''SELECT id_doc FROM RS_docs WHERE verified = 1  and (sent <> 1 or sent is null)
                 UNION
@@ -3296,7 +3468,6 @@ def good_card_on_input(hashMap,  _files=None, _data=None):
         hashMap.put('ShowProcessResult', 'Остатки|Проверить остатки')
     return hashMap
 
-
 def price_tables_on_start(hashMap,  _files=None, _data=None):
     if hashMap.get('parent_screen') == "Товары список":
         hashMap.put('current_screen_name', "Товары список")
@@ -3491,49 +3662,17 @@ def remains_tables_on_input(hashMap, _files=None, _data=None):
         identify_barcode_remains(hashMap)
     return hashMap
 
-
-@HashMap(debug=True)
-def doc_details_on_scan_barcode(hash_map: HashMap):
-    doc = ui_global.Rs_doc
-    doc.id_doc = hash_map['id_doc']
-
-    answer = http_exchange.post_goods_to_server(doc.id_doc, get_http_settings(hash_map))
-    if answer.get('Error') is not None:
-        hash_map.debug(answer.get('Error'))
-
-
 @HashMap()
-def doc_details_on_start_refresh_screen(hash_map: HashMap):
-    pass
-    # time.sleep(3)
-    # doc_goods = hash_map.get('doc_goods', True)
-    # hash_map.toast('start')
-    #
-    # if doc_goods:
-    #     cards_data = doc_goods['customcards']['cardsdata']
-    # #
-    #     try:
-    #         update_data = get_update_goods_data_screen(hash_map['id_doc'], cards_data)
-    #
-    #         if isinstance(update_data, dict) and update_data.get('Error'):
-    #             hash_map.toast('error')
-    #             hash_map.error_log(update_data.get('Error'))
-    #         else:
-    #             update_data = {row['key']: row for row in update_data}
-    #             cards_data_dict = {row['key']: row for row in cards_data}
-    #             for row in cards_data:
-    #                 if update_data.get(row['key']):
-    #                     row['qtty'] = update_data[row['key']]
-    #
-    #             add_rows = [w for k, w in update_data.items() if k not in cards_data_dict]
-    #             cards_data = cards_data + add_rows
-    #             doc_goods['customcards']['cardsdata'] = cards_data
-    #             hash_map.put(doc_goods, True)
-    #             hash_map.refresh_screen()
-    #
-        # except Exception as e:
-        #     hash_map.toast(e.args[0])
-        #     hash_map.send_to_telegram(e.args[0])
-    #
-    # hash_map.run_event_async('doc_details_on_start_refresh_screen')
-    # hash_map.toast('finish')
+def doc_details_barcode_scanned(hash_map: HashMap):
+    if hash_map['barcode_scanned'] == 'true':
+        doc = ui_global.Rs_doc
+        doc.id_doc = hash_map.get('id_doc')
+
+        answer = http_exchange.post_goods_to_server(doc.id_doc, get_http_settings(hash_map))
+
+        if answer and answer.get('Error') is not None:
+            hash_map.debug(answer.get('Error'))
+
+        doc_details_on_start(hash_map)
+        hash_map.refresh_screen()
+
