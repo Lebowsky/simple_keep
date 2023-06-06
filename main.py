@@ -3468,6 +3468,200 @@ def good_card_on_input(hashMap,  _files=None, _data=None):
         hashMap.put('ShowProcessResult', 'Остатки|Проверить остатки')
     return hashMap
 
+def price_tables_on_start(hashMap,  _files=None, _data=None):
+    if hashMap.get('parent_screen') == "Товары список":
+        hashMap.put('current_screen_name', "Товары список")
+
+    return hashMap
+
+
+def get_good_variants(hashMap, _files=None, _data=None):
+    selected_good_id = hashMap.get("selected_good_id")
+    barcode = hashMap.get('barcode')
+
+    if barcode:
+        goods_barcode = ui_global.get_query_result(
+            "SELECT barcode,id_property,id_series,id_unit FROM RS_barcodes WHERE barcode = '" + barcode +
+            "'")
+
+    elif selected_good_id:
+        goods_barcode = ui_global.get_query_result(
+            "SELECT barcode,id_property,id_series,id_unit FROM RS_barcodes WHERE id_good = '" + selected_good_id +
+            "'")
+
+    barcode_cards = ui_form_data2.barcode_cards
+
+    barcode_cards["customcards"]["cardsdata"] = []
+
+    i = 0
+    for element in goods_barcode:
+        c = {"key": str(i), "barcode": element[0], "properties": element[1], "unit": element[3], "series": element[2]}
+
+        if element[1]:
+            c['properties'] = get_name_by_field("RS_properties", "id", element[1])
+        if element[3]:
+            c['unit'] = get_name_by_field("RS_units", "id", element[3])
+
+        barcode_cards["customcards"]["cardsdata"].append(c)
+        i += 1
+
+    hashMap.put("barcode_cards", json.dumps(barcode_cards))
+
+    return hashMap
+
+
+def fill_empty_values(hashMap, names_list=dict(), value=""):
+
+    for k, v in names_list.items():
+
+        if v is None:
+            v = ''
+        if len(v) == 0:
+            hashMap.put(k, value)
+        else:
+            hashMap.put(k, v)
+
+    return hashMap
+
+
+def remains_on_start(hashMap, _files=None, _data=None):
+
+    return hashMap
+
+
+def modify_cards(j, hide_name=False, title_color='', replace_blank=False, disable_override_search=False):
+    cards_layout_elements = j['customcards']['layout']['Elements'][0]['Elements'][0]['Elements']
+
+    if disable_override_search:
+        j['customcards']['options']['override_search'] = False
+
+    for element in cards_layout_elements:
+        if element['Value'] == '@name':
+            if cards_layout_elements.index(element) == 0:
+                element['gravity_horizontal'] = "left"
+                if title_color:
+                    element["TextColor"] = title_color
+                # element['Value'] = str(0)
+            else:
+                if hide_name:
+
+                    # element["show_by_condition"] = "True"
+                    del cards_layout_elements[cards_layout_elements.index(element)]
+
+    if replace_blank:
+        cards_data = j['customcards']['cardsdata']
+
+        for element in cards_data:
+            for key, val in element.items():
+                if val == 'None' or val == "":
+                    element[key] = "—"
+
+    return j
+
+
+def get_name_by_field(table_name, field, field_value):
+
+    query = ui_global.get_query_result(
+        "SELECT name FROM " + table_name.strip('"\'') + " WHERE " + field + '=' + "'" + field_value + "'")
+    try:
+        if type(query) == "str":
+            return str(query).split("'")[1]
+        else:
+            return str(query[0]).split("'")[1]
+    except IndexError:
+        return field_value
+
+
+def good_types_on_start(hashMap, _files=None, _data=None):
+
+    cards_json = get_table_cards('RS_types_goods', exclude_list=['use_mark'], no_label=True)
+
+    cards = modify_cards(json.loads(cards_json), hide_name=True, disable_override_search=True)
+
+    hashMap.put('cards', json.dumps(cards))
+
+    # hashMap.put('cards', cards_json)
+
+    return hashMap
+
+
+def good_types_on_click(hashMap, _files=None, _data=None):
+    listener = hashMap.get("listener")
+
+    if listener == "CardsClick":
+
+        selected_type_id = hashMap.get('selected_card_key')
+
+        hashMap.put('type_id', str(selected_type_id))
+
+        selected_type_name = get_name_by_field("RS_types_goods", "id", selected_type_id)
+
+        hashMap.put('select_goods_type', selected_type_name)
+
+        hashMap.put("ShowScreen", "Товары список")
+
+    elif listener == 'ON_BACK_PRESSED':
+        hashMap.put('type_id', '')
+        hashMap.put('type_name', '')
+        hashMap.put("ShowScreen", "Товары список")
+
+    return hashMap
+
+
+def remains_on_input(hashMap, _files=None, _data=None):
+    if hashMap.get('listener') == 'wh_select':
+        hashMap.put("ShowScreen", "Выбор склада")
+    if hashMap.get('listener') == 'get_remains_btn':
+        get_remains(hashMap)
+    if hashMap.get('listener') == 'barcode':
+        identify_barcode_remains(hashMap)
+    if hashMap.get('listener') == 'ON_BACK_PRESSED':
+        kill_remains_tables(hashMap)
+        if hashMap.get('return_to_good_card'):
+            hashMap.put('noRefresh', '')
+            hashMap.put("FinishProcessResult", "")
+        else:
+            hashMap.put("FinishProcess", "")
+    return hashMap
+
+
+def warehouse_on_input(hashMap, _files=None, _data=None):
+    if hashMap.get('listener') == 'CardsClick':
+        selected_wh_id = hashMap.get("selected_card_key")
+        selected_wh_name = ui_global.get_query_result(
+            "SELECT name FROM RS_warehouses where id = '" + selected_wh_id + "'")
+        hashMap.put('selected_warehouse_id', str(selected_wh_id))
+        hashMap.put("wh_select", str(selected_wh_name[0]).split("'")[1])
+        hashMap.put('error_msg', '')
+        hashMap.put("BackScreen", "")
+        return hashMap
+    if hashMap.get('listener') == 'back_to_remains' or 'ON_BACK_PRESSED':
+        back_to_remains(hashMap)
+    return hashMap
+
+
+def remains_tables_on_input(hashMap, _files=None, _data=None):
+    if hashMap.get('listener') == 'show_filters':
+        hashMap.put("ShowScreen", "Проверить остатки")
+    if hashMap.get('listener') == 'ON_BACK_PRESSED':
+        hashMap.put('barcode', '')
+        hashMap.put('property_id', '')
+
+        if hashMap.get("return_to_good_card"):
+            hashMap.put("BackScreen", '')
+        else:
+            hashMap.put('selected_good_id', '')
+
+            if hashMap.get("current_screen_name") == "Таблица остатков":
+                kill_remains_tables(hashMap)
+                hashMap.put('ShowScreen', 'Проверить остатки')
+            elif hashMap.get("current_screen_name") == "Таблица цен":
+                kill_price_tables(hashMap)
+                hashMap.put('ShowScreen', 'Проверка цен')
+    if hashMap.get('listener') == 'barcode':
+        identify_barcode_remains(hashMap)
+    return hashMap
+
 @HashMap()
 def doc_details_barcode_scanned(hash_map: HashMap):
     if hash_map['barcode_scanned'] == 'true':
