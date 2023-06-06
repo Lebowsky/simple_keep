@@ -1,5 +1,5 @@
 import collections
-import datetime
+from datetime import datetime
 import sqlite3
 from sqlite3 import Error
 import ui_barcodes
@@ -90,13 +90,14 @@ def check_adr_barcode_compliance(el_dict: dict, id_doc):
     AND id_good = :id_good
     AND id_properties = :id_properties
     AND id_series = :id_series
-    --AND id_unit = :id_unit
+    AND id_cell = :id_cell or id_cell = "" OR id_cell is Null
     '''
     args_dict = {}
     args_dict['idDoc'] = id_doc
     args_dict['id_good'] = el_dict['id_good']
     args_dict['id_properties'] = el_dict['id_property']
     args_dict['id_series'] = el_dict['id_series']
+    args_dict['id_cell'] = el_dict['id_cell']
     #args_dict['id_unit'] = el_dict['id_unit']
 
     res = get_query_result(query_text, args_dict, True)
@@ -345,13 +346,13 @@ class Rs_doc():
             #     qtext = 'DELETE FROM RS_docs_table  WHERE id = ?'
             #     get_query_result(qtext, (el['id'],))
             # else:
-            qtext = 'UPDATE RS_docs_table SET qtty=qtty+?, last_updated = ?, sent = 0  WHERE id = ?'
-            get_query_result(qtext, (qtty, str(datetime.datetime.now()), el['id']))
+            qtext = 'UPDATE RS_docs_table SET qtty=qtty+?, last_updated = ?  WHERE id = ?'
+            get_query_result(qtext, (qtty,  datetime.now().strftime("%y-%m-%d %H:%M:%S"), el['id']))
         else:  # Такой строки нет, надо добавить
-            qtext = 'REPLACE INTO RS_docs_table(id_doc, id_good, id_properties,id_series, id_unit, qtty, price, id_price, is_plan, sent) VALUES (?,?,?,?,?,?,?,?,?,?)'
+            qtext = 'REPLACE INTO RS_docs_table(id_doc, id_good, id_properties,id_series, id_unit, qtty, price, id_price, is_plan) VALUES (?,?,?,?,?,?,?,?,?)'
             get_query_result(qtext, (
                 self.id_doc, elem_for_add['id_good'], elem_for_add['id_property'], elem_for_add['id_series'],
-                elem_for_add.get('id_unit'), qtty, 0, '', 'False', 0))
+                elem_for_add.get('id_unit'), qtty, 0, '', 'False'))
 
         return res
 
@@ -610,14 +611,14 @@ class Rs_adr_doc():
 
         return get_query_result(query, (self.id_doc, search_value), True)
 
-    def update_doc_table_data(self, elem_for_add: dict, qtty=1, cell_name = None):
+    def update_doc_table_data(self, elem_for_add: dict, qtty=1, cell_id = None, table_type = 'out'):
         #Ищем ячейку по имени, нам нужен ID
-        res  = get_query_result('Select id From RS_cells Where name = ?',(cell_name,))
-
-        cell_id = res[0][0] if res else None
+        # res  = get_query_result('Select id From RS_cells Where name = ?',(cell_name,))
+        #
+        # cell_id = res[0][0] if res else None
 
         # Сначала определим, есть ли в списке товаров документа наш товар:
-        qtext = 'Select * from RS_adr_docs_table Where id_doc=? and id_good = ? and id_properties = ? and id_series = ?  and id_cell=?' #and id_unit = ?
+        qtext = 'Select * from RS_adr_docs_table Where id_doc=? and id_good = ? and id_properties = ? and id_series = ?  and (id_cell=?  OR id_cell= "" OR id_cell is Null)'  #and id_unit = ?
         args = (self.id_doc, elem_for_add['id_good'], elem_for_add['id_property'], elem_for_add['id_series'], cell_id) #,elem_for_add['id_unit']
         res = get_query_result(qtext, args, True)
         if res:  # Нашли строки документа, добавляем количество
@@ -627,13 +628,13 @@ class Rs_adr_doc():
             #     qtext = 'DELETE FROM RS_docs_table  WHERE id = ?'
             #     get_query_result(qtext, (el['id'],))
             # else:
-            qtext = 'UPDATE RS_adr_docs_table SET qtty=qtty+?, last_updated = ?  WHERE id = ?'
-            get_query_result(qtext, (qtty, str(datetime.datetime.now()), el['id']))
+            qtext = 'UPDATE RS_adr_docs_table SET qtty=qtty+?, last_updated = ?, id_cell = ?  WHERE id = ?'
+            get_query_result(qtext, (qtty,  datetime.now().strftime("%y-%m-%d %H:%M:%S"),cell_id, el['id']))
         else:  # Такой строки нет, надо добавить
-            qtext = 'REPLACE INTO RS_adr_docs_table(id_doc, id_good, id_properties,id_series, id_unit, qtty, is_plan, id_cell) VALUES (?,?,?,?,?,?,?,?)'
+            qtext = 'REPLACE INTO RS_adr_docs_table(id_doc, id_good, id_properties,id_series, id_unit, qtty, is_plan, id_cell, table_type) VALUES (?,?,?,?,?,?,?,?,?)'
             get_query_result(qtext, (
                 self.id_doc, elem_for_add['id_good'], elem_for_add['id_property'], elem_for_add['id_series'],
-                elem_for_add['id_unit'], qtty, 'False',cell_id))
+                elem_for_add['id_unit'], qtty, 'False',cell_id, table_type))
 
         return res
 
@@ -642,7 +643,7 @@ class Rs_adr_doc():
     # Есть план по списку товаров have_zero_plan
     # КОнтроль планов в документе - control
     # Есть план по маркируемой продукции have_mark_plan
-    def process_the_barcode(self, barcode, have_qtty_plan = False, have_zero_plan = False, control = False, cell_name = None): # add_if_not_found=False, add_if_not_in_plan=False):
+    def process_the_barcode(self, barcode, have_qtty_plan = False, have_zero_plan = False, control = False, cell_id = None): # add_if_not_found=False, add_if_not_in_plan=False):
         # Получим структуру баркода
         if barcode[0] == chr(29) and len(barcode) > 31:  # Remove first GS1 char from barcode
             barcode = barcode[1:]
@@ -665,7 +666,7 @@ class Rs_adr_doc():
         else:
             return {'Error': 'NotFound', 'Descr': 'Штрихкод не найден в базе', 'Barcode': barcode}
 
-
+        elem['id_cell'] = cell_id
 
         #Товар в таблице документа (Товар найден в документе)
         res = check_adr_barcode_compliance(elem, self.id_doc)  #Получаем строку таблицы товары документа
@@ -686,14 +687,14 @@ class Rs_adr_doc():
 
 
         # Обновляем таблицу товары
-        self.update_doc_table_data(self, elem, 1, cell_name)
+        self.update_doc_table_data(self, elem, 1, cell_id)
 
         return {'Result': 'Марка добавлена в документ', 'Error': None,
                         'barcode': barcode_info['GTIN'] + barcode_info['SERIAL']}
 
 
     def add(self, args):
-        query = 'INSERT INTO RS_docs(id_doc, doc_type, doc_n, doc_date, id_warehouse, verified, sent) VALUES (?,?,?,?,?,?,0,0)'
+        query = 'INSERT INTO RS_adr_docs(id_doc, doc_type, doc_n, doc_date, id_warehouse, verified, sent) VALUES (?,?,?,?,?,0,0)'
         res = get_query_result(query, args)
 
     def get_new_id(self):
@@ -730,7 +731,10 @@ def execute_query(q_index, q_text, args, in_dict):
             get_query_result()
 
 
-
+def write_error_on_log(Err_value):
+    if Err_value:
+        qtext = 'Insert into Error_log(log) Values(?)'
+        get_query_result(qtext, (Err_value,))
 
 
 
