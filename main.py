@@ -5,6 +5,7 @@ import ui_csv
 import ui_global
 import ui_form_data
 import ui_form_data2 as ui_tables_structure
+import db_services
 import socket
 import json
 import requests
@@ -14,7 +15,9 @@ import os
 from PIL import Image
 from datetime import datetime
 import importlib
-from rs_settings import RSSettings
+
+import widgets
+# from rs_settings import RSSettings
 from java import jclass
 import http_exchange
 from requests.auth import HTTPBasicAuth
@@ -34,6 +37,8 @@ importlib.reload(ui_tables_structure)
 importlib.reload(database_init_queryes)
 importlib.reload(http_exchange)
 importlib.reload(ui_utils)
+importlib.reload(db_services)
+
 
 # -----
 # 0100608940553886215,iPGSQpBt!&B
@@ -67,6 +72,31 @@ def settings_on_start(hashMap, _files=None, _data=None):
     return hashMap
 
 
+def debug_on_start(hashMap, _files=None, _data=None):
+    if not hashMap.containsKey('ip_host'):
+        hashMap.put('ip_host', '192.168.1.77')
+    return hashMap
+
+
+def debug_listener(hashMap, _files=None, _data=None):
+
+    listener = hashMap.get('listener')
+
+    if listener == 'btn_copy_base':
+        ip_host = hashMap.get('ip_host')
+        if os.path.isfile('//data/data/ru.travelfood.simple_ui/databases/SimpleKeep'): #Keep'):
+            with open('//data/data/ru.travelfood.simple_ui/databases/SimpleKeep', 'rb') as f:  # rightscan
+                r = requests.post('http://' + ip_host + ':2444/post', files={'Rightscan': f})  # rightscan
+            if r.status_code == 200:
+                hashMap.put('toast', 'База SQLite успешно выгружена')
+            else:
+                hashMap.put('toast', 'Ошибка соединения')
+        else:
+            hashMap.put('toast', 'Файл не найден')
+
+    return hashMap
+
+
 def settings_on_click(hashMap, _files=None, _data=None):
     use_series = hashMap.get('use_series')
     use_properties = hashMap.get('use_properties')
@@ -87,20 +117,9 @@ def settings_on_click(hashMap, _files=None, _data=None):
     ui_global.put_constants(
         (use_series, use_properties, use_mark, add_if_not_in_plan, path, delete_files, allow_overscan))
     listener = hashMap.get('listener')
-    if listener == 'btn_copy_base':
-        ip_host = hashMap.get('ip_host')
-        ip_host = '192.168.1.6'
-        if os.path.isfile('//data/data/ru.travelfood.simple_ui/databases/SimpleKeep'):  # SimpleKeep
-            with open('//data/data/ru.travelfood.simple_ui/databases/SimpleKeep', 'rb') as f:  # Rightscan
-                r = requests.post('http://' + ip_host + ':2444/post', files={'Rightscan': f})  # rightscan
-            if r.status_code == 200:
-                hashMap.put('toast', 'База SQLite успешно выгружена')
-            else:
-                hashMap.put('toast', 'Ошибка соединения')
-        else:
-            hashMap.put('toast', 'Файл не найден')
 
-    elif listener == 'btn_local_files':
+
+    if listener == 'btn_local_files':
         # path = hashMap.get('localpath')
         path = hashMap.get('path')
         delete_files = hashMap.get('delete_files')
@@ -161,7 +180,7 @@ def settings_on_click(hashMap, _files=None, _data=None):
             # htpparams = {'username':hashMap.get('onlineUser'), 'password':hashMap.get('onlinePass'), 'url':url}
             answer = http_exchange.post_changes_to_server(doc_in_str, url)
             if answer.get('Error') is not None:
-                rs_settings.put('error_log', str(answer.get('Error')), True)
+                ui_global.write_error_on_log(str(answer.get('Error')))
 
             qtext = f'UPDATE RS_docs SET sent = 1  WHERE id_doc in ({doc_in_str}) '
             ui_global.get_query_result(qtext, (doc_in_str,), False)
@@ -207,6 +226,30 @@ def refill_docs_list(filter=''):
     return json.dumps(doc_list)
 
 
+def refill_docs_list_new(_filter=''):
+    query_text = ui_form_data.get_doc_query(_filter)
+
+    if _filter == '' or _filter == 'Все':
+        results = ui_global.get_query_result(query_text, return_dict=True)
+    else:
+        results = ui_global.get_query_result(query_text, (_filter,), return_dict=True)
+
+    table_data = []
+
+    for record in results:
+        table_data.append({
+            'key': record['id_doc'],
+            'type': record['doc_type'],
+            'number': record['doc_n'],
+            'data': record['doc_date'],
+            'warehouse': record['RS_warehouse'],
+            'countragent': record['RS_countragent'],
+            'add_mark_selection': record['add_mark_selection']
+        })
+
+    return ui_form_data.get_doc_card_new(rs_settings, table_data)
+
+
 def docs_on_start(hashMap, _files=None, _data=None):
     # Заполним поле фильтра по виду документов
     hashMap.put("SetTitle", "Документы")
@@ -232,6 +275,30 @@ def docs_on_start(hashMap, _files=None, _data=None):
     hashMap.put("docCards", ls)
 
     return hashMap
+
+
+@HashMap()
+def docs_on_start_new(hash_map: HashMap):
+    result = ui_global.get_query_result(ui_form_data.get_doc_type_query())
+    if not hash_map.get('doc_type_select'):
+        doc_type_list = ['Все']
+        for record in result:
+            doc_type_list.append(record[0])
+        hash_map.put('doc_type_select', ';'.join(doc_type_list))
+
+    # Если Вызов экрана из меню плиток - обработаем
+    if hash_map.containsKey('selected_tile_key'):
+        tile_key = hash_map.get('selected_tile_key')
+        if tile_key:
+            hash_map.put('doc_type_click', tile_key)
+            hash_map.put('selected_tile_key', '')
+
+    # Перезаполним список документов
+    if not hash_map.get('doc_type_click'):
+        ls = refill_docs_list_new()
+    else:
+        ls = refill_docs_list_new(hash_map.get('doc_type_click'))
+    hash_map.put("docCards", ls)
 
 
 def doc_details_on_start(hashMap, _files=None, _data=None):
@@ -278,7 +345,7 @@ def doc_details_on_start(hashMap, _files=None, _data=None):
         if el['key'] == id_doc:
             hashMap.put('add_mark_selection',
                         str(el['add_mark_selection'] if el['add_mark_selection'] else '0'))
-    #     current_elem = jlist['customcards']['cardsdata'][int(current_str)-1]
+    #    current_elem = jlist['customcards']['cardsdata'][int(current_str)-1]
 
     query_text = ui_form_data.get_doc_details_query()
 
@@ -309,7 +376,6 @@ def doc_details_on_start(hashMap, _files=None, _data=None):
                 'price': str(record['price'] if record['price'] is not None else 0),
                 'price_name': str(record['price_name']),
                 'picture': pic,
-                'last_updated': str(record['last_updated']),
             }
 
             good_info = ""
@@ -457,6 +523,67 @@ def doc_details_on_load(hashMap, _files=None, _data=None):
     barcode_btn.setElevation(15)
     return hashMap
 
+@HashMap()
+def doc_details_on_start_new(hash_map):
+    id_doc = hash_map.get('id_doc')
+    use_series, use_properties, *constants = ui_global.get_constants()
+    add_labels = [
+        key for key, value in
+        {'series_name': use_series, 'properties_name': use_properties}.items()
+        if str(value) in ['1', 'true']
+    ]
+
+    hash_map.put('use_properties', use_properties)
+
+    query_text = ui_form_data.get_doc_details_query()
+    doc_details = ui_global.get_query_result(query_text, (id_doc,), True)
+    cards_data = []
+    have_zero_plan = False
+
+    if doc_details:
+        for record in doc_details:
+            pic = '#f02a' if record['IsDone'] != 0 else '#f00c'
+            if record['qtty'] == 0 and record['qtty_plan'] == 0:
+                pic = ''
+
+            cards_data.append({
+                'key': str(record['id']),
+                'good_name': str(record['good_name']),
+                'id_good': str(record['id_good']),
+                'id_properties': str(record['id_properties']),
+                'properties_name': str(record['properties_name'] or ''),
+                'id_series': str(record['id_series']),
+                'series_name': str(record['series_name'] or ''),
+                'id_unit': str(record['id_unit']),
+                'units_name': str(record['units_name'] or ''),
+                'code_art': 'Код: ' + str(record['code']),
+
+                'qtty': str(record['qtty'] if record['qtty'] is not None else 0),
+                'qtty_plan': str(record['qtty_plan'] if record['qtty_plan'] is not None else 0),
+                'price': str(record['price'] if record['price'] is not None else 0),
+                'price_name': str(record['price_name'] or ''),
+                'picture': pic
+            })
+            have_zero_plan = True
+
+    doc_goods = ui_form_data.get_doc_detail_cards_new(rs_settings, cards_data, add_labels=add_labels)
+    hash_map.put("doc_goods", doc_goods)
+
+    have_qtty_plan = sum([item['qtty_plan'] or 0 for item in doc_details]) > 0
+
+    qtext = ui_form_data.get_have_mark_codes_query()
+    res = list(ui_global.get_query_result(qtext, {'id_doc': id_doc, 'is_plan': '1'}))
+    have_mark_plan = res and res[0][0] > 0
+
+    res = list(ui_global.get_query_result('SELECT control from RS_docs  WHERE id_doc = ?', (id_doc,)))
+    control = res and res[0][0] not in (0, '0', 'false', 'False', None)
+
+    hash_map.put('have_zero_plan', str(have_zero_plan))
+    hash_map.put('have_qtty_plan', str(have_qtty_plan))
+    hash_map.put('have_mark_plan', str(have_mark_plan))
+    hash_map.put('control', str(control))
+
+
 def doc_adr_details_on_start(hashMap, _files=None, _data=None):
     id_doc = hashMap.get('id_doc')
     current_cell = hashMap.get('current_cell_id')
@@ -467,8 +594,27 @@ def doc_adr_details_on_start(hashMap, _files=None, _data=None):
     use_series = res[1]
     use_properties = res[2]
     hashMap.put('use_properties', res[2])
-    doc_detail_list = ui_form_data.get_doc_detail_cards(use_series, use_properties,rs_settings, True)
-    doc_detail_list['customcards']['cardsdata'] = []
+    #doc_detail_list = ui_form_data.get_doc_detail_cards(use_series, use_properties,rs_settings, True)
+
+    doc_detail_list = widgets.CustomCards(
+                      widgets.LinearLayout(widgets.TextView(Value='@good_name', TextSize= rs_settings.get('GoodsCardTitleTextSize'), TextBold = True, weight = 1),
+                             widgets.PopupMenuButton(Value = "Удалить строку"),
+                             widgets.LinearLayout(
+                                 widgets.TextView(TextBold = True, weight = 1, Value='@code_art'),
+                                 widgets.TextView(TextBold = False, weight = 1, Value = '@art'),
+                                 orientation="horizontal"),
+                                 widgets.LinearLayout(
+                                     widgets.TextView(Value = 'План', TextSize = rs_settings.get('goodsTextSize')),
+                                     widgets.TextView(Value='@qtty_plan'),
+                                     widgets.TextView(Value='Факт'),
+                                     widgets.TextView(Value='@qtty'),
+                                     #widgets.TextView(Value = '@'),
+                                     widgets.TextView(Value = 'Цена'),
+                                     widgets.TextView(Value = '@price'),
+                                     widgets.TextView(Value = '@picture'),
+                                 orientation="horizontal"),orientation="vertical"),options = widgets.Options())
+
+    #doc_detail_list['customcards']['cardsdata'] = []
 
     # Получаем теекущий документ
     current_str = hashMap.get("selected_card_position")
@@ -487,7 +633,7 @@ def doc_adr_details_on_start(hashMap, _files=None, _data=None):
     if current_cell:
         params = (id_doc, table_type_filter, current_cell)
     else:
-        params = (id_doc, table_type_filter)
+        params = {'id_doc':id_doc, 'table_type':table_type_filter, 'EmptyString':'', 'NullValue':'<пустое значение>'}
 
     results = ui_global.get_query_result(query_text, params, True)
     row_filter = True if hashMap.get('rows_filter') == '1' else False
@@ -504,7 +650,8 @@ def doc_adr_details_on_start(hashMap, _files=None, _data=None):
 
             if current_cell != record['cell_name']:
                 c = {"group": record['cell_name']}
-                doc_detail_list['customcards']['cardsdata'].append(c)
+                #doc_detail_list['customcards']['cardsdata'].append(c)
+                doc_detail_list.customcards['cardsdata'].append(c)
                 current_cell = record['cell_name']
 
             product_row = {
@@ -526,7 +673,8 @@ def doc_adr_details_on_start(hashMap, _files=None, _data=None):
                 'picture': pic
             }
 
-            doc_detail_list['customcards']['cardsdata'].append(product_row)
+#            doc_detail_list['customcards']['cardsdata'].append(product_row)
+            doc_detail_list.customcards['cardsdata'].append(product_row)
 
         # Признак, have_qtty_plan ЕстьПланПОКОличеству  -  Истина когда сумма колонки Qtty_plan > 0
         # Признак  have_mark_plan "ЕстьПланКОдовМаркировки – Истина, когда количество строк табл. RS_docs_barcodes с заданным id_doc и is_plan  больше нуля.
@@ -576,7 +724,8 @@ def doc_adr_details_on_start(hashMap, _files=None, _data=None):
         control = 'False'
 
     hashMap.put('control', control)
-    hashMap.put("doc_goods", json.dumps(doc_detail_list))
+    #    hashMap.put("doc_goods", json.dumps(doc_detail_list))
+    hashMap.put("doc_goods", doc_detail_list.to_json())
 
     return hashMap
 
@@ -651,7 +800,7 @@ def doc_adr_details_listener(hashMap, _files=None, _data=None):
         have_mark_plan = hashMap.get('have_mark_plan')
         control = hashMap.get('control')
         res = doc.process_the_barcode(doc, barcode
-                                      , eval(have_qtty_plan), eval(have_zero_plan), eval(control),  current_cell)
+                                      , eval(have_qtty_plan), eval(have_zero_plan), eval(control),  hashMap.get('current_cell_id'))
         if res == None:
             hashMap.put('scanned_barcode', barcode)
             # suClass.urovo_set_lock_trigger(True)
@@ -709,19 +858,31 @@ def doc_adr_details_listener(hashMap, _files=None, _data=None):
     elif listener =='LayoutAction':
         layout_listener = hashMap.get('layout_listener')
         # Находим ID строки
-        current_str = int(hashMap.get("selected_card_position"))
-        current_elem = get_current_elem_doc_goods(hashMap, current_str)
-        if current_elem.get('group') and hashMap.get('view') == "cards":
-            current_elem = jlist['customcards']['cardsdata'][current_str+1]
+        # current_str = int(hashMap.get("selected_card_position"))
+        # jlist = json.loads(hashMap.get("doc_goods"))
+        # current_elem = jlist['customcards']['cardsdata'][current_str]
+        # if current_elem.get('group'):
+        #     current_elem = jlist['customcards']['cardsdata'][current_str+1]
         #
+        current_key = hashMap.get("key")
         if layout_listener == 'Удалить строку':
 
-            if current_elem['key']:
-                ui_global.get_query_result('DELETE FROM RS_adr_docs_table WHERE id = ?', (current_elem['key'],))
+            if current_key: #current_elem['key']:
+                ui_global.get_query_result('DELETE FROM RS_adr_docs_table WHERE id = ?', (current_key, )) #current_elem['key'],))
                 hashMap.put('RefreshScreen','')
         elif layout_listener == 'Изменить ячейку':
 
-            pass
+            hashMap.remove('SearchString')
+            hashMap.put('table_for_select', 'RS_cells')  # Таблица для выбора значения
+            hashMap.put('SetResultListener', 'select_cell_value_for_card')
+            hashMap.put('filter_fields', 'name;barcode')
+            hashMap.put('ShowProcessResult', 'Универсальный справочник|Справочник')
+
+    elif listener == 'select_cell_value_for_card':
+        current_key = hashMap.get("key")
+        if current_key:
+            ui_global.get_query_result('Update RS_adr_docs_table SET id_cell = ? Where id = ?', (hashMap.get('current_id'), current_key))
+            hashMap.put('RefreshScreen','')
 
     elif listener == 'btn_add_string':
 
@@ -823,6 +984,17 @@ def docs_on_select(hashMap, _files=None, _data=None):
     return hashMap
 
 
+@HashMap()
+def docs_on_select_CardsClick(hash_map):
+    id_doc = hash_map['id_doc']
+    service = db_services.DocService(id_doc)
+
+    try:
+        service.set_doc_value('verified', '1')
+    except Exception as e:
+        hash_map.error_log(e.args[0])
+
+
 def doc_details_listener(hashMap, _files=None, _data=None):
     # Находим ID документа
     # current_str = hashMap.get("selected_card_position")
@@ -836,6 +1008,7 @@ def doc_details_listener(hashMap, _files=None, _data=None):
     listener = hashMap.get('listener')
 
     if listener == "CardsClick":
+
         # Находим ID документа
         current_str = hashMap.get("selected_card_position")
         current_elem = get_current_elem_doc_goods(hashMap, current_str)
@@ -917,7 +1090,8 @@ def doc_details_listener(hashMap, _files=None, _data=None):
         have_mark_plan = hashMap.get('have_mark_plan')
         control = hashMap.get('control')
         res = doc.process_the_barcode(doc, barcode
-                                      , eval(have_qtty_plan), eval(have_zero_plan), eval(control), eval(have_mark_plan))
+                                      , eval(have_qtty_plan), eval(have_zero_plan), eval(control), eval(have_mark_plan),
+                                      user_tmz=int(hashMap.get("TMZ")))
         if res == None:
             hashMap.put('scanned_barcode', barcode)
             # suClass.urovo_set_lock_trigger(True)
@@ -943,25 +1117,25 @@ def doc_details_listener(hashMap, _files=None, _data=None):
         else:
             highlight_added_good(hashMap, barcode)
             hashMap.put('toast', 'Товар добавлен в документ')
+            hashMap.put('barcode_scanned', 'true')
         # hashMap.put('toast','1')
         #-------------------------------------------------- Временно
-        url = get_http_settings(hashMap)
-        qtext = '''SELECT id_doc FROM RS_docs WHERE verified = 1'''
-        res = ui_global.get_query_result(qtext, None, True)
-
-        if res:
-            doc_list = []
-            for el in res:
-                doc_list.append('"' + el['id_doc'] + '"')
-            doc_in_str = ','.join(doc_list)
-            # htpparams = {'username':hashMap.get('onlineUser'), 'password':hashMap.get('onlinePass'), 'url':url}
-            answer = http_exchange.post_changes_to_server(doc_in_str, url)
-            if answer.get('Error') is not None:
-                rs_settings.put('error_log', str(answer.get('Error')), True)
-
-            qtext = f'UPDATE RS_docs SET sent = 1  WHERE id_doc in ({doc_in_str}) '
-            ui_global.get_query_result(qtext, None, False)
-        # hashMap.put('RefreshScreen', '')
+        # url = get_http_settings(hashMap)
+        # qtext = '''SELECT id_doc FROM RS_docs WHERE verified = 1'''
+        # res = ui_global.get_query_result(qtext, None, True)
+        #
+        # if res:
+        #     doc_list = []
+        #     for el in res:
+        #         doc_list.append('"' + el['id_doc'] + '"')
+        #     doc_in_str = ','.join(doc_list)
+        #     # htpparams = {'username':hashMap.get('onlineUser'), 'password':hashMap.get('onlinePass'), 'url':url}
+        #     answer = http_exchange.post_changes_to_server(doc_in_str, url)
+        #     if answer.get('Error') is not None:
+        #         rs_settings.put('error_log', str(answer.get('Error')), True)
+        #
+        #     qtext = f'UPDATE RS_docs SET sent = 1  WHERE id_doc in ({doc_in_str}) '
+        #     ui_global.get_query_result(qtext, None, False)
         # ---------------------------------------------------------
     elif listener == 'btn_doc_mark_verified':
         doc = ui_global.Rs_doc
@@ -997,6 +1171,49 @@ def doc_details_listener(hashMap, _files=None, _data=None):
         hashMap.put('RefreshScreen', '')
 
     return hashMap
+
+
+@HashMap()
+def doc_details_listener_new(hash_map):
+    listener = hash_map['listener']
+
+    if listener == "CardsClick":
+        pass
+    elif listener == "btn_barcodes":
+        hash_map.put("ShowDialog", "ВвестиШтрихкод")
+    elif listener == 'barcode' or hash_map.get("event") == "onResultPositive":
+        doc = ui_global.Rs_doc
+        doc.id_doc = hash_map.get('id_doc')
+
+        if hash_map.get("event") == "onResultPositive":
+            barcode = hash_map.get('fld_barcode')
+        else:
+            barcode = hash_map.get('barcode_camera')
+
+        have_qtty_plan = hash_map.get('have_qtty_plan')
+        have_zero_plan = hash_map.get('have_zero_plan')
+        have_mark_plan = hash_map.get('have_mark_plan')
+        control = hash_map.get('control')
+        res = doc.process_the_barcode(doc, barcode
+                                      , eval(have_qtty_plan), eval(have_zero_plan), eval(control), eval(have_mark_plan))
+        if res is None:
+            hash_map.put('scanned_barcode', barcode)
+            hash_map.put('ShowScreen', 'Ошибка сканера')
+        elif res['Error']:
+            if res['Error'] == 'AlreadyScanned':
+                hash_map.put('barcode', json.dumps({'barcode': res['Barcode'], 'doc_info': res['doc_info']}))
+                hash_map.put('ShowScreen', 'Удаление штрихкода')
+            elif res['Error'] == 'QuantityPlanReached':
+                hash_map.put('toast', res['Descr'])
+            elif res['Error'] == 'Zero_plan_error':
+                hash_map.put('toast', res['Descr'])
+            else:
+                hash_map.put('toast', res['Descr'])
+        else:
+            hash_map.put('toast', 'Товар добавлен в документ')
+            hash_map.put('barcode_scanned', 'true')
+    elif listener in ['ON_BACK_PRESSED', 'BACK_BUTTON']:
+        hash_map.put("ShowScreen", "Документы")
 
 
 def delete_barcode_screen_start(hashMap, _files=None, _data=None):
@@ -1419,7 +1636,7 @@ def elem_viev_on_click(hashMap, _files=None, _data=None):
     return hashMap
 
 
-def price_on_start(hashMap, _files=None, _data=None):
+def prices_on_start(hashMap, _files=None, _data=None):
     id_good = hashMap.get('id_good')
     # Формируем таблицу карточек и запрос к базе
     goods_price_list = ui_form_data.get_price_card(rs_settings)
@@ -1448,7 +1665,6 @@ def prices_on_input(hashMap, _files=None, _data=None):
         get_good_by_art(hashMap)
         if hashMap.get('input_good_id'):
             hashMap.put("ShowScreen", 'Выбор характеристик')
-            # return hashMap
     if hashMap.get('listener') == "unit_select":
         get_good_by_art(hashMap)
         if hashMap.get('input_good_id'):
@@ -1918,10 +2134,10 @@ def sound_settings_on_start(hashMap, _files=None, _data=None):
     # ss = {'signal_num': "Номер сигнала",
     #       'beep_duration':'Длительность(мс)'}  # ,
 
-    hashMap.put('signal_num',
+    hashMap.put('signal_num_card',
                 ui_form_data.ModernField(hint='Номер сигнала', default_text=rs_settings.get('signal_num'),
                                          password=False).to_json())  # )
-    hashMap.put('beep_duration',
+    hashMap.put('beep_duration_card',
                 ui_form_data.ModernField(hint='Длительность(мс)', default_text=rs_settings.get('beep_duration'),
                                          password=False).to_json())  # )
     #fields_from_settings(hashMap, ss)
@@ -1939,8 +2155,15 @@ def sound_settings_listener(hashMap, _files=None, _data=None):
     elif listener == 'btn_on_cancel' or listener == 'ON_BACK_PRESSED':
         hashMap.put('ShowScreen', 'Настройки и обмен')
     elif listener == 'btn_test_sound':
-        hashMap.put('beep_duration ', hashMap.get("beep_duration"))
-        hashMap.put('beep', hashMap.get('signal_num'))
+        # hashMap.put('beep_duration', hashMap.get("beep_duration_value"))
+        # hashMap.put('beep', hashMap.get('signal_num_value'))
+
+        # hashMap.put('beep_duration', str(rs_settings.get('beep_duration')))
+        # hashMap.put("beep", str(rs_settings.get('signal_num')))
+
+        hashMap.put('beep_duration', '83')
+        hashMap.put("beep", '1000')
+
     return hashMap
 
 
@@ -2011,7 +2234,7 @@ def barcode_flow_on_start(hashMap, _files=None, _data=None):
                 have_qtty_plan = res[0][1] > 0  # В документе есть колво план
             else:
                 have_qtty_plan = False
-        # Евсть ли в документе план по кодам маркироки
+        # Есть ли в документе план по кодам маркировки
         qtext = ui_form_data.get_have_mark_codes_query()
         res = ui_global.get_query_result(qtext, {'id_doc': id_doc, 'is_plan': '1'})
         if not res:
@@ -2100,53 +2323,58 @@ def timer_update(hashMap,  _files=None, _data=None):
     url = get_http_settings(hashMap)
     #url = 'http://192.168.1.77/NSI/hs/simple_accounting/data'
 
-    #hashMap.put('toast', 'Обмен') #url)
-    try:
-        result = http_exchange.server_load_data(url)
-    except:
-        raise 'Ошибка запроса к HTTP'
-    if result['status_code'] ==200:
-        if result.get('batch') is not None:
-            rs_settings.put('batch', result.get('batch'),True)
-            rs_settings.put('number_of_received','0', True)
-
-        if result.get('res_for_sql') is not None:
-
-            if rs_settings.get('batch') is not None:  #Мы выполняем пакет загрузки, данные разбиты на несколько файлов, их количество в batch
-                number_of_received = 0 if rs_settings.get('number_of_received')== 'not found' else int(rs_settings.get('number_of_received'))
-                total_received = int(rs_settings.get('batch'))
-                number_of_received =+1
-            else:
-                total_received = None
-
-            sql_error = False
-            error_pool = []
-            for key in result['res_for_sql']:
-                try:
-                    ui_global.get_query_result(key)
-                    # return 'ok'
-                except Exception as e:
-                    sql_error = True
-                    error_pool.append(e.args[0])
+    # hashMap.put('toast', 'Обмен') #url)
+    result = http_exchange.timer_server_load_data(url)
+    # if result.get('Error'):
+    #     hashMap.put('error_log', )
 
 
-            if total_received:
-                hashMap.put('toast', 'Идет загрузка большого объема данных. Получено '+ str(number_of_received*50000) + 'из, примерно '+ str(total_received*50000))
-                rs_settings.put('number_of_received',str(number_of_received), True)
-
-            if sql_error:
-                rs_settings.put('error_log', str(error_pool), True)
-                hashMap.put('toast', 'При загрузке были ошибки. Проверьте их в настройках (кнопка посмотреть ошибки)')
-        if hashMap.get('current_screen_name') == 'Документы':
-            #hashMap.put('toast', 'Документы')
-            docs_on_start(hashMap)
-        #tiles_on_start(hashMap)
-            docs_adr_on_start(hashMap)
-            hashMap.put('RefreshScreen','')
-
-    else:
-
-        hashMap.put('toast', str(result['error_pool']))
+    # try:
+    #     result = http_exchange.server_load_data(url)
+    # except:
+    #     raise 'Ошибка запроса к HTTP'
+    # if result['status_code'] ==200:
+    #     if result.get('batch') is not None:
+    #         rs_settings.put('batch', result.get('batch'),True)
+    #         rs_settings.put('number_of_received','0', True)
+    #
+    #     if result.get('res_for_sql') is not None:
+    #
+    #         if rs_settings.get('batch') is not None:  #Мы выполняем пакет загрузки, данные разбиты на несколько файлов, их количество в batch
+    #             number_of_received = 0 if rs_settings.get('number_of_received')== 'not found' else int(rs_settings.get('number_of_received'))
+    #             total_received = int(rs_settings.get('batch'))
+    #             number_of_received =+1
+    #         else:
+    #             total_received = None
+    #
+    #         sql_error = False
+    #         error_pool = []
+    #         for key in result['res_for_sql']:
+    #             try:
+    #                 ui_global.get_query_result(key)
+    #                 # return 'ok'
+    #             except Exception as e:
+    #                 sql_error = True
+    #                 error_pool.append(e.args[0])
+    #
+    #
+    #         if total_received:
+    #             hashMap.put('toast', 'Идет загрузка большого объема данных. Получено '+ str(number_of_received*50000) + 'из, примерно '+ str(total_received*50000))
+    #             rs_settings.put('number_of_received',str(number_of_received), True)
+    #
+    #         if sql_error:
+    #             rs_settings.put('error_log', str(error_pool), True)
+    #             hashMap.put('toast', 'При загрузке были ошибки. Проверьте их в настройках (кнопка посмотреть ошибки)')
+    #     if hashMap.get('current_screen_name') == 'Документы':
+    #         hashMap.put('toast', 'Документы')
+    #         #docs_on_start(hashMap)
+    #     #tiles_on_start(hashMap)
+    #         docs_adr_on_start(hashMap)
+    #         hashMap.put('RefreshScreen','')
+    #
+    # else:
+    #
+    #     hashMap.put('toast', str(result['error_pool']))
 
     qtext = '''SELECT id_doc FROM RS_docs WHERE verified = 1  and (sent <> 1 or sent is null)
                 UNION
@@ -2161,7 +2389,7 @@ def timer_update(hashMap,  _files=None, _data=None):
         #htpparams = {'username':hashMap.get('onlineUser'), 'password':hashMap.get('onlinePass'), 'url':url}
         answer = http_exchange.post_changes_to_server(doc_in_str , url)
         if answer.get('Error') is not None:
-            rs_settings.put('error_log', str(answer.get('Error')), True)
+            ui_global.write_error_on_log(str(answer.get('Error')))
         else:
 
             qtext = f'UPDATE RS_docs SET sent = 1  WHERE id_doc in ({doc_in_str}) '
@@ -2174,8 +2402,11 @@ def timer_update(hashMap,  _files=None, _data=None):
 
 
 def settings_errors_on_start(hashMap,  _files=None, _data=None):
-    err = rs_settings.get('error_log')
-    hashMap.put('error_log', err)
+
+    filter_value = ''
+    filter_fields = ('log',)
+    hashMap.put('cards', get_table_cards('Error_log', filter_fields, filter_value))
+
     return hashMap
 
 def settings_errors_on_click(hashMap,  _files=None, _data=None):
@@ -2188,6 +2419,26 @@ def settings_errors_on_click(hashMap,  _files=None, _data=None):
         rs_settings.put('error_log','')
         hashMap.put('error_log','')
         hashMap.put('RefreshScreen','')
+
+
+    elif listener == "CardsClick":
+        pass
+
+
+    elif listener == 'LayoutAction':
+        layout_listener = hashMap.get('layout_listener')
+        # Находим ID документа
+        current_card = json.loads(hashMap.get("current_card"))
+
+    elif listener == 'Search':
+        filter_value = hashMap.get('SearchString')
+        if len(filter_value) > 2:
+            filter_fields = hashMap.get('filter_fields').split(';')
+            hashMap.put('cards', get_table_cards(hashMap.get('table_for_select'), filter_fields, filter_value))
+
+            hashMap.put('RefreshScreen', '')
+        # universal_cards_on_start(hashMap)
+
     return hashMap
 
 
@@ -2487,7 +2738,7 @@ def universal_cards_listener(hashMap, _files=None, _data=None):
 
 
 # Добавлен параметр "no_label"
-def get_table_cards(table_name: str, filter_fields=list(), filter_value='', exclude_list=list(), no_label=False):
+def get_table_cards(table_name: str, filter_fields=list(), filter_value='', exclude_list=list(), no_label=False, struct_view:list = list()):
     # Получим список полей таблицы
     # table_name = 'RS_goods'
     res = ui_global.get_query_result(f"PRAGMA table_info({table_name})")
@@ -2562,6 +2813,98 @@ def get_table_cards(table_name: str, filter_fields=list(), filter_value='', excl
 
     return json.dumps(cards)
 
+class UniversalCard:
+    def __init__(self, table_name: str, filter_fields=list(), filter_value='', exclude_list=list(),no_label=False, struct_view:list = list()):
+        self.table_name = table_name
+        self.filter_fields = filter_fields
+        self.filter_value = filter_value
+        self.exclude_list = exclude_list
+        self.no_label = no_label
+        self.struct_view = struct_view
+
+        res = ui_global.get_query_result(f"PRAGMA table_info({table_name})")
+        self.fields = [f[1] for f in res]
+        # Словарь русских имен полей
+        self.aliases = ui_form_data.fields_alias_dict()
+        # Словарь полей-ссылок на таблицы
+        self.tables_dict = ui_form_data.table_names_dict()
+        self.card_elem = ui_form_data.get_elem_dict(24)
+        self.cards = ui_form_data.get_universal_card()
+        self.gorizontal_layout = {"layout": {
+            "type": "LinearLayout",
+            "orientation": "gorizontal",
+            "height": "match_parent",
+            "width": "match_parent",
+            "weight": "0",
+
+            "Elements": []}}
+
+    def get_query_by_table_name(self):
+        qfield_text = []
+        left_joins_list = []
+        for el in self.fields:
+            link_table_name = self.tables_dict.get(el)
+            qfield_text.append(self.table_name + '.' + el)
+            #qtext = 'Select ' + ','.join(qfield_text) + f' FROM {self.table_name} ' + ' '.join(left_joins_list)
+            # Если есть фильтры/отборы - добавим их в запрос
+            if link_table_name:
+                # Это ссылка на таблицу
+                qfield_text.append(link_table_name + f'.name as {link_table_name}_name')
+                left_joins_list.append(f'''
+                    LEFT JOIN {link_table_name}
+                    ON {link_table_name}.id = {self.table_name}.{el}
+                    ''')
+        qtext = 'Select ' + ','.join(qfield_text) + f' FROM {self.table_name} ' + ' '.join(left_joins_list)
+        # Если есть фильтры/отборы - добавим их в запрос
+        if self.filter_value:
+            # conditions = [f"{field} LIKE '%{filter_value}%'" for field in filter_fields]
+            conditions = [f"{self.table_name}.{field} LIKE '%{self.filter_value}%'" for field in self.filter_fields]
+            qtext = qtext + f" WHERE {' OR '.join(conditions)}"
+        return qtext
+
+    def form_card_struct(self):
+        #qfield_text = []
+        card_elem = self.card_elem
+        cards = self.cards
+        for el in self.fields:
+            if el not in self.exclude_list:
+                link_table_name = self.tables_dict.get(el)
+                #qfield_text.append(self.table_name + '.' + el)
+
+                # Дополним выходную структуру полями таблицы:
+                aliases_elem = self.aliases.get(el)
+                if aliases_elem:  # Для этого поля предусмотрена настройка
+                    if not aliases_elem['name'] == 'key':  # Для ключа настройки не нужны
+                        if not self.no_label:
+                            # добавим описание поля:...
+                            card_elem['Value'] = aliases_elem['name']
+                            card_elem['TextSize'] = rs_settings.get('CardDateTextSize')  # aliases_elem['text_size']
+                            card_elem['TextBold'] = False
+                            cards['customcards']['layout']['Elements'][0]['Elements'][0]['Elements'].append(
+                                card_elem.copy())
+
+                        # Теперь само поле:
+                        card_elem['Value'] = '@' + el
+                        card_elem['TextSize'] = rs_settings.get(aliases_elem['text_size'])
+                        card_elem['TextBold'] = aliases_elem['TextBold']
+                else:  # Иначе просто добавим его со стандартными настройками
+                    card_elem['Value'] = '@' + el
+                    # Добавим поле в карточки
+            cards['customcards']['layout']['Elements'][0]['Elements'][0]['Elements'].append(card_elem.copy())
+    def form_card_struct_from_ready_sruct(self):
+        temp_struct = ('code','name',('art','timestamp'),'full_name')
+        json_structure = []
+
+        for item in temp_struct:
+            if isinstance(item, list):
+                nested_structure = []
+                for nested_item in item:
+                    nested_structure.append(nested_item)
+                json_structure.append(nested_structure)
+            else:
+                json_structure.append(item)
+
+        return json.dumps(json_structure, indent=4)
 
 
 # Литвиненко Олег. Создание таблиц по запросу остатков и цен. 16.05.2023
@@ -2595,9 +2938,9 @@ def open_cell_list_on_start(hashMap, _files=None, _data=None):
         hashMap.put("toast", "Не выбран товар")
         hashMap.put("ShowScreen", "Проверить остатки")
 
-    else:
+    """else:
 
-        hashMap.put("cards_loading", "Загружается список ячеек...")
+        hashMap.put("cards_loading", "Загружается список ячеек...")"""
 
     return hashMap
 
@@ -2708,8 +3051,6 @@ def get_remains(hashMap, _files=None, _data=None):
             hashMap.put('Show_barcode_info', '-1')
 
         hashMap.put('Show_selected_cell_name', '1')
-
-        hashMap.put("toast", str(params))
 
         r = requests.get(get_remains_url,
                          auth=HTTPBasicAuth(http['user'], http['pass']),
@@ -3070,7 +3411,7 @@ def get_prices(hashMap, _files=None, _data=None):
             params['id_unit'] = hashMap.get('selected_unit_id')
 
         if hashMap.get('selected_price_type_id'):
-            params['id_price_type'] = hashMap.get('selected_price_type_id' + "\n" + hashMap.get('property_id'))
+            params['id_price_type'] = hashMap.get('selected_price_type_id')
 
         r = requests.get(get_prices_url,
                          auth=HTTPBasicAuth(http['user'], http['pass']),

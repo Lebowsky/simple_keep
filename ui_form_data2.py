@@ -1356,23 +1356,6 @@ def get_doc_detail_table_body_layout(use_series, use_properties, settings_global
                                                 "width": "match_parent",
                                                 "height": "wrap_content",
                                                 "weight": 1
-                                            },
-                                            {
-                                                "type": "TextView",
-                                                "show_by_condition": "",
-                                                "Value": "@last_updated",
-                                                "NoRefresh": False,
-                                                "document_type": "",
-                                                "mask": "",
-                                                "Variable": "",
-                                                "TextSize": "15",
-                                                "TextColor": "",
-                                                "TextBold": False,
-                                                "TextItalic": False,
-                                                "BackgroundColor": "",
-                                                "width": "match_parent",
-                                                "height": "wrap_content",
-                                                "weight": 1
                                             }
                                         ]
                                     }
