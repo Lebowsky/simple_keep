@@ -9,7 +9,6 @@ import ui_form_data2 as ui_tables_structure
 import socket
 import json
 import requests
-import ast
 import database_init_queryes
 import os
 from PIL import Image
@@ -38,6 +37,7 @@ importlib.reload(database_init_queryes)
 importlib.reload(http_exchange)
 importlib.reload(ui_utils)
 importlib.reload(db_services)
+importlib.reload(widgets)
 
 
 # -----
@@ -376,7 +376,7 @@ def doc_details_on_start(hashMap, _files=None, _data=None):
                 'price': str(record['price'] if record['price'] is not None else 0),
                 'price_name': str(record['price_name']),
                 'picture': pic,
-                'last_updated': str(record['last_updated']),
+                # 'last_updated': str(record['last_updated']),
             }
 
             good_info = ""
@@ -523,6 +523,7 @@ def doc_details_on_load(hashMap, _files=None, _data=None):
     barcode_btn.setBackground(shape_2)
     barcode_btn.setElevation(15)
     return hashMap
+
 
 @HashMap()
 def doc_details_on_start_new(hash_map):
@@ -1118,26 +1119,8 @@ def doc_details_listener(hashMap, _files=None, _data=None):
         else:
             highlight_added_good(hashMap, barcode)
             hashMap.put('toast', 'Товар добавлен в документ')
-            hashMap.put('barcode_scanned', 'true')
-        # hashMap.put('toast','1')
-        #-------------------------------------------------- Временно
-        # url = get_http_settings(hashMap)
-        # qtext = '''SELECT id_doc FROM RS_docs WHERE verified = 1'''
-        # res = ui_global.get_query_result(qtext, None, True)
-        #
-        # if res:
-        #     doc_list = []
-        #     for el in res:
-        #         doc_list.append('"' + el['id_doc'] + '"')
-        #     doc_in_str = ','.join(doc_list)
-        #     # htpparams = {'username':hashMap.get('onlineUser'), 'password':hashMap.get('onlinePass'), 'url':url}
-        #     answer = http_exchange.post_changes_to_server(doc_in_str, url)
-        #     if answer.get('Error') is not None:
-        #         rs_settings.put('error_log', str(answer.get('Error')), True)
-        #
-        #     qtext = f'UPDATE RS_docs SET sent = 1  WHERE id_doc in ({doc_in_str}) '
-        #     ui_global.get_query_result(qtext, None, False)
-        # ---------------------------------------------------------
+
+
     elif listener == 'btn_doc_mark_verified':
         doc = ui_global.Rs_doc
         doc.id_doc = hashMap.get('id_doc')
@@ -1211,8 +1194,10 @@ def doc_details_listener_new(hash_map):
             else:
                 hash_map.put('toast', res['Descr'])
         else:
+            highlight_added_good(hash_map, barcode)
             hash_map.put('toast', 'Товар добавлен в документ')
             hash_map.put('barcode_scanned', 'true')
+
     elif listener in ['ON_BACK_PRESSED', 'BACK_BUTTON']:
         hash_map.put("ShowScreen", "Документы")
 
@@ -3890,6 +3875,7 @@ def remains_tables_on_input(hashMap, _files=None, _data=None):
     if hashMap.get('listener') == "CardsClick":
         hashMap.put("toast", str(hashMap.get("selected_card_position")))
     return hashMap
+
 
 @HashMap()
 def doc_details_barcode_scanned(hash_map: HashMap):

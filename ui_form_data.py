@@ -127,10 +127,6 @@ def get_doc_card(settings_global, AddMenu=''):
 
 
 def get_doc_card_new(settings_global, table_data):
-    options = {
-            'search_enabled': True,
-            'save_position': True
-       }
     doc_list = widgets.CustomCards(
         widgets.LinearLayout(
             widgets.LinearLayout(
@@ -168,8 +164,8 @@ def get_doc_card_new(settings_global, table_data):
             ),
             width="match_parent"
         ),
-        options,
-        table_data
+        options=widgets.Options().options,
+        cardsdata=table_data
     )
 
     return doc_list.to_json()
@@ -838,11 +834,6 @@ def get_doc_detail_cards(use_series, use_properties, settings_global, isAdr = Fa
 
 def get_doc_detail_cards_new(settings_global, cards_data: list, add_labels: list = []):
     goods_text_size = settings_global.get('goodsTextSize')
-    options = {
-        "search_enabled": True,
-        "save_position": True
-    }
-
     header = widgets.LinearLayout(
         orientation='horizontal',
         height='match_parent',
@@ -917,7 +908,7 @@ def get_doc_detail_cards_new(settings_global, cards_data: list, add_labels: list
             height='match_parent',
             width='match_parent'
         ),
-        options=options,
+        options=widgets.Options().options,
         cardsdata=cards_data
     )
 

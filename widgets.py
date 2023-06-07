@@ -14,7 +14,7 @@ class Widget(ABC):
         self.width =  wrap_content
         self.height = match_parent
         self.weight = 0
-        self.NoRefresh = False
+
         self.show_by_condition = ''
 
         # self.document_type = ''
@@ -39,7 +39,7 @@ class TextView(Widget):
     def __init__(self, **kwargs):
         self.Value = '@value'
         super().__init__(**kwargs)
-        self.TextSize = '12'
+        # self.TextSize = '12'
         self.type = "TextView"
 
 
@@ -73,10 +73,11 @@ class LinearLayout(Widget):
 
 
 class Options:
-    def __init__(self,search_enabled = True, save_position = True):
+    def __init__(self, search_enabled=True, save_position=True):
         self.options = {
-        'search_enabled':search_enabled,
-        'save_position':save_position}
+            'search_enabled': search_enabled,
+            'save_position': save_position
+        }
 
 
 class CustomCards:

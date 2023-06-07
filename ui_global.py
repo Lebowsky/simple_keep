@@ -105,7 +105,8 @@ def check_adr_barcode_compliance(el_dict: dict, id_doc):
     return res
 #
 
-def get_query_result(query_text: object, args: object = "", return_dict=False) -> collections.Iterable:
+
+def get_query_result(query_text: object, args: object = "", return_dict=False) -> list:
     # **********************
 
     # global conn
