@@ -1,0 +1,15 @@
+tests
+venv
+.idea
+*.vscode
+__pycache__
+ru
+test_files
+local_utils
+local_data
+java.py
+*.db
+sui_main.ui
+rs_settings.*
+ru.travelfood.simple_ui.py
+android
