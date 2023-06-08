@@ -5,6 +5,7 @@ import json
 wrap_content = "wrap_content"
 match_parent = 'match_parent'
 
+
 class Widget(ABC):
     @abstractmethod
     def __init__(self, **kwargs):
@@ -14,11 +15,6 @@ class Widget(ABC):
         self.width = wrap_content
         self.height = wrap_content
         self.weight = 0
-
-        # self.show_by_condition = ''
-
-        # self.document_type = ''
-        # self.mask = ''
 
         if kwargs:
             for key, value in kwargs.items():
@@ -39,7 +35,6 @@ class TextView(Widget):
     def __init__(self, **kwargs):
         self.Value = '@value'
         super().__init__(**kwargs)
-        # self.TextSize = '12'
         self.type = "TextView"
 
 

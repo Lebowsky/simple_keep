@@ -100,6 +100,10 @@ class HashMap:
     def to_json(self):
         return json.dumps(self.export(), indent=4, ensure_ascii=False).encode('utf8').decode()
 
+    def show_dialog(self, dialog):
+        self.put("ShowDialog", dialog['name'])
+        self.put("ShowDialogStyle", json.dumps(dialog['dialog_style']))
+
 
 def parse_barcode(val):
     if len(val) < 21:
