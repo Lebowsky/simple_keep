@@ -124,14 +124,16 @@
                                             },
                                             {
                                                 "TextBold": true,
-                                                "height": "wrap_content",
-                                                "width": "wrap_content",
+                                                "height": 0,
+                                                "width": 0,
                                                 "gravity_horizontal": "center",
                                                 "gravity_vertical": "center",
                                                 "weight": "0",
                                                 "type": "Button",
                                                 "Value": "+",
-                                                "Variable": "btn_add_doc"
+                                                "Variable": "btn_add_doc",
+                                                "height_value": "0",
+                                                "width_value": "0"
                                             }
                                         ]
                                     },
@@ -347,17 +349,6 @@
                                         "Variable": "doc_goods_cards"
                                     },
                                     {
-                                        "BackgroundColor": "#FFFFFF",
-                                        "height": "wrap_content",
-                                        "width": "match_parent",
-                                        "gravity_horizontal": "center",
-                                        "gravity_vertical": "center",
-                                        "weight": "0",
-                                        "type": "Button",
-                                        "Value": "Отметить к отправке",
-                                        "Variable": "btn_doc_mark_verified"
-                                    },
-                                    {
                                         "BackgroundColor": "",
                                         "StrokeWidth": "",
                                         "Padding": "",
@@ -418,6 +409,11 @@
                                 "type": "MenuItem",
                                 "Value": "Вид карточек",
                                 "Variable": "card_view"
+                            },
+                            {
+                                "Value": "Отметить к отправке",
+                                "Variable": "btn_doc_mark_verified",
+                                "type": "MenuItem"
                             }
                         ],
                         "Handlers": [
@@ -3405,7 +3401,7 @@
             {
                 "type": "Process",
                 "ProcessName": "Адресное хранение",
-                "hidden": false,
+                "hidden": true,
                 "DefineOnBackPressed": true,
                 "Operations": [
                     {
@@ -3668,16 +3664,6 @@
                                         "type": "CardsLayout",
                                         "Value": "@doc_goods",
                                         "Variable": "doc_goods"
-                                    },
-                                    {
-                                        "height": "wrap_content",
-                                        "width": "match_parent",
-                                        "gravity_horizontal": "center",
-                                        "gravity_vertical": "center",
-                                        "weight": "0",
-                                        "type": "Button",
-                                        "Value": "Отметить к отправке",
-                                        "Variable": "btn_doc_mark_verified"
                                     }
                                 ]
                             },
@@ -3705,6 +3691,11 @@
                                 "type": "MenuItem",
                                 "Value": "Ввести штрихкод",
                                 "Variable": "btn_barcodes"
+                            },
+                            {
+                                "Value": "Отметить к отправке",
+                                "Variable": "btn_doc_mark_verified",
+                                "type": "MenuItem"
                             }
                         ],
                         "Handlers": [
