@@ -38,7 +38,7 @@ importlib.reload(db_services)
 # 0100608940553886215,iPGSQpBt!&B
 def settings_on_start(hashMap, _files=None, _data=None):
     # hashMap.put('toast','обновились')
-    app_on_start(hashMap)
+    #app_on_start(hashMap)
     s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
     try:
         s.connect(("8.8.8.8", 80))
@@ -50,15 +50,15 @@ def settings_on_start(hashMap, _files=None, _data=None):
         hashMap.put('ip_adr', 'нет сети')
     # app_on_start(hashMap)
     # Значения констант и настроек
-    res = ui_global.get_constants()
-    if res:
-        hashMap.put('use_series', str(res[1]))
-        hashMap.put('use_properties', str(res[2]))
-        hashMap.put('use_mark', str(res[3]))
-        hashMap.put('add_if_not_in_plan', str(res[4]))
-        hashMap.put('path', str(res[5]))
-        hashMap.put('delete_files', str(res[6]))
-        hashMap.put('allow_overscan', str(res[9]))
+    #res = ui_global.get_constants()
+    #if res:
+        # hashMap.put('use_series', str(res[1]))
+        # hashMap.put('use_properties', str(res[2]))
+    hashMap.put('use_mark', rs_settings.get('use_mark'))  #str(res[3]))
+    hashMap.put('add_if_not_in_plan',rs_settings.get('add_if_not_in_plan'))  # str(res[4]))
+    hashMap.put('path',rs_settings.get('path') ) # str(res[5]))
+    hashMap.put('delete_files',rs_settings.get('delete_files'))  # str(res[6]))
+    hashMap.put('allow_overscan',rs_settings.get('allow_overscan'))  # str(res[9]))
 
     if not hashMap.containsKey('ip_host'):
         hashMap.put('ip_host', '192.168.1.77')
@@ -72,7 +72,15 @@ def debug_on_start(hashMap, _files=None, _data=None):
     return hashMap
 
 
+    hashMap.put('use_mark', rs_settings.get('use_mark')) #str(res[3]))
+    hashMap.put('add_if_not_in_plan', rs_settings.get('add_if_not_in_plan')) #str(res[4]))
+    hashMap.put('path', rs_settings.get('path')) #str(res[5]))
+    hashMap.put('delete_files', rs_settings.get('delete_files')) #str(res[6]))
+    hashMap.put('allow_overscan', rs_settings.get('allow_overscan')) #str(res[9]))
+
 def debug_listener(hashMap, _files=None, _data=None):
+    delete_files = rs_settings.get('delete_files')
+    if delete_files is None: delete_files = 'false'
 
     listener = hashMap.get('listener')
 
@@ -87,43 +95,37 @@ def debug_listener(hashMap, _files=None, _data=None):
                 hashMap.put('toast', 'Ошибка соединения')
         else:
             hashMap.put('toast', 'Файл не найден')
-
-    return hashMap
-
-
-def settings_on_click(hashMap, _files=None, _data=None):
-    use_series = hashMap.get('use_series')
-    use_properties = hashMap.get('use_properties')
-    use_mark = hashMap.get('use_mark')
-    delete_files = hashMap.get('delete_files')
-    add_if_not_in_plan = hashMap.get('add_if_not_in_plan')
-    allow_overscan = hashMap.get('allow_overscan')
-    path = hashMap.get('path')
-
-    if use_series is None: use_series = 'false'
-    if use_properties is None: use_properties = 'false'
-    if use_mark is None: use_mark = 'false'
-    if add_if_not_in_plan is None: add_if_not_in_plan = 'false'
-    if path is None: path = '//storage/emulated/0/Android/data/ru.travelfood.simple_ui/'  # '//storage/emulated/0/download/'
-    if delete_files is None: delete_files = 'false'
-    if allow_overscan is None: allow_overscan = 'false'
-    # ui_global.get_query_result('Update RS_docs SET control = ?',(allow_overscan,))  #В таблицы документов записываем новое значение контроля
-    ui_global.put_constants(
-        (use_series, use_properties, use_mark, add_if_not_in_plan, path, delete_files, allow_overscan))
-    listener = hashMap.get('listener')
-
-
-    if listener == 'btn_local_files':
+    elif listener == 'btn_local_files':
         # path = hashMap.get('localpath')
         path = hashMap.get('path')
         delete_files = hashMap.get('delete_files')
-        if not delete_files: delete_files = '0'
+        if not delete_files:
+            delete_files = '0'
         if not path: path = '//storage/emulated/0/download/'
 
         ret_text = ui_csv.list_folder(path, delete_files)
 
         hashMap.put('toast', ret_text)
-    elif listener == 'btn_export':
+    return hashMap
+
+
+def settings_on_click(hashMap, _files=None, _data=None):
+    #Использовать маркировку
+    use_mark = hashMap.get('use_mark')
+    if use_mark is None: use_mark = 'false'
+
+    path = hashMap.get('path')
+    if path is None: path = '//storage/emulated/0/Android/data/ru.travelfood.simple_ui/'  # '//storage/emulated/0/download/'
+
+
+    # ui_global.get_query_result('Update RS_docs SET control = ?',(allow_overscan,))  #В таблицы документов записываем новое значение контроля
+    #ui_global.put_constants(
+    rs_settings.put('use_mark',use_mark, True) #, path))
+    rs_settings.put('path', path, True)
+
+    listener = hashMap.get('listener')
+
+    if listener == 'btn_export':
 
         ui_csv.export_csv(path, hashMap.get('ip_adr'), hashMap.get('ANDROID_ID'))
         hashMap.put('toast', 'Данные выгружены')
@@ -132,21 +134,15 @@ def settings_on_click(hashMap, _files=None, _data=None):
 
         hashMap.put('FinishProcess', '')
 
-    elif listener == 'btn_files_list':
-        hashMap.put('ShowScreen', 'СписокФайлов')
+    # elif listener == 'btn_files_list':
+    #     hashMap.put('ShowScreen', 'СписокФайлов')
     elif listener == 'btn_conf_version':
         conf = json.loads(hashMap.get('_configuration '))
 
     elif listener == 'btn_size':
         hashMap.put('ShowScreen', 'Настройки Шрифтов')
     elif listener == 'btn_test_barcode':
-        hashMap.put('ShowScreen', 'Тест штрихкода')
-    elif listener == 'btn_load_data':
-        # http = get_http_settings(hashMap)
-        # result = http_exchange.server_load_data(http)
-        timer_update(hashMap, _files=None, _data=None)
-        # if not result == 'ok':
-        #     hashMap.put('toast',result)
+        hashMap.put('ShowScreen', 'Тест сканера')
     elif listener == 'btn_err_log':
         hashMap.put('ShowScreen', 'Ошибки')
     elif listener == 'btn_http_settings':
@@ -298,10 +294,10 @@ def doc_details_on_start(hashMap, _files=None, _data=None):
     id_doc = hashMap.get('id_doc')
     falseValueList = (0,'0','false','False',None)
     # Формируем таблицу карточек и запрос к базе
-    res = ui_global.get_constants()
-    use_series = res[1]
-    use_properties = res[2]
-    hashMap.put('use_properties', res[2])
+    #res = ui_global.get_constants()
+    use_series = rs_settings.get('use_series') #res[1]
+    use_properties = rs_settings.get('use_series') #res[2]
+    hashMap.put('use_properties', rs_settings.get('use_series')) #res[2])
     doc_detail_list = ui_form_data.get_doc_detail_cards(use_series, use_properties,rs_settings)
     doc_detail_list['customcards']['cardsdata'] = []
 
@@ -406,7 +402,9 @@ def doc_details_on_start(hashMap, _files=None, _data=None):
 @HashMap()
 def doc_details_on_start_new(hash_map):
     id_doc = hash_map.get('id_doc')
-    use_series, use_properties, *constants = ui_global.get_constants()
+    use_series = rs_settings.get('use_series')
+    use_properties = rs_settings.get('use_properties')
+
     add_labels = [
         key for key, value in
         {'series_name': use_series, 'properties_name': use_properties}.items()
@@ -470,10 +468,10 @@ def doc_adr_details_on_start(hashMap, _files=None, _data=None):
 
     falseValueList = (0,'0','false','False',None)
     # Формируем таблицу карточек и запрос к базе
-    res = ui_global.get_constants()
-    use_series = res[1]
-    use_properties = res[2]
-    hashMap.put('use_properties', res[2])
+    #res = ui_global.get_constants()
+    use_series = rs_settings.get('use_series')  #res[1]
+    use_properties = rs_settings.get('use_properties')#res[2]
+    hashMap.put('use_properties', use_properties)
     #doc_detail_list = ui_form_data.get_doc_detail_cards(use_series, use_properties,rs_settings, True)
 
     doc_detail_list = widgets.CustomCards(
@@ -951,7 +949,7 @@ def doc_details_listener(hashMap, _files=None, _data=None):
         have_mark_plan = hashMap.get('have_mark_plan')
         control = hashMap.get('control')
         res = doc.process_the_barcode(doc, barcode
-                                      , eval(have_qtty_plan), eval(have_zero_plan), eval(control), eval(have_mark_plan))
+                                      , eval(have_qtty_plan), eval(have_zero_plan), eval(control), eval(have_mark_plan), rs_settings.get('use_mark'))
         if res == None:
             hashMap.put('scanned_barcode', barcode)
             # suClass.urovo_set_lock_trigger(True)
@@ -1045,7 +1043,7 @@ def doc_details_listener_new(hash_map):
         have_mark_plan = hash_map.get('have_mark_plan')
         control = hash_map.get('control')
         res = doc.process_the_barcode(doc, barcode
-                                      , eval(have_qtty_plan), eval(have_zero_plan), eval(control), eval(have_mark_plan))
+                                      , eval(have_qtty_plan), eval(have_zero_plan), eval(control), eval(have_mark_plan), rs_settings.get('use_mark'))
         if res is None:
             hash_map.put('scanned_barcode', barcode)
             hash_map.put('ShowScreen', 'Ошибка сканера')
@@ -1848,28 +1846,39 @@ def app_on_start(hashMap, _files=None, _data=None):
 
         # for parameter_name, value in parameters.items():
         #     set_params.put(parameter_name,value)
-    if rs_settings.get('TitleTextSize') == None:
+    if rs_settings.get('TitleTextSize') is None:
         rs_settings.put("TitleTextSize", "18", True)
-    if rs_settings.get('titleDocTypeCardTextSize') == None:
+    if rs_settings.get('titleDocTypeCardTextSize') is None:
         rs_settings.put("titleDocTypeCardTextSize", "18", True)
-    if rs_settings.get('CardTitleTextSize') == None:
+    if rs_settings.get('CardTitleTextSize') is None:
         rs_settings.put("CardTitleTextSize", "20", True)
-    if rs_settings.get('CardDateTextSize') == None:
+    if rs_settings.get('CardDateTextSize') is None:
         rs_settings.put("CardDateTextSize", "10", True)
-    if rs_settings.get('CardTextSize') == None:
+    if rs_settings.get('CardTextSize') is None:
         rs_settings.put("CardTextSize", "15", True)
-    if rs_settings.get('GoodsCardTitleTextSize') == None:
+    if rs_settings.get('GoodsCardTitleTextSize') is None:
         rs_settings.put("GoodsCardTitleTextSize", "18", True)
-    if rs_settings.get('goodsTextSize') == None:
+    if rs_settings.get('goodsTextSize') is None:
         rs_settings.put("goodsTextSize", "18", True)
-    if rs_settings.get('SeriesPropertiesTextSize') == None:
+    if rs_settings.get('SeriesPropertiesTextSize') is None:
         rs_settings.put("SeriesPropertiesTextSize", "16", True)
-    if rs_settings.get('DocTypeCardTextSize') == None:
+    if rs_settings.get('DocTypeCardTextSize') is None:
         rs_settings.put("DocTypeCardTextSize", "15", True)
-    if rs_settings.get('signal_num') == None:
+    if rs_settings.get('signal_num') is None:
         rs_settings.put('signal_num', '83', True)
-    if rs_settings.get('beep_duration') == None:
+    if rs_settings.get('beep_duration') is None:
         rs_settings.put('beep_duration', '1000', True)
+    if rs_settings.get('use_mark')  is None:
+        rs_settings.put('use_mark', 'false', True)
+    if rs_settings.get('add_if_not_in_plan')  is None:
+        rs_settings.put('add_if_not_in_plan', 'false', True)
+    if rs_settings.get('path')  is None:
+        rs_settings.put('path', '', True)
+    if rs_settings.get('delete_files')  is None:
+        rs_settings.put('delete_files', 'false', True)
+    if rs_settings.get('allow_overscan')  is None:
+        rs_settings.put('allow_overscan', 'false', True)
+
 
     hashMap.put('toast', 'Готов к работе')
 
@@ -1926,7 +1935,7 @@ def put_notification(hashMap, _files=None, _data=None):
 
 def font_size_settings_listener(hashMap, _files=None, _data=None):
     listener = hashMap.get('listener')
-    if listener == 'btn_on_save' or hashMap.get('event')=='Input':
+    if listener == 'btn_on_save':  # or hashMap.get('event')=='Input'
 
         rs_settings.put("TitleTextSize", hashMap.get("TitleTextSize"), True)
         rs_settings.put("CardTitleTextSize", hashMap.get("CardTitleTextSize"), True)
@@ -1937,6 +1946,7 @@ def font_size_settings_listener(hashMap, _files=None, _data=None):
         rs_settings.put("SeriesPropertiesTextSize", hashMap.get("SeriesPropertiesTextSize"), True)
         rs_settings.put("DocTypeCardTextSize", hashMap.get("DocTypeCardTextSize"), True)
         rs_settings.put("titleDocTypeCardTextSize", hashMap.get("titleDocTypeCardTextSize"), True)
+        hashMap.put('ShowScreen', 'Настройки и обмен')
         #params.put("signal_num", hashMap.get("signal_num"), True)
     elif listener == 'btn_on_cancel' or listener == 'ON_BACK_PRESSED':
         hashMap.put('ShowScreen', 'Настройки и обмен')
@@ -2009,23 +2019,25 @@ def sound_settings_on_start(hashMap, _files=None, _data=None):
 
 def sound_settings_listener(hashMap, _files=None, _data=None):
     listener = hashMap.get('listener')
-    if listener == 'btn_on_save' or hashMap.get('event') == 'Input':
+    if listener == 'btn_on_save':  # or hashMap.get('event') == 'Input'
 
         rs_settings.put('signal_num', hashMap.get("signal_num_value"), True)
         rs_settings.put('beep_duration', hashMap.get('beep_duration_value'), True)
-        if listener == 'btn_on_save':
-            hashMap.put('ShowScreen', 'Настройки и обмен')
+        hashMap.put('ShowScreen', 'Настройки и обмен')
+
     elif listener == 'btn_on_cancel' or listener == 'ON_BACK_PRESSED':
         hashMap.put('ShowScreen', 'Настройки и обмен')
     elif listener == 'btn_test_sound':
-        # hashMap.put('beep_duration', hashMap.get("beep_duration_value"))
-        # hashMap.put('beep', hashMap.get('signal_num_value'))
+        rs_settings.put('signal_num', hashMap.get("signal_num_value"), True)
+        rs_settings.put('beep_duration', hashMap.get('beep_duration_value'), True)
+        hashMap.put('beep_duration', hashMap.get("beep_duration_value"))
+        hashMap.put('beep', hashMap.get('signal_num_value'))
 
         # hashMap.put('beep_duration', str(rs_settings.get('beep_duration')))
         # hashMap.put("beep", str(rs_settings.get('signal_num')))
 
-        hashMap.put('beep_duration', '83')
-        hashMap.put("beep", '1000')
+        # hashMap.put('beep_duration', '83')
+        # hashMap.put("beep", '1000')
 
     return hashMap
 
@@ -3468,6 +3480,7 @@ def good_card_on_input(hashMap,  _files=None, _data=None):
         hashMap.put('ShowProcessResult', 'Остатки|Проверить остатки')
     return hashMap
 
+
 def price_tables_on_start(hashMap,  _files=None, _data=None):
     if hashMap.get('parent_screen') == "Товары список":
         hashMap.put('current_screen_name', "Товары список")
@@ -3676,3 +3689,7 @@ def doc_details_barcode_scanned(hash_map: HashMap):
         doc_details_on_start(hash_map)
         hash_map.refresh_screen()
 
+#
+# def on_close_app(hashMap, _files=None, _data=None):
+#     suClass.deleteCache()
+#     return hashMap

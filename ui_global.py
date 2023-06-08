@@ -5,7 +5,6 @@ from sqlite3 import Error
 import ui_barcodes
 import os
 import ui_form_data
-import threading
 import queue
 
 query_list = queue.Queue()
@@ -201,37 +200,31 @@ def get_by_name(fld, table):
     else:
         return res[0][0]
 
+#
+# def get_constants(need_const=''):
+#     sql_text = 'Select * from RS_constants'
+#     res = get_query_result(sql_text)
+#
+#     # инициализируем константы
+#     if not res:  # len(res) == 0:
+#         get_query_result(
+#             'INSERT INTO RS_constants (use_series, use_properties, use_mark, add_if_not_in_plan, path, delete_files, reserved, allow_overscan) VALUES (?,?,?,?,?,?,?,?)',
+#             ('0', '0', '0', '0', '//storage/emulated/0/Android/data/ru.travelfood.simple_ui/', '0',
+#              '0', '0'))  # //storage/emulated/0/download/
+#
+#         res = get_query_result(sql_text)
+#
+#     else:  # len(res)>0:
+#         if need_const:
+#             ls = ['id', 'use_series', 'use_properties', 'use_mark', 'add_if_not_in_plan', 'path', 'delete_files',
+#                   'reserved', 'allow_overscan', 'release']
+#             x = ls.index(need_const)
+#
+#             if x > 0:
+#                 return res[0][x]
+#         else:
+#             return res[0]
 
-def get_constants(need_const=''):
-    sql_text = 'Select * from RS_constants'
-    res = get_query_result(sql_text)
-
-    # инициализируем константы
-    if not res:  # len(res) == 0:
-        get_query_result(
-            'INSERT INTO RS_constants (use_series, use_properties, use_mark, add_if_not_in_plan, path, delete_files, reserved, allow_overscan) VALUES (?,?,?,?,?,?,?,?)',
-            ('0', '0', '0', '0', '//storage/emulated/0/Android/data/ru.travelfood.simple_ui/', '0',
-             '0', '0'))  # //storage/emulated/0/download/
-
-        res = get_query_result(sql_text)
-
-    else:  # len(res)>0:
-        if need_const:
-            ls = ['id', 'use_series', 'use_properties', 'use_mark', 'add_if_not_in_plan', 'path', 'delete_files',
-                  'reserved', 'allow_overscan', 'release']
-            x = ls.index(need_const)
-
-            if x > 0:
-                return res[0][x]
-        else:
-            return res[0]
-
-
-
-def put_constants(args):
-    sql_update_query = """Update RS_constants set use_series = ?, use_properties = ?, use_mark = ?, add_if_not_in_plan=?, path = ?,
-     delete_files = ?, allow_overscan = ? """
-    res = get_query_result(sql_update_query, args)
 
 
 def Id_to_HEX(guid):
@@ -406,7 +399,7 @@ class Rs_doc():
     # КОнтроль планов в документе - control
     # Есть план по маркируемой продукции have_mark_plan
     def process_the_barcode(self, barcode, have_qtty_plan = False, have_zero_plan = False, control = False, have_mark_plan = False,
-                            elem = None): # add_if_not_found=False, add_if_not_in_plan=False):
+                            elem = None, use_mark_setting = 'false'): # add_if_not_found=False, add_if_not_in_plan=False):
         # Получим структуру баркода
         if barcode[0] == chr(29) and len(barcode) > 31:  # Remove first GS1 char from barcode
             barcode = barcode[1:]
@@ -429,7 +422,7 @@ class Rs_doc():
         else:
             return {'Error': 'NotFound', 'Descr': 'Штрихкод не найден в базе', 'Barcode': barcode}
 
-        use_mark = get_constants('use_mark') == 'true' and elem['use_mark'] == 1
+        use_mark = use_mark_setting  == 'true' and elem['use_mark'] == 1 #get_constants('use_mark')
 
         # Проверяем маркировку
         if use_mark:
