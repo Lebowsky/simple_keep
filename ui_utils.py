@@ -72,6 +72,13 @@ class HashMap:
         else:
             return self.hash_map.get(item)
 
+    def get_json(self, item):
+        return json.loads(self.hash_map.get(item)) if self.hash_map.get(item) else None
+
+    def get_bool(self, item):
+        value = str(self.hash_map.get(item)).lower() not in ('0', 'false', 'none')
+        return value
+
     def put(self, key, value, to_json=False):
         if to_json:
             self.hash_map.put(key, json.dumps(value))
@@ -81,61 +88,17 @@ class HashMap:
     def containsKey(self, key):
         return self.hash_map.containsKey(key)
 
+    def remove(self, key):
+        self.hash_map.remove(key)
 
-def json_to_sqlite_query(data):
-    table_list = (
-        'RS_doc_types', 'RS_goods', 'RS_properties', 'RS_units', 'RS_types_goods', 'RS_series', 'RS_countragents',
-        'RS_warehouses', 'RS_price_types', 'RS_cells', 'RS_barcodes', 'RS_prices', 'RS_doc_types', 'RS_docs',
-        'RS_docs_table', 'RS_docs_barcodes', 'RS_adr_docs', 'RS_adr_docs_table')  # ,, 'RS_barc_flow'
-    table_for_delete = ('RS_docs_table', 'RS_docs_barcodes, RS_adr_docs_table')  # , 'RS_barc_flow'
+    def delete(self, key):
+        self.hash_map.remove(key)
 
-    queries = []
-    doc_id_list = []
+    def export(self) -> list:
+        return self.hash_map.export()
 
-    # Цикл по именам таблиц
-    for table_name in table_list:
-        if not data.get(table_name):
-            continue
-
-        # Добавим в запросы удаление из базы строк тех документов, что мы загружаем
-        if table_name in table_for_delete:
-            query = f"DELETE FROM {table_name} WHERE id_doc in ({', '.join(doc_id_list)}) "
-            queries.append(query)
-
-        column_names = data[table_name][0].keys()
-        if 'mark_code' in column_names:
-            query_col_names = list(column_names)
-            query_col_names.append('GTIN')
-            query_col_names.append('Series')
-            query_col_names.remove('mark_code')
-        else:
-            query_col_names = column_names
-
-        query = f"REPLACE INTO {table_name} ({', '.join(query_col_names)}) VALUES "
-        values = []
-
-        for row in data[table_name]:
-            row_values = []
-            list_quoted_fields = ('name', 'full_name', "mark_code")
-            for col in column_names:
-                if col in list_quoted_fields and "\"" in row[col]:
-                    row[col] = row[col].replace("\"", "\"\"")
-                if row[col] is None:
-                    row[col] = ''
-                if col == 'mark_code':  # Заменяем это поле на поля GTIN и Series
-                    barc_struct = parse_barcode(row[col])
-                    row_values.append(barc_struct['GTIN'])
-                    row_values.append(barc_struct['Series'])
-                else:
-                    row_values.append(row[col])  # (f'"{row[col]}"')
-                if col == 'id_doc' and table_name == 'RS_docs':
-                    doc_id_list.append('"' + row[col] + '"')
-            formatted_val = [f'"{x}"' if isinstance(x, str) else str(x) for x in row_values]
-            values.append(f"({', '.join(formatted_val)})")
-        query += ", ".join(values)
-        queries.append(query)
-
-    return queries
+    def to_json(self):
+        return json.dumps(self.export(), indent=4, ensure_ascii=False).encode('utf8').decode()
 
 
 def parse_barcode(val):

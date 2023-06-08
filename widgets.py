@@ -11,11 +11,11 @@ class Widget(ABC):
         self.type: str
         self.Value: str
         self.Variable: str = ''
-        self.width =  wrap_content
-        self.height = match_parent
+        self.width = wrap_content
+        self.height = wrap_content
         self.weight = 0
 
-        self.show_by_condition = ''
+        # self.show_by_condition = ''
 
         # self.document_type = ''
         # self.mask = ''
@@ -45,6 +45,7 @@ class TextView(Widget):
 
 class CheckBox(Widget):
     def __init__(self, **kwargs):
+        super().__init__(**kwargs)
         self.type = 'CheckBox'
 
 
