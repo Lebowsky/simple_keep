@@ -1,3 +1,4 @@
+/java.py
 tests
 venv
 .idea
@@ -7,7 +8,6 @@ ru
 test_files
 local_utils
 local_data
-java.py
 *.db
 sui_main.ui
 rs_settings.*
