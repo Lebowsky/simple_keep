@@ -153,8 +153,8 @@ class DocService:
         return qlist
 
     @staticmethod
-    def _get_query_result(query_text, return_dict=False):
-        return get_query_result(query_text, return_dict=return_dict)
+    def _get_query_result(query_text, args='', return_dict=False):
+        return get_query_result(query_text, args=args, return_dict=return_dict)
 
     def set_doc_value(self, key, value):
         query = f'''
@@ -164,3 +164,39 @@ class DocService:
             '''
 
         self._get_query_result(query)
+
+    def get_doc_types(self) -> list:
+        query = 'SELECT DISTINCT doc_type from RS_docs'
+        doc_types = [rec[0] for rec in self._get_query_result(query)]
+        return doc_types
+
+    def get_doc_view_data(self, doc_type='') -> list:
+        query_text = '''
+            SELECT RS_docs.id_doc,
+                RS_docs.doc_type,
+                RS_docs.doc_n,
+                RS_docs.doc_date,
+                RS_docs.id_countragents,
+                RS_docs.id_warehouse,
+                ifnull(RS_countragents.full_name,'') as RS_countragent,
+                ifnull(RS_warehouses.name,'') as RS_warehouse,
+                RS_docs.verified,
+                RS_docs.sent,
+                RS_docs.add_mark_selection
+
+            FROM RS_docs
+            LEFT JOIN RS_countragents as RS_countragents
+                ON RS_countragents.id = RS_docs.id_countragents
+            LEFT JOIN RS_warehouses as RS_warehouses
+                ON RS_warehouses.id=RS_docs.id_warehouse
+        '''
+        where = '' if not doc_type else 'WHERE RS_docs.doc_type=?'
+
+        query_text = f'''
+            {query_text}
+            {where}
+            ORDER BY RS_docs.doc_date
+        '''
+
+        result = self._get_query_result(query_text, return_dict=True)
+        return result
