@@ -2927,7 +2927,7 @@ class UniversalCard:
 
 def open_wh_list_on_start(hashMap, _files=None, _data=None):
 
-    j = ui_form_data2.wh_list_cards
+    j = ui_tables_structure.wh_list_cards
 
     j["customcards"]["cardsdata"] = []
 
