@@ -153,7 +153,7 @@ class DocService:
         return qlist
 
     @staticmethod
-    def _get_query_result(query_text, args='', return_dict=False):
+    def _get_query_result(query_text, args=None, return_dict=False):
         return get_query_result(query_text, args=args, return_dict=return_dict)
 
     def set_doc_value(self, key, value):
@@ -198,5 +198,5 @@ class DocService:
             ORDER BY RS_docs.doc_date
         '''
 
-        result = self._get_query_result(query_text, return_dict=True)
+        result = self._get_query_result(query_text, (doc_type, ), return_dict=True)
         return result
