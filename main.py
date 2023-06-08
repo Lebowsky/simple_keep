@@ -380,7 +380,7 @@ def doc_details_on_start(hashMap, _files=None, _data=None):
 
             good_info = ""
             if product_row['art'] != "None":
-                good_info += product_row['art'] + " "
+                good_info += product_row['art']
             if product_row['properties_name'] != "None":
                 good_info += "(" + product_row['properties_name'] + ") "
             if product_row['series_name'] != "None":
@@ -1731,8 +1731,9 @@ def prices_tables_on_input(hashMap, _files=None, _data=None):
         hashMap.put("ShowScreen", "Проверка цен")
 
     if hashMap.get('listener') == 'ON_BACK_PRESSED':
-        hashMap.put('barcode', '')
-        hashMap.put('property_id', '')
+        if not hashMap.get("return_to_good_card"):
+            hashMap.put('property_id', '')
+            hashMap.put('barcode', '')
 
         if hashMap.get("return_to_good_card"):
             hashMap.put("BackScreen", '')
@@ -1754,6 +1755,8 @@ def prices_tables_on_input(hashMap, _files=None, _data=None):
 def identify_barcode_prices(hashMap, _files=None, _data=None):
     if hashMap.get('barcode'):
         hashMap.put('barcode_info', str(hashMap.get('barcode')))
+        hashMap.put('property_select', '')
+        hashMap.put('selected_property_id', '')
 
         barcode = hashMap.get('barcode')
         barcode_good_query = ui_global.get_query_result(
@@ -2965,9 +2968,12 @@ def get_good_cells(hashMap, _files=None, _data=None):
         appended_cell_id_list = []
         for record in json_response:
             if record["id_cell"] not in appended_cell_id_list:
-                c = {"key": record["id_cell"], "name": get_name_by_field("RS_cells", 'id', record["id_cell"])}
-                j["customcards"]["cardsdata"].append(c)
-                appended_cell_id_list.append(record["id_cell"])
+                if not hashMap.get("property_id") or \
+                        record['id_property'] == hashMap.get("property_id"):
+                    c = {"key": record["id_cell"], "name": get_name_by_field("RS_cells", 'id', record["id_cell"])}
+                    j["customcards"]["cardsdata"].append(c)
+                    appended_cell_id_list.append(record["id_cell"])
+
         appended_cell_id_list.clear()
 
         if not hashMap.containsKey("cell_cards"):
@@ -3009,14 +3015,14 @@ def get_remains(hashMap, _files=None, _data=None):
 
     http = get_http_settings(hashMap)
 
-    if hashMap.get('good_art_input') or hashMap.get('cell_input'):
-        identify_input_text(hashMap)
-
-    if not (hashMap.get('good_art_input') or hashMap.get('wh_select') or hashMap.get('cell_input') or hashMap.get('selected_cell_id')):
+    if not (hashMap.get('barcode') or hashMap.get('wh_select') or hashMap.get('cell_input') or hashMap.get('selected_cell_id')):
         hashMap.put('goods_custom_table', '')
         hashMap.put('object_name', '')
         hashMap.put('cell_name', '')
         hashMap.put('error_msg', "Должен быть выбран склад, товар или ячейка")
+
+    if hashMap.get('good_art_input') or hashMap.get('cell_input') and not hashMap("selected_good_id"):
+        identify_input_text(hashMap)
 
     if hashMap.get("error_msg"):
         hashMap.put("Show_error_msg", "1")
@@ -3178,7 +3184,8 @@ def get_remains(hashMap, _files=None, _data=None):
         else:
             return hashMap
 
-    hashMap.put('barcode', '')
+    if not hashMap.get("return_to_good_card"):
+        hashMap.put('barcode', '')
 
     if len(goods_custom_table["customtable"]["tabledata"]) < 1:
         hashMap.put('error_msg', "Товар не найден")
@@ -3193,7 +3200,9 @@ def get_remains(hashMap, _files=None, _data=None):
 
 def identify_input_text(hashMap):
 
-    good_art_input = hashMap.get('good_art_input')
+    if hashMap.get('good_art_input'):
+        good_art_input = hashMap.get('good_art_input')
+
     cell_input = hashMap.get('cell_input')
 
     if good_art_input and not hashMap.get('return_to_good_card'):
@@ -3207,7 +3216,7 @@ def identify_input_text(hashMap):
             hashMap.put('good_code', good_query[0][1])
             hashMap.put('object_name', str(good_name).split("'")[1])
             hashMap.put('error_msg', "")
-            hashMap.put('good_art_input', hashMap.get('good_art_input'))
+            # hashMap.put('good_art_input', hashMap.get('good_art_input'))
 
         else:
             hashMap.put('error_msg', " Товар с артикулом " + "'" + good_art_input + "'" + " не найден")
@@ -3237,37 +3246,43 @@ def identify_barcode_remains(hashMap, _files=None, _data=None):
 
     hashMap.put('barcode_info', str(hashMap.get('barcode')))
     hashMap.put("cell_cards", "")
-    hashMap.put("selected_cell_id", "")
-    hashMap.put("cell_select", "")
+
 
     if hashMap.get('barcode'):
         barcode = hashMap.get('barcode')
 
-        good_id = ui_global.get_query_result("SELECT id_good FROM RS_barcodes where barcode = '" + barcode + "'")
+        barcode_query = ui_global.get_query_result("SELECT id_good,id_property FROM RS_barcodes where barcode = '" + barcode + "'")
 
-        properties_query = ui_global.get_query_result(
-            "SELECT id_property FROM RS_barcodes where barcode = '" + barcode + "'")
+        if len(barcode_query) > 0:
+            if barcode_query[0][0]:
+                good_id = barcode_query[0][0]
+                hashMap.put('selected_good_id', str(good_id))
 
-        if properties_query:
-            property_id = str(properties_query).split("'")[1]
-            hashMap.put('property_id', property_id)
+                good_query = ui_global.get_query_result("SELECT name,art,code FROM RS_goods where id = '" + good_id + "'")
+                if good_query[0][0]:
 
-        if len(good_id) > 0:
+                    hashMap.put('object_name', good_query[0][0])
+                else:
+                    hashMap.put("object_name", "")
+                if good_query[0][1]:
 
-            good_name = ui_global.get_query_result("SELECT name FROM RS_goods where id = '" + str(good_id).split("'")[1] + "'")
+                    hashMap.put('good_art_input', str(good_query[0][1]))
+                else:
+                    hashMap.put('good_art_input', "")
+                if good_query[0][2]:
+                    hashMap.put("good_code", good_query[0][2])
+                else:
+                    hashMap.put("good_code", "")
 
-            good_art = ui_global.get_query_result("SELECT art FROM RS_goods where id = '" + str(good_id).split("'")[1] + "'")
+                hashMap.put('error_msg', "")
 
-            hashMap.put('selected_good_id', str(good_id).split("'")[1])
-            hashMap.put('good_art_input', str(good_art).split("'")[1])
-            hashMap.put('object_name', str(good_name).split("'")[1])
-            hashMap.put('error_msg', "")
+            if barcode_query[0][1]:
+                property_id = barcode_query[0][1]
+                hashMap.put('property_id', property_id)
 
         else:
 
             cell_id = ui_global.get_query_result("SELECT id FROM RS_cells where barcode = '" + barcode + "'")
-
-            hashMap.put('error_msg', barcode)
 
             if len(cell_id) > 0:
 
@@ -3491,7 +3506,6 @@ def get_prices(hashMap, _files=None, _data=None):
             hashMap.put('prices_error_msg', "Не указан товар")
 
     hashMap.put('property_id', "")
-    hashMap.put('selected_property_id', "")
 
     return hashMap
 
@@ -3539,10 +3553,10 @@ def kill_remains_tables(hashMap, _files=None, _data=None):
     hashMap.put('good_art_input', '')
     hashMap.put('cell_input', '')
     hashMap.put('cell_name', '')
+    hashMap.put('cell_select', '')
     hashMap.put('object_name', '')
     hashMap.put('error_msg', '')
     hashMap.put('goods_custom_table', '')
-    hashMap.put('barcode', '')
     hashMap.put('selected_cell_id', '')
     hashMap.put('selected_cell_name', '')
     hashMap.put('good_code', '')
@@ -3550,6 +3564,9 @@ def kill_remains_tables(hashMap, _files=None, _data=None):
     hashMap.put('selected_wh_name', '')
     hashMap.put('selected_warehouse_id', '')
     hashMap.put('barcode_info', '')
+    if not hashMap.get("return_to_good_card"):
+        hashMap.put('barcode', '')
+
     return hashMap
 
 
@@ -3567,7 +3584,8 @@ def kill_price_tables(hashMap, _files=None, _data=None):
     hashMap.put("unit_select", "")
     hashMap.put('prices_custom_table', '')
     hashMap.put('input_good_id', '')
-    hashMap.put('barcode', '')
+    if not hashMap.get("return_to_good_card"):
+        hashMap.put('barcode', '')
     hashMap.put('good_code', '')
     hashMap.put('barcode_info', '')
 
@@ -3867,8 +3885,9 @@ def remains_tables_on_input(hashMap, _files=None, _data=None):
     if hashMap.get('listener') == 'show_filters':
         hashMap.put("ShowScreen", "Проверить остатки")
     if hashMap.get('listener') == 'ON_BACK_PRESSED':
-        hashMap.put('barcode', '')
-        hashMap.put('property_id', '')
+        if not hashMap.get("return_to_good_card"):
+            hashMap.put('property_id', '')
+            hashMap.put('barcode', '')
 
         if hashMap.get("return_to_good_card"):
             hashMap.put("BackScreen", '')

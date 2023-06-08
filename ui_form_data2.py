@@ -1178,7 +1178,8 @@ def get_doc_detail_table_head():
         "customtable": {
             "options": {
                 "search_enabled": True,
-                "save_position": True
+                "save_position": True,
+                "override_search": False
             },
             "layout": {
                 "type": "LinearLayout",
