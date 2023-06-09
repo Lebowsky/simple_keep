@@ -6,6 +6,7 @@ import ui_csv
 import ui_global
 import ui_form_data
 import ui_form_data2 as ui_tables_structure
+import ui_models
 import socket
 import json
 import requests
@@ -38,6 +39,7 @@ importlib.reload(http_exchange)
 importlib.reload(ui_utils)
 importlib.reload(db_services)
 importlib.reload(widgets)
+importlib.reload(ui_models)
 
 
 # -----
@@ -274,27 +276,9 @@ def docs_on_start(hashMap, _files=None, _data=None):
 
 
 @HashMap()
-def docs_on_start_new(hash_map: HashMap):
-    result = ui_global.get_query_result(ui_form_data.get_doc_type_query())
-    if not hash_map.get('doc_type_select'):
-        doc_type_list = ['Все']
-        for record in result:
-            doc_type_list.append(record[0])
-        hash_map.put('doc_type_select', ';'.join(doc_type_list))
-
-    # Если Вызов экрана из меню плиток - обработаем
-    if hash_map.containsKey('selected_tile_key'):
-        tile_key = hash_map.get('selected_tile_key')
-        if tile_key:
-            hash_map.put('doc_type_click', tile_key)
-            hash_map.put('selected_tile_key', '')
-
-    # Перезаполним список документов
-    if not hash_map.get('doc_type_click'):
-        ls = refill_docs_list_new()
-    else:
-        ls = refill_docs_list_new(hash_map.get('doc_type_click'))
-    hash_map.put("docCards", ls)
+def docs_on_start_group_scan(hash_map: HashMap):
+    screen = ui_models.DocsListScreen(hash_map, rs_settings)
+    screen.on_start()
 
 
 def doc_details_on_start(hashMap, _files=None, _data=None):
@@ -918,6 +902,7 @@ def get_current_elem_doc_goods(hashMap, current_str):
 
     return current_elem
 
+
 def docs_on_select(hashMap, _files=None, _data=None):
     listener = hashMap.get("listener")
 
@@ -984,18 +969,90 @@ def docs_on_select(hashMap, _files=None, _data=None):
         # hashMap.put('ShowScreen', 'Новый документ')
     return hashMap
 
+@HashMap()
+def test_on_start(hash_map):
+    hash_map.put('SetTitle', 'New')
+    # test_on_start.
 
 @HashMap()
-def docs_on_select_CardsClick(hash_map):
-    id_doc = hash_map['id_doc']
-    service = db_services.DocService(id_doc)
+def docs_on_select_group_scan(hash_map):
+    listener = hash_map.get("listener")
 
-    try:
-        service.set_doc_value('verified', '1')
-    except Exception as e:
-        hash_map.error_log(e.args[0])
+    if listener == "CardsClick":
+        hash_map.put('ShowDialog', 'Подтвердите действие')
+        #     hash_map.show_dialog(
+        #         'Подтвердите действие'
+        #         # '1',
+        #         # ['Продолжить', 'Отмена']
+        #     )
+
+    elif hash_map['event'] == "onResultPositive":
+        # Находим ID документа
+        current_str = hash_map.get("selected_card_position")
+        jlist = json.loads(hash_map.get("docCards"))
+        current_doc = jlist['customcards']['cardsdata'][int(current_str)]
+
+        # id_doc = current_doc['key']
+        hash_map.put('id_doc', current_doc['key'])
+        hash_map.put('doc_type', current_doc['type'])
+        hash_map.put('doc_n', current_doc['number'])
+        hash_map.put('doc_date', current_doc['data'])
+        hash_map.put('warehouse', current_doc['warehouse'])
+        hash_map.put('countragent', current_doc['countragent'])
+
+        hash_map.put("ShowScreen", "Документ товары")
+
+        id_doc = hash_map['id_doc']
+        service = db_services.DocService(id_doc)
+
+        try:
+            service.set_doc_value('verified', '1')
+        except Exception as e:
+            hash_map.error_log(e.args[0])
+
+    elif listener == "doc_type_click":
+        ls = refill_docs_list(hash_map.get('doc_type_click'))
+        hash_map.put('docCards', ls)
+        hash_map.put('ShowScreen', 'Документы')
+    elif listener == 'LayoutAction':
+        layout_listener = hash_map.get('layout_listener')
+        # Находим ID документа
+        current_doc = json.loads(hash_map.get("card_data"))
+        doc = ui_global.Rs_doc()
+        doc.id_doc = current_doc['key']
+
+        if layout_listener == 'CheckBox1':
+            if current_doc['completed'] == 'false':
+                doc.mark_verified(1)
+            else:
+                doc.mark_verified(0)
+
+        elif layout_listener == 'Подтвердить':
+            doc.mark_verified(1)
+            hash_map.put('ShowScreen', 'Документы')
+        elif layout_listener == 'Очистить данные пересчета':
+            doc.clear_barcode_data()
+            hash_map.put('toast', 'Данные пересчета и маркировки очищены')
+        elif layout_listener == 'Удалить':
+            doc.delete_doc()
+            hash_map.put('ShowScreen', 'Документы')
+        elif layout_listener == 'Сканировать штрихкоды потоком':
+            hash_map.put('id_doc', current_doc['key'])
+            hash_map.put('doc_type', current_doc['type'])
+            hash_map.put('doc_n', current_doc['number'])
+            hash_map.put('doc_date', current_doc['data'])
+            hash_map.put('warehouse', current_doc['warehouse'])
+            hash_map.put('countragent', current_doc['countragent'])
+
+            hash_map.put('ShowScreen', 'ПотокШтрихкодовДокумента')
+    elif listener == "btn_add_doc":
+        hash_map.put('ShowScreen', 'Новый документ')
+
+    elif listener == 'ON_BACK_PRESSED':
+        hash_map.put('ShowScreen', 'Плитки')
 
 
+@HashMap()
 def doc_details_listener(hashMap, _files=None, _data=None):
     # Находим ID документа
     # current_str = hashMap.get("selected_card_position")
@@ -1070,15 +1127,17 @@ def doc_details_listener(hashMap, _files=None, _data=None):
         hashMap.put("ShowScreen", "Товар")
 
     elif listener == "BACK_BUTTON":
-
         hashMap.put("ShowScreen", "Документы")
     elif listener == "btn_barcodes":
+        hashMap.show_dialog('ВвестиШтрихкод')
 
-        hashMap.put("ShowDialog", "ВвестиШтрихкод")
+    elif listener == 'confirm_verified' and hashMap.get("event") == "onResultPositive":
+        doc = ui_global.Rs_doc()
+        doc.id_doc = hashMap.get('id_doc')
+        doc.mark_verified(1)
+        hashMap.put("ShowScreen", "Документы")
 
-    # elif hashMap.get("event") == "onResultPositive":
-
-    elif listener == 'barcode' or hashMap.get("event") == "onResultPositive":
+    elif listener == 'barcode' or (listener == 'ВвестиШтрихкод' and hashMap.get("event") == "onResultPositive"):
         doc = ui_global.Rs_doc
         doc.id_doc = hashMap.get('id_doc')
         if hashMap.get("event") == "onResultPositive":
@@ -1086,13 +1145,25 @@ def doc_details_listener(hashMap, _files=None, _data=None):
         else:
             barcode = hashMap.get('barcode_camera')
 
+        if not barcode.strip():
+            hashMap.put("ShowDialog", "ВвестиШтрихкод")
+            return hashMap
+
         have_qtty_plan = hashMap.get('have_qtty_plan')
         have_zero_plan = hashMap.get('have_zero_plan')
         have_mark_plan = hashMap.get('have_mark_plan')
         control = hashMap.get('control')
-        res = doc.process_the_barcode(doc, barcode
-                                      , eval(have_qtty_plan), eval(have_zero_plan), eval(control), eval(have_mark_plan), rs_settings.get('use_mark'))
-        if res == None:
+
+        res = doc.process_the_barcode(
+            doc,
+            barcode,
+            eval(have_qtty_plan),
+            eval(have_zero_plan),
+            eval(control),
+            eval(have_mark_plan),
+            rs_settings.get('use_mark'))
+
+        if res is None:
             hashMap.put('scanned_barcode', barcode)
             # suClass.urovo_set_lock_trigger(True)
             hashMap.put('ShowScreen', 'Ошибка сканера')
@@ -1120,10 +1191,8 @@ def doc_details_listener(hashMap, _files=None, _data=None):
             hashMap.put('barcode_scanned', 'true')
 
     elif listener == 'btn_doc_mark_verified':
-        doc = ui_global.Rs_doc
-        doc.id_doc = hashMap.get('id_doc')
-        doc.mark_verified(doc, 1)
-        hashMap.put("ShowScreen", "Документы")
+        hashMap.show_dialog('confirm_verified', 'Завершить документ?', ['Да', 'Нет'])
+        hashMap['confirm_dialog_verified'] = True
 
     elif listener == 'ON_BACK_PRESSED':
         hashMap.put("ShowScreen", "Документы")
@@ -1134,7 +1203,6 @@ def doc_details_listener(hashMap, _files=None, _data=None):
             id_str = current_elem['key']
             qtext = 'DELETE FROM RS_docs_table WHERE id=?'
             ui_global.get_query_result(qtext, (id_str,))
-
     elif listener == 'btn_rows_filter_on':
         hashMap.put('rows_filter', '1')
         hashMap.put('RefreshScreen','')
@@ -1156,15 +1224,16 @@ def doc_details_listener(hashMap, _files=None, _data=None):
 
 
 @HashMap()
-def doc_details_listener_new(hash_map):
+def doc_details_listener_group_scan(hash_map: HashMap):
     listener = hash_map['listener']
 
     if listener == "CardsClick":
         pass
     elif listener == "btn_barcodes":
-        hash_map.put("ShowDialog", "ВвестиШтрихкод")
-    elif listener == 'barcode' or hash_map.get("event") == "onResultPositive":
-        doc = ui_global.Rs_doc
+        # hash_map.show_dialog('ВвестиШтрихкод')
+        hash_map.put('ShowDialog', 'ВвестиШтрихкод')
+    elif listener == 'barcode' or (listener == 'ВвестиШтрихкод' and hash_map.get("event") == "onResultPositive"):
+        doc = ui_global.Rs_doc()
         doc.id_doc = hash_map.get('id_doc')
 
         if hash_map.get("event") == "onResultPositive":
@@ -1172,12 +1241,22 @@ def doc_details_listener_new(hash_map):
         else:
             barcode = hash_map.get('barcode_camera')
 
+        if not barcode.strip():
+            hash_map.show_dialog("ВвестиШтрихкод")
+            return
+
         have_qtty_plan = hash_map.get('have_qtty_plan')
         have_zero_plan = hash_map.get('have_zero_plan')
         have_mark_plan = hash_map.get('have_mark_plan')
         control = hash_map.get('control')
-        res = doc.process_the_barcode(doc, barcode
-                                      , eval(have_qtty_plan), eval(have_zero_plan), eval(control), eval(have_mark_plan), rs_settings.get('use_mark'))
+        res = doc.process_the_barcode(
+            doc,
+            barcode,
+            eval(have_qtty_plan),
+            eval(have_zero_plan),
+            eval(control),
+            eval(have_mark_plan),
+            rs_settings.get('use_mark'))
         if res is None:
             hash_map.put('scanned_barcode', barcode)
             hash_map.put('ShowScreen', 'Ошибка сканера')

@@ -85,6 +85,10 @@ class HashMap:
         else:
             self.hash_map.put(key, str(value))
 
+    def put_data(self, data: dict):
+        for key, value in data.items():
+            self[key] = value
+
     def containsKey(self, key):
         return self.hash_map.containsKey(key)
 
@@ -100,9 +104,21 @@ class HashMap:
     def to_json(self):
         return json.dumps(self.export(), indent=4, ensure_ascii=False).encode('utf8').decode()
 
-    def show_dialog(self, dialog):
-        self.put("ShowDialog", dialog['name'])
-        self.put("ShowDialogStyle", json.dumps(dialog['dialog_style']))
+    def show_dialog(self, listener, title='', buttons=None):
+        self.put("ShowDialog", listener)
+
+        if title:
+            dialog_style = {
+                'title': title or listener,
+                'yes': 'Ок',
+                'no': 'Отмена'
+            }
+            if buttons and len(buttons) > 1:
+                dialog_style['yes'] = buttons[0]
+                dialog_style['no'] = buttons[1]
+
+            self.put('ShowDialogStyle', dialog_style)
+
 
 
 def parse_barcode(val):
