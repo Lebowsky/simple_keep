@@ -6,6 +6,8 @@ import ui_barcodes
 import os
 import ui_form_data
 import queue
+from datetime import datetime, timedelta
+
 
 query_list = queue.Queue()
 # Вот таким незатейливым методом определяем, мы запустились на компе или на ТСД **
@@ -328,7 +330,7 @@ class Rs_doc():
 
         return get_query_result(query, (self.id_doc, search_value), True)
 
-    def update_doc_table_data(self, elem_for_add: dict, qtty=1):
+    def update_doc_table_data(self, elem_for_add: dict, qtty=1, user_tmz=0):
         # Сначала определим, есть ли в списке товаров документа наш товар:
         qtext = 'Select * from RS_docs_table Where id_doc=? and id_good = ? and id_properties = ? and id_series = ? ' #and id_unit = ?
         args = (self.id_doc, elem_for_add['id_good'], elem_for_add['id_property'], elem_for_add['id_series']) #,elem_for_add['id_unit']
@@ -340,8 +342,9 @@ class Rs_doc():
             #     qtext = 'DELETE FROM RS_docs_table  WHERE id = ?'
             #     get_query_result(qtext, (el['id'],))
             # else:
-            qtext = 'UPDATE RS_docs_table SET qtty=qtty+?, last_updated = ?, sent = 0  WHERE id = ?'
-            get_query_result(qtext, (qtty,  datetime.now().strftime("%Y-%m-%d %H:%M:%S"), el['id']))
+            qtext = 'UPDATE RS_docs_table SET qtty=qtty+?, last_updated = ? sent = 0 WHERE id = ?'
+            current_time_utc_0 = (datetime.now() - timedelta(hours=user_tmz)).strftime("%Y-%m-%d %H:%M:%S")
+            get_query_result(qtext, (qtty, current_time_utc_0, el['id']))
         else:  # Такой строки нет, надо добавить
             qtext = 'REPLACE INTO RS_docs_table(id_doc, id_good, id_properties,id_series, id_unit, qtty, price, id_price, is_plan, sent) VALUES (?,?,?,?,?,?,?,?,?,?)'
             get_query_result(qtext, (
@@ -400,7 +403,7 @@ class Rs_doc():
     # КОнтроль планов в документе - control
     # Есть план по маркируемой продукции have_mark_plan
     def process_the_barcode(self, barcode, have_qtty_plan = False, have_zero_plan = False, control = False, have_mark_plan = False,
-                            elem = None, use_mark_setting = 'false'): # add_if_not_found=False, add_if_not_in_plan=False):
+                            elem = None, use_mark_setting = 'false', user_tmz=0): # add_if_not_found=False, add_if_not_in_plan=False):
         # Получим структуру баркода
         if barcode[0] == chr(29) and len(barcode) > 31:  # Remove first GS1 char from barcode
             barcode = barcode[1:]
@@ -486,7 +489,7 @@ class Rs_doc():
 
 
         # Обновляем таблицу товары
-        self.update_doc_table_data(self, elem, 1)
+        self.update_doc_table_data(self, elem, 1, user_tmz)
 
         return {'Result': 'Марка добавлена в документ', 'Error': None,
                         'barcode': barcode_info['GTIN'] + barcode_info['SERIAL']}
@@ -605,7 +608,7 @@ class Rs_adr_doc():
 
         return get_query_result(query, (self.id_doc, search_value), True)
 
-    def update_doc_table_data(self, elem_for_add: dict, qtty=1, cell_id = None, table_type = 'out'):
+    def update_doc_table_data(self, elem_for_add: dict, qtty=1, cell_id = None, table_type = 'out', user_tmz=0):
         #Ищем ячейку по имени, нам нужен ID
         # res  = get_query_result('Select id From RS_cells Where name = ?',(cell_name,))
         #
@@ -623,7 +626,8 @@ class Rs_adr_doc():
             #     get_query_result(qtext, (el['id'],))
             # else:
             qtext = 'UPDATE RS_adr_docs_table SET qtty=qtty+?, last_updated = ?, id_cell = ?  WHERE id = ?'
-            get_query_result(qtext, (qtty,  datetime.now().strftime("%Y-%m-%d %H:%M:%S"),cell_id, el['id']))
+            current_time_utc_0 = (datetime.now() - timedelta(hours=int(user_tmz))).strftime("%Y-%m-%d %H:%M:%S")
+            get_query_result(qtext, (qtty,  current_time_utc_0, cell_id, el['id']))
         else:  # Такой строки нет, надо добавить
             qtext = 'REPLACE INTO RS_adr_docs_table(id_doc, id_good, id_properties,id_series, id_unit, qtty, is_plan, id_cell, table_type) VALUES (?,?,?,?,?,?,?,?,?)'
             get_query_result(qtext, (
@@ -637,7 +641,8 @@ class Rs_adr_doc():
     # Есть план по списку товаров have_zero_plan
     # КОнтроль планов в документе - control
     # Есть план по маркируемой продукции have_mark_plan
-    def process_the_barcode(self, barcode, have_qtty_plan = False, have_zero_plan = False, control = False, cell_id = None): # add_if_not_found=False, add_if_not_in_plan=False):
+    def process_the_barcode(self, barcode, have_qtty_plan = False, have_zero_plan = False, control = False,
+                            cell_name = None, user_tmz=0): # add_if_not_found=False, add_if_not_in_plan=False):
         # Получим структуру баркода
         if barcode[0] == chr(29) and len(barcode) > 31:  # Remove first GS1 char from barcode
             barcode = barcode[1:]
@@ -681,7 +686,7 @@ class Rs_adr_doc():
 
 
         # Обновляем таблицу товары
-        self.update_doc_table_data(self, elem, 1, cell_id)
+        self.update_doc_table_data(self, elem, 1, cell_id, user_tmz)
 
         return {'Result': 'Марка добавлена в документ', 'Error': None,
                         'barcode': barcode_info['GTIN'] + barcode_info['SERIAL']}
