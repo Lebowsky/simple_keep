@@ -3435,7 +3435,7 @@ def get_prices(hashMap, _files=None, _data=None):
 
         json_prices = json.loads(r.text.encode("utf-8"))
 
-        if len(json_prices) == 0:
+        if len(json_prices) < 2:
             hashMap.put("no_data", "Нет данных")
 
         unit_values = 0
