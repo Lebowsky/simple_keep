@@ -893,12 +893,14 @@ def get_current_elem_doc_goods(hashMap, current_str):
 
     if hashMap.get('view') == "cards":
         jlist = json.loads(hashMap.get("doc_goods_cards"))
-        current_elem = jlist['customcards']['cardsdata'][int(current_str)]
-
+        cards_data = jlist['customcards']['cardsdata']
     else:
         jlist = json.loads(hashMap.get("doc_goods_table"))
-        current_elem = jlist['customtable']['tabledata'][int(current_str)]
-
+        cards_data = jlist['customtable']['tabledata']
+    for element in cards_data:
+        if "key" in element:
+            if element["key"] == hashMap.get("selected_card_key"):
+                current_elem = element
     return current_elem
 
 
@@ -1066,6 +1068,7 @@ def doc_details_listener(hashMap, _files=None, _data=None):
 
     if listener == "CardsClick":
 
+
         # Находим ID документа
         current_str = hashMap.get("selected_card_position")
         current_elem = get_current_elem_doc_goods(hashMap, current_str)
@@ -1159,8 +1162,8 @@ def doc_details_listener(hashMap, _files=None, _data=None):
             eval(have_zero_plan),
             eval(control),
             eval(have_mark_plan),
-            rs_settings.get('use_mark')),
-            user_tmz = int(hashMap.get("TMZ")
+            rs_settings.get('use_mark'),
+            user_tmz = int(hashMap.get("TMZ"))
         )
         if res is None:
             hashMap.put('scanned_barcode', barcode)
@@ -1254,7 +1257,8 @@ def doc_details_listener_group_scan(hash_map: HashMap):
             eval(have_zero_plan),
             eval(control),
             eval(have_mark_plan),
-            rs_settings.get('use_mark'))
+            rs_settings.get('use_mark'),
+            user_tmz=int(hashMap.get("TMZ")))
         if res is None:
             hash_map.put('scanned_barcode', barcode)
             hash_map.put('ShowScreen', 'Ошибка сканера')
@@ -3090,7 +3094,8 @@ def get_remains(hashMap, _files=None, _data=None):
 
     http = get_http_settings(hashMap)
 
-    if not (hashMap.get('barcode') or hashMap.get('wh_select') or hashMap.get('cell_input') or hashMap.get('selected_cell_id')):
+    if not (hashMap.get('barcode') or hashMap.get('wh_select') or hashMap.get('cell_input')
+            or hashMap.get('selected_cell_id') or hashMap.get('selected_good_id')):
         hashMap.put('goods_custom_table', '')
         hashMap.put('object_name', '')
         hashMap.put('cell_name', '')
@@ -3139,6 +3144,12 @@ def get_remains(hashMap, _files=None, _data=None):
                          params=params)
 
         json_response = json.loads(r.text.encode("utf-8"))
+
+        if len(json_response) < 2:
+            hashMap.put("no_data", "Нет данных")
+            hashMap.put("Show_no_data", "1")
+        else:
+            hashMap.put("Show_no_data", "-1")
 
         values = 0
         for element in json_response:
@@ -3216,6 +3227,12 @@ def get_remains(hashMap, _files=None, _data=None):
                              params=params)
 
             json_response = json.loads(r.text.encode("utf-8"))
+
+            if len(json_response) < 2:
+                hashMap.put("no_data", "Нет данных")
+                hashMap.put("Show_no_data", "1")
+            else:
+                hashMap.put("Show_no_data", "-1")
 
             values = 0
             for element in json_response:
