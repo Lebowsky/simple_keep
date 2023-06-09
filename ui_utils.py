@@ -104,6 +104,11 @@ class HashMap:
     def to_json(self):
         return json.dumps(self.export(), indent=4, ensure_ascii=False).encode('utf8').decode()
 
+    def show_screen(self, name, data=None):
+        self.put('ShowScreen', name)
+        if data:
+            self.put_data(data)
+
     def show_dialog(self, listener, title='', buttons=None):
         self.put("ShowDialog", listener)
 
