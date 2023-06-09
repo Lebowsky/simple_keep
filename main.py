@@ -3287,6 +3287,8 @@ def get_remains(hashMap, _files=None, _data=None):
         hashMap.put('error_msg', "Товар не найден")
         hashMap.put('Show_error_msg', '1')
 
+    hashMap.put('property_id', '')
+
     hashMap.put("goods_custom_table", json.dumps(goods_custom_table))
 
     hashMap.put("ShowScreen", "Таблица остатков")
