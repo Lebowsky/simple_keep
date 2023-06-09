@@ -88,13 +88,12 @@ class CustomCards:
         return json.dumps(self, default=lambda x: vars(x), indent=4, ensure_ascii=False).encode('utf8').decode()
 
 
-
-
 class CustomTable:
-    def __init__(self, layout: LinearLayout, tabledata: List[dict]):
+    def __init__(self, layout: LinearLayout, options: Options, tabledata: List[dict]):
         self.customtable = {
             'layout': layout,
-            'tabledata': tabledata
+            'tabledata': tabledata,
+            'options': options or Options()
         }
 
     def to_json(self):
