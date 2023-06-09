@@ -910,7 +910,12 @@ def docs_on_select(hashMap, _files=None, _data=None):
         # Находим ID документа
         current_str = hashMap.get("selected_card_position")
         jlist = json.loads(hashMap.get("docCards"))
-        current_doc = jlist['customcards']['cardsdata'][int(current_str)]
+        cards_data = jlist['customcards']['cardsdata']
+        for element in cards_data:
+            if "key" in element:
+                if element["key"] == hashMap.get("selected_card_key"):
+                    current_doc = element
+        # current_doc = jlist['customcards']['cardsdata'][int(current_str)]
 
         # id_doc = current_doc['key']
         hashMap.put('id_doc', current_doc['key'])
