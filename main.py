@@ -1,3 +1,4 @@
+import db_services
 from ru.travelfood.simple_ui import SimpleUtilites as suClass
 
 import ui_barcodes
@@ -5,11 +6,10 @@ import ui_csv
 import ui_global
 import ui_form_data
 import ui_form_data2 as ui_tables_structure
-import db_services
+import ui_models
 import socket
 import json
 import requests
-import ast
 import database_init_queryes
 import os
 from PIL import Image
@@ -38,13 +38,15 @@ importlib.reload(database_init_queryes)
 importlib.reload(http_exchange)
 importlib.reload(ui_utils)
 importlib.reload(db_services)
+importlib.reload(widgets)
+importlib.reload(ui_models)
 
 
 # -----
 # 0100608940553886215,iPGSQpBt!&B
 def settings_on_start(hashMap, _files=None, _data=None):
     # hashMap.put('toast','обновились')
-    app_on_start(hashMap)
+    #app_on_start(hashMap)
     s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
     try:
         s.connect(("8.8.8.8", 80))
@@ -56,15 +58,15 @@ def settings_on_start(hashMap, _files=None, _data=None):
         hashMap.put('ip_adr', 'нет сети')
     # app_on_start(hashMap)
     # Значения констант и настроек
-    res = ui_global.get_constants()
-    if res:
-        hashMap.put('use_series', str(res[1]))
-        hashMap.put('use_properties', str(res[2]))
-        hashMap.put('use_mark', str(res[3]))
-        hashMap.put('add_if_not_in_plan', str(res[4]))
-        hashMap.put('path', str(res[5]))
-        hashMap.put('delete_files', str(res[6]))
-        hashMap.put('allow_overscan', str(res[9]))
+    #res = ui_global.get_constants()
+    #if res:
+        # hashMap.put('use_series', str(res[1]))
+        # hashMap.put('use_properties', str(res[2]))
+    hashMap.put('use_mark', rs_settings.get('use_mark'))  #str(res[3]))
+    hashMap.put('add_if_not_in_plan',rs_settings.get('add_if_not_in_plan'))  # str(res[4]))
+    hashMap.put('path',rs_settings.get('path') ) # str(res[5]))
+    hashMap.put('delete_files',rs_settings.get('delete_files'))  # str(res[6]))
+    hashMap.put('allow_overscan',rs_settings.get('allow_overscan'))  # str(res[9]))
 
     if not hashMap.containsKey('ip_host'):
         hashMap.put('ip_host', '192.168.1.77')
@@ -78,7 +80,15 @@ def debug_on_start(hashMap, _files=None, _data=None):
     return hashMap
 
 
+    hashMap.put('use_mark', rs_settings.get('use_mark')) #str(res[3]))
+    hashMap.put('add_if_not_in_plan', rs_settings.get('add_if_not_in_plan')) #str(res[4]))
+    hashMap.put('path', rs_settings.get('path')) #str(res[5]))
+    hashMap.put('delete_files', rs_settings.get('delete_files')) #str(res[6]))
+    hashMap.put('allow_overscan', rs_settings.get('allow_overscan')) #str(res[9]))
+
 def debug_listener(hashMap, _files=None, _data=None):
+    delete_files = rs_settings.get('delete_files')
+    if delete_files is None: delete_files = 'false'
 
     listener = hashMap.get('listener')
 
@@ -93,43 +103,37 @@ def debug_listener(hashMap, _files=None, _data=None):
                 hashMap.put('toast', 'Ошибка соединения')
         else:
             hashMap.put('toast', 'Файл не найден')
-
-    return hashMap
-
-
-def settings_on_click(hashMap, _files=None, _data=None):
-    use_series = hashMap.get('use_series')
-    use_properties = hashMap.get('use_properties')
-    use_mark = hashMap.get('use_mark')
-    delete_files = hashMap.get('delete_files')
-    add_if_not_in_plan = hashMap.get('add_if_not_in_plan')
-    allow_overscan = hashMap.get('allow_overscan')
-    path = hashMap.get('path')
-
-    if use_series is None: use_series = 'false'
-    if use_properties is None: use_properties = 'false'
-    if use_mark is None: use_mark = 'false'
-    if add_if_not_in_plan is None: add_if_not_in_plan = 'false'
-    if path is None: path = '//storage/emulated/0/Android/data/ru.travelfood.simple_ui/'  # '//storage/emulated/0/download/'
-    if delete_files is None: delete_files = 'false'
-    if allow_overscan is None: allow_overscan = 'false'
-    # ui_global.get_query_result('Update RS_docs SET control = ?',(allow_overscan,))  #В таблицы документов записываем новое значение контроля
-    ui_global.put_constants(
-        (use_series, use_properties, use_mark, add_if_not_in_plan, path, delete_files, allow_overscan))
-    listener = hashMap.get('listener')
-
-
-    if listener == 'btn_local_files':
+    elif listener == 'btn_local_files':
         # path = hashMap.get('localpath')
         path = hashMap.get('path')
         delete_files = hashMap.get('delete_files')
-        if not delete_files: delete_files = '0'
+        if not delete_files:
+            delete_files = '0'
         if not path: path = '//storage/emulated/0/download/'
 
         ret_text = ui_csv.list_folder(path, delete_files)
 
         hashMap.put('toast', ret_text)
-    elif listener == 'btn_export':
+    return hashMap
+
+
+def settings_on_click(hashMap, _files=None, _data=None):
+    #Использовать маркировку
+    use_mark = hashMap.get('use_mark')
+    if use_mark is None: use_mark = 'false'
+
+    path = hashMap.get('path')
+    if path is None: path = '//storage/emulated/0/Android/data/ru.travelfood.simple_ui/'  # '//storage/emulated/0/download/'
+
+
+    # ui_global.get_query_result('Update RS_docs SET control = ?',(allow_overscan,))  #В таблицы документов записываем новое значение контроля
+    #ui_global.put_constants(
+    rs_settings.put('use_mark',use_mark, True) #, path))
+    rs_settings.put('path', path, True)
+
+    listener = hashMap.get('listener')
+
+    if listener == 'btn_export':
 
         ui_csv.export_csv(path, hashMap.get('ip_adr'), hashMap.get('ANDROID_ID'))
         hashMap.put('toast', 'Данные выгружены')
@@ -138,21 +142,15 @@ def settings_on_click(hashMap, _files=None, _data=None):
 
         hashMap.put('FinishProcess', '')
 
-    elif listener == 'btn_files_list':
-        hashMap.put('ShowScreen', 'СписокФайлов')
+    # elif listener == 'btn_files_list':
+    #     hashMap.put('ShowScreen', 'СписокФайлов')
     elif listener == 'btn_conf_version':
         conf = json.loads(hashMap.get('_configuration '))
 
     elif listener == 'btn_size':
         hashMap.put('ShowScreen', 'Настройки Шрифтов')
     elif listener == 'btn_test_barcode':
-        hashMap.put('ShowScreen', 'Тест штрихкода')
-    elif listener == 'btn_load_data':
-        # http = get_http_settings(hashMap)
-        # result = http_exchange.server_load_data(http)
-        timer_update(hashMap, _files=None, _data=None)
-        # if not result == 'ok':
-        #     hashMap.put('toast',result)
+        hashMap.put('ShowScreen', 'Тест сканера')
     elif listener == 'btn_err_log':
         hashMap.put('ShowScreen', 'Ошибки')
     elif listener == 'btn_http_settings':
@@ -278,27 +276,9 @@ def docs_on_start(hashMap, _files=None, _data=None):
 
 
 @HashMap()
-def docs_on_start_new(hash_map: HashMap):
-    result = ui_global.get_query_result(ui_form_data.get_doc_type_query())
-    if not hash_map.get('doc_type_select'):
-        doc_type_list = ['Все']
-        for record in result:
-            doc_type_list.append(record[0])
-        hash_map.put('doc_type_select', ';'.join(doc_type_list))
-
-    # Если Вызов экрана из меню плиток - обработаем
-    if hash_map.containsKey('selected_tile_key'):
-        tile_key = hash_map.get('selected_tile_key')
-        if tile_key:
-            hash_map.put('doc_type_click', tile_key)
-            hash_map.put('selected_tile_key', '')
-
-    # Перезаполним список документов
-    if not hash_map.get('doc_type_click'):
-        ls = refill_docs_list_new()
-    else:
-        ls = refill_docs_list_new(hash_map.get('doc_type_click'))
-    hash_map.put("docCards", ls)
+def docs_on_start_group_scan(hash_map: HashMap):
+    screen = ui_models.DocsListScreen(hash_map, rs_settings)
+    screen.on_start()
 
 
 def doc_details_on_start(hashMap, _files=None, _data=None):
@@ -320,10 +300,13 @@ def doc_details_on_start(hashMap, _files=None, _data=None):
     id_doc = hashMap.get('id_doc')
     falseValueList = (0,'0','false','False',None)
     # Формируем таблицу карточек и запрос к базе
-    res = ui_global.get_constants()
-    use_series = res[1]
-    use_properties = res[2]
-    hashMap.put('use_properties', res[2])
+    #res = ui_global.get_constants()
+    use_series = rs_settings.get('use_series') #res[1]
+    use_properties = rs_settings.get('use_series') #res[2]
+    hashMap.put('use_properties', rs_settings.get('use_series')) #res[2])
+    doc_detail_list = ui_form_data.get_doc_detail_cards(use_series, use_properties,rs_settings)
+    doc_detail_list['customcards']['cardsdata'] = []
+
     if hashMap.get('view') == "cards":
         hashMap.put('Show_card_view', "-1")
         # doc_detail_list = ui_form_data.get_doc_detail_cards(use_series, use_properties, rs_settings)
@@ -335,8 +318,6 @@ def doc_details_on_start(hashMap, _files=None, _data=None):
         doc_detail_list = ui_tables_structure.get_doc_detail_table_head()
         doc_detail_list["customtable"]["tabledata"] = [{}]
 
-    # Получаем теекущий документ
-    current_str = hashMap.get("selected_card_position")
     jlist = json.loads(hashMap.get('docCards'))
 
     elem_n = jlist['customcards']['cardsdata']
@@ -375,12 +356,12 @@ def doc_details_on_start(hashMap, _files=None, _data=None):
                 'qtty_plan': str(record['qtty_plan'] if record['qtty_plan'] is not None else 0),
                 'price': str(record['price'] if record['price'] is not None else 0),
                 'price_name': str(record['price_name']),
-                'picture': pic,
+                'picture': pic
             }
 
             good_info = ""
             if product_row['art'] != "None":
-                good_info += product_row['art']
+                good_info += product_row['art'] + " "
             if product_row['properties_name'] != "None":
                 good_info += "(" + product_row['properties_name'] + ") "
             if product_row['series_name'] != "None":
@@ -523,10 +504,13 @@ def doc_details_on_load(hashMap, _files=None, _data=None):
     barcode_btn.setElevation(15)
     return hashMap
 
+
 @HashMap()
 def doc_details_on_start_new(hash_map):
     id_doc = hash_map.get('id_doc')
-    use_series, use_properties, *constants = ui_global.get_constants()
+    use_series = rs_settings.get('use_series')
+    use_properties = rs_settings.get('use_properties')
+
     add_labels = [
         key for key, value in
         {'series_name': use_series, 'properties_name': use_properties}.items()
@@ -590,10 +574,9 @@ def doc_adr_details_on_start(hashMap, _files=None, _data=None):
 
     falseValueList = (0,'0','false','False',None)
     # Формируем таблицу карточек и запрос к базе
-    res = ui_global.get_constants()
-    use_series = res[1]
-    use_properties = res[2]
-    hashMap.put('use_properties', res[2])
+    use_series = rs_settings.get('use_series')  #res[1]
+    use_properties = rs_settings.get('use_properties')#res[2]
+    hashMap.put('use_properties', use_properties)
     #doc_detail_list = ui_form_data.get_doc_detail_cards(use_series, use_properties,rs_settings, True)
 
     doc_detail_list = widgets.CustomCards(
@@ -745,10 +728,11 @@ def doc_adr_details_listener(hashMap, _files=None, _data=None):
 
         # Находим ID документа
         current_str = hashMap.get("selected_card_position")
-        current_elem = get_current_elem_doc_goods(hashMap, current_str)
+        jlist = json.loads(hashMap.get("doc_goods"))
+        current_elem = jlist['customcards']['cardsdata'][int(current_str)]
         hashMap.put("Doc_data",
                     hashMap.get('doc_type') + ' №' + hashMap.get('doc_n') +
-                    ' от ' + hashMap.get('doc_date'))
+                    ' от' + hashMap.get('doc_date'))
         hashMap.put("current_cell_name", 'Ячейка: ' +  current_elem['cell_name'])
         hashMap.put('id_cell', current_elem['id_cell'])
         hashMap.put("Good", current_elem['good_name'])
@@ -888,7 +872,7 @@ def doc_adr_details_listener(hashMap, _files=None, _data=None):
 
         hashMap.put("Doc_data",
                     hashMap.get('doc_type') + ' №' + hashMap.get('doc_n') +
-                    ' от ' + hashMap.get('doc_date'))
+                    ' от' + hashMap.get('doc_date'))
         hashMap.put("Good", '')
         hashMap.put("properties", '')
         hashMap.put("qtty_plan", '')
@@ -916,6 +900,7 @@ def get_current_elem_doc_goods(hashMap, current_str):
         current_elem = jlist['customtable']['tabledata'][int(current_str)]
 
     return current_elem
+
 
 def docs_on_select(hashMap, _files=None, _data=None):
     listener = hashMap.get("listener")
@@ -983,18 +968,90 @@ def docs_on_select(hashMap, _files=None, _data=None):
         # hashMap.put('ShowScreen', 'Новый документ')
     return hashMap
 
+@HashMap()
+def test_on_start(hash_map):
+    hash_map.put('SetTitle', 'New')
+    # test_on_start.
 
 @HashMap()
-def docs_on_select_CardsClick(hash_map):
-    id_doc = hash_map['id_doc']
-    service = db_services.DocService(id_doc)
+def docs_on_select_group_scan(hash_map):
+    listener = hash_map.get("listener")
 
-    try:
-        service.set_doc_value('verified', '1')
-    except Exception as e:
-        hash_map.error_log(e.args[0])
+    if listener == "CardsClick":
+        hash_map.put('ShowDialog', 'Подтвердите действие')
+        #     hash_map.show_dialog(
+        #         'Подтвердите действие'
+        #         # '1',
+        #         # ['Продолжить', 'Отмена']
+        #     )
+
+    elif hash_map['event'] == "onResultPositive":
+        # Находим ID документа
+        current_str = hash_map.get("selected_card_position")
+        jlist = json.loads(hash_map.get("docCards"))
+        current_doc = jlist['customcards']['cardsdata'][int(current_str)]
+
+        # id_doc = current_doc['key']
+        hash_map.put('id_doc', current_doc['key'])
+        hash_map.put('doc_type', current_doc['type'])
+        hash_map.put('doc_n', current_doc['number'])
+        hash_map.put('doc_date', current_doc['data'])
+        hash_map.put('warehouse', current_doc['warehouse'])
+        hash_map.put('countragent', current_doc['countragent'])
+
+        hash_map.put("ShowScreen", "Документ товары")
+
+        id_doc = hash_map['id_doc']
+        service = db_services.DocService(id_doc)
+
+        try:
+            service.set_doc_value('verified', '1')
+        except Exception as e:
+            hash_map.error_log(e.args[0])
+
+    elif listener == "doc_type_click":
+        ls = refill_docs_list(hash_map.get('doc_type_click'))
+        hash_map.put('docCards', ls)
+        hash_map.put('ShowScreen', 'Документы')
+    elif listener == 'LayoutAction':
+        layout_listener = hash_map.get('layout_listener')
+        # Находим ID документа
+        current_doc = json.loads(hash_map.get("card_data"))
+        doc = ui_global.Rs_doc()
+        doc.id_doc = current_doc['key']
+
+        if layout_listener == 'CheckBox1':
+            if current_doc['completed'] == 'false':
+                doc.mark_verified(1)
+            else:
+                doc.mark_verified(0)
+
+        elif layout_listener == 'Подтвердить':
+            doc.mark_verified(1)
+            hash_map.put('ShowScreen', 'Документы')
+        elif layout_listener == 'Очистить данные пересчета':
+            doc.clear_barcode_data()
+            hash_map.put('toast', 'Данные пересчета и маркировки очищены')
+        elif layout_listener == 'Удалить':
+            doc.delete_doc()
+            hash_map.put('ShowScreen', 'Документы')
+        elif layout_listener == 'Сканировать штрихкоды потоком':
+            hash_map.put('id_doc', current_doc['key'])
+            hash_map.put('doc_type', current_doc['type'])
+            hash_map.put('doc_n', current_doc['number'])
+            hash_map.put('doc_date', current_doc['data'])
+            hash_map.put('warehouse', current_doc['warehouse'])
+            hash_map.put('countragent', current_doc['countragent'])
+
+            hash_map.put('ShowScreen', 'ПотокШтрихкодовДокумента')
+    elif listener == "btn_add_doc":
+        hash_map.put('ShowScreen', 'Новый документ')
+
+    elif listener == 'ON_BACK_PRESSED':
+        hash_map.put('ShowScreen', 'Плитки')
 
 
+@HashMap()
 def doc_details_listener(hashMap, _files=None, _data=None):
     # Находим ID документа
     # current_str = hashMap.get("selected_card_position")
@@ -1069,15 +1126,17 @@ def doc_details_listener(hashMap, _files=None, _data=None):
         hashMap.put("ShowScreen", "Товар")
 
     elif listener == "BACK_BUTTON":
-
         hashMap.put("ShowScreen", "Документы")
     elif listener == "btn_barcodes":
+        hashMap.show_dialog('ВвестиШтрихкод')
 
-        hashMap.put("ShowDialog", "ВвестиШтрихкод")
+    elif listener == 'confirm_verified' and hashMap.get("event") == "onResultPositive":
+        doc = ui_global.Rs_doc()
+        doc.id_doc = hashMap.get('id_doc')
+        doc.mark_verified(1)
+        hashMap.put("ShowScreen", "Документы")
 
-    # elif hashMap.get("event") == "onResultPositive":
-
-    elif listener == 'barcode' or hashMap.get("event") == "onResultPositive":
+    elif listener == 'barcode' or (listener == 'ВвестиШтрихкод' and hashMap.get("event") == "onResultPositive"):
         doc = ui_global.Rs_doc
         doc.id_doc = hashMap.get('id_doc')
         if hashMap.get("event") == "onResultPositive":
@@ -1085,14 +1144,25 @@ def doc_details_listener(hashMap, _files=None, _data=None):
         else:
             barcode = hashMap.get('barcode_camera')
 
+        if not barcode.strip():
+            hashMap.put("ShowDialog", "ВвестиШтрихкод")
+            return hashMap
+
         have_qtty_plan = hashMap.get('have_qtty_plan')
         have_zero_plan = hashMap.get('have_zero_plan')
         have_mark_plan = hashMap.get('have_mark_plan')
         control = hashMap.get('control')
-        res = doc.process_the_barcode(doc, barcode
-                                      , eval(have_qtty_plan), eval(have_zero_plan), eval(control), eval(have_mark_plan),
-                                      user_tmz=int(hashMap.get("TMZ")))
-        if res == None:
+        res = doc.process_the_barcode(
+            doc,
+            barcode,
+            eval(have_qtty_plan),
+            eval(have_zero_plan),
+            eval(control),
+            eval(have_mark_plan),
+            rs_settings.get('use_mark')),
+            user_tmz = int(hashMap.get("TMZ")
+        )
+        if res is None:
             hashMap.put('scanned_barcode', barcode)
             # suClass.urovo_set_lock_trigger(True)
             hashMap.put('ShowScreen', 'Ошибка сканера')
@@ -1118,30 +1188,9 @@ def doc_details_listener(hashMap, _files=None, _data=None):
             highlight_added_good(hashMap, barcode)
             hashMap.put('toast', 'Товар добавлен в документ')
             hashMap.put('barcode_scanned', 'true')
-        # hashMap.put('toast','1')
-        #-------------------------------------------------- Временно
-        # url = get_http_settings(hashMap)
-        # qtext = '''SELECT id_doc FROM RS_docs WHERE verified = 1'''
-        # res = ui_global.get_query_result(qtext, None, True)
-        #
-        # if res:
-        #     doc_list = []
-        #     for el in res:
-        #         doc_list.append('"' + el['id_doc'] + '"')
-        #     doc_in_str = ','.join(doc_list)
-        #     # htpparams = {'username':hashMap.get('onlineUser'), 'password':hashMap.get('onlinePass'), 'url':url}
-        #     answer = http_exchange.post_changes_to_server(doc_in_str, url)
-        #     if answer.get('Error') is not None:
-        #         rs_settings.put('error_log', str(answer.get('Error')), True)
-        #
-        #     qtext = f'UPDATE RS_docs SET sent = 1  WHERE id_doc in ({doc_in_str}) '
-        #     ui_global.get_query_result(qtext, None, False)
-        # ---------------------------------------------------------
+
     elif listener == 'btn_doc_mark_verified':
-        doc = ui_global.Rs_doc
-        doc.id_doc = hashMap.get('id_doc')
-        doc.mark_verified(doc, 1)
-        hashMap.put("ShowScreen", "Документы")
+        hashMap.show_dialog('confirm_verified', 'Завершить документ?', ['Да', 'Нет'])
 
     elif listener == 'ON_BACK_PRESSED':
         hashMap.put("ShowScreen", "Документы")
@@ -1152,7 +1201,6 @@ def doc_details_listener(hashMap, _files=None, _data=None):
             id_str = current_elem['key']
             qtext = 'DELETE FROM RS_docs_table WHERE id=?'
             ui_global.get_query_result(qtext, (id_str,))
-
     elif listener == 'btn_rows_filter_on':
         hashMap.put('rows_filter', '1')
         hashMap.put('RefreshScreen','')
@@ -1174,15 +1222,16 @@ def doc_details_listener(hashMap, _files=None, _data=None):
 
 
 @HashMap()
-def doc_details_listener_new(hash_map):
+def doc_details_listener_group_scan(hash_map: HashMap):
     listener = hash_map['listener']
 
     if listener == "CardsClick":
         pass
     elif listener == "btn_barcodes":
-        hash_map.put("ShowDialog", "ВвестиШтрихкод")
-    elif listener == 'barcode' or hash_map.get("event") == "onResultPositive":
-        doc = ui_global.Rs_doc
+        # hash_map.show_dialog('ВвестиШтрихкод')
+        hash_map.put('ShowDialog', 'ВвестиШтрихкод')
+    elif listener == 'barcode' or (listener == 'ВвестиШтрихкод' and hash_map.get("event") == "onResultPositive"):
+        doc = ui_global.Rs_doc()
         doc.id_doc = hash_map.get('id_doc')
 
         if hash_map.get("event") == "onResultPositive":
@@ -1190,12 +1239,22 @@ def doc_details_listener_new(hash_map):
         else:
             barcode = hash_map.get('barcode_camera')
 
+        if not barcode.strip():
+            hash_map.show_dialog("ВвестиШтрихкод")
+            return
+
         have_qtty_plan = hash_map.get('have_qtty_plan')
         have_zero_plan = hash_map.get('have_zero_plan')
         have_mark_plan = hash_map.get('have_mark_plan')
         control = hash_map.get('control')
-        res = doc.process_the_barcode(doc, barcode
-                                      , eval(have_qtty_plan), eval(have_zero_plan), eval(control), eval(have_mark_plan))
+        res = doc.process_the_barcode(
+            doc,
+            barcode,
+            eval(have_qtty_plan),
+            eval(have_zero_plan),
+            eval(control),
+            eval(have_mark_plan),
+            rs_settings.get('use_mark'))
         if res is None:
             hash_map.put('scanned_barcode', barcode)
             hash_map.put('ShowScreen', 'Ошибка сканера')
@@ -1210,8 +1269,10 @@ def doc_details_listener_new(hash_map):
             else:
                 hash_map.put('toast', res['Descr'])
         else:
+            highlight_added_good(hash_map, barcode)
             hash_map.put('toast', 'Товар добавлен в документ')
             hash_map.put('barcode_scanned', 'true')
+
     elif listener in ['ON_BACK_PRESSED', 'BACK_BUTTON']:
         hash_map.put("ShowScreen", "Документы")
 
@@ -1988,28 +2049,39 @@ def app_on_start(hashMap, _files=None, _data=None):
 
         # for parameter_name, value in parameters.items():
         #     set_params.put(parameter_name,value)
-    if rs_settings.get('TitleTextSize') == None:
+    if rs_settings.get('TitleTextSize') is None:
         rs_settings.put("TitleTextSize", "18", True)
-    if rs_settings.get('titleDocTypeCardTextSize') == None:
+    if rs_settings.get('titleDocTypeCardTextSize') is None:
         rs_settings.put("titleDocTypeCardTextSize", "18", True)
-    if rs_settings.get('CardTitleTextSize') == None:
+    if rs_settings.get('CardTitleTextSize') is None:
         rs_settings.put("CardTitleTextSize", "20", True)
-    if rs_settings.get('CardDateTextSize') == None:
+    if rs_settings.get('CardDateTextSize') is None:
         rs_settings.put("CardDateTextSize", "10", True)
-    if rs_settings.get('CardTextSize') == None:
+    if rs_settings.get('CardTextSize') is None:
         rs_settings.put("CardTextSize", "15", True)
-    if rs_settings.get('GoodsCardTitleTextSize') == None:
+    if rs_settings.get('GoodsCardTitleTextSize') is None:
         rs_settings.put("GoodsCardTitleTextSize", "18", True)
-    if rs_settings.get('goodsTextSize') == None:
+    if rs_settings.get('goodsTextSize') is None:
         rs_settings.put("goodsTextSize", "18", True)
-    if rs_settings.get('SeriesPropertiesTextSize') == None:
+    if rs_settings.get('SeriesPropertiesTextSize') is None:
         rs_settings.put("SeriesPropertiesTextSize", "16", True)
-    if rs_settings.get('DocTypeCardTextSize') == None:
+    if rs_settings.get('DocTypeCardTextSize') is None:
         rs_settings.put("DocTypeCardTextSize", "15", True)
-    if rs_settings.get('signal_num') == None:
+    if rs_settings.get('signal_num') is None:
         rs_settings.put('signal_num', '83', True)
-    if rs_settings.get('beep_duration') == None:
+    if rs_settings.get('beep_duration') is None:
         rs_settings.put('beep_duration', '1000', True)
+    if rs_settings.get('use_mark')  is None:
+        rs_settings.put('use_mark', 'false', True)
+    if rs_settings.get('add_if_not_in_plan')  is None:
+        rs_settings.put('add_if_not_in_plan', 'false', True)
+    if rs_settings.get('path')  is None:
+        rs_settings.put('path', '', True)
+    if rs_settings.get('delete_files')  is None:
+        rs_settings.put('delete_files', 'false', True)
+    if rs_settings.get('allow_overscan')  is None:
+        rs_settings.put('allow_overscan', 'false', True)
+
 
     hashMap.put('toast', 'Готов к работе')
 
@@ -2066,7 +2138,7 @@ def put_notification(hashMap, _files=None, _data=None):
 
 def font_size_settings_listener(hashMap, _files=None, _data=None):
     listener = hashMap.get('listener')
-    if listener == 'btn_on_save' or hashMap.get('event')=='Input':
+    if listener == 'btn_on_save':  # or hashMap.get('event')=='Input'
 
         rs_settings.put("TitleTextSize", hashMap.get("TitleTextSize"), True)
         rs_settings.put("CardTitleTextSize", hashMap.get("CardTitleTextSize"), True)
@@ -2077,6 +2149,7 @@ def font_size_settings_listener(hashMap, _files=None, _data=None):
         rs_settings.put("SeriesPropertiesTextSize", hashMap.get("SeriesPropertiesTextSize"), True)
         rs_settings.put("DocTypeCardTextSize", hashMap.get("DocTypeCardTextSize"), True)
         rs_settings.put("titleDocTypeCardTextSize", hashMap.get("titleDocTypeCardTextSize"), True)
+        hashMap.put('ShowScreen', 'Настройки и обмен')
         #params.put("signal_num", hashMap.get("signal_num"), True)
     elif listener == 'btn_on_cancel' or listener == 'ON_BACK_PRESSED':
         hashMap.put('ShowScreen', 'Настройки и обмен')
@@ -2149,23 +2222,25 @@ def sound_settings_on_start(hashMap, _files=None, _data=None):
 
 def sound_settings_listener(hashMap, _files=None, _data=None):
     listener = hashMap.get('listener')
-    if listener == 'btn_on_save' or hashMap.get('event') == 'Input':
+    if listener == 'btn_on_save':  # or hashMap.get('event') == 'Input'
 
         rs_settings.put('signal_num', hashMap.get("signal_num_value"), True)
         rs_settings.put('beep_duration', hashMap.get('beep_duration_value'), True)
-        if listener == 'btn_on_save':
-            hashMap.put('ShowScreen', 'Настройки и обмен')
+        hashMap.put('ShowScreen', 'Настройки и обмен')
+
     elif listener == 'btn_on_cancel' or listener == 'ON_BACK_PRESSED':
         hashMap.put('ShowScreen', 'Настройки и обмен')
     elif listener == 'btn_test_sound':
-        # hashMap.put('beep_duration', hashMap.get("beep_duration_value"))
-        # hashMap.put('beep', hashMap.get('signal_num_value'))
+        rs_settings.put('signal_num', hashMap.get("signal_num_value"), True)
+        rs_settings.put('beep_duration', hashMap.get('beep_duration_value'), True)
+        hashMap.put('beep_duration', hashMap.get("beep_duration_value"))
+        hashMap.put('beep', hashMap.get('signal_num_value'))
 
         # hashMap.put('beep_duration', str(rs_settings.get('beep_duration')))
         # hashMap.put("beep", str(rs_settings.get('signal_num')))
 
-        hashMap.put('beep_duration', '83')
-        hashMap.put("beep", '1000')
+        # hashMap.put('beep_duration', '83')
+        # hashMap.put("beep", '1000')
 
     return hashMap
 
@@ -3906,6 +3981,7 @@ def remains_tables_on_input(hashMap, _files=None, _data=None):
         hashMap.put("toast", str(hashMap.get("selected_card_position")))
     return hashMap
 
+
 @HashMap()
 def doc_details_barcode_scanned(hash_map: HashMap):
     if hash_map['barcode_scanned'] == 'true':
@@ -3920,3 +3996,7 @@ def doc_details_barcode_scanned(hash_map: HashMap):
         doc_details_on_start(hash_map)
         hash_map.refresh_screen()
 
+#
+def on_close_app(hashMap, _files=None, _data=None):
+    suClass.deleteCache()
+    return hashMap

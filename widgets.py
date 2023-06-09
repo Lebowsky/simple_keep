@@ -5,20 +5,16 @@ import json
 wrap_content = "wrap_content"
 match_parent = 'match_parent'
 
+
 class Widget(ABC):
     @abstractmethod
     def __init__(self, **kwargs):
         self.type: str
         self.Value: str
         self.Variable: str = ''
-        self.width =  wrap_content
-        self.height = match_parent
+        self.width = wrap_content
+        self.height = wrap_content
         self.weight = 0
-        self.NoRefresh = False
-        self.show_by_condition = ''
-
-        # self.document_type = ''
-        # self.mask = ''
 
         if kwargs:
             for key, value in kwargs.items():
@@ -39,12 +35,12 @@ class TextView(Widget):
     def __init__(self, **kwargs):
         self.Value = '@value'
         super().__init__(**kwargs)
-        self.TextSize = '12'
         self.type = "TextView"
 
 
 class CheckBox(Widget):
     def __init__(self, **kwargs):
+        super().__init__(**kwargs)
         self.type = 'CheckBox'
 
 
@@ -73,10 +69,11 @@ class LinearLayout(Widget):
 
 
 class Options:
-    def __init__(self,search_enabled = True, save_position = True):
+    def __init__(self, search_enabled=True, save_position=True):
         self.options = {
-        'search_enabled':search_enabled,
-        'save_position':save_position}
+            'search_enabled': search_enabled,
+            'save_position': save_position
+        }
 
 
 class CustomCards:

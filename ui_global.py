@@ -5,7 +5,6 @@ from sqlite3 import Error
 import ui_barcodes
 import os
 import ui_form_data
-import threading
 import queue
 from datetime import datetime, timedelta
 
@@ -107,7 +106,8 @@ def check_adr_barcode_compliance(el_dict: dict, id_doc):
     return res
 #
 
-def get_query_result(query_text: object, args: object = "", return_dict=False) -> collections.Iterable:
+
+def get_query_result(query_text: object, args: object = "", return_dict=False) -> list:
     # **********************
 
     # global conn
@@ -203,37 +203,31 @@ def get_by_name(fld, table):
     else:
         return res[0][0]
 
+#
+# def get_constants(need_const=''):
+#     sql_text = 'Select * from RS_constants'
+#     res = get_query_result(sql_text)
+#
+#     # инициализируем константы
+#     if not res:  # len(res) == 0:
+#         get_query_result(
+#             'INSERT INTO RS_constants (use_series, use_properties, use_mark, add_if_not_in_plan, path, delete_files, reserved, allow_overscan) VALUES (?,?,?,?,?,?,?,?)',
+#             ('0', '0', '0', '0', '//storage/emulated/0/Android/data/ru.travelfood.simple_ui/', '0',
+#              '0', '0'))  # //storage/emulated/0/download/
+#
+#         res = get_query_result(sql_text)
+#
+#     else:  # len(res)>0:
+#         if need_const:
+#             ls = ['id', 'use_series', 'use_properties', 'use_mark', 'add_if_not_in_plan', 'path', 'delete_files',
+#                   'reserved', 'allow_overscan', 'release']
+#             x = ls.index(need_const)
+#
+#             if x > 0:
+#                 return res[0][x]
+#         else:
+#             return res[0]
 
-def get_constants(need_const=''):
-    sql_text = 'Select * from RS_constants'
-    res = get_query_result(sql_text)
-
-    # инициализируем константы
-    if not res:  # len(res) == 0:
-        get_query_result(
-            'INSERT INTO RS_constants (use_series, use_properties, use_mark, add_if_not_in_plan, path, delete_files, reserved, allow_overscan) VALUES (?,?,?,?,?,?,?,?)',
-            ('0', '0', '0', '0', '//storage/emulated/0/Android/data/ru.travelfood.simple_ui/', '0',
-             '0', '0'))  # //storage/emulated/0/download/
-
-        res = get_query_result(sql_text)
-
-    else:  # len(res)>0:
-        if need_const:
-            ls = ['id', 'use_series', 'use_properties', 'use_mark', 'add_if_not_in_plan', 'path', 'delete_files',
-                  'reserved', 'allow_overscan', 'release']
-            x = ls.index(need_const)
-
-            if x > 0:
-                return res[0][x]
-        else:
-            return res[0]
-
-
-
-def put_constants(args):
-    sql_update_query = """Update RS_constants set use_series = ?, use_properties = ?, use_mark = ?, add_if_not_in_plan=?, path = ?,
-     delete_files = ?, allow_overscan = ? """
-    res = get_query_result(sql_update_query, args)
 
 
 def Id_to_HEX(guid):
@@ -348,7 +342,7 @@ class Rs_doc():
             #     qtext = 'DELETE FROM RS_docs_table  WHERE id = ?'
             #     get_query_result(qtext, (el['id'],))
             # else:
-            qtext = 'UPDATE RS_docs_table SET qtty=qtty+?, last_updated = ?  WHERE id = ?'
+            qtext = 'UPDATE RS_docs_table SET qtty=qtty+?, last_updated = ? sent = 0 WHERE id = ?'
             current_time_utc_0 = (datetime.now() - timedelta(hours=user_tmz)).strftime("%Y-%m-%d %H:%M:%S")
             get_query_result(qtext, (qtty, current_time_utc_0, el['id']))
         else:  # Такой строки нет, надо добавить
@@ -409,7 +403,7 @@ class Rs_doc():
     # КОнтроль планов в документе - control
     # Есть план по маркируемой продукции have_mark_plan
     def process_the_barcode(self, barcode, have_qtty_plan = False, have_zero_plan = False, control = False, have_mark_plan = False,
-                            elem = None, user_tmz=0): # add_if_not_found=False, add_if_not_in_plan=False):
+                            elem = None, use_mark_setting = 'false', user_tmz=0): # add_if_not_found=False, add_if_not_in_plan=False):
         # Получим структуру баркода
         if barcode[0] == chr(29) and len(barcode) > 31:  # Remove first GS1 char from barcode
             barcode = barcode[1:]
@@ -432,7 +426,7 @@ class Rs_doc():
         else:
             return {'Error': 'NotFound', 'Descr': 'Штрихкод не найден в базе', 'Barcode': barcode}
 
-        use_mark = get_constants('use_mark') == 'true' and elem['use_mark'] == 1
+        use_mark = use_mark_setting  == 'true' and elem['use_mark'] == 1 #get_constants('use_mark')
 
         # Проверяем маркировку
         if use_mark:
@@ -631,9 +625,9 @@ class Rs_adr_doc():
             #     qtext = 'DELETE FROM RS_docs_table  WHERE id = ?'
             #     get_query_result(qtext, (el['id'],))
             # else:
-            qtext = 'UPDATE RS_adr_docs_table SET qtty=qtty+?, last_updated = ?  WHERE id = ?'
+            qtext = 'UPDATE RS_adr_docs_table SET qtty=qtty+?, last_updated = ?, id_cell = ?  WHERE id = ?'
             current_time_utc_0 = (datetime.now() - timedelta(hours=int(user_tmz))).strftime("%Y-%m-%d %H:%M:%S")
-            get_query_result(qtext, (qtty, current_time_utc_0, el['id']))
+            get_query_result(qtext, (qtty,  current_time_utc_0, cell_id, el['id']))
         else:  # Такой строки нет, надо добавить
             qtext = 'REPLACE INTO RS_adr_docs_table(id_doc, id_good, id_properties,id_series, id_unit, qtty, is_plan, id_cell, table_type) VALUES (?,?,?,?,?,?,?,?,?)'
             get_query_result(qtext, (
