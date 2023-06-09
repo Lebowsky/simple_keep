@@ -361,9 +361,9 @@ def doc_details_on_start(hashMap, _files=None, _data=None):
 
             good_info = ""
             if product_row['art'] != "None":
-                good_info += product_row['art'] + " "
+                good_info += product_row['art']
             if product_row['properties_name'] != "None":
-                good_info += "(" + product_row['properties_name'] + ") "
+                good_info += "(" + product_row['properties_name'] + ")"
             if product_row['series_name'] != "None":
                 good_info += product_row['series_name']
             if product_row['units_name'] != "None":
@@ -778,7 +778,6 @@ def doc_adr_details_listener(hashMap, _files=None, _data=None):
             hashMap.put('current_cell_id', doc_cell['id'])
             return hashMap
 
-
         have_qtty_plan = hashMap.get('have_qtty_plan')
         have_zero_plan = hashMap.get('have_zero_plan')
         have_mark_plan = hashMap.get('have_mark_plan')
@@ -1163,7 +1162,7 @@ def doc_details_listener(hashMap, _files=None, _data=None):
             eval(control),
             eval(have_mark_plan),
             rs_settings.get('use_mark'),
-            user_tmz = int(hashMap.get("TMZ"))
+            user_tmz=int(hashMap.get("TMZ"))
         )
         if res is None:
             hashMap.put('scanned_barcode', barcode)
