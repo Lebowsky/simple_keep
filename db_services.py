@@ -5,7 +5,7 @@ from ui_global import get_query_result
 
 
 class DocService:
-    def __init__(self, doc_id):
+    def __init__(self, doc_id=''):
         self.doc_id = doc_id
 
     def get_last_edited_goods(self, to_json=False):
@@ -198,5 +198,64 @@ class DocService:
             ORDER BY RS_docs.doc_date
         '''
 
-        result = self._get_query_result(query_text, (doc_type, ), return_dict=True)
+        args = (doc_type, ) if doc_type else None
+
+        result = self._get_query_result(query_text, args, return_dict=True)
         return result
+
+    def delete_doc(self, id_doc):
+        query_doc = 'DELETE FROM RS_docs WHERE id_doc = ?'
+        res = self._get_query_result(query_doc, (id_doc,))
+
+        return res
+
+    def get_docs_stat(self):
+        query = '''
+        WITH tmp AS (
+            SELECT 
+                doc_type,
+                RS_docs.id_doc,
+                1 as doc_Count,
+                IFNULL(RS_docs.sent,0) as sent,
+                IFNULL(verified,0) as verified, 
+                CASE WHEN IFNULL(verified,0)=0 THEN 
+                    COUNT(RS_docs_table.id)
+                ELSE 
+                    0 
+                END as count_verified,
+                CASE WHEN IFNULL(verified,0)=1 THEN 
+                    count(RS_docs_table.id)
+                ELSE 
+                    0 
+                END as count_unverified,
+                CASE WHEN IFNULL(verified,0)=0 THEN
+                     SUM(RS_docs_table.qtty_plan)
+                ELSE 
+                    0 
+                END as qtty_plan_verified,
+                CASE WHEN ifnull(verified,0)=1 THEN 
+                    SUM(RS_docs_table.qtty_plan)
+                ELSE 
+                    0 
+                END as qtty_plan_unverified
+            FROM RS_docs
+            LEFT JOIN RS_docs_table 
+                ON RS_docs_table.id_doc = RS_docs.id_doc
+            GROUP BY RS_docs.id_doc
+        )
+        SELECT 
+            doc_type as docType, 
+            COUNT(id_doc),
+            SUM(doc_Count) as count, 
+            SUM(sent) as sent, 
+            SUM(verified) as verified,
+            SUM(count_verified) as count_verified,
+            SUM(count_unverified) as count_unverified,
+            SUM(qtty_plan_verified) as qtty_plan_verified,
+            SUM(qtty_plan_unverified) as qtty_plan_unverified
+        FROM tmp
+        GROUP BY doc_type
+        '''
+
+        res = self._get_query_result(query, return_dict=True)
+        return res
