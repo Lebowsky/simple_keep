@@ -254,8 +254,8 @@ def database_shema():
     Rs.append('''
     CREATE TABLE IF NOT EXISTS RS_docs_barcodes (
     id                   INTEGER PRIMARY KEY AUTOINCREMENT,
-    id_doc               TEXT    NOT NULL
-                                 REFERENCES RS_docs (id_doc),
+    id_doc               TEXT    NOT NULL 
+                                 REFERENCES RS_docs (id_doc) ON DELETE CASCADE,
     id_good     TEXT NOT NULL
          REFERENCES RS_goods (id),
     id_property TEXT NOT NULL
