@@ -832,7 +832,7 @@ def get_doc_detail_cards(use_series, use_properties, settings_global, isAdr = Fa
     return list
 
 
-def get_doc_detail_cards_new(settings_global, cards_data: list, add_labels: list = []):
+def get_doc_detail_cards_new(settings_global, cards_data: list, add_labels: list = None):
     goods_text_size = settings_global.get('goodsTextSize')
     header = widgets.LinearLayout(
         orientation='horizontal',
@@ -841,6 +841,7 @@ def get_doc_detail_cards_new(settings_global, cards_data: list, add_labels: list
     )
 
     # series_name, properties_name, cell_name
+    add_labels = add_labels or []
     for label in add_labels:
         header.append(
             widgets.TextView(Value=f'@{label}', TextSize=settings_global.get('SeriesPropertiesTextSize')),

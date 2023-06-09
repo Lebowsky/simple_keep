@@ -107,7 +107,7 @@ class HashMap:
     def show_dialog(self, listener, title='', buttons=None):
         self.put("ShowDialog", listener)
 
-        if title:
+        if title or buttons:
             dialog_style = {
                 'title': title or listener,
                 'yes': 'Ок',
@@ -118,7 +118,6 @@ class HashMap:
                 dialog_style['no'] = buttons[1]
 
             self.put('ShowDialogStyle', dialog_style)
-
 
 
 def parse_barcode(val):

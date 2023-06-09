@@ -1159,8 +1159,8 @@ def doc_details_listener(hashMap, _files=None, _data=None):
             eval(have_zero_plan),
             eval(control),
             eval(have_mark_plan),
-            rs_settings.get('use_mark')),
-            user_tmz = int(hashMap.get("TMZ")
+            rs_settings.get('use_mark'),
+            user_tmz=int(hashMap.get("TMZ"))
         )
         if res is None:
             hashMap.put('scanned_barcode', barcode)
@@ -3960,9 +3960,8 @@ def remains_tables_on_input(hashMap, _files=None, _data=None):
     if hashMap.get('listener') == 'show_filters':
         hashMap.put("ShowScreen", "Проверить остатки")
     if hashMap.get('listener') == 'ON_BACK_PRESSED':
-        if not hashMap.get("return_to_good_card"):
-            hashMap.put('property_id', '')
-            hashMap.put('barcode', '')
+        hashMap.put('barcode', '')
+        hashMap.put('property_id', '')
 
         if hashMap.get("return_to_good_card"):
             hashMap.put("BackScreen", '')
