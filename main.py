@@ -24,8 +24,8 @@ from requests.auth import HTTPBasicAuth
 import ui_utils
 from ui_utils import HashMap
 from ru.travelfood.simple_ui import ImportUtils as iuClass
-from android.graphics.drawable import GradientDrawable as GradientDrawable
-from android.graphics import Color
+# from android.graphics.drawable import GradientDrawable as GradientDrawable
+# from android.graphics import Color
 
 noClass = jclass("ru.travelfood.simple_ui.NoSQL")
 rs_settings = noClass("rs_settings")
@@ -70,123 +70,14 @@ def docs_on_select_group_scan(hash_map: HashMap):
 
 @HashMap()
 def doc_details_on_start_group_scan(hash_map: HashMap):
-    id_doc = hash_map.get('id_doc')
-    hash_map.toast(id_doc)
-    # use_series = rs_settings.get('use_series')
-    # use_properties = rs_settings.get('use_properties')
-    #
-    # add_labels = [
-    #     key for key, value in
-    #     {'series_name': use_series, 'properties_name': use_properties}.items()
-    #     if str(value) in ['1', 'true']
-    # ]
-    #
-    # hash_map.put('use_properties', use_properties)
-    #
-    # query_text = ui_form_data.get_doc_details_query()
-    # doc_details = ui_global.get_query_result(query_text, (id_doc,), True)
-    # cards_data = []
-    # have_zero_plan = False
-    #
-    # if doc_details:
-    #     for record in doc_details:
-    #         pic = '#f02a' if record['IsDone'] != 0 else '#f00c'
-    #         if record['qtty'] == 0 and record['qtty_plan'] == 0:
-    #             pic = ''
-    #
-    #         cards_data.append({
-    #             'key': str(record['id']),
-    #             'good_name': str(record['good_name']),
-    #             'id_good': str(record['id_good']),
-    #             'id_properties': str(record['id_properties']),
-    #             'properties_name': str(record['properties_name'] or ''),
-    #             'id_series': str(record['id_series']),
-    #             'series_name': str(record['series_name'] or ''),
-    #             'id_unit': str(record['id_unit']),
-    #             'units_name': str(record['units_name'] or ''),
-    #             'code_art': 'Код: ' + str(record['code']),
-    #
-    #             'qtty': str(record['qtty'] if record['qtty'] is not None else 0),
-    #             'qtty_plan': str(record['qtty_plan'] if record['qtty_plan'] is not None else 0),
-    #             'price': str(record['price'] if record['price'] is not None else 0),
-    #             'price_name': str(record['price_name'] or ''),
-    #             'picture': pic
-    #         })
-    #         have_zero_plan = True
-    #
-    # doc_goods = ui_form_data.get_doc_detail_cards_new(rs_settings, cards_data, add_labels=add_labels)
-    # hash_map.put("doc_goods", doc_goods)
-    #
-    # have_qtty_plan = sum([item['qtty_plan'] or 0 for item in doc_details]) > 0
-    #
-    # qtext = ui_form_data.get_have_mark_codes_query()
-    # res = list(ui_global.get_query_result(qtext, {'id_doc': id_doc, 'is_plan': '1'}))
-    # have_mark_plan = res and res[0][0] > 0
-    #
-    # res = list(ui_global.get_query_result('SELECT control from RS_docs  WHERE id_doc = ?', (id_doc,)))
-    # control = res and res[0][0] not in (0, '0', 'false', 'False', None)
-    #
-    # hash_map.put('have_zero_plan', str(have_zero_plan))
-    # hash_map.put('have_qtty_plan', str(have_qtty_plan))
-    # hash_map.put('have_mark_plan', str(have_mark_plan))
-    # hash_map.put('control', str(control))
+    screen = ui_models.DocDetailsGroupScanScreen(hash_map, rs_settings)
+    screen.on_start()
 
 
 @HashMap()
 def doc_details_listener_group_scan(hash_map: HashMap):
-    listener = hash_map['listener']
-
-    if listener == "CardsClick":
-        pass
-    elif listener == "btn_barcodes":
-        # hash_map.show_dialog('ВвестиШтрихкод')
-        hash_map.put('ShowDialog', 'ВвестиШтрихкод')
-    elif listener == 'barcode' or (listener == 'ВвестиШтрихкод' and hash_map.get("event") == "onResultPositive"):
-        doc = ui_global.Rs_doc()
-        doc.id_doc = hash_map.get('id_doc')
-
-        if hash_map.get("event") == "onResultPositive":
-            barcode = hash_map.get('fld_barcode')
-        else:
-            barcode = hash_map.get('barcode_camera')
-
-        if not barcode.strip():
-            hash_map.show_dialog("ВвестиШтрихкод")
-            return
-
-        have_qtty_plan = hash_map.get('have_qtty_plan')
-        have_zero_plan = hash_map.get('have_zero_plan')
-        have_mark_plan = hash_map.get('have_mark_plan')
-        control = hash_map.get('control')
-        res = doc.process_the_barcode(
-            doc,
-            barcode,
-            eval(have_qtty_plan),
-            eval(have_zero_plan),
-            eval(control),
-            eval(have_mark_plan),
-            rs_settings.get('use_mark'))
-        if res is None:
-            hash_map.put('scanned_barcode', barcode)
-            hash_map.put('ShowScreen', 'Ошибка сканера')
-        elif res['Error']:
-            if res['Error'] == 'AlreadyScanned':
-                hash_map.put('barcode', json.dumps({'barcode': res['Barcode'], 'doc_info': res['doc_info']}))
-                hash_map.put('ShowScreen', 'Удаление штрихкода')
-            elif res['Error'] == 'QuantityPlanReached':
-                hash_map.put('toast', res['Descr'])
-            elif res['Error'] == 'Zero_plan_error':
-                hash_map.put('toast', res['Descr'])
-            else:
-                hash_map.put('toast', res['Descr'])
-        else:
-            highlight_added_good(hash_map, barcode)
-            hash_map.put('toast', 'Товар добавлен в документ')
-            hash_map.put('barcode_scanned', 'true')
-
-    elif listener in ['ON_BACK_PRESSED', 'BACK_BUTTON']:
-        hash_map.put("ShowScreen", "Документы")
-
+    screen = ui_models.DocDetailsGroupScanScreen(hash_map, rs_settings)
+    screen.on_input()
 
 @HashMap()
 def doc_details_barcode_scanned(hash_map: HashMap):
