@@ -44,40 +44,49 @@ importlib.reload(ui_models)
 # =============== Group Scan =================
 
 
+def create_screen(hash_map):
+    screen_params = {
+        'hash_map': hash_map,
+        'rs_settings': rs_settings
+    }
+    return ui_models.ScreensFactory.create_screen(**screen_params)
+
+
 @HashMap()
 def tiles_on_start_group_scan(hash_map: HashMap):
-    screen = ui_models.Tiles(hash_map, rs_settings)
+    screen = create_screen(hash_map)
     screen.on_start()
 
 
 @HashMap()
 def tiles_on_input_group_scan(hash_map: HashMap):
-    screen = ui_models.Tiles(hash_map, rs_settings)
+    screen = create_screen(hash_map)
     screen.on_input()
 
 
 @HashMap()
 def docs_on_start_group_scan(hash_map: HashMap):
-    screen = ui_models.DocsListGroupScanScreen(hash_map, rs_settings)
+    screen = create_screen(hash_map)
     screen.on_start()
 
 
 @HashMap()
 def docs_on_select_group_scan(hash_map: HashMap):
-    screen = ui_models.DocsListGroupScanScreen(hash_map, rs_settings)
+    screen = create_screen(hash_map)
     screen.on_input()
 
 
 @HashMap()
 def doc_details_on_start_group_scan(hash_map: HashMap):
-    screen = ui_models.DocDetailsGroupScanScreen(hash_map, rs_settings)
+    screen = create_screen(hash_map)
     screen.on_start()
 
 
 @HashMap()
 def doc_details_listener_group_scan(hash_map: HashMap):
-    screen = ui_models.DocDetailsGroupScanScreen(hash_map, rs_settings)
+    screen = create_screen(hash_map)
     screen.on_input()
+
 
 @HashMap()
 def doc_details_barcode_scanned(hash_map: HashMap):
@@ -147,6 +156,7 @@ def debug_listener(hashMap, _files=None, _data=None):
 
     if listener == 'btn_copy_base':
         ip_host = hashMap.get('ip_host')
+        # ip_host = '10.24.24.20'
         if os.path.isfile('//data/data/ru.travelfood.simple_ui/databases/SimpleKeep'): #Keep'):
             with open('//data/data/ru.travelfood.simple_ui/databases/SimpleKeep', 'rb') as f:  # rightscan
                 r = requests.post('http://' + ip_host + ':2444/post', files={'Rightscan': f})  # rightscan
@@ -1044,17 +1054,17 @@ def doc_details_listener(hashMap, _files=None, _data=None):
         doc.id_doc = hashMap.get('id_doc')
         if hashMap.get("event") == "onResultPositive":
             barcode = hashMap.get('fld_barcode')
+            if not barcode.strip():
+                hashMap.put("ShowDialog", "ВвестиШтрихкод")
+                return hashMap
         else:
             barcode = hashMap.get('barcode_camera')
-
-        if not barcode.strip():
-            hashMap.put("ShowDialog", "ВвестиШтрихкод")
-            return hashMap
 
         have_qtty_plan = hashMap.get('have_qtty_plan')
         have_zero_plan = hashMap.get('have_zero_plan')
         have_mark_plan = hashMap.get('have_mark_plan')
         control = hashMap.get('control')
+
         res = doc.process_the_barcode(
             doc,
             barcode,
