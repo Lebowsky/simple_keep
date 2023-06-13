@@ -423,9 +423,9 @@ def doc_details_on_start(hashMap, _files=None, _data=None):
 
             good_info = ""
             if product_row['art'] != "None":
-                good_info += product_row['art'] + " "
+                good_info += product_row['art']
             if product_row['properties_name'] != "None":
-                good_info += "(" + product_row['properties_name'] + ") "
+                good_info += "(" + product_row['properties_name'] + ")"
             if product_row['series_name'] != "None":
                 good_info += product_row['series_name']
             if product_row['units_name'] != "None":
@@ -777,7 +777,6 @@ def doc_adr_details_listener(hashMap, _files=None, _data=None):
             hashMap.put('current_cell_id', doc_cell['id'])
             return hashMap
 
-
         have_qtty_plan = hashMap.get('have_qtty_plan')
         have_zero_plan = hashMap.get('have_zero_plan')
         have_mark_plan = hashMap.get('have_mark_plan')
@@ -892,12 +891,14 @@ def get_current_elem_doc_goods(hashMap, current_str):
 
     if hashMap.get('view') == "cards":
         jlist = json.loads(hashMap.get("doc_goods_cards"))
-        current_elem = jlist['customcards']['cardsdata'][int(current_str)]
-
+        cards_data = jlist['customcards']['cardsdata']
     else:
         jlist = json.loads(hashMap.get("doc_goods_table"))
-        current_elem = jlist['customtable']['tabledata'][int(current_str)]
-
+        cards_data = jlist['customtable']['tabledata']
+    for element in cards_data:
+        if "key" in element:
+            if element["key"] == hashMap.get("selected_card_key"):
+                current_elem = element
     return current_elem
 
 
@@ -908,7 +909,12 @@ def docs_on_select(hashMap, _files=None, _data=None):
         # Находим ID документа
         current_str = hashMap.get("selected_card_position")
         jlist = json.loads(hashMap.get("docCards"))
-        current_doc = jlist['customcards']['cardsdata'][int(current_str)]
+        cards_data = jlist['customcards']['cardsdata']
+        for element in cards_data:
+            if "key" in element:
+                if element["key"] == hashMap.get("selected_card_key"):
+                    current_doc = element
+        # current_doc = jlist['customcards']['cardsdata'][int(current_str)]
 
         # id_doc = current_doc['key']
         hashMap.put('id_doc', current_doc['key'])
@@ -982,6 +988,7 @@ def doc_details_listener(hashMap, _files=None, _data=None):
     listener = hashMap.get('listener')
 
     if listener == "CardsClick":
+
 
         # Находим ID документа
         current_str = hashMap.get("selected_card_position")
@@ -2951,7 +2958,8 @@ def get_remains(hashMap, _files=None, _data=None):
 
     http = get_http_settings(hashMap)
 
-    if not (hashMap.get('barcode') or hashMap.get('wh_select') or hashMap.get('cell_input') or hashMap.get('selected_cell_id')):
+    if not (hashMap.get('barcode') or hashMap.get('wh_select') or hashMap.get('cell_input')
+            or hashMap.get('selected_cell_id') or hashMap.get('selected_good_id')):
         hashMap.put('goods_custom_table', '')
         hashMap.put('object_name', '')
         hashMap.put('cell_name', '')
@@ -3000,6 +3008,12 @@ def get_remains(hashMap, _files=None, _data=None):
                          params=params)
 
         json_response = json.loads(r.text.encode("utf-8"))
+
+        if len(json_response) < 2:
+            hashMap.put("no_data", "Нет данных")
+            hashMap.put("Show_no_data", "1")
+        else:
+            hashMap.put("Show_no_data", "-1")
 
         values = 0
         for element in json_response:
@@ -3077,6 +3091,12 @@ def get_remains(hashMap, _files=None, _data=None):
                              params=params)
 
             json_response = json.loads(r.text.encode("utf-8"))
+
+            if len(json_response) < 2:
+                hashMap.put("no_data", "Нет данных")
+                hashMap.put("Show_no_data", "1")
+            else:
+                hashMap.put("Show_no_data", "-1")
 
             values = 0
             for element in json_response:
@@ -3371,7 +3391,7 @@ def get_prices(hashMap, _files=None, _data=None):
 
         json_prices = json.loads(r.text.encode("utf-8"))
 
-        if len(json_prices) == 0:
+        if len(json_prices) < 2:
             hashMap.put("no_data", "Нет данных")
 
         unit_values = 0
@@ -3821,8 +3841,9 @@ def remains_tables_on_input(hashMap, _files=None, _data=None):
     if hashMap.get('listener') == 'show_filters':
         hashMap.put("ShowScreen", "Проверить остатки")
     if hashMap.get('listener') == 'ON_BACK_PRESSED':
-        hashMap.put('barcode', '')
-        hashMap.put('property_id', '')
+        if not hashMap.get("return_to_good_card"):
+            hashMap.put('property_id', '')
+            hashMap.put('barcode', '')
 
         if hashMap.get("return_to_good_card"):
             hashMap.put("BackScreen", '')
