@@ -49,7 +49,11 @@ def create_screen(hash_map):
         'hash_map': hash_map,
         'rs_settings': rs_settings
     }
-    return ui_models.ScreensFactory.create_screen(**screen_params)
+    screen = ui_models.ScreensFactory.create_screen(**screen_params)
+    if not screen:
+        screen = ui_models.MockScreen(hash_map)
+
+    return screen
 
 
 @HashMap()
@@ -99,7 +103,7 @@ def doc_details_barcode_scanned(hash_map: HashMap):
         if answer and answer.get('Error') is not None:
             hash_map.debug(answer.get('Error'))
 
-        doc_details_on_start(hash_map)
+        doc_details_on_start_group_scan(hash_map)
         hash_map.refresh_screen()
 
 # ^^^^^^^^^^^^^^^^^ Group Scan ^^^^^^^^^^^^^^^^^
@@ -156,7 +160,7 @@ def debug_listener(hashMap, _files=None, _data=None):
 
     if listener == 'btn_copy_base':
         ip_host = hashMap.get('ip_host')
-        # ip_host = '10.24.24.20'
+        ip_host = '10.24.24.20'
         if os.path.isfile('//data/data/ru.travelfood.simple_ui/databases/SimpleKeep'): #Keep'):
             with open('//data/data/ru.travelfood.simple_ui/databases/SimpleKeep', 'rb') as f:  # rightscan
                 r = requests.post('http://' + ip_host + ':2444/post', files={'Rightscan': f})  # rightscan
