@@ -342,7 +342,7 @@ class Rs_doc():
             #     qtext = 'DELETE FROM RS_docs_table  WHERE id = ?'
             #     get_query_result(qtext, (el['id'],))
             # else:
-            qtext = 'UPDATE RS_docs_table SET qtty=qtty+?, last_updated = ? sent = 0 WHERE id = ?'
+            qtext = 'UPDATE RS_docs_table SET qtty=qtty+?, last_updated = ?, sent = 0 WHERE id = ?'
             current_time_utc_0 = (datetime.now() - timedelta(hours=user_tmz)).strftime("%Y-%m-%d %H:%M:%S")
             get_query_result(qtext, (qtty, current_time_utc_0, el['id']))
         else:  # Такой строки нет, надо добавить
