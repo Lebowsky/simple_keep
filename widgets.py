@@ -1,5 +1,5 @@
-from abc import ABC, abstractmethod, abstractproperty
-from typing import Union, List
+from abc import ABC, abstractmethod
+from typing import List
 import json
 
 wrap_content = "wrap_content"
@@ -11,7 +11,6 @@ class Widget(ABC):
     def __init__(self, **kwargs):
         self.type: str
         self.Value: str
-        self.Variable: str = ''
         self.width = wrap_content
         self.height = wrap_content
         self.weight = 0

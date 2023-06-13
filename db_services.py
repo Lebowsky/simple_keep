@@ -259,3 +259,41 @@ class DocService:
 
         res = self._get_query_result(query, return_dict=True)
         return res
+
+    def get_doc_details_data(self, id_doc) -> list:
+        query = """
+            SELECT
+            RS_docs_table.id,
+            RS_docs_table.id_doc,
+            RS_docs_table.id_good,
+            RS_goods.name as good_name,
+            RS_goods.code,
+            RS_goods.art,
+            RS_docs_table.id_properties,
+            RS_properties.name as properties_name,
+            RS_docs_table.id_series,
+            RS_series.name as series_name,
+            RS_docs_table.id_unit,
+            RS_units.name as units_name,
+            RS_docs_table.qtty,
+            RS_docs_table.qtty_plan,
+            RS_docs_table.price,
+            RS_price_types.name as price_name,
+            RS_docs_table.qtty_plan - RS_docs_table.qtty as IsDone
+            FROM RS_docs_table 
+
+            LEFT JOIN RS_goods 
+            ON RS_goods.id=RS_docs_table.id_good
+            LEFT JOIN RS_properties
+            ON RS_properties.id = RS_docs_table.id_properties
+            LEFT JOIN RS_series
+            ON RS_series.id = RS_docs_table.id_series
+            LEFT JOIN RS_units
+            ON RS_units.id=RS_docs_table.id_unit
+            LEFT JOIN RS_price_types
+            ON RS_price_types.id = RS_docs_table.id_price
+            WHERE id_doc = $arg1
+            ORDER BY RS_docs_table.last_updated DESC 
+            """
+        res = self._get_query_result(query, (id_doc,), return_dict=True)
+        return res
