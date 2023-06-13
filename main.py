@@ -475,6 +475,8 @@ def doc_details_on_start(hashMap, _files=None, _data=None):
 
         else:
             have_mark_plan = res[0][0] > 0
+
+        hashMap.put("table_lines_qtty", str(len(results)))
     else:
         have_qtty_plan = False
         have_zero_plan = False
@@ -984,8 +986,6 @@ def doc_details_listener(hashMap, _files=None, _data=None):
     listener = hashMap.get('listener')
 
     if listener == "CardsClick":
-
-
         # Находим ID документа
         current_str = hashMap.get("selected_card_position")
         current_elem = get_current_elem_doc_goods(hashMap, current_str)
@@ -996,9 +996,19 @@ def doc_details_listener(hashMap, _files=None, _data=None):
                         hashMap.get('doc_type') + ' №' + hashMap.get('doc_n') +
                         ' от ' + hashMap.get('doc_date'))
             hashMap.put("Good", current_elem['good_name'])
-            good_info = current_elem['good_info']
+            hashMap.put('good_art', str(current_elem['art']))
+            hashMap.put('good_sn', str(current_elem['series_name']))
+            hashMap.put('good_property', str(current_elem['properties_name']))
+            hashMap.put('good_price', str(current_elem['price']))
+            hashMap.put('good_unit', str(current_elem['units_name']))
+            hashMap.put('good_str', str(current_str) + "/" + hashMap.get('table_lines_qtty'))
 
-            hashMap.put("Good_info", good_info)
+            fill_empty_values(hashMap, {'good_art': str(current_elem['art']),
+                                        'good_sn': str(current_elem['series_name']),
+                                        'good_property': str(current_elem['properties_name']),
+                                        'good_price': str(current_elem['price']),
+                                        'good_plan': str(current_elem['qtty_plan'])}, value="отсутствует")
+
             hashMap.put("qtty_plan", str(current_elem['qtty_plan']))
             if not current_elem['qtty']:  # or float(current_elem['qtty']) == 0:
                 hashMap.put("qtty", '')
@@ -2069,6 +2079,7 @@ def font_sizes_on_start(hashMap, _files=None, _data=None):
                                          password=False).to_json())  # )
 
     return hashMap
+
 
 def sound_settings_on_start(hashMap, _files=None, _data=None):
     # ss = {'signal_num': "Номер сигнала",
@@ -3704,7 +3715,7 @@ def fill_empty_values(hashMap, names_list=dict(), value=""):
 
     for k, v in names_list.items():
 
-        if v is None:
+        if v is None or v == "None":
             v = ''
         if len(v) == 0:
             hashMap.put(k, value)
