@@ -13,6 +13,8 @@ class Screen(ABC):
     def __init__(self, hash_map: HashMap):
         self.hash_map: HashMap = hash_map
         self.screen_values = {}
+        self.listener: str = ''
+        self.event: str = ''
 
     @abstractmethod
     def on_start(self):
@@ -32,6 +34,9 @@ class Screen(ABC):
 
     def toast(self, text):
         self.hash_map.toast(text)
+
+    def _is_result_positive(self, listener) -> bool:
+        return self.listener == listener and self.event == 'onResultPositive'
 
     def __str__(self):
         return f'{self.process_name} / {self.screen_name}'
@@ -290,8 +295,7 @@ class DocsListScreen(Screen):
                 title='Удалить документ с устройства?'
             )
 
-    def _is_result_positive(self, listener) -> bool:
-        return self.listener == listener and self.event == 'onResultPositive'
+
 
     def _get_doc_list_data(self, doc_type='') -> list:
         if doc_type and doc_type != 'Все':
@@ -302,6 +306,15 @@ class DocsListScreen(Screen):
         table_data = []
 
         for record in results:
+            doc_status = ''
+
+            if record['verified'] and record['sent']:
+                doc_status = 'Выгружен'
+            elif record['verified']:
+                doc_status = 'К выгрузке'
+            elif not (record['verified'] and record['sent']):
+                doc_status = 'К выполнению'
+
             table_data.append({
                 'key': record['id_doc'],
                 'type': record['doc_type'],
@@ -309,7 +322,8 @@ class DocsListScreen(Screen):
                 'data': record['doc_date'],
                 'warehouse': record['RS_warehouse'],
                 'countragent': record['RS_countragent'],
-                'add_mark_selection': record['add_mark_selection']
+                'add_mark_selection': record['add_mark_selection'],
+                'status': doc_status
             })
 
         return table_data
@@ -383,6 +397,8 @@ class DocsListGroupScanScreen(DocsListScreen):
         super().on_input()
         if self.listener == "CardsClick":
             self.hash_map.show_dialog('Подтвердите действие')
+            selected_card_key = self.hash_map['selected_card_key']
+            self.hash_map['id_doc'] = selected_card_key
 
         elif self.listener == 'LayoutAction':
             self._layout_action()
@@ -398,6 +414,10 @@ class DocsListGroupScanScreen(DocsListScreen):
                 self.hash_map.toast('Ошибка удаления документа')
 
         elif self._is_result_positive('Подтвердите действие'):
+            id_doc = self.hash_map['id_doc']
+            self.service.doc_id = id_doc
+            self.service.set_doc_value('verified', 1)
+
             screen_name = 'Документ товары'
             screen = ScreensFactory.create_screen(
                 screen_name=screen_name,
@@ -406,7 +426,6 @@ class DocsListGroupScanScreen(DocsListScreen):
                 rs_settings=self.rs_settings)
 
             screen.show(args=self._get_selected_card_put_data())
-            # self.hash_map.show_screen('Документ товары', )
 
         elif self.listener == 'ON_BACK_PRESSED':
             self.hash_map.show_screen('Плитки')
@@ -419,6 +438,10 @@ class DocsListGroupScanScreen(DocsListScreen):
         doc_cards = widgets.CustomCards(
             widgets.LinearLayout(
                 widgets.LinearLayout(
+                    widgets.TextView(
+                        Value='@status',
+                        gravity_horizontal='left'
+                    ),
                     widgets.TextView(
                         weight=8,
                         width='match_parent',
@@ -510,9 +533,13 @@ class DocDetailsGroupScanScreen(DocDetailsScreen):
 
         doc_details = service.get_doc_details_data(id_doc)
         table_data = [{}]
+        row_filter = self.hash_map.get_bool('rows_filter')
 
         if doc_details:
             for record in doc_details:
+                if row_filter and record['qtty'] == record['qtty_plan']:
+                    continue
+
                 pic = '#f02a' if record['IsDone'] != 0 else '#f00c'
                 if record['qtty'] == 0 and record['qtty_plan'] == 0:
                     pic = ''
@@ -533,7 +560,7 @@ class DocDetailsGroupScanScreen(DocDetailsScreen):
                     'qtty_plan': str(record['qtty_plan'] if record['qtty_plan'] is not None else 0),
                     'price': str(record['price'] if record['price'] is not None else 0),
                     'price_name': str(record['price_name'] or ''),
-                    'picture': pic
+                    'picture': pic,
                 }
 
                 props = [
@@ -568,7 +595,7 @@ class DocDetailsGroupScanScreen(DocDetailsScreen):
 
         if listener == "CardsClick":
             pass
-        elif listener == 'barcode':
+        elif listener == 'barcode' or self._is_result_positive('ВвестиШтрихкод'):
             doc = RsDoc(id_doc)
             barcode = self.hash_map.get('barcode_camera')
 
@@ -601,9 +628,20 @@ class DocDetailsGroupScanScreen(DocDetailsScreen):
                 self._add_scanned_row(id_doc, res.get('key'))
                 self.hash_map.toast('Товар добавлен в документ')
                 self.hash_map.put('barcode_scanned', 'true')
+                self.hash_map.run_event_async('doc_details_barcode_scanned')
 
+        elif listener == 'btn_barcodes':
+            self.hash_map.show_dialog('ВвестиШтрихкод')
         elif listener in ['ON_BACK_PRESSED', 'BACK_BUTTON']:
             self.hash_map.put("ShowScreen", "Документы")
+
+        elif listener == 'btn_rows_filter_on':
+            self.hash_map.put('rows_filter', '1')
+            self.hash_map.refresh_screen()
+
+        elif listener == 'btn_rows_filter_off':
+            self.hash_map.remove('rows_filter')
+            self.hash_map.refresh_screen()
 
     def _get_doc_table_view(self, table_data):
         table_view = widgets.CustomTable(
@@ -724,7 +762,6 @@ class DocDetailsGroupScanScreen(DocDetailsScreen):
 
         self.hash_map.put('added_goods', added_goods, to_json=True)
 
-
     class TextView(widgets.TextView):
         def __init__(self, value):
             super().__init__()
@@ -760,3 +797,16 @@ class ScreensFactory:
             if getattr(item, 'screen_name') == screen_name and getattr(item, 'process_name') == process:
                 return item(**kwargs)
 
+
+class MockScreen(Screen):
+    def on_start(self):
+        pass
+
+    def on_input(self):
+        pass
+
+    def on_post_start(self):
+        pass
+
+    def show(self, args=None):
+        pass
