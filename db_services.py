@@ -1,6 +1,5 @@
 import json
 
-from ui_utils import parse_barcode
 from ui_global import get_query_result
 
 
@@ -91,8 +90,7 @@ class DocService:
 
                 self._get_query_result(query)
 
-    @staticmethod
-    def json_to_sqlite_query(data, docs=None):
+    def json_to_sqlite_query(self, data, docs=None):
         qlist = []
         # Цикл по именам таблиц
         table_list = (
@@ -134,7 +132,7 @@ class DocService:
                     if row[col] is None:
                         row[col] = ''
                     if col == 'mark_code':  # Заменяем это поле на поля GTIN и Series
-                        barc_struct = parse_barcode(row[col])
+                        barc_struct = self.parse_barcode(row[col])
                         row_values.append(barc_struct['GTIN'])
                         row_values.append(barc_struct['Series'])
                     else:
@@ -164,6 +162,12 @@ class DocService:
             '''
 
         self._get_query_result(query)
+
+    def get_doc_value(self, key, id_doc):
+        query = f'SELECT {key} from RS_docs  WHERE id_doc = ?'
+        res = self._get_query_result(query, (id_doc,), True)
+        if res:
+            return res[0][key]
 
     def get_doc_types(self) -> list:
         query = 'SELECT DISTINCT doc_type from RS_docs'
@@ -297,3 +301,20 @@ class DocService:
             """
         res = self._get_query_result(query, (id_doc,), return_dict=True)
         return res
+
+    def parse_barcode(self, val):
+        if len(val) < 21:
+            return {'GTIN': '', 'Series': ''}
+
+        val.replace('(01)', '01')
+        val.replace('(21)', '21')
+
+        if val[:2] == '01':
+            GTIN = val[2:16]
+            Series = val[18:]
+        else:
+            GTIN = val[:14]
+            Series = val[14:]
+
+        return {'GTIN': GTIN, 'Series': Series}
+

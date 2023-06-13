@@ -289,7 +289,7 @@ class Rs_doc():
                 Where id_doc=? """
         res = get_query_result(query, (int(key), self.id_doc))
 
-    def find_barcode_in_table(self, search_value: str, func_compared='=?') -> object:
+    def find_barcode_in_table(self, search_value: str, func_compared='=?') -> list:
 
         query = '''
                  SELECT

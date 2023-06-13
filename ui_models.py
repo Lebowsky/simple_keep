@@ -1,6 +1,7 @@
 from abc import ABC, abstractmethod
+import json
 
-from ui_utils import HashMap
+from ui_utils import HashMap, RsDoc
 from db_services import DocService
 import widgets
 
@@ -12,6 +13,8 @@ class Screen(ABC):
     def __init__(self, hash_map: HashMap):
         self.hash_map: HashMap = hash_map
         self.screen_values = {}
+        self.listener: str = ''
+        self.event: str = ''
 
     @abstractmethod
     def on_start(self):
@@ -31,6 +34,9 @@ class Screen(ABC):
 
     def toast(self, text):
         self.hash_map.toast(text)
+
+    def _is_result_positive(self, listener) -> bool:
+        return self.listener == listener and self.event == 'onResultPositive'
 
     def __str__(self):
         return f'{self.process_name} / {self.screen_name}'
@@ -289,8 +295,7 @@ class DocsListScreen(Screen):
                 title='Удалить документ с устройства?'
             )
 
-    def _is_result_positive(self, listener) -> bool:
-        return self.listener == listener and self.event == 'onResultPositive'
+
 
     def _get_doc_list_data(self, doc_type='') -> list:
         if doc_type and doc_type != 'Все':
@@ -301,6 +306,15 @@ class DocsListScreen(Screen):
         table_data = []
 
         for record in results:
+            doc_status = ''
+
+            if record['verified'] and record['sent']:
+                doc_status = 'Выгружен'
+            elif record['verified']:
+                doc_status = 'К выгрузке'
+            elif not (record['verified'] and record['sent']):
+                doc_status = 'К выполнению'
+
             table_data.append({
                 'key': record['id_doc'],
                 'type': record['doc_type'],
@@ -308,7 +322,8 @@ class DocsListScreen(Screen):
                 'data': record['doc_date'],
                 'warehouse': record['RS_warehouse'],
                 'countragent': record['RS_countragent'],
-                'add_mark_selection': record['add_mark_selection']
+                'add_mark_selection': record['add_mark_selection'],
+                'status': doc_status
             })
 
         return table_data
@@ -382,6 +397,8 @@ class DocsListGroupScanScreen(DocsListScreen):
         super().on_input()
         if self.listener == "CardsClick":
             self.hash_map.show_dialog('Подтвердите действие')
+            selected_card_key = self.hash_map['selected_card_key']
+            self.hash_map['id_doc'] = selected_card_key
 
         elif self.listener == 'LayoutAction':
             self._layout_action()
@@ -397,6 +414,10 @@ class DocsListGroupScanScreen(DocsListScreen):
                 self.hash_map.toast('Ошибка удаления документа')
 
         elif self._is_result_positive('Подтвердите действие'):
+            id_doc = self.hash_map['id_doc']
+            self.service.doc_id = id_doc
+            self.service.set_doc_value('verified', 1)
+
             screen_name = 'Документ товары'
             screen = ScreensFactory.create_screen(
                 screen_name=screen_name,
@@ -405,7 +426,6 @@ class DocsListGroupScanScreen(DocsListScreen):
                 rs_settings=self.rs_settings)
 
             screen.show(args=self._get_selected_card_put_data())
-            # self.hash_map.show_screen('Документ товары', )
 
         elif self.listener == 'ON_BACK_PRESSED':
             self.hash_map.show_screen('Плитки')
@@ -418,6 +438,10 @@ class DocsListGroupScanScreen(DocsListScreen):
         doc_cards = widgets.CustomCards(
             widgets.LinearLayout(
                 widgets.LinearLayout(
+                    widgets.TextView(
+                        Value='@status',
+                        gravity_horizontal='left'
+                    ),
                     widgets.TextView(
                         weight=8,
                         width='match_parent',
@@ -509,9 +533,13 @@ class DocDetailsGroupScanScreen(DocDetailsScreen):
 
         doc_details = service.get_doc_details_data(id_doc)
         table_data = [{}]
+        row_filter = self.hash_map.get_bool('rows_filter')
 
         if doc_details:
             for record in doc_details:
+                if row_filter and record['qtty'] == record['qtty_plan']:
+                    continue
+
                 pic = '#f02a' if record['IsDone'] != 0 else '#f00c'
                 if record['qtty'] == 0 and record['qtty_plan'] == 0:
                     pic = ''
@@ -532,7 +560,7 @@ class DocDetailsGroupScanScreen(DocDetailsScreen):
                     'qtty_plan': str(record['qtty_plan'] if record['qtty_plan'] is not None else 0),
                     'price': str(record['price'] if record['price'] is not None else 0),
                     'price_name': str(record['price_name'] or ''),
-                    'picture': pic
+                    'picture': pic,
                 }
 
                 props = [
@@ -544,35 +572,18 @@ class DocDetailsGroupScanScreen(DocDetailsScreen):
                 product_row['good_info'] = ''.join(props)
 
                 product_row['_layout'] = self._get_doc_table_row_view()
+                self._set_background_row_color(product_row, id_doc)
                 table_data.append(product_row)
 
             have_zero_plan = True
             have_qtty_plan = sum([item['qtty_plan'] for item in doc_details if item['qtty_plan']]) > 0
 
-            qtext = ui_form_data.get_have_mark_codes_query()
-            res = ui_global.get_query_result(qtext, {'id_doc': id_doc, 'is_plan': '1'})
-            have_mark_plan = res and res[0][0] > 0
+        self.hash_map['have_qtty_plan'] = have_qtty_plan
+        self.hash_map['have_zero_plan'] = have_zero_plan
+        self.hash_map['have_mark_plan'] = have_mark_plan
 
-        hashMap.put('have_qtty_plan', str(have_qtty_plan))
-        hashMap.put('have_zero_plan', str(have_zero_plan))
-        hashMap.put('have_mark_plan', str(have_mark_plan))
-
-        res = ui_global.get_query_result('SELECT control from RS_docs  WHERE id_doc = ?', (id_doc,))
-        # Есть ли контроль плана в документе
-        if res:
-            if res[0][0]:
-                if res[0][0] in falseValueList:
-                    control = 'False'
-                else:
-                    control = 'True'
-
-                # control = res[0][0] #'True'
-            else:
-                control = 'False'
-        else:
-            control = 'False'
-
-        hashMap.put('control', control)
+        control = service.get_doc_value('control', id_doc) not in (0, '0', 'false', 'False', None)
+        self.hash_map['control'] = control
 
         table_view = self._get_doc_table_view(table_data=table_data)
         self.hash_map.put("doc_goods_table", table_view.to_json())
@@ -580,46 +591,57 @@ class DocDetailsGroupScanScreen(DocDetailsScreen):
     def on_input(self) -> None:
         super().on_input()
         listener = self.hash_map['listener']
+        id_doc = self.hash_map.get('id_doc')
 
         if listener == "CardsClick":
             pass
-        elif listener == 'barcode':
-
+        elif listener == 'barcode' or self._is_result_positive('ВвестиШтрихкод'):
+            doc = RsDoc(id_doc)
             barcode = self.hash_map.get('barcode_camera')
 
-        #     have_qtty_plan = hash_map.get('have_qtty_plan')
-        #     have_zero_plan = hash_map.get('have_zero_plan')
-        #     have_mark_plan = hash_map.get('have_mark_plan')
-        #     control = hash_map.get('control')
+            have_qtty_plan = self.hash_map.get_bool('have_qtty_plan')
+            have_zero_plan = self.hash_map.get_bool('have_zero_plan')
+            have_mark_plan = self.hash_map.get_bool('have_mark_plan')
+            control = self.hash_map.get_bool('control')
 
-        #     res = doc.process_the_barcode(
-        #         doc,
-        #         barcode,
-        #         eval(have_qtty_plan),
-        #         eval(have_zero_plan),
-        #         eval(control),
-        #         eval(have_mark_plan),
-        #         rs_settings.get('use_mark'))
-        #     if res is None:
-        #         hash_map.put('scanned_barcode', barcode)
-        #         hash_map.put('ShowScreen', 'Ошибка сканера')
-        #     elif res['Error']:
-        #         if res['Error'] == 'AlreadyScanned':
-        #             hash_map.put('barcode', json.dumps({'barcode': res['Barcode'], 'doc_info': res['doc_info']}))
-        #             hash_map.put('ShowScreen', 'Удаление штрихкода')
-        #         elif res['Error'] == 'QuantityPlanReached':
-        #             hash_map.put('toast', res['Descr'])
-        #         elif res['Error'] == 'Zero_plan_error':
-        #             hash_map.put('toast', res['Descr'])
-        #         else:
-        #             hash_map.put('toast', res['Descr'])
-        #     else:
-        #         highlight_added_good(hash_map, barcode)
-        #         hash_map.put('toast', 'Товар добавлен в документ')
-        #         hash_map.put('barcode_scanned', 'true')
-        #
+            res = doc.process_the_barcode(
+                barcode,
+                have_qtty_plan,
+                have_zero_plan,
+                control,
+                have_mark_plan,
+                use_mark_setting=self.rs_settings.get('use_mark'))
+            if res is None:
+                self.hash_map.put('scanned_barcode', barcode)
+                self.hash_map.show_screen('Ошибка сканера')
+            elif res['Error']:
+                if res['Error'] == 'AlreadyScanned':
+                    self.hash_map.put('barcode', json.dumps({'barcode': res['Barcode'], 'doc_info': res['doc_info']}))
+                    self.hash_map.show_screen('Удаление штрихкода')
+                elif res['Error'] == 'QuantityPlanReached':
+                    self.hash_map.toast('toast', res['Descr'])
+                elif res['Error'] == 'Zero_plan_error':
+                    self.hash_map.toast(res['Descr'])
+                else:
+                    self.hash_map.toast(res['Descr'])
+            else:
+                self._add_scanned_row(id_doc, res.get('key'))
+                self.hash_map.toast('Товар добавлен в документ')
+                self.hash_map.put('barcode_scanned', 'true')
+                self.hash_map.run_event_async('doc_details_barcode_scanned')
+
+        elif listener == 'btn_barcodes':
+            self.hash_map.show_dialog('ВвестиШтрихкод')
         elif listener in ['ON_BACK_PRESSED', 'BACK_BUTTON']:
             self.hash_map.put("ShowScreen", "Документы")
+
+        elif listener == 'btn_rows_filter_on':
+            self.hash_map.put('rows_filter', '1')
+            self.hash_map.refresh_screen()
+
+        elif listener == 'btn_rows_filter_off':
+            self.hash_map.remove('rows_filter')
+            self.hash_map.refresh_screen()
 
     def _get_doc_table_view(self, table_data):
         table_view = widgets.CustomTable(
@@ -704,25 +726,41 @@ class DocDetailsGroupScanScreen(DocDetailsScreen):
             name = f'Show_{v}'
             self.hash_map[name] = '1' if self.hash_map[v] else '-1'
 
-    def _set_background_row_color(self, product_row):
+    def _set_background_row_color(self, product_row, id_doc):
         background_color = '#FFFFFF'
         qtty, qtty_plan = float(product_row['qtty']), float(product_row['qtty_plan'])
 
         if qtty_plan > qtty:
-            background_color = "#FBE9E7"
-        elif False:
-            background_color = '#F0F8FF'
-            # if hashMap.get("added_goods"):
-            #     added_goods_dict = json.loads(hashMap.get("added_goods"))
-            #     if str(results[0]['id_doc']) in added_goods_dict.keys():
-            #         if str(record['id_good']) in added_goods_dict[str(results[0]['id_doc'])][0]:
-            #             if str(record['id_properties']) in added_goods_dict[str(results[0]['id_doc'])][1] or not str(
-            #                     record['id_properties']):
-            #                 product_row['_layout']["BackgroundColor"] = "#F0F8FF"
+            if self._added_goods_has_key(self.hash_map.get_json('added_goods'), id_doc, product_row['key']):
+                background_color = '#F0F8FF'
+            else:
+                background_color = "#FBE9E7"
+
         elif qtty_plan < qtty:
             background_color = "#FFF9C4"
 
-        product_row['_layout']["BackgroundColor"] = background_color
+        product_row['_layout'].BackgroundColor = background_color
+
+    def _added_goods_has_key(self, added_goods, id_doc, key):
+        result = False
+        if added_goods:
+            added_goods_doc = added_goods.get(id_doc, [])
+            result = str(key) in [str(item) for item in added_goods_doc]
+
+        return result
+
+    def _add_scanned_row(self, id_doc, row_key):
+        if not row_key:
+            raise ValueError(f'Row key must be set not {row_key}')
+
+        added_goods = self.hash_map.get_json('added_goods') or {}
+        added_goods_doc = added_goods.get(id_doc, [row_key])
+        if row_key not in added_goods_doc:
+            added_goods_doc.append(row_key)
+
+        added_goods[id_doc] = added_goods_doc
+
+        self.hash_map.put('added_goods', added_goods, to_json=True)
 
     class TextView(widgets.TextView):
         def __init__(self, value):
@@ -759,3 +797,16 @@ class ScreensFactory:
             if getattr(item, 'screen_name') == screen_name and getattr(item, 'process_name') == process:
                 return item(**kwargs)
 
+
+class MockScreen(Screen):
+    def on_start(self):
+        pass
+
+    def on_input(self):
+        pass
+
+    def on_post_start(self):
+        pass
+
+    def show(self, args=None):
+        pass

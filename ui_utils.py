@@ -3,6 +3,8 @@ from typing import Callable
 from functools import wraps
 
 from java import jclass
+from ui_global import Rs_doc, find_barcode_in_barcode_table
+from db_services import DocService
 
 noClass = jclass("ru.travelfood.simple_ui.NoSQL")
 rs_settings = noClass("rs_settings")
@@ -130,18 +132,73 @@ class HashMap:
     def get_current_process(self):
         return self['current_process_name']
 
-def parse_barcode(val):
-    if len(val) < 21:
-        return {'GTIN': '', 'Series': ''}
+class RsDoc(Rs_doc):
+    def __init__(self, id_doc):
+        self.id_doc = id_doc
 
-    val.replace('(01)','01')
-    val.replace('(21)', '21')
+    def update_doc_str(self, price=0):
+        pass
 
-    if val[:2] == '01':
-        GTIN = val[2:16]
-        Series = val[18:]
-    else:
-        GTIN = val[:14]
-        Series = val[14:]
+    def delete_doc(self):
+        pass
 
-    return {'GTIN': GTIN, 'Series': Series}
+    def clear_barcode_data(self):
+        pass
+
+    def mark_for_upload(self):
+        pass
+
+    def mark_verified(self, key):
+        pass
+
+    def find_barcode_in_table(self, search_value, func_compared='=?') -> dict:
+        result = super().find_barcode_in_table(search_value, func_compared)
+        if result:
+            return result[0]
+
+
+    def find_barcode_in_mark_table(self, search_value: str, func_compared='=?'):
+        pass
+
+    def update_doc_table_data(self, elem_for_add: dict, qtty=1, user_tmz=0):
+        pass
+
+    def add_marked_codes_in_doc(self, barcode_info):
+        pass
+
+    def add_new_barcode_in_doc_barcodes_table(self, el, barcode_info):
+        pass
+
+    def process_the_barcode(
+            self,
+            barcode,
+            have_qtty_plan=False,
+            have_zero_plan=False,
+            control=False,
+            have_mark_plan=False,
+            elem=None,
+            use_mark_setting='false',
+            user_tmz=0):
+
+        Rs_doc.id_doc = self.id_doc
+        result = Rs_doc.process_the_barcode(
+            Rs_doc, barcode, have_qtty_plan, have_zero_plan, control, have_mark_plan, elem, use_mark_setting, user_tmz
+        )
+        if not result.get('Error'):
+            service = DocService(self.id_doc)
+            service.set_doc_value('sent', 0)
+
+            res = self.find_barcode_in_table(barcode)
+            if res.get('id'):
+                result['key'] = res['id']
+
+        return result
+
+    def add(self, args):
+        pass
+
+    def get_new_id(self):
+        pass
+
+    def find_barcode_in_barcode_table(self, barcode):
+        return find_barcode_in_barcode_table(barcode)
