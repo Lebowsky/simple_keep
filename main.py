@@ -3009,7 +3009,7 @@ def get_remains(hashMap, _files=None, _data=None):
 
         json_response = json.loads(r.text.encode("utf-8"))
 
-        if len(json_response) < 2:
+        if len(json_response) < 1:
             hashMap.put("no_data", "Нет данных")
             hashMap.put("Show_no_data", "1")
         else:
@@ -3092,7 +3092,7 @@ def get_remains(hashMap, _files=None, _data=None):
 
             json_response = json.loads(r.text.encode("utf-8"))
 
-            if len(json_response) < 2:
+            if len(json_response) < 1:
                 hashMap.put("no_data", "Нет данных")
                 hashMap.put("Show_no_data", "1")
             else:
@@ -3146,6 +3146,8 @@ def get_remains(hashMap, _files=None, _data=None):
     if len(goods_custom_table["customtable"]["tabledata"]) < 1:
         hashMap.put('error_msg', "Товар не найден")
         hashMap.put('Show_error_msg', '1')
+
+    hashMap.put("property_id", "")
 
     hashMap.put("goods_custom_table", json.dumps(goods_custom_table))
 
@@ -3391,7 +3393,7 @@ def get_prices(hashMap, _files=None, _data=None):
 
         json_prices = json.loads(r.text.encode("utf-8"))
 
-        if len(json_prices) < 2:
+        if len(json_prices) < 1:
             hashMap.put("no_data", "Нет данных")
 
         unit_values = 0
@@ -3621,8 +3623,6 @@ def good_card_on_start(hashMap, _files=None, _data=None):
         fill_empty_values(hashMap, {"good_name": good_name, "good_art": good_art, "good_code": good_code,
                                     "good_descr": good_descr, "good_type": good_type}, value="отсутствует")
 
-        hashMap.put("load_info", "Данные загружаются...")
-
     return hashMap
 
 
@@ -3686,7 +3686,8 @@ def get_good_variants(hashMap, _files=None, _data=None):
         barcode_cards["customcards"]["cardsdata"] = []
         i = 0
         for element in goods_barcode:
-            c = {"key": str(i), "barcode": element[0], "properties": element[1], "unit": element[3], "series": element[2]}
+            c = {"key": str(i), "barcode": element[0], "properties": element[1], "unit": element[3],
+                 "series": element[2]}
 
             if element[1]:
                 c['properties'] = get_name_by_field("RS_properties", "id", element[1])
@@ -3699,8 +3700,6 @@ def get_good_variants(hashMap, _files=None, _data=None):
         hashMap.put("load_info", "")
     else:
         hashMap.put("load_info", "Данные о характеристиках отсутствуют")
-
-    hashMap.put("RefreshScreen", "")
 
     return hashMap
 
