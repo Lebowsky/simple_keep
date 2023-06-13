@@ -4,6 +4,7 @@ from functools import wraps
 
 from java import jclass
 from ui_global import Rs_doc, find_barcode_in_barcode_table
+from db_services import DocService
 
 noClass = jclass("ru.travelfood.simple_ui.NoSQL")
 rs_settings = noClass("rs_settings")
@@ -131,23 +132,6 @@ class HashMap:
     def get_current_process(self):
         return self['current_process_name']
 
-def parse_barcode(val):
-    if len(val) < 21:
-        return {'GTIN': '', 'Series': ''}
-
-    val.replace('(01)','01')
-    val.replace('(21)', '21')
-
-    if val[:2] == '01':
-        GTIN = val[2:16]
-        Series = val[18:]
-    else:
-        GTIN = val[:14]
-        Series = val[14:]
-
-    return {'GTIN': GTIN, 'Series': Series}
-
-
 class RsDoc(Rs_doc):
     def __init__(self, id_doc):
         self.id_doc = id_doc
@@ -201,6 +185,9 @@ class RsDoc(Rs_doc):
             Rs_doc, barcode, have_qtty_plan, have_zero_plan, control, have_mark_plan, elem, use_mark_setting, user_tmz
         )
         if not result.get('Error'):
+            service = DocService(self.id_doc)
+            service.set_doc_value('sent', 0)
+
             res = self.find_barcode_in_table(barcode)
             if res.get('id'):
                 result['key'] = res['id']
