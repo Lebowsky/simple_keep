@@ -844,14 +844,246 @@
                                 "Variable": "",
                                 "Elements": [
                                     {
+                                        "TextSize": "16",
+                                        "TextColor": "",
+                                        "TextBold": false,
+                                        "TextItalic": false,
+                                        "BackgroundColor": "",
+                                        "StrokeWidth": "",
+                                        "Padding": "",
+                                        "orientation": "",
                                         "height": "wrap_content",
-                                        "width": "wrap_content",
-                                        "gravity_horizontal": "center",
+                                        "width": "match_parent",
+                                        "gravity_horizontal": "left",
                                         "gravity_vertical": "center",
                                         "weight": "0",
                                         "type": "TextView",
                                         "Value": "@Doc_data",
-                                        "Variable": ""
+                                        "Variable": "",
+                                        "style_name": "",
+                                        "drawable": "forward"
+                                    },
+                                    {
+                                        "height": "wrap_content",
+                                        "width": "match_parent",
+                                        "gravity_horizontal": "center",
+                                        "gravity_vertical": "center",
+                                        "weight": "0",
+                                        "type": "LinearLayout",
+                                        "Value": "@Good_info",
+                                        "Variable": "",
+                                        "orientation": "vertical",
+                                        "Elements": [
+                                            {
+                                                "type": "LinearLayout",
+                                                "height": "match_parent",
+                                                "width": "match_parent",
+                                                "weight": "0",
+                                                "Value": "",
+                                                "Variable": "",
+                                                "orientation": "horizontal",
+                                                "Elements": [
+                                                    {
+                                                        "type": "LinearLayout",
+                                                        "height": "wrap_content",
+                                                        "width": "match_parent",
+                                                        "weight": "1",
+                                                        "Value": "",
+                                                        "Variable": "",
+                                                        "orientation": "horizontal",
+                                                        "Elements": [
+                                                            {
+                                                                "type": "TextView",
+                                                                "height": "wrap_content",
+                                                                "width": "wrap_content",
+                                                                "weight": "0",
+                                                                "Value": "Артикул:",
+                                                                "Variable": "",
+                                                                "gravity_horizontal": "left",
+                                                                "TextColor": "#000000"
+                                                            },
+                                                            {
+                                                                "type": "TextView",
+                                                                "height": "wrap_content",
+                                                                "width": "wrap_content",
+                                                                "weight": "0",
+                                                                "Value": "@good_art",
+                                                                "Variable": "",
+                                                                "gravity_horizontal": "left",
+                                                                "TextColor": "#000000"
+                                                            }
+                                                        ],
+                                                        "BackgroundColor": "",
+                                                        "StrokeWidth": "",
+                                                        "Padding": ""
+                                                    },
+                                                    {
+                                                        "type": "LinearLayout",
+                                                        "height": "wrap_content",
+                                                        "width": "match_parent",
+                                                        "weight": "7",
+                                                        "Value": "",
+                                                        "Variable": "",
+                                                        "orientation": "horizontal",
+                                                        "Elements": [
+                                                            {
+                                                                "type": "TextView",
+                                                                "height": "wrap_content",
+                                                                "width": "wrap_content",
+                                                                "weight": "0",
+                                                                "Value": "@good_str",
+                                                                "Variable": "",
+                                                                "gravity_horizontal": "right",
+                                                                "TextColor": "#000000"
+                                                            }
+                                                        ],
+                                                        "BackgroundColor": "",
+                                                        "StrokeWidth": "",
+                                                        "Padding": "",
+                                                        "gravity_horizontal": "right"
+                                                    }
+                                                ],
+                                                "BackgroundColor": "",
+                                                "StrokeWidth": "",
+                                                "Padding": ""
+                                            },
+                                            {
+                                                "type": "LinearLayout",
+                                                "height": "wrap_content",
+                                                "width": "wrap_content",
+                                                "weight": "0",
+                                                "Value": "",
+                                                "Variable": "",
+                                                "orientation": "horizontal",
+                                                "Elements": [
+                                                    {
+                                                        "type": "TextView",
+                                                        "height": "wrap_content",
+                                                        "width": "wrap_content",
+                                                        "weight": "0",
+                                                        "Value": "s.n. ",
+                                                        "Variable": "",
+                                                        "gravity_horizontal": "left",
+                                                        "TextColor": "#000000"
+                                                    },
+                                                    {
+                                                        "type": "TextView",
+                                                        "height": "wrap_content",
+                                                        "width": "wrap_content",
+                                                        "weight": "0",
+                                                        "Value": "@good_sn",
+                                                        "Variable": "",
+                                                        "gravity_horizontal": "left",
+                                                        "TextColor": "#000000"
+                                                    }
+                                                ],
+                                                "BackgroundColor": "",
+                                                "StrokeWidth": "",
+                                                "Padding": ""
+                                            },
+                                            {
+                                                "type": "LinearLayout",
+                                                "height": "wrap_content",
+                                                "width": "wrap_content",
+                                                "weight": "0",
+                                                "Value": "",
+                                                "Variable": "",
+                                                "orientation": "horizontal",
+                                                "Elements": [
+                                                    {
+                                                        "type": "TextView",
+                                                        "height": "wrap_content",
+                                                        "width": "wrap_content",
+                                                        "weight": "0",
+                                                        "Value": "Хар:",
+                                                        "Variable": "",
+                                                        "gravity_horizontal": "left",
+                                                        "TextColor": "#000000"
+                                                    },
+                                                    {
+                                                        "type": "TextView",
+                                                        "height": "wrap_content",
+                                                        "width": "wrap_content",
+                                                        "weight": "0",
+                                                        "Value": "@good_property",
+                                                        "Variable": "",
+                                                        "TextColor": "#000000"
+                                                    }
+                                                ],
+                                                "BackgroundColor": "",
+                                                "StrokeWidth": "",
+                                                "Padding": ""
+                                            },
+                                            {
+                                                "type": "LinearLayout",
+                                                "height": "wrap_content",
+                                                "width": "wrap_content",
+                                                "weight": "0",
+                                                "Value": "",
+                                                "Variable": "",
+                                                "orientation": "horizontal",
+                                                "Elements": [
+                                                    {
+                                                        "type": "TextView",
+                                                        "height": "wrap_content",
+                                                        "width": "wrap_content",
+                                                        "weight": "0",
+                                                        "Value": "Цена:",
+                                                        "Variable": "",
+                                                        "gravity_horizontal": "left",
+                                                        "TextColor": "#cc0000"
+                                                    },
+                                                    {
+                                                        "type": "TextView",
+                                                        "height": "wrap_content",
+                                                        "width": "wrap_content",
+                                                        "weight": "0",
+                                                        "Value": "@good_price",
+                                                        "Variable": "",
+                                                        "TextColor": "#cc0000"
+                                                    }
+                                                ],
+                                                "BackgroundColor": "",
+                                                "StrokeWidth": "",
+                                                "Padding": ""
+                                            },
+                                            {
+                                                "type": "LinearLayout",
+                                                "height": "wrap_content",
+                                                "width": "wrap_content",
+                                                "weight": "0",
+                                                "Value": "",
+                                                "Variable": "",
+                                                "orientation": "horizontal",
+                                                "Elements": [
+                                                    {
+                                                        "type": "TextView",
+                                                        "height": "wrap_content",
+                                                        "width": "wrap_content",
+                                                        "weight": "0",
+                                                        "Value": "Упаковка:",
+                                                        "Variable": "",
+                                                        "gravity_horizontal": "left",
+                                                        "TextColor": "#000000"
+                                                    },
+                                                    {
+                                                        "type": "TextView",
+                                                        "height": "wrap_content",
+                                                        "width": "wrap_content",
+                                                        "weight": "0",
+                                                        "Value": "@good_unit",
+                                                        "Variable": "",
+                                                        "TextColor": "#000000"
+                                                    }
+                                                ],
+                                                "BackgroundColor": "",
+                                                "StrokeWidth": "",
+                                                "Padding": ""
+                                            }
+                                        ],
+                                        "BackgroundColor": "",
+                                        "StrokeWidth": "",
+                                        "Padding": ""
                                     },
                                     {
                                         "TextSize": "24",
@@ -865,16 +1097,6 @@
                                         "weight": "0",
                                         "type": "TextView",
                                         "Value": "@Good",
-                                        "Variable": ""
-                                    },
-                                    {
-                                        "height": "wrap_content",
-                                        "width": "match_parent",
-                                        "gravity_horizontal": "center",
-                                        "gravity_vertical": "center",
-                                        "weight": "0",
-                                        "type": "TextView",
-                                        "Value": "@Good_info",
                                         "Variable": ""
                                     },
                                     {
@@ -915,6 +1137,13 @@
                                                     },
                                                     {
                                                         "TextSize": "24",
+                                                        "TextColor": "",
+                                                        "TextBold": false,
+                                                        "TextItalic": false,
+                                                        "BackgroundColor": "",
+                                                        "StrokeWidth": "",
+                                                        "Padding": "",
+                                                        "orientation": "",
                                                         "height": "wrap_content",
                                                         "width": "match_parent",
                                                         "gravity_horizontal": "center",
@@ -922,7 +1151,8 @@
                                                         "weight": "0",
                                                         "type": "TextView",
                                                         "Value": "@qtty_plan",
-                                                        "Variable": ""
+                                                        "Variable": "qtty_plan",
+                                                        "style_name": ""
                                                     }
                                                 ]
                                             },
@@ -969,41 +1199,6 @@
                                                         "style_name": ""
                                                     }
                                                 ]
-                                            }
-                                        ]
-                                    },
-                                    {
-                                        "BackgroundColor": "",
-                                        "StrokeWidth": "",
-                                        "Padding": "",
-                                        "orientation": "horizontal",
-                                        "height": "wrap_content",
-                                        "width": "match_parent",
-                                        "gravity_horizontal": "center",
-                                        "gravity_vertical": "center",
-                                        "weight": "0",
-                                        "type": "LinearLayout",
-                                        "Variable": "",
-                                        "Elements": [
-                                            {
-                                                "height": "wrap_content",
-                                                "width": "wrap_content",
-                                                "gravity_horizontal": "center",
-                                                "gravity_vertical": "center",
-                                                "weight": "0",
-                                                "type": "TextView",
-                                                "Value": "Цена",
-                                                "Variable": ""
-                                            },
-                                            {
-                                                "height": "wrap_content",
-                                                "width": "match_parent",
-                                                "gravity_horizontal": "center",
-                                                "gravity_vertical": "center",
-                                                "weight": "0",
-                                                "type": "EditTextNumeric",
-                                                "Value": "@price",
-                                                "Variable": "price"
                                             }
                                         ]
                                     },
@@ -6604,6 +6799,26 @@
                                         "type": "TableLayout",
                                         "Value": "@goods_custom_table",
                                         "Variable": "goods_custom_table"
+                                    },
+                                    {
+                                        "TextSize": "",
+                                        "TextColor": "",
+                                        "TextBold": false,
+                                        "TextItalic": false,
+                                        "BackgroundColor": "",
+                                        "StrokeWidth": "",
+                                        "Padding": "",
+                                        "orientation": "",
+                                        "height": "wrap_content",
+                                        "width": "match_parent",
+                                        "gravity_horizontal": "center",
+                                        "gravity_vertical": "center",
+                                        "weight": "",
+                                        "type": "TextView",
+                                        "Value": "@no_data",
+                                        "Variable": "no_data",
+                                        "style_name": "",
+                                        "drawable": "forward"
                                     }
                                 ]
                             },
