@@ -165,6 +165,12 @@ class DocService:
 
         self._get_query_result(query)
 
+    def get_doc_value(self, key, id_doc):
+        query = f'SELECT {key} from RS_docs  WHERE id_doc = ?'
+        res = self._get_query_result(query, (id_doc,), True)
+        if res:
+            return res[0][key]
+
     def get_doc_types(self) -> list:
         query = 'SELECT DISTINCT doc_type from RS_docs'
         doc_types = [rec[0] for rec in self._get_query_result(query)]
