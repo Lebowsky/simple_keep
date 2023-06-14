@@ -318,3 +318,32 @@ class DocService:
 
         return {'GTIN': GTIN, 'Series': Series}
 
+    def clear_barcode_data(self, id_doc):
+        query_text = ('Update RS_docs_barcodes Set approved = 0 Where id_doc=:id_doc',
+                      'Delete From RS_docs_barcodes Where  id_doc=:id_doc And is_plan = 0',
+                      'Update RS_docs_table Set qtty = 0 Where id_doc=:id_doc',
+                      'Delete From RS_docs_table Where id_doc=:id_doc and is_plan = "False"')
+        try:
+            for el in query_text:
+                get_query_result(el, ({'id_doc': id_doc}))
+        except Exception as e:
+            return {'result': False, 'error': e.args[0]}
+
+        return {'result': True, 'error': ''}
+
+    def get_doc_barcode_data(self, args):
+        query = '''
+            SELECT
+            "(01)" || GTIN || "(21)" || Series as mark_code,
+            approved
+            FROM RS_docs_barcodes
+            Where
+            id_doc = :id_doc AND
+            id_good = :id_good AND
+            id_property = :id_property AND
+            id_series = :id_series 
+            --AND  id_unit = :id_unit
+         '''
+
+        res = self._get_query_result(query, args, return_dict=True)
+        return res
