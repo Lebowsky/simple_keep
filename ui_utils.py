@@ -145,3 +145,9 @@ def parse_barcode(val):
         Series = val[14:]
 
     return {'GTIN': GTIN, 'Series': Series}
+
+
+def format_doc_date(date_string):
+    new_date_string = date_string[8:10] + "." + date_string[5:7] + "." + date_string[0:4] + " " + \
+                      date_string[11:13] + ":" + date_string[14:16] + ":" + date_string[17:19]
+    return new_date_string
