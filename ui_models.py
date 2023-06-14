@@ -118,6 +118,7 @@ class Tiles(Screen):
 
     def _get_doc_tiles(self, settings_global):
 
+        # TODO Переделать через виджеты
         small_tile = {
             "type": "LinearLayout",
             "orientation": "vertical",
@@ -262,6 +263,8 @@ class Tiles(Screen):
 
         return small_tile
 
+# ==================== DocsList =============================
+
 
 class DocsListScreen(Screen):
     def __init__(self, hash_map: HashMap,  rs_settings):
@@ -288,14 +291,16 @@ class DocsListScreen(Screen):
     def _layout_action(self) -> None:
         layout_listener = self.hash_map['layout_listener']
 
-
         if layout_listener == 'Удалить':
             self.hash_map.show_dialog(
                 listener='confirm_delete',
                 title='Удалить документ с устройства?'
             )
-
-
+        elif layout_listener == 'Очистить данные пересчета':
+            self.hash_map.show_dialog(
+                listener='confirm_clear_barcode_data',
+                title='Очистить данные пересчета?'
+            )
 
     def _get_doc_list_data(self, doc_type='') -> list:
         if doc_type and doc_type != 'Все':
@@ -327,6 +332,56 @@ class DocsListScreen(Screen):
             })
 
         return table_data
+
+    def _get_doc_cards_view(self, table_data, popup_menu_data):
+        title_text_size = self.rs_settings.get("TitleTextSize")
+        card_title_text_size = self.rs_settings.get('CardTitleTextSize')
+        card_date_text_size = self.rs_settings.get('CardDateTextSize')
+
+        doc_cards = widgets.CustomCards(
+            widgets.LinearLayout(
+                widgets.LinearLayout(
+                    widgets.TextView(
+                        Value='@status',
+                        width='match_parent',
+                        gravity_horizontal='left',
+                        weight=2
+                    ),
+                    widgets.TextView(
+                        Value='@type',
+                        TextSize=title_text_size,
+                    ),
+                    widgets.PopupMenuButton(
+                        Value=popup_menu_data,
+                        Variable="menu_delete",
+                    ),
+                    orientation='horizontal',
+                    width='match_parent'
+                ),
+                widgets.LinearLayout(
+                    widgets.TextView(
+                        Value='@number',
+                        TextBold=True,
+                        TextSize=card_title_text_size
+                    )
+                ),
+                widgets.LinearLayout(
+                    widgets.TextView(
+                        Value='@countragent',
+                        TextSize=card_date_text_size
+                    ),
+                    widgets.TextView(
+                        Value='@warehouse',
+                        TextSize=card_date_text_size
+                    )
+                ),
+                width="match_parent"
+            ),
+            options=widgets.Options().options,
+            cardsdata=table_data
+        )
+
+        return doc_cards
 
     def _get_selected_card(self):
         current_str = self.hash_map.get("selected_card_position")
@@ -369,8 +424,11 @@ class DocsListScreen(Screen):
 
         return result
 
+    def _clear_barcode_data(self, id_doc):
+        return self.service.clear_barcode_data(id_doc)
 
-class DocsListGroupScanScreen(DocsListScreen):
+
+class GroupScanDocsListScreen(DocsListScreen):
     screen_name = 'Документы'
     process_name = 'Групповая обработка'
 
@@ -390,7 +448,7 @@ class DocsListGroupScanScreen(DocsListScreen):
         else:
             list_data = self._get_doc_list_data()
 
-        doc_cards = self._get_doc_cards_view(list_data)
+        doc_cards = self._get_doc_cards_view(list_data, 'Удалить')
         self.hash_map['docCards'] = doc_cards.to_json()
 
     def on_input(self):
@@ -430,57 +488,73 @@ class DocsListGroupScanScreen(DocsListScreen):
         elif self.listener == 'ON_BACK_PRESSED':
             self.hash_map.show_screen('Плитки')
 
-    def _get_doc_cards_view(self, table_data):
-        title_text_size = self.rs_settings.get("TitleTextSize")
-        card_title_text_size = self.rs_settings.get('CardTitleTextSize')
-        card_date_text_size = self.rs_settings.get('CardDateTextSize')
 
-        doc_cards = widgets.CustomCards(
-            widgets.LinearLayout(
-                widgets.LinearLayout(
-                    widgets.TextView(
-                        Value='@status',
-                        gravity_horizontal='left'
-                    ),
-                    widgets.TextView(
-                        weight=8,
-                        width='match_parent',
-                        Value='@type',
-                        gravity_horizontal='right',
-                        TextSize=title_text_size,
-                    ),
-                    widgets.PopupMenuButton(
-                        weight=2,
-                        Value='Удалить',
-                        Variable="menu_delete"
-                    ),
-                    orientation='horizontal',
-                    width='match_parent'
-                ),
-                widgets.LinearLayout(
-                    widgets.TextView(
-                        Value='@number',
-                        TextBold=True,
-                        TextSize=card_title_text_size
-                    )
-                ),
-                widgets.LinearLayout(
-                    widgets.TextView(
-                        Value='@countragent',
-                        TextSize=card_date_text_size
-                    ),
-                    widgets.TextView(
-                        Value='@warehouse',
-                        TextSize=card_date_text_size
-                    )
-                ),
-                width="match_parent"
-            ),
-            options=widgets.Options().options,
-            cardsdata=table_data
-        )
+class DocumentsDocsListScreen(DocsListScreen):
+    screen_name = 'Документы'
+    process_name = 'Документы'
 
-        return doc_cards
+    def __init__(self, hash_map, rs_settings):
+        super().__init__(hash_map, rs_settings)
+
+    def on_start(self):
+        doc_types = self.service.get_doc_types()
+        self.hash_map['doc_type_select'] = ';'.join(['Все'] + doc_types)
+
+        doc_type = self.hash_map['selected_tile_key'] or self.hash_map['doc_type_click']
+
+        if doc_type:
+            list_data = self._get_doc_list_data(doc_type)
+            self.hash_map['doc_type_click'] = doc_type
+            self.hash_map['selected_tile_key'] = ''
+        else:
+            list_data = self._get_doc_list_data()
+
+        doc_cards = self._get_doc_cards_view(list_data, popup_menu_data='Удалить;Очистить данные пересчета')
+        self.hash_map['docCards'] = doc_cards.to_json()
+
+    def on_input(self):
+        super().on_input()
+        if self.listener == "CardsClick":
+            id_doc = self.hash_map['id_doc']
+            self.service.doc_id = id_doc
+
+            screen_name = 'Документ товары'
+            screen = ScreensFactory.create_screen(
+                screen_name=screen_name,
+                process=self.process_name,
+                hash_map=self.hash_map,
+                rs_settings=self.rs_settings)
+
+            screen.show(args=self._get_selected_card_put_data())
+
+        elif self.listener == 'LayoutAction':
+            self._layout_action()
+
+        elif self._is_result_positive('confirm_delete'):
+            card_data = self.hash_map.get_json("card_data")
+            id_doc = card_data['key']
+
+            if self._doc_delete(id_doc):
+                self.hash_map.toast('Документ успешно удалён')
+                self.on_start()
+            else:
+                self.hash_map.toast('Ошибка удаления документа')
+
+        elif self._is_result_positive('confirm_clear_barcode_data'):
+            id_doc = self.hash_map['id_doc']
+            res = self._clear_barcode_data(id_doc)
+            if res.get('result'):
+                self.toast('Данные пересчета и маркировки очищены')
+            else:
+                self.toast('При очистке данных пересчета возникла ошибка.')
+                self.hash_map.error_log(res.get('error'))
+
+        elif self.listener == 'ON_BACK_PRESSED':
+            self.hash_map.show_screen('Плитки')
+
+# ^^^^^^^^^^^^^^^^^^^^^ DocsList ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+# ==================== DocDetails =============================
 
 
 class DocDetailsScreen(Screen):
@@ -504,8 +578,148 @@ class DocDetailsScreen(Screen):
         self.hash_map.show_screen(self.screen_name, args)
         self._validate_screen_values()
 
+    def _set_visibility_on_start(self):
+        _vars = ['warehouse', 'countragent']
 
-class DocDetailsGroupScanScreen(DocDetailsScreen):
+        for v in _vars:
+            name = f'Show_{v}'
+            self.hash_map[name] = '1' if self.hash_map[v] else '-1'
+
+    def _get_doc_table_view(self, table_data):
+        table_view = widgets.CustomTable(
+            widgets.LinearLayout(
+                self.LinearLayout(
+                    self.TextView('Название'),
+                    weight=3
+                ),
+                self.LinearLayout(
+                    self.TextView('План'),
+                    weight=1
+                ),
+                self.LinearLayout(
+                    self.TextView('Факт'),
+                    weight=1
+                ),
+                orientation='horizontal',
+                height="match_parent",
+                width="match_parent",
+                BackgroundColor='#FFFFFF'
+            ),
+            options=widgets.Options().options,
+            tabledata=table_data
+        )
+
+        return table_view
+
+    def _get_doc_table_row_view(self):
+        row_view = widgets.LinearLayout(
+            widgets.LinearLayout(
+                widgets.LinearLayout(
+                    widgets.LinearLayout(
+                        self.TextView('@good_name'),
+                        widgets.TextView(
+                            Value='@good_info',
+                            TextSize=15,
+                            width='match_parent'
+                        ),
+                        width='match_parent',
+                    ),
+                    width='match_parent',
+                    orientation='horizontal',
+                    StrokeWidth=1
+                ),
+                width='match_parent',
+                weight=3,
+                StrokeWidth=1
+            ),
+            widgets.LinearLayout(
+                widgets.TextView(
+                    Value='@qtty_plan',
+                    TextSize=15,
+                    width='match_parent',
+                ),
+                width='match_parent',
+                height='match_parent',
+                weight=1,
+                StrokeWidth=1
+            ),
+            widgets.LinearLayout(
+                widgets.TextView(
+                    Value='@qtty',
+                    TextSize=15,
+                    width='match_parent'
+                ),
+                width='match_parent',
+                height='match_parent',
+                weight=1,
+                StrokeWidth=1
+            ),
+            orientation='horizontal',
+            width='match_parent',
+            BackgroundColor='#FFFFFF'
+        )
+
+        return row_view
+
+    def _set_background_row_color(self, product_row, id_doc):
+        background_color = '#FFFFFF'
+        qtty, qtty_plan = float(product_row['qtty']), float(product_row['qtty_plan'])
+
+        if qtty_plan > qtty:
+            if self._added_goods_has_key(self.hash_map.get_json('added_goods'), id_doc, product_row['key']):
+                background_color = '#F0F8FF'
+            else:
+                background_color = "#FBE9E7"
+
+        elif qtty_plan < qtty:
+            background_color = "#FFF9C4"
+
+        product_row['_layout'].BackgroundColor = background_color
+
+    def _added_goods_has_key(self, added_goods, id_doc, key):
+        result = False
+        if added_goods:
+            added_goods_doc = added_goods.get(id_doc, [])
+            result = str(key) in [str(item) for item in added_goods_doc]
+
+        return result
+
+    def _add_scanned_row(self, id_doc, row_key):
+        if not row_key:
+            raise ValueError(f'Row key must be set not {row_key}')
+
+        added_goods = self.hash_map.get_json('added_goods') or {}
+        added_goods_doc = added_goods.get(id_doc, [row_key])
+        if row_key not in added_goods_doc:
+            added_goods_doc.append(row_key)
+
+        added_goods[id_doc] = added_goods_doc
+
+        self.hash_map.put('added_goods', added_goods, to_json=True)
+
+    def _fill_none_values(self, data, keys, default=''):
+        none_list = [None, 'None']
+        for key in keys:
+            data[key] = default if data[key] in none_list else data[key]
+
+    class TextView(widgets.TextView):
+        def __init__(self, value):
+            super().__init__()
+            self.TextSize = '15'
+            self.TextBold = True
+            self.width = 'match_parent'
+            self.Value = value
+
+    class LinearLayout(widgets.LinearLayout):
+        def __init__(self, *args, **kwargs):
+            super().__init__(*args, **kwargs)
+            self.orientation = 'horizontal'
+            self.height = "match_parent"
+            self.width = "match_parent"
+            self.StrokeWidth = 1
+
+
+class GroupScanDocDetailsScreen(DocDetailsScreen):
     screen_name = 'Документ товары'
     process_name = 'Групповая обработка'
 
@@ -627,8 +841,8 @@ class DocDetailsGroupScanScreen(DocDetailsScreen):
             else:
                 self._add_scanned_row(id_doc, res.get('key'))
                 self.hash_map.toast('Товар добавлен в документ')
-                self.hash_map.put('barcode_scanned', 'true')
-                self.hash_map.run_event_async('doc_details_barcode_scanned')
+                self.hash_map.put('barcode_scanned', True)
+                # self.hash_map.run_event_async('doc_details_barcode_scanned')
 
         elif listener == 'btn_barcodes':
             self.hash_map.show_dialog('ВвестиШтрихкод')
@@ -643,147 +857,278 @@ class DocDetailsGroupScanScreen(DocDetailsScreen):
             self.hash_map.remove('rows_filter')
             self.hash_map.refresh_screen()
 
-    def _get_doc_table_view(self, table_data):
-        table_view = widgets.CustomTable(
-            widgets.LinearLayout(
-                self.LinearLayout(
-                    self.TextView('Название'),
-                    weight=3
-                ),
-                self.LinearLayout(
-                    self.TextView('План'),
-                    weight=1
-                ),
-                self.LinearLayout(
-                    self.TextView('Факт'),
-                    weight=1
-                ),
-                orientation='horizontal',
-                height="match_parent",
-                width="match_parent",
-                BackgroundColor='#FFFFFF'
-            ),
-            options=widgets.Options().options,
-            tabledata=table_data
-        )
 
-        return table_view
+class DocumentsDocDetailScreen(DocDetailsScreen):
+    screen_name = 'Документ товары'
+    process_name = 'Документы'
 
-    def _get_doc_table_row_view(self):
-        row_view = widgets.LinearLayout(
-            widgets.LinearLayout(
-                widgets.LinearLayout(
-                    widgets.LinearLayout(
-                        self.TextView('@good_name'),
-                        widgets.TextView(
-                            Value='@good_info',
-                            TextSize=15,
-                            width='match_parent'
-                        ),
-                        width='match_parent',
-                    ),
-                    width='match_parent',
-                    orientation='horizontal',
-                    StrokeWidth=1
-                ),
-                width='match_parent',
-                weight=3,
-                StrokeWidth=1
-            ),
-            widgets.LinearLayout(
-                widgets.TextView(
-                    Value='@qtty_plan',
-                    TextSize=15,
-                    width='match_parent',
-                ),
-                width='match_parent',
-                height='match_parent',
-                weight=1,
-                StrokeWidth=1
-            ),
-            widgets.LinearLayout(
-                widgets.TextView(
-                    Value='@qtty',
-                    TextSize=15,
-                    width='match_parent'
-                ),
-                width='match_parent',
-                height='match_parent',
-                weight=1,
-                StrokeWidth=1
-            ),
-            orientation='horizontal',
-            width='match_parent',
-            BackgroundColor='#FFFFFF'
-        )
+    def __init__(self, hash_map, rs_settings):
+        super().__init__(hash_map, rs_settings)
 
-        return row_view
+    def on_start(self) -> None:
+        self._set_visibility_on_start()
+        self.hash_map.put('SetTitle', self.hash_map["doc_type"])
+        id_doc = self.hash_map['id_doc']
 
-    def _set_visibility_on_start(self):
-        _vars = ['warehouse', 'countragent']
+        service = DocService()
 
-        for v in _vars:
-            name = f'Show_{v}'
-            self.hash_map[name] = '1' if self.hash_map[v] else '-1'
+        have_qtty_plan = False
+        have_zero_plan = False
+        have_mark_plan = False
 
-    def _set_background_row_color(self, product_row, id_doc):
-        background_color = '#FFFFFF'
-        qtty, qtty_plan = float(product_row['qtty']), float(product_row['qtty_plan'])
+        doc_details = service.get_doc_details_data(id_doc)
+        table_data = [{}]
+        row_filter = self.hash_map.get_bool('rows_filter')
 
-        if qtty_plan > qtty:
-            if self._added_goods_has_key(self.hash_map.get_json('added_goods'), id_doc, product_row['key']):
-                background_color = '#F0F8FF'
+        if doc_details:
+            for record in doc_details:
+                if row_filter and record['qtty'] == record['qtty_plan']:
+                    continue
+
+                pic = '#f02a' if record['IsDone'] != 0 else '#f00c'
+                if record['qtty'] == 0 and record['qtty_plan'] == 0:
+                    pic = ''
+
+                product_row = {
+                    'key': str(record['id']),
+                    'good_name': str(record['good_name']),
+                    'id_good': str(record['id_good']),
+                    'id_properties': str(record['id_properties']),
+                    'properties_name': str(record['properties_name'] or ''),
+                    'id_series': str(record['id_series']),
+                    'series_name': str(record['series_name'] or ''),
+                    'id_unit': str(record['id_unit']),
+                    'units_name': str(record['units_name'] or ''),
+                    'code_art': 'Код: ' + str(record['code']),
+                    'art': str(record['art']),
+                    'qtty': str(record['qtty'] if record['qtty'] is not None else 0),
+                    'qtty_plan': str(record['qtty_plan'] if record['qtty_plan'] is not None else 0),
+                    'price': str(record['price'] if record['price'] is not None else 0),
+                    'price_name': str(record['price_name'] or ''),
+                    'picture': pic,
+                }
+
+                props = [
+                    '{} '.format(product_row['art']) if product_row['art'] else '',
+                    '({}) }'.format(product_row['properties_name']) if product_row['properties_name'] else '',
+                    '{}'.format(product_row['series_name']) if product_row['series_name'] else '',
+                    ', {}'.format(product_row['units_name']) if product_row['units_name'] else ''
+                ]
+                product_row['good_info'] = ''.join(props)
+
+                product_row['_layout'] = self._get_doc_table_row_view()
+                self._set_background_row_color(product_row, id_doc)
+                table_data.append(product_row)
+
+            self.hash_map['table_lines_qtty'] = len(doc_details)
+
+            have_zero_plan = True
+            have_qtty_plan = sum([item['qtty_plan'] for item in doc_details if item['qtty_plan']]) > 0
+
+        self.hash_map['have_qtty_plan'] = have_qtty_plan
+        self.hash_map['have_zero_plan'] = have_zero_plan
+        self.hash_map['have_mark_plan'] = have_mark_plan
+
+        control = service.get_doc_value('control', id_doc) not in (0, '0', 'false', 'False', None)
+        self.hash_map['control'] = control
+
+        table_view = self._get_doc_table_view(table_data=table_data)
+        self.hash_map.put("doc_goods_table", table_view.to_json())
+
+    def on_input(self) -> None:
+        super().on_input()
+        listener = self.hash_map['listener']
+        id_doc = self.hash_map.get('id_doc')
+
+        if listener == "CardsClick":
+            selected_card_key = self.hash_map['selected_card_key']
+            doc_goods_table = self.hash_map.get_json('doc_goods_table')
+            table_data = doc_goods_table['customtable']['tabledata']
+
+            current_elem = None
+            current_elem_filter = [item for item in table_data if item.get('key') == selected_card_key]
+
+            if current_elem_filter:
+                current_elem = current_elem_filter[0]
+
+            current_str = self.hash_map["selected_card_position"]
+            table_lines_qtty = self.hash_map['table_lines_qtty']
+
+            # текущий элемент не найден или это заголовок таблицы
+            if current_elem is None or 'good_name' not in current_elem:
+                return
+
+            title = '{} № {} от {}'.format(self.hash_map['doc_type'], self.hash_map['doc_n'], self.hash_map['doc_date'])
+            put_data = {
+                'Doc_data': title,
+                'Good': current_elem['good_name'],
+                'good_art': current_elem['art'],
+                'good_sn': current_elem['series_name'],
+                'good_property': current_elem['properties_name'],
+                'good_price': current_elem['price'],
+                'good_unit': current_elem['units_name'],
+                'good_str': f'{current_str} / {table_lines_qtty}',
+                'qtty_plan': current_elem['qtty_plan'],
+                'good_plan': current_elem['qtty_plan'],
+                'key': current_elem['key'],
+                'price': current_elem['price'],
+                'price_type': current_elem['price_name'],
+                'qtty': current_elem['qtty'] if current_elem['qtty'] and float(current_elem['qtty']) != 0 else '',
+            }
+            self._fill_none_values(
+                put_data,
+                ('good_art', 'good_sn', 'good_property', 'good_price', 'good_plan'),
+                default='отсутствует')
+
+            self.hash_map.put_data(put_data)
+
+            # Формируем таблицу QR кодов------------------
+
+            args = {
+                'id_doc': id_doc,
+                'id_good': current_elem['id_good'],
+                'id_property': current_elem['id_properties'],
+                'id_series': current_elem['id_series'],
+                'id_unit': current_elem['id_unit'],
+            }
+            res = self._get_doc_barcode_data(args)
+
+            #TODO Переделать через виджеты
+            cards = self._get_barcode_card()
+
+            # Формируем список карточек баркодов
+            cards['customcards']['cardsdata'] = []
+            for el in res:
+
+                picture = '#f00c' if el['approved'] in ['True', 'true', '1'] else ''
+                row = {
+                    'barcode': el['mark_code'],
+                    'picture': picture
+                }
+                cards['customcards']['cardsdata'].append(row)
+
+            self.hash_map.put('barcode_cards', cards, to_json=True)
+            self.hash_map.show_screen("Товар выбор")
+
+        elif listener == 'barcode' or self._is_result_positive('ВвестиШтрихкод'):
+            doc = RsDoc(id_doc)
+            barcode = self.hash_map.get('barcode_camera')
+
+            have_qtty_plan = self.hash_map.get_bool('have_qtty_plan')
+            have_zero_plan = self.hash_map.get_bool('have_zero_plan')
+            have_mark_plan = self.hash_map.get_bool('have_mark_plan')
+            control = self.hash_map.get_bool('control')
+
+            res = doc.process_the_barcode(
+                barcode,
+                have_qtty_plan,
+                have_zero_plan,
+                control,
+                have_mark_plan,
+                use_mark_setting=self.rs_settings.get('use_mark'))
+            if res is None:
+                self.hash_map.put('scanned_barcode', barcode)
+                self.hash_map.show_screen('Ошибка сканера')
+            elif res['Error']:
+                if res['Error'] == 'AlreadyScanned':
+                    self.hash_map.put('barcode', json.dumps({'barcode': res['Barcode'], 'doc_info': res['doc_info']}))
+                    self.hash_map.show_screen('Удаление штрихкода')
+                elif res['Error'] == 'QuantityPlanReached':
+                    self.hash_map.toast('toast', res['Descr'])
+                elif res['Error'] == 'Zero_plan_error':
+                    self.hash_map.toast(res['Descr'])
+                else:
+                    self.hash_map.toast(res['Descr'])
             else:
-                background_color = "#FBE9E7"
+                self._add_scanned_row(id_doc, res.get('key'))
+                self.hash_map.toast('Товар добавлен в документ')
+                self.hash_map.put('barcode_scanned', True)
 
-        elif qtty_plan < qtty:
-            background_color = "#FFF9C4"
+        elif listener == 'btn_barcodes':
+            self.hash_map.show_dialog('ВвестиШтрихкод')
 
-        product_row['_layout'].BackgroundColor = background_color
+        elif listener in ['ON_BACK_PRESSED', 'BACK_BUTTON']:
+            self.hash_map.put("ShowScreen", "Документы")
 
-    def _added_goods_has_key(self, added_goods, id_doc, key):
-        result = False
-        if added_goods:
-            added_goods_doc = added_goods.get(id_doc, [])
-            result = str(key) in [str(item) for item in added_goods_doc]
+        elif self._is_result_positive('confirm_verified'):
+            id_doc = self.hash_map['id_doc']
+            doc = RsDoc(id_doc)
+            doc.mark_verified(1)
+            self.hash_map.show_screen("Документы")
 
-        return result
+        elif listener == 'btn_doc_mark_verified':
+            self.hash_map.show_dialog('confirm_verified', 'Завершить документ?', ['Да', 'Нет'])
 
-    def _add_scanned_row(self, id_doc, row_key):
-        if not row_key:
-            raise ValueError(f'Row key must be set not {row_key}')
+        elif listener == 'btn_rows_filter_on':
+            self.hash_map.put('rows_filter', '1')
+            self.hash_map.refresh_screen()
 
-        added_goods = self.hash_map.get_json('added_goods') or {}
-        added_goods_doc = added_goods.get(id_doc, [row_key])
-        if row_key not in added_goods_doc:
-            added_goods_doc.append(row_key)
+        elif listener == 'btn_rows_filter_off':
+            self.hash_map.remove('rows_filter')
+            self.hash_map.refresh_screen()
 
-        added_goods[id_doc] = added_goods_doc
+    def _get_barcode_card(self):
+        # TODO Переделать через виджеты
 
-        self.hash_map.put('added_goods', added_goods, to_json=True)
+        ls = {"customcards": {
+            "options": {
+                "search_enabled": False,
+                "save_position": True
+            },
+            "layout": {
+                "type": "LinearLayout",
+                "orientation": "vertical",
+                "height": "match_parent",
+                "width": "match_parent",
+                "weight": "0",
+                "Elements": [
+                    {
+                        "type": "LinearLayout",
+                        "orientation": "horizontal",
+                        "height": "match_parent",
+                        "width": "match_parent",
+                        "weight": "0",
+                        "Elements": [
+                            {"type": "TextView",
+                             "height": "wrap_content",
+                             "width": "match_parent",
+                             "weight": "1",
+                             "Value": "@barcode",
+                             "TextSize": self.rs_settings.get('goodsTextSize'),
+                             "Variable": ""
+                             },
+                            {
+                                "type": "TextView",
+                                "show_by_condition": "",
+                                "Value": "@picture",
+                                "TextColor": "#DB7093",
+                                "BackgroundColor": "#FFFFFF",
+                                "Variable": "btn_tst1",
+                                "NoRefresh": False,
+                                "document_type": "",
+                                "cardCornerRadius": "15dp",
+                                "weight": "1",
+                                "mask": ""
+                            }]
+                    }
+                ]
+            }}
+        }
+        return ls
 
-    class TextView(widgets.TextView):
-        def __init__(self, value):
-            super().__init__()
-            self.TextSize = '15'
-            self.TextBold = True
-            self.width = 'match_parent'
-            self.Value = value
+    def _get_doc_barcode_data(self, args):
+        return self.service.get_doc_barcode_data(args)
 
-    class LinearLayout(widgets.LinearLayout):
-        def __init__(self, *args, **kwargs):
-            super().__init__(*args, **kwargs)
-            self.orientation = 'horizontal'
-            self.height = "match_parent"
-            self.width = "match_parent"
-            self.StrokeWidth = 1
+# ^^^^^^^^^^^^^^^^^^^^^ DocDetails ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 
 class ScreensFactory:
     screens = [
         Tiles,
-        DocsListGroupScanScreen,
-        DocDetailsGroupScanScreen
+        GroupScanDocsListScreen,
+        DocumentsDocsListScreen,
+        GroupScanDocDetailsScreen,
+        DocumentsDocDetailScreen
     ]
 
     @staticmethod

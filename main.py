@@ -94,7 +94,7 @@ def doc_details_listener_group_scan(hash_map: HashMap):
 
 @HashMap()
 def doc_details_barcode_scanned(hash_map: HashMap):
-    if hash_map['barcode_scanned'] == 'true':
+    if hash_map.get_bool('barcode_scanned'):
         doc = ui_global.Rs_doc
         doc.id_doc = hash_map.get('id_doc')
 
@@ -103,8 +103,8 @@ def doc_details_barcode_scanned(hash_map: HashMap):
         if answer and answer.get('Error') is not None:
             hash_map.debug(answer.get('Error'))
 
-        doc_details_on_start_group_scan(hash_map)
-        hash_map.refresh_screen()
+        # doc_details_on_start_group_scan(hash_map)
+        # hash_map.refresh_screen()
 
 # ^^^^^^^^^^^^^^^^^ Group Scan ^^^^^^^^^^^^^^^^^
 
