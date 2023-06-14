@@ -129,6 +129,7 @@ def settings_on_start(hashMap, _files=None, _data=None):
         # hashMap.put('use_series', str(res[1]))
         # hashMap.put('use_properties', str(res[2]))
     hashMap.put('use_mark', rs_settings.get('use_mark'))  #str(res[3]))
+    hashMap.put('allow_fact_input', rs_settings.get('allow_fact_input'))  #str(res[3]))
     hashMap.put('add_if_not_in_plan',rs_settings.get('add_if_not_in_plan'))  # str(res[4]))
     hashMap.put('path',rs_settings.get('path') ) # str(res[5]))
     hashMap.put('delete_files',rs_settings.get('delete_files'))  # str(res[6]))
@@ -192,11 +193,14 @@ def settings_on_click(hashMap, _files=None, _data=None):
     path = hashMap.get('path')
     if path is None: path = '//storage/emulated/0/Android/data/ru.travelfood.simple_ui/'  # '//storage/emulated/0/download/'
 
+    allow_fact_input = hashMap.get('allow_fact_input')
+    if allow_fact_input is None: allow_fact_input = 'false'
 
     # ui_global.get_query_result('Update RS_docs SET control = ?',(allow_overscan,))  #В таблицы документов записываем новое значение контроля
     #ui_global.put_constants(
     rs_settings.put('use_mark',use_mark, True) #, path))
     rs_settings.put('path', path, True)
+    rs_settings.put('allow_fact_input', allow_fact_input, True)  # , path))
 
     listener = hashMap.get('listener')
 
@@ -356,6 +360,14 @@ def doc_details_on_start(hashMap, _files=None, _data=None):
         hashMap.put("Show_countragent", "1")
     else:
         hashMap.put("Show_countragent", "-1")
+
+    if rs_settings.get('allow_fact_input') == 'true':
+        hashMap.put("Show_fact_qtty_input", "1")
+        hashMap.put("Show_fact_qtty_note", "-1")
+    else:
+        hashMap.put("Show_fact_qtty_input", "-1")
+        hashMap.put("Show_fact_qtty_note", "1")
+
 
     hashMap.put('SetTitle', hashMap.get("doc_type"))
 
@@ -922,7 +934,7 @@ def docs_on_select(hashMap, _files=None, _data=None):
         hashMap.put('id_doc', current_doc['key'])
         hashMap.put('doc_type', current_doc['type'])
         hashMap.put('doc_n', current_doc['number'])
-        hashMap.put('doc_date', current_doc['data'])
+        hashMap.put('doc_date', ui_utils.format_doc_date(current_doc['data']))
         hashMap.put('warehouse', current_doc['warehouse'])
         hashMap.put('countragent', current_doc['countragent'])
 
@@ -3617,6 +3629,8 @@ def identify_barcode_goods(hashMap, _files=None, _data=None):
 
 
 def good_card_on_start(hashMap, _files=None, _data=None):
+
+    hashMap.put("Show_buttons", "-1")  # Пока спрятали переход к процессам "остатки" и "цены"
 
     if hashMap.get('selected_good_id'):
         selected_good_id = hashMap.get('selected_good_id')

@@ -202,3 +202,9 @@ class RsDoc(Rs_doc):
 
     def find_barcode_in_barcode_table(self, barcode):
         return find_barcode_in_barcode_table(barcode)
+
+
+def format_doc_date(date_string):
+    new_date_string = date_string[8:10] + "." + date_string[5:7] + "." + date_string[0:4] + " " + \
+                      date_string[11:13] + ":" + date_string[14:16] + ":" + date_string[17:19]
+    return new_date_string
