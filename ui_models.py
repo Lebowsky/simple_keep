@@ -4,6 +4,7 @@ import json
 from ui_utils import HashMap, RsDoc
 from db_services import DocService
 import widgets
+import http_exchange
 
 
 class Screen(ABC):
@@ -48,7 +49,7 @@ class Screen(ABC):
                                  f'For key {key} must be set value not None')
 
 
-class Tiles(Screen):
+class GroupScanTiles(Screen):
     screen_name = 'Плитки'
     process_name = 'Групповая обработка'
 
@@ -262,6 +263,11 @@ class Tiles(Screen):
         }
 
         return small_tile
+
+
+class DocumentsTiles(GroupScanTiles):
+    screen_name = 'Плитки'
+    process_name = 'Документы'
 
 # ==================== DocsList =============================
 
@@ -584,6 +590,13 @@ class DocDetailsScreen(Screen):
         for v in _vars:
             name = f'Show_{v}'
             self.hash_map[name] = '1' if self.hash_map[v] else '-1'
+        # TODO rework this
+        if self.rs_settings.get('allow_fact_input') == 'true':
+            self.hash_map.put("Show_fact_qtty_input", "1")
+            self.hash_map.put("Show_fact_qtty_note", "-1")
+        else:
+            self.hash_map.put("Show_fact_qtty_input", "-1")
+            self.hash_map.put("Show_fact_qtty_note", "1")
 
     def _get_doc_table_view(self, table_data):
         table_view = widgets.CustomTable(
@@ -857,6 +870,17 @@ class GroupScanDocDetailsScreen(DocDetailsScreen):
             self.hash_map.remove('rows_filter')
             self.hash_map.refresh_screen()
 
+    def on_barcode_scanned(self, http_settings):
+        if self.hash_map.get_bool('barcode_scanned'):
+            id_doc = self.hash_map.get('id_doc')
+            answer = http_exchange.post_goods_to_server(id_doc, http_settings)
+
+            if answer and answer.get('Error') is not None:
+                self.hash_map.debug(answer.get('Error'))
+
+            self.on_start()
+            self.hash_map.refresh_screen()
+
 
 class DocumentsDocDetailScreen(DocDetailsScreen):
     screen_name = 'Документ товары'
@@ -1124,7 +1148,8 @@ class DocumentsDocDetailScreen(DocDetailsScreen):
 
 class ScreensFactory:
     screens = [
-        Tiles,
+        GroupScanTiles,
+        DocumentsTiles,
         GroupScanDocsListScreen,
         DocumentsDocsListScreen,
         GroupScanDocDetailsScreen,

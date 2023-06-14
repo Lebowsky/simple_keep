@@ -41,7 +41,7 @@ importlib.reload(db_services)
 importlib.reload(widgets)
 importlib.reload(ui_models)
 
-# =============== Group Scan =================
+# =============== Documents =================
 
 
 def create_screen(hash_map):
@@ -57,59 +57,50 @@ def create_screen(hash_map):
 
 
 @HashMap()
-def tiles_on_start_group_scan(hash_map: HashMap):
+def tiles_on_start(hash_map: HashMap):
     screen = create_screen(hash_map)
     screen.on_start()
 
 
 @HashMap()
-def tiles_on_input_group_scan(hash_map: HashMap):
+def tiles_on_input(hash_map: HashMap):
     screen = create_screen(hash_map)
     screen.on_input()
 
 
 @HashMap()
-def docs_on_start_group_scan(hash_map: HashMap):
+def docs_on_start(hash_map: HashMap):
     screen = create_screen(hash_map)
     screen.on_start()
 
 
 @HashMap()
-def docs_on_select_group_scan(hash_map: HashMap):
+def docs_on_select(hash_map: HashMap):
     screen = create_screen(hash_map)
     screen.on_input()
 
 
 @HashMap()
-def doc_details_on_start_group_scan(hash_map: HashMap):
+def doc_details_on_start(hash_map: HashMap):
     screen = create_screen(hash_map)
     screen.on_start()
 
 
 @HashMap()
-def doc_details_listener_group_scan(hash_map: HashMap):
+def doc_details_listener(hash_map: HashMap):
     screen = create_screen(hash_map)
     screen.on_input()
 
 
 @HashMap()
 def doc_details_barcode_scanned(hash_map: HashMap):
-    if hash_map.get_bool('barcode_scanned'):
-        doc = ui_global.Rs_doc
-        doc.id_doc = hash_map.get('id_doc')
+    screen = create_screen(hash_map)
+    screen.on_barcode_scanned(get_http_settings(hash_map))
 
-        answer = http_exchange.post_goods_to_server(doc.id_doc, get_http_settings(hash_map))
 
-        if answer and answer.get('Error') is not None:
-            hash_map.debug(answer.get('Error'))
+# ^^^^^^^^^^^^^^^^^ Documents ^^^^^^^^^^^^^^^^^
 
-        # doc_details_on_start_group_scan(hash_map)
-        # hash_map.refresh_screen()
 
-# ^^^^^^^^^^^^^^^^^ Group Scan ^^^^^^^^^^^^^^^^^
-
-# -----
-# 0100608940553886215,iPGSQpBt!&B
 def settings_on_start(hashMap, _files=None, _data=None):
     # hashMap.put('toast','обновились')
     #app_on_start(hashMap)
@@ -317,212 +308,6 @@ def refill_docs_list_new(_filter=''):
         })
 
     return ui_form_data.get_doc_card_new(rs_settings, table_data)
-
-
-def docs_on_start(hashMap, _files=None, _data=None):
-    # Заполним поле фильтра по виду документов
-    hashMap.put("SetTitle", "Документы")
-    result = ui_global.get_query_result(ui_form_data.get_doc_type_query())
-    if hashMap.get('doc_type_select') == None:
-        doc_type_list = ['Все']
-        for record in result:
-            doc_type_list.append(record[0])
-        hashMap.put('doc_type_select', ';'.join(doc_type_list))
-
-    # hashMap.put('doc_type_click', 'Все')
-    # Если Вызов экрана из меню плиток - обработаем
-    if hashMap.containsKey('selected_tile_key'):
-        tile_key = hashMap.get('selected_tile_key')
-        if tile_key:
-            hashMap.put('doc_type_click', tile_key)
-            hashMap.put('selected_tile_key', '')
-    # Перезаполним список документов
-    if hashMap.get('doc_type_click') == None:
-        ls = refill_docs_list()
-    else:
-        ls = refill_docs_list(hashMap.get('doc_type_click'))
-    hashMap.put("docCards", ls)
-
-    return hashMap
-
-
-
-def doc_details_on_start(hashMap, _files=None, _data=None):
-
-    if hashMap.get('doc_goods_table'):
-        hashMap.put("doc_goods_table", None)
-
-    if hashMap.get("warehouse"):
-        hashMap.put("Show_warehouse", "1")
-    else:
-        hashMap.put("Show_warehouse", "-1")
-    if hashMap.get("countragent"):
-        hashMap.put("Show_countragent", "1")
-    else:
-        hashMap.put("Show_countragent", "-1")
-
-    if rs_settings.get('allow_fact_input') == 'true':
-        hashMap.put("Show_fact_qtty_input", "1")
-        hashMap.put("Show_fact_qtty_note", "-1")
-    else:
-        hashMap.put("Show_fact_qtty_input", "-1")
-        hashMap.put("Show_fact_qtty_note", "1")
-
-
-    hashMap.put('SetTitle', hashMap.get("doc_type"))
-
-    id_doc = hashMap.get('id_doc')
-    falseValueList = (0,'0','false','False',None)
-    # Формируем таблицу карточек и запрос к базе
-    #res = ui_global.get_constants()
-    use_series = rs_settings.get('use_series') #res[1]
-    use_properties = rs_settings.get('use_series') #res[2]
-    hashMap.put('use_properties', rs_settings.get('use_series')) #res[2])
-    doc_detail_list = ui_form_data.get_doc_detail_cards(use_series, use_properties,rs_settings)
-    doc_detail_list['customcards']['cardsdata'] = []
-
-    if hashMap.get('view') == "cards":
-        hashMap.put('Show_card_view', "-1")
-        # doc_detail_list = ui_form_data.get_doc_detail_cards(use_series, use_properties, rs_settings)
-        doc_detail_list = ui_tables_structure.get_doc_detail_cards_mod(use_series, use_properties, rs_settings)
-
-        doc_detail_list['customcards']['cardsdata'] = []
-    else:
-        hashMap.put('Show_table_view', "-1")
-        doc_detail_list = ui_tables_structure.get_doc_detail_table_head()
-        doc_detail_list["customtable"]["tabledata"] = [{}]
-
-    jlist = json.loads(hashMap.get('docCards'))
-
-    elem_n = jlist['customcards']['cardsdata']
-
-    for el in elem_n:
-        if el['key'] == id_doc:
-            hashMap.put('add_mark_selection',
-                        str(el['add_mark_selection'] if el['add_mark_selection'] else '0'))
-    #    current_elem = jlist['customcards']['cardsdata'][int(current_str)-1]
-
-    query_text = ui_form_data.get_doc_details_query()
-
-    results = ui_global.get_query_result(query_text, (id_doc,), True)
-    row_filter = True if hashMap.get('rows_filter') == '1' else False
-    if results:
-        hashMap.put('id_doc', str(results[0]['id_doc']))
-        for record in results:
-            pic = '#f02a' if record['IsDone'] != 0 else '#f00c'
-            if record['qtty'] == 0 and record['qtty_plan'] == 0:
-                pic = ''
-            if row_filter and record['qtty'] == record['qtty_plan']:
-                continue
-            product_row = {
-                'key': str(record['id']),
-                'good_name': str(record['good_name']),
-                'id_good': str(record['id_good']),
-                'id_properties': str(record['id_properties']),
-                'properties_name': str(record['properties_name']),
-                'id_series': str(record['id_series']),
-                'series_name': str(record['series_name']),
-                'id_unit': str(record['id_unit']),
-                'units_name': str(record['units_name']),
-                'code_art': str(record['code']),
-                'art': str(record['art']),
-                'qtty': str(record['qtty'] if record['qtty'] is not None else 0),
-                'qtty_plan': str(record['qtty_plan'] if record['qtty_plan'] is not None else 0),
-                'price': str(record['price'] if record['price'] is not None else 0),
-                'price_name': str(record['price_name']),
-                'picture': pic
-            }
-
-            good_info = ""
-            if product_row['art'] != "None":
-                good_info += product_row['art']
-            if product_row['properties_name'] != "None":
-                good_info += "(" + product_row['properties_name'] + ")"
-            if product_row['series_name'] != "None":
-                good_info += product_row['series_name']
-            if product_row['units_name'] != "None":
-                good_info += ", " + product_row['units_name']
-            product_row['good_info'] = good_info
-
-            if hashMap.get('view') == "cards":
-                doc_detail_list['customcards']['cardsdata'].append(product_row)
-            else:
-                product_row['_layout'] = ui_tables_structure.get_doc_detail_table_body_layout(use_series, use_properties, rs_settings)
-
-                if float(product_row['qtty_plan']) > float(product_row['qtty']):
-                    product_row['_layout']["BackgroundColor"] = "#FBE9E7"
-
-                if hashMap.get("added_goods"):
-                    added_goods_dict = json.loads(hashMap.get("added_goods"))
-                    if str(results[0]['id_doc']) in added_goods_dict.keys():
-                        if str(record['id_good']) in added_goods_dict[str(results[0]['id_doc'])][0]:
-                            if str(record['id_properties']) in added_goods_dict[str(results[0]['id_doc'])][1] or not str(record['id_properties']):
-                                product_row['_layout']["BackgroundColor"] = "#F0F8FF"
-
-                if float(product_row['qtty_plan']) == float(product_row['qtty']):
-                    product_row['_layout']["BackgroundColor"] = "#FFFFFF"
-
-                if float(product_row['qtty_plan']) < float(product_row['qtty']):
-                    product_row['_layout']["BackgroundColor"] = "#FFF9C4"
-
-                doc_detail_list['customtable']['tabledata'].append(product_row)
-
-        # Признак, have_qtty_plan ЕстьПланПОКОличеству  -  Истина когда сумма колонки Qtty_plan > 0
-        # Признак  have_mark_plan "ЕстьПланКОдовМаркировки – Истина, когда количество строк табл. RS_docs_barcodes с заданным id_doc и is_plan  больше нуля.
-        # Признак have_zero_plan "Есть строки товара в документе" Истина, когда есть заполненные строки товаров в документе
-        # Признак "Контролировать"  - признак для документа, надо ли контролировать
-
-        qtext = ui_form_data.get_qtty_string_count_query()
-        res = ui_global.get_query_result(qtext, {'id_doc': id_doc})
-        if not res:
-            have_qtty_plan = False
-            have_zero_plan = False
-        else:
-            have_zero_plan = res[0][0] > 0  # В документе есть строки
-            if have_zero_plan:
-                have_qtty_plan = res[0][1] > 0  # В документе есть колво план
-            else:
-                have_qtty_plan = False
-        # Есть ли в документе план по кодам маркировки
-        qtext = ui_form_data.get_have_mark_codes_query()
-        res = ui_global.get_query_result(qtext, {'id_doc': id_doc, 'is_plan': '1'})
-        if not res:
-            have_mark_plan = False
-
-        else:
-            have_mark_plan = res[0][0] > 0
-
-        hashMap.put("table_lines_qtty", str(len(results)))
-    else:
-        have_qtty_plan = False
-        have_zero_plan = False
-        have_mark_plan = False
-
-    hashMap.put('have_qtty_plan', str(have_qtty_plan))
-    hashMap.put('have_zero_plan', str(have_zero_plan))
-    hashMap.put('have_mark_plan', str(have_mark_plan))
-    res = ui_global.get_query_result('SELECT control from RS_docs  WHERE id_doc = ?', (id_doc,))
-    # Есть ли контроль плана в документе
-    if res:
-        if res[0][0]:
-            if res[0][0] in falseValueList:
-                control = 'False'
-            else:
-                control = 'True'
-
-            # control = res[0][0] #'True'
-        else:
-            control = 'False'
-    else:
-        control = 'False'
-
-    hashMap.put('control', control)
-    if hashMap.get("view") == "cards":
-        hashMap.put("doc_goods_cards", json.dumps(doc_detail_list))
-    else:
-        hashMap.put("doc_goods_table", json.dumps(doc_detail_list))
-
-    return hashMap
 
 
 def highlight_added_good(hashMap, barcode):
@@ -914,257 +699,6 @@ def get_current_elem_doc_goods(hashMap, current_str):
             if element["key"] == hashMap.get("selected_card_key"):
                 current_elem = element
     return current_elem
-
-
-def docs_on_select(hashMap, _files=None, _data=None):
-    listener = hashMap.get("listener")
-
-    if listener == "CardsClick":
-        # Находим ID документа
-        current_str = hashMap.get("selected_card_position")
-        jlist = json.loads(hashMap.get("docCards"))
-        cards_data = jlist['customcards']['cardsdata']
-        for element in cards_data:
-            if "key" in element:
-                if element["key"] == hashMap.get("selected_card_key"):
-                    current_doc = element
-        # current_doc = jlist['customcards']['cardsdata'][int(current_str)]
-
-        # id_doc = current_doc['key']
-        hashMap.put('id_doc', current_doc['key'])
-        hashMap.put('doc_type', current_doc['type'])
-        hashMap.put('doc_n', current_doc['number'])
-        hashMap.put('doc_date', ui_utils.format_doc_date(current_doc['data']))
-        hashMap.put('warehouse', current_doc['warehouse'])
-        hashMap.put('countragent', current_doc['countragent'])
-
-        hashMap.put("ShowScreen", "Документ товары")
-
-    elif listener == "doc_type_click":
-        ls = refill_docs_list(hashMap.get('doc_type_click'))
-        hashMap.put('docCards', ls)
-        hashMap.put('ShowScreen', 'Документы')
-    elif listener == 'LayoutAction':
-        layout_listener = hashMap.get('layout_listener')
-        # Находим ID документа
-        current_doc = json.loads(hashMap.get("card_data"))
-        doc = ui_global.Rs_doc
-        doc.id_doc = current_doc['key']
-
-        if layout_listener == 'CheckBox1':
-            if current_doc['completed'] == 'false':
-                doc.mark_verified(doc, 1)
-            else:
-                doc.mark_verified(doc, 0)
-
-        elif layout_listener == 'Подтвердить':
-            doc.mark_verified(doc, 1)
-            hashMap.put('ShowScreen', 'Документы')
-        elif layout_listener == 'Очистить данные пересчета':
-            doc.clear_barcode_data(doc)
-            hashMap.put('toast', 'Данные пересчета и маркировки очищены')
-        elif layout_listener == 'Удалить':
-            doc.delete_doc(doc)
-            hashMap.put('ShowScreen', 'Документы')
-        elif layout_listener == 'Сканировать штрихкоды потоком':
-
-            # id_doc = current_doc['key']
-            hashMap.put('id_doc', current_doc['key'])
-            hashMap.put('doc_type', current_doc['type'])
-            hashMap.put('doc_n', current_doc['number'])
-            hashMap.put('doc_date', current_doc['data'])
-            hashMap.put('warehouse', current_doc['warehouse'])
-            hashMap.put('countragent', current_doc['countragent'])
-
-            hashMap.put('ShowScreen','ПотокШтрихкодовДокумента')
-    elif listener == "btn_add_doc":
-        hashMap.put('ShowScreen', 'Новый документ')
-
-    elif listener == 'ON_BACK_PRESSED':
-        hashMap.put('ShowScreen', 'Плитки')
-        # hashMap.put('FinishProcess', '')
-
-        # hashMap.put('ShowScreen', 'Новый документ')
-    return hashMap
-
-
-@HashMap()
-def doc_details_listener(hashMap, _files=None, _data=None):
-    # Находим ID документа
-    # current_str = hashMap.get("selected_card_position")
-    # current_card_list = hashMap.get("doc_goods")
-    # jl = jlist['customcards']['cardsdata']
-    # if not current_card_list == None:
-    #     jlist = json.loads(current_card_list)
-    #     current_elem = jlist['customcards']['cardsdata'][int(current_str)-1]
-    # else:
-    #     current_elem = None
-    listener = hashMap.get('listener')
-
-    if listener == "CardsClick":
-        # Находим ID документа
-        current_str = hashMap.get("selected_card_position")
-        current_elem = get_current_elem_doc_goods(hashMap, current_str)
-
-        if 'good_name' in current_elem:  # в таблице первая карточка - заголовок таблицы без полей
-
-            hashMap.put("Doc_data",
-                        hashMap.get('doc_type') + ' №' + hashMap.get('doc_n') +
-                        ' от ' + hashMap.get('doc_date'))
-            hashMap.put("Good", current_elem['good_name'])
-            hashMap.put('good_art', str(current_elem['art']))
-            hashMap.put('good_sn', str(current_elem['series_name']))
-            hashMap.put('good_property', str(current_elem['properties_name']))
-            hashMap.put('good_price', str(current_elem['price']))
-            hashMap.put('good_unit', str(current_elem['units_name']))
-            hashMap.put('good_str', str(current_str) + "/" + hashMap.get('table_lines_qtty'))
-
-            fill_empty_values(hashMap, {'good_art': str(current_elem['art']),
-                                        'good_sn': str(current_elem['series_name']),
-                                        'good_property': str(current_elem['properties_name']),
-                                        'good_price': str(current_elem['price']),
-                                        'good_plan': str(current_elem['qtty_plan'])}, value="отсутствует")
-
-            hashMap.put("qtty_plan", str(current_elem['qtty_plan']))
-            if not current_elem['qtty']:  # or float(current_elem['qtty']) == 0:
-                hashMap.put("qtty", '')
-            else:
-                if float(current_elem['qtty']) == 0:
-                    hashMap.put("qtty", '')
-                else:
-                    hashMap.put("qtty", str(current_elem['qtty']))
-            hashMap.put('key', current_elem['key'])
-            hashMap.put('price', current_elem['price'])
-            hashMap.put('price_type', current_elem['price_name'])
-            # Формируем таблицу QR кодов------------------
-            query_text = ui_form_data.get_doc_barcode_query()
-            args = dict(id_good=current_elem['id_good'], id_property=current_elem['id_properties'],
-                        id_series=current_elem['id_series'], id_unit=current_elem['id_unit'], id_doc=hashMap.get('id_doc'))
-
-            cards = ui_form_data.get_barcode_card(rs_settings)
-            res = ui_global.get_query_result(query_text, args, True)
-            # Формируем список карточек баркодов
-            cards['customcards']['cardsdata'] = []
-            for el in res:
-                # barcode_data = ui_barcodes.get_gtin_serial_from_datamatrix(el['barcode'])
-                if el['approved'] == 'True' or el['approved'] == '1' or el['approved'] == 'true':
-                    picture = '#f00c'
-                else:
-                    picture = ''
-                row = {
-                    'barcode': el['mark_code'],
-                    'picture': picture
-                }
-                cards['customcards']['cardsdata'].append(row)
-            hashMap.put("barcode_cards", json.dumps(cards))
-
-            hashMap.put("ShowScreen", "Товар выбор")
-
-    elif listener == 'btn_add_string':
-
-        hashMap.put("Doc_data",
-                    hashMap.get('doc_type') + ' №' + hashMap.get('doc_n') +
-                    ' от ' + hashMap.get('doc_date'))
-        hashMap.put("Good", '')
-        hashMap.put("properties", '')
-        hashMap.put("qtty_plan", '')
-
-        hashMap.put("ShowScreen", "Товар")
-
-    elif listener == "BACK_BUTTON":
-        hashMap.put("ShowScreen", "Документы")
-    elif listener == "btn_barcodes":
-        hashMap.show_dialog('ВвестиШтрихкод')
-
-    elif listener == 'confirm_verified' and hashMap.get("event") == "onResultPositive":
-        doc = ui_global.Rs_doc()
-        doc.id_doc = hashMap.get('id_doc')
-        doc.mark_verified(1)
-        hashMap.put("ShowScreen", "Документы")
-
-    elif listener == 'barcode' or (listener == 'ВвестиШтрихкод' and hashMap.get("event") == "onResultPositive"):
-        doc = ui_global.Rs_doc
-        doc.id_doc = hashMap.get('id_doc')
-        if hashMap.get("event") == "onResultPositive":
-            barcode = hashMap.get('fld_barcode')
-            if not barcode.strip():
-                hashMap.put("ShowDialog", "ВвестиШтрихкод")
-                return hashMap
-        else:
-            barcode = hashMap.get('barcode_camera')
-
-        have_qtty_plan = hashMap.get('have_qtty_plan')
-        have_zero_plan = hashMap.get('have_zero_plan')
-        have_mark_plan = hashMap.get('have_mark_plan')
-        control = hashMap.get('control')
-
-        res = doc.process_the_barcode(
-            doc,
-            barcode,
-            eval(have_qtty_plan),
-            eval(have_zero_plan),
-            eval(control),
-            eval(have_mark_plan),
-            rs_settings.get('use_mark'),
-            user_tmz=int(hashMap.get("TMZ"))
-        )
-        if res is None:
-            hashMap.put('scanned_barcode', barcode)
-            # suClass.urovo_set_lock_trigger(True)
-            hashMap.put('ShowScreen', 'Ошибка сканера')
-            # hashMap.put('toast',
-            #             'Штрих код не зарегистрирован в базе данных. Проверьте товар или выполните обмен данными')
-        elif res['Error']:
-            hashMap.put('beep_duration ', rs_settings.get('beep_duration'))
-            hashMap.put("beep", rs_settings.get('signal_num'))
-            if res['Error'] == 'AlreadyScanned':
-
-                hashMap.put('barcode', json.dumps({'barcode': res['Barcode'], 'doc_info': res['doc_info']}))
-                hashMap.put('ShowScreen', 'Удаление штрихкода')
-            elif res['Error'] == 'QuantityPlanReached':
-
-                hashMap.put('toast', res['Descr'])
-            elif res['Error'] == 'Zero_plan_error':
-
-                hashMap.put('toast', res['Descr'])
-            else:
-
-                hashMap.put('toast', res['Descr'] )  #+ ' '+ res['Barcode']
-        else:
-            highlight_added_good(hashMap, barcode)
-            hashMap.put('toast', 'Товар добавлен в документ')
-            hashMap.put('barcode_scanned', 'true')
-
-    elif listener == 'btn_doc_mark_verified':
-        hashMap.show_dialog('confirm_verified', 'Завершить документ?', ['Да', 'Нет'])
-
-    elif listener == 'ON_BACK_PRESSED':
-        hashMap.put("ShowScreen", "Документы")
-    elif listener == 'LayoutAction':
-        layout_listener = hashMap.get('layout_listener')
-        if layout_listener == 'Удалить строку':
-            current_elem = json.loads(hashMap.get("card_data"))
-            id_str = current_elem['key']
-            qtext = 'DELETE FROM RS_docs_table WHERE id=?'
-            ui_global.get_query_result(qtext, (id_str,))
-    elif listener == 'btn_rows_filter_on':
-        hashMap.put('rows_filter', '1')
-        hashMap.put('RefreshScreen','')
-    elif listener == 'btn_rows_filter_off':
-        hashMap.remove('rows_filter')
-        hashMap.put('RefreshScreen','')
-    elif listener == 'card_view':
-        hashMap.put('view', 'cards')
-        hashMap.put('doc_goods_table', '')
-        hashMap.put("Show_card_view", "-1")
-        hashMap.put('RefreshScreen', '')
-    elif listener == 'table_view':
-        hashMap.put('view', 'table')
-        hashMap.put('doc_goods_cards', '')
-        hashMap.put("Show_table_view", "-1")
-        hashMap.put('RefreshScreen', '')
-
-    return hashMap
 
 
 def delete_barcode_screen_start(hashMap, _files=None, _data=None):
@@ -1870,61 +1404,6 @@ def barcode_error_screen_listener(hashMap, _files=None, _data=None):
     elif hashMap.get('listener') == 'btn_continue_scan':
         # suClass.urovo_set_lock_trigger(False)
         hashMap.put("ShowScreen", "Документ товары")
-    return hashMap
-
-
-def tiles_on_start(hashMap, _files=None, _data=None):
-    small_tile = ui_form_data.get_doc_tiles(rs_settings)
-    qtext = ui_form_data.get_docs_stat_query()
-    res = ui_global.get_query_result(qtext, None, True)
-
-    x = {'tiles': [[]], "background_color": "#f5f5f5"}
-
-    # x['tiles':[0][0]]=1
-    rows = 1
-    columns = 1
-    for el in res:
-        if el['docType']==None:
-            continue
-        if columns % 3 == 0:
-            rows += 1
-            columns = 0
-            x['tiles'].append([])
-        columns += 1
-
-        tile = {
-
-            "layout": small_tile,
-            "data": {
-                "docName": el['docType'],
-                'QttyOfDocs': str(el['count']) + '/' + str(el['verified']),
-                # 'QttyOfDocsIncompleted':el['count'] - el['verified']
-                'count_verified': str(el['count_verified']+el['count_unverified']) + '/' + str(el['count_unverified']),
-                'qtty_plan_verified': str(el['qtty_plan_verified']+el['qtty_plan_unverified']) + '/' + str(el['qtty_plan_unverified']),
-
-            },
-            "height": "wrap_content",
-            "color": '#FFFFFF',  # "#FFCC99",
-            "start_screen": "Документы",
-
-            "start_process": "",
-            'key': el['docType']
-        }
-
-        x['tiles'][rows - 1].append(tile)
-
-    hashMap.put("tiles", json.dumps(x, ensure_ascii=False).encode('utf8').decode())
-    return hashMap
-
-
-def tiles_on_select(hashMap, _files=None, _data=None):
-    listener = hashMap.get("listener")
-
-    if listener == "CardsClick":
-        pass
-    elif listener == 'ON_BACK_PRESSED':
-
-        hashMap.put('FinishProcess', '')
     return hashMap
 
 
