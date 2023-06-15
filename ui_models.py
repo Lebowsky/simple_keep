@@ -430,8 +430,27 @@ class DocsListScreen(Screen):
 
         return result
 
+    def _get_docs_count(self, doc_type=''):
+        doc_type = '' if not doc_type or doc_type == 'Все' else doc_type
+        return self.service.get_docs_count(doc_type)
+
     def _clear_barcode_data(self, id_doc):
         return self.service.clear_barcode_data(id_doc)
+
+    def confirm_delete_doc_listener(self):
+        card_data = self.hash_map.get_json("card_data")
+        id_doc = card_data['key']
+        doc_type = self.hash_map['doc_type_click']
+
+        if self._doc_delete(id_doc):
+            docs_count = self._get_docs_count(doc_type=doc_type)
+            self.hash_map.toast('Документ успешно удалён')
+            if docs_count:
+                self.on_start()
+            else:
+                self.hash_map.show_screen('Плитки')
+        else:
+            self.hash_map.toast('Ошибка удаления документа')
 
 
 class GroupScanDocsListScreen(DocsListScreen):
@@ -468,14 +487,7 @@ class GroupScanDocsListScreen(DocsListScreen):
             self._layout_action()
 
         elif self._is_result_positive('confirm_delete'):
-            card_data = self.hash_map.get_json("card_data")
-            id_doc = card_data['key']
-
-            if self._doc_delete(id_doc):
-                self.hash_map.toast('Документ успешно удалён')
-                self.on_start()
-            else:
-                self.hash_map.toast('Ошибка удаления документа')
+            self.confirm_delete_doc_listener()
 
         elif self._is_result_positive('Подтвердите действие'):
             id_doc = self.hash_map['id_doc']
@@ -537,14 +549,7 @@ class DocumentsDocsListScreen(DocsListScreen):
             self._layout_action()
 
         elif self._is_result_positive('confirm_delete'):
-            card_data = self.hash_map.get_json("card_data")
-            id_doc = card_data['key']
-
-            if self._doc_delete(id_doc):
-                self.hash_map.toast('Документ успешно удалён')
-                self.on_start()
-            else:
-                self.hash_map.toast('Ошибка удаления документа')
+            self.confirm_delete_doc_listener()
 
         elif self._is_result_positive('confirm_clear_barcode_data'):
             id_doc = self.hash_map['id_doc']
@@ -699,7 +704,8 @@ class DocDetailsScreen(Screen):
 
     def _add_scanned_row(self, id_doc, row_key):
         if not row_key:
-            raise ValueError(f'Row key must be set not {row_key}')
+            return
+            # raise ValueError(f'Row key must be set not {row_key}')
 
         added_goods = self.hash_map.get_json('added_goods') or {}
         added_goods_doc = added_goods.get(id_doc, [row_key])
@@ -792,7 +798,7 @@ class GroupScanDocDetailsScreen(DocDetailsScreen):
 
                 props = [
                     '{} '.format(product_row['art']) if product_row['art'] else '',
-                    '({}) }'.format(product_row['properties_name']) if product_row['properties_name'] else '',
+                    '({}) '.format(product_row['properties_name']) if product_row['properties_name'] else '',
                     '{}'.format(product_row['series_name']) if product_row['series_name'] else '',
                     ', {}'.format(product_row['units_name']) if product_row['units_name'] else ''
                 ]
@@ -824,7 +830,13 @@ class GroupScanDocDetailsScreen(DocDetailsScreen):
             pass
         elif listener == 'barcode' or self._is_result_positive('ВвестиШтрихкод'):
             doc = RsDoc(id_doc)
-            barcode = self.hash_map.get('barcode_camera')
+            if self.hash_map.get("event") == "onResultPositive":
+                barcode = self.hash_map.get('fld_barcode')
+            else:
+                barcode = self.hash_map.get('barcode_camera')
+
+            if not barcode:
+                return
 
             have_qtty_plan = self.hash_map.get_bool('have_qtty_plan')
             have_zero_plan = self.hash_map.get_bool('have_zero_plan')
@@ -842,6 +854,8 @@ class GroupScanDocDetailsScreen(DocDetailsScreen):
                 self.hash_map.put('scanned_barcode', barcode)
                 self.hash_map.show_screen('Ошибка сканера')
             elif res['Error']:
+                self.hash_map.put('beep_duration ', self.rs_settings.get('beep_duration'))
+                self.hash_map.put("beep", self.rs_settings.get('signal_num'))
                 if res['Error'] == 'AlreadyScanned':
                     self.hash_map.put('barcode', json.dumps({'barcode': res['Barcode'], 'doc_info': res['doc_info']}))
                     self.hash_map.show_screen('Удаление штрихкода')
@@ -855,7 +869,6 @@ class GroupScanDocDetailsScreen(DocDetailsScreen):
                 self._add_scanned_row(id_doc, res.get('key'))
                 self.hash_map.toast('Товар добавлен в документ')
                 self.hash_map.put('barcode_scanned', True)
-                # self.hash_map.run_event_async('doc_details_barcode_scanned')
 
         elif listener == 'btn_barcodes':
             self.hash_map.show_dialog('ВвестиШтрихкод')
@@ -934,7 +947,7 @@ class DocumentsDocDetailScreen(DocDetailsScreen):
 
                 props = [
                     '{} '.format(product_row['art']) if product_row['art'] else '',
-                    '({}) }'.format(product_row['properties_name']) if product_row['properties_name'] else '',
+                    '({}) '.format(product_row['properties_name']) if product_row['properties_name'] else '',
                     '{}'.format(product_row['series_name']) if product_row['series_name'] else '',
                     ', {}'.format(product_row['units_name']) if product_row['units_name'] else ''
                 ]
@@ -1036,7 +1049,13 @@ class DocumentsDocDetailScreen(DocDetailsScreen):
 
         elif listener == 'barcode' or self._is_result_positive('ВвестиШтрихкод'):
             doc = RsDoc(id_doc)
-            barcode = self.hash_map.get('barcode_camera')
+            if self.hash_map.get("event") == "onResultPositive":
+                barcode = self.hash_map.get('fld_barcode')
+            else:
+                barcode = self.hash_map.get('barcode_camera')
+
+            if not barcode:
+                return
 
             have_qtty_plan = self.hash_map.get_bool('have_qtty_plan')
             have_zero_plan = self.hash_map.get_bool('have_zero_plan')

@@ -347,3 +347,16 @@ class DocService:
 
         res = self._get_query_result(query, args, return_dict=True)
         return res
+
+    def get_docs_count(self, doc_type=''):
+        query = 'SELECT COUNT(*) AS docs_count FROM RS_docs'
+        args = None
+
+        if doc_type:
+            query = '\n'.join([query, 'WHERE doc_type = ?'])
+            args = (doc_type,)
+
+        res = self._get_query_result(query, args, True)
+        if res:
+            return res[0].get('docs_count', 0)
+        return 0
