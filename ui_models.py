@@ -1073,6 +1073,8 @@ class DocumentsDocDetailScreen(DocDetailsScreen):
                 self.hash_map.put('scanned_barcode', barcode)
                 self.hash_map.show_screen('Ошибка сканера')
             elif res['Error']:
+                self.hash_map.put('beep_duration ', self.rs_settings.get('beep_duration'))
+                self.hash_map.put("beep", self.rs_settings.get('signal_num'))
                 if res['Error'] == 'AlreadyScanned':
                     self.hash_map.put('barcode', json.dumps({'barcode': res['Barcode'], 'doc_info': res['doc_info']}))
                     self.hash_map.show_screen('Удаление штрихкода')
