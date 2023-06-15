@@ -1776,7 +1776,6 @@ def timer_update(hashMap,  _files=None, _data=None):
     # if result.get('Error'):
     #     hashMap.put('error_log', )
 
-
     # try:
     #     result = http_exchange.server_load_data(url)
     # except:
