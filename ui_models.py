@@ -551,7 +551,8 @@ class DocumentsDocsListScreen(DocsListScreen):
     def on_input(self):
         super().on_input()
         if self.listener == "CardsClick":
-            id_doc = self.hash_map['id_doc']
+            id_doc = self.get_id_doc()
+            self.hash_map['id_doc'] = id_doc
             self.service.doc_id = id_doc
 
             screen_name = 'Документ товары'
@@ -592,8 +593,11 @@ class DocumentsDocsListScreen(DocsListScreen):
             self.hash_map.show_screen('Плитки')
 
     def get_id_doc(self):
-        card_data = self.hash_map.get_json("card_data")
-        return card_data['key']
+        card_data = self.hash_map.get_json("card_data") or {}
+        id_doc = card_data.get('key') or self.hash_map['selected_card_key']
+        return id_doc
+
+
 # ^^^^^^^^^^^^^^^^^^^^^ DocsList ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 # ==================== DocDetails =============================
