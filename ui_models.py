@@ -63,7 +63,7 @@ class GroupScanTiles(Screen):
     screen_name = 'Плитки'
     process_name = 'Групповая обработка'
 
-    def __init__(self, hash_map: HashMap):
+    def __init__(self, hash_map: HashMap, rs_settings):
         super().__init__(hash_map, rs_settings)
         self.listener = self.hash_map['listener']
         self.name = 'Плитки'

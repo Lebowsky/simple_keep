@@ -51,7 +51,7 @@ def create_screen(hash_map):
     }
     screen = ui_models.ScreensFactory.create_screen(**screen_params)
     if not screen:
-        screen = ui_models.MockScreen(hash_map)
+        screen = ui_models.MockScreen(hash_map, rs_settings)
 
     return screen
 
