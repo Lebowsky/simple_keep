@@ -3,6 +3,7 @@ import json
 
 from ui_utils import HashMap, RsDoc
 from db_services import DocService
+from http_exchange import post_changes_to_server
 import widgets
 
 
@@ -10,9 +11,10 @@ class Screen(ABC):
     screen_name: str
     process_name: str
 
-    def __init__(self, hash_map: HashMap):
+    def __init__(self, hash_map: HashMap, rs_settings):
         self.hash_map: HashMap = hash_map
         self.screen_values = {}
+        self.rs_settings = rs_settings
         self.listener: str = ''
         self.event: str = ''
 
@@ -47,15 +49,23 @@ class Screen(ABC):
                 raise ValueError(f'Process: {self.process_name}, screen: {self.screen_name}.'
                                  f'For key {key} must be set value not None')
 
+    def get_http_settings(self):
+        http_settings = {
+            'url': self.rs_settings.get("URL"),
+            'user': self.rs_settings.get('USER'),
+            'pass': self.rs_settings.get('PASS'),
+            'device_model': self.hash_map['DEVICE_MODEL'],
+            'android_id': self.hash_map['ANDROID_ID'],
+            'user_name': self.rs_settings.get('user_name')}
+        return http_settings
 
 class Tiles(Screen):
     screen_name = 'Плитки'
     process_name = 'Групповая обработка'
 
-    def __init__(self, hash_map: HashMap, rs_settings):
-        super().__init__(hash_map)
+    def __init__(self, hash_map: HashMap):
+        super().__init__(hash_map, rs_settings)
         self.listener = self.hash_map['listener']
-        self.rs_settings = rs_settings
         self.name = 'Плитки'
         self.db_service = DocService()
         self.screen_name = self.hash_map.get_current_screen()
@@ -268,10 +278,9 @@ class Tiles(Screen):
 
 class DocsListScreen(Screen):
     def __init__(self, hash_map: HashMap,  rs_settings):
-        super().__init__(hash_map)
+        super().__init__(hash_map, rs_settings)
         self.listener = self.hash_map['listener']
         self.event = self.hash_map['event']
-        self.rs_settings = rs_settings
         self.service = DocService()
         self.screen_values = {}
 
@@ -300,6 +309,11 @@ class DocsListScreen(Screen):
             self.hash_map.show_dialog(
                 listener='confirm_clear_barcode_data',
                 title='Очистить данные пересчета?'
+            )
+        elif layout_listener == 'Отправить повторно':
+            self.hash_map.show_dialog(
+                listener='confirm_resend_doc',
+                title='Отправить документ повторно?'
             )
 
     def _get_doc_list_data(self, doc_type='') -> list:
@@ -355,8 +369,10 @@ class DocsListScreen(Screen):
                         Value=popup_menu_data,
                         Variable="menu_delete",
                     ),
+
                     orientation='horizontal',
-                    width='match_parent'
+                    width='match_parent',
+
                 ),
                 widgets.LinearLayout(
                     widgets.TextView(
@@ -509,7 +525,8 @@ class DocumentsDocsListScreen(DocsListScreen):
         else:
             list_data = self._get_doc_list_data()
 
-        doc_cards = self._get_doc_cards_view(list_data, popup_menu_data='Удалить;Очистить данные пересчета')
+        doc_cards = self._get_doc_cards_view(list_data,
+                                             popup_menu_data='Удалить;Очистить данные пересчета;Отправить повторно')
         self.hash_map['docCards'] = doc_cards.to_json()
 
     def on_input(self):
@@ -531,8 +548,7 @@ class DocumentsDocsListScreen(DocsListScreen):
             self._layout_action()
 
         elif self._is_result_positive('confirm_delete'):
-            card_data = self.hash_map.get_json("card_data")
-            id_doc = card_data['key']
+            id_doc = self.get_id_doc()
 
             if self._doc_delete(id_doc):
                 self.hash_map.toast('Документ успешно удалён')
@@ -541,7 +557,7 @@ class DocumentsDocsListScreen(DocsListScreen):
                 self.hash_map.toast('Ошибка удаления документа')
 
         elif self._is_result_positive('confirm_clear_barcode_data'):
-            id_doc = self.hash_map['id_doc']
+            id_doc = self.get_id_doc()
             res = self._clear_barcode_data(id_doc)
             if res.get('result'):
                 self.toast('Данные пересчета и маркировки очищены')
@@ -549,9 +565,22 @@ class DocumentsDocsListScreen(DocsListScreen):
                 self.toast('При очистке данных пересчета возникла ошибка.')
                 self.hash_map.error_log(res.get('error'))
 
+        elif self._is_result_positive('confirm_resend_doc'):
+            id_doc = self.get_id_doc()
+            http_params = self.get_http_settings()
+            answer = post_changes_to_server(f"'{id_doc}'", http_params)
+            if answer.get('Error') is not None:
+                ui_global.write_error_on_log(str(answer.get('Error')))
+                self.toast('Не удалось отправить документ повторно')
+            else:
+                self.toast('Документ отправлен повторно')
+
         elif self.listener == 'ON_BACK_PRESSED':
             self.hash_map.show_screen('Плитки')
 
+    def get_id_doc(self):
+        card_data = self.hash_map.get_json("card_data")
+        return card_data['key']
 # ^^^^^^^^^^^^^^^^^^^^^ DocsList ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 # ==================== DocDetails =============================
@@ -559,7 +588,7 @@ class DocumentsDocsListScreen(DocsListScreen):
 
 class DocDetailsScreen(Screen):
     def __init__(self, hash_map, rs_settings):
-        super().__init__(hash_map)
+        super().__init__(hash_map, rs_settings)
         self.listener = self.hash_map['listener']
         self.event = self.hash_map['event']
         self.service = DocService()
@@ -779,7 +808,7 @@ class GroupScanDocDetailsScreen(DocDetailsScreen):
 
                 props = [
                     '{} '.format(product_row['art']) if product_row['art'] else '',
-                    '({}) }'.format(product_row['properties_name']) if product_row['properties_name'] else '',
+                    '({})'.format(product_row['properties_name']) if product_row['properties_name'] else '',
                     '{}'.format(product_row['series_name']) if product_row['series_name'] else '',
                     ', {}'.format(product_row['units_name']) if product_row['units_name'] else ''
                 ]
@@ -910,7 +939,7 @@ class DocumentsDocDetailScreen(DocDetailsScreen):
 
                 props = [
                     '{} '.format(product_row['art']) if product_row['art'] else '',
-                    '({}) }'.format(product_row['properties_name']) if product_row['properties_name'] else '',
+                    '({})'.format(product_row['properties_name']) if product_row['properties_name'] else '',
                     '{}'.format(product_row['series_name']) if product_row['series_name'] else '',
                     ', {}'.format(product_row['units_name']) if product_row['units_name'] else ''
                 ]
@@ -1141,6 +1170,9 @@ class ScreensFactory:
         for item in ScreensFactory.screens:
             if getattr(item, 'screen_name') == screen_name and getattr(item, 'process_name') == process:
                 return item(**kwargs)
+
+
+
 
 
 class MockScreen(Screen):
