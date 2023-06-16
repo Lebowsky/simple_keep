@@ -866,9 +866,7 @@ class GroupScanDocDetailsScreen(DocDetailsScreen):
             doc_details = self._get_doc_details_data()
             table_data = self._prepare_table_data(doc_details)
             table_view = self._get_doc_table_view(table_data=table_data)
-            self.toast(table_data)
             self.hash_map.put("doc_goods_table", table_view.to_json())
-
             self.hash_map.refresh_screen()
 
 
