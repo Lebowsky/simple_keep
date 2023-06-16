@@ -237,7 +237,7 @@ class DocService:
                 ELSE 
                     0 
                 END as qtty_plan_verified,
-                CASE WHEN ifnull(verified,0)=1 THEN 
+                CASE WHEN IFNULL(verified,0)=1 THEN 
                     SUM(RS_docs_table.qtty_plan)
                 ELSE 
                     0 
