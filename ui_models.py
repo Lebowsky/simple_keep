@@ -4,6 +4,7 @@ import json
 from ui_utils import HashMap, RsDoc
 from db_services import DocService
 from hs_services import HsService
+import http_exchange
 from http_exchange import post_changes_to_server
 import widgets
 
@@ -756,6 +757,49 @@ class DocDetailsScreen(Screen):
         for key in keys:
             data[key] = default if data[key] in none_list else data[key]
 
+    def _barcode_scanned(self):
+        id_doc = self.hash_map.get('id_doc')
+        doc = RsDoc(id_doc)
+        if self.hash_map.get("event") == "onResultPositive":
+            barcode = self.hash_map.get('fld_barcode')
+        else:
+            barcode = self.hash_map.get('barcode_camera')
+
+        if not barcode:
+            return
+
+        have_qtty_plan = self.hash_map.get_bool('have_qtty_plan')
+        have_zero_plan = self.hash_map.get_bool('have_zero_plan')
+        have_mark_plan = self.hash_map.get_bool('have_mark_plan')
+        control = self.hash_map.get_bool('control')
+
+        res = doc.process_the_barcode(
+            barcode,
+            have_qtty_plan,
+            have_zero_plan,
+            control,
+            have_mark_plan,
+            use_mark_setting=self.rs_settings.get('use_mark'))
+        if res is None:
+            self.hash_map.put('scanned_barcode', barcode)
+            self.hash_map.show_screen('Ошибка сканера')
+        elif res['Error']:
+            self.hash_map.put('beep_duration ', self.rs_settings.get('beep_duration'))
+            self.hash_map.put("beep", self.rs_settings.get('signal_num'))
+            if res['Error'] == 'AlreadyScanned':
+                self.hash_map.put('barcode', json.dumps({'barcode': res['Barcode'], 'doc_info': res['doc_info']}))
+                self.hash_map.show_screen('Удаление штрихкода')
+            elif res['Error'] == 'QuantityPlanReached':
+                self.hash_map.toast('toast', res['Descr'])
+            elif res['Error'] == 'Zero_plan_error':
+                self.hash_map.toast(res['Descr'])
+            else:
+                self.hash_map.toast(res['Descr'])
+        else:
+            self._add_scanned_row(id_doc, res.get('key'))
+            self.hash_map.toast('Товар добавлен в документ')
+            self.hash_map.put('barcode_scanned', True)
+
     class TextView(widgets.TextView):
         def __init__(self, value):
             super().__init__()
@@ -859,54 +903,16 @@ class GroupScanDocDetailsScreen(DocDetailsScreen):
     def on_input(self) -> None:
         super().on_input()
         listener = self.hash_map['listener']
-        id_doc = self.hash_map.get('id_doc')
 
         if listener == "CardsClick":
             pass
+
         elif listener == 'barcode' or self._is_result_positive('ВвестиШтрихкод'):
-            doc = RsDoc(id_doc)
-            if self.hash_map.get("event") == "onResultPositive":
-                barcode = self.hash_map.get('fld_barcode')
-            else:
-                barcode = self.hash_map.get('barcode_camera')
-
-            if not barcode:
-                return
-
-            have_qtty_plan = self.hash_map.get_bool('have_qtty_plan')
-            have_zero_plan = self.hash_map.get_bool('have_zero_plan')
-            have_mark_plan = self.hash_map.get_bool('have_mark_plan')
-            control = self.hash_map.get_bool('control')
-
-            res = doc.process_the_barcode(
-                barcode,
-                have_qtty_plan,
-                have_zero_plan,
-                control,
-                have_mark_plan,
-                use_mark_setting=self.rs_settings.get('use_mark'))
-            if res is None:
-                self.hash_map.put('scanned_barcode', barcode)
-                self.hash_map.show_screen('Ошибка сканера')
-            elif res['Error']:
-                self.hash_map.put('beep_duration ', self.rs_settings.get('beep_duration'))
-                self.hash_map.put("beep", self.rs_settings.get('signal_num'))
-                if res['Error'] == 'AlreadyScanned':
-                    self.hash_map.put('barcode', json.dumps({'barcode': res['Barcode'], 'doc_info': res['doc_info']}))
-                    self.hash_map.show_screen('Удаление штрихкода')
-                elif res['Error'] == 'QuantityPlanReached':
-                    self.hash_map.toast('toast', res['Descr'])
-                elif res['Error'] == 'Zero_plan_error':
-                    self.hash_map.toast(res['Descr'])
-                else:
-                    self.hash_map.toast(res['Descr'])
-            else:
-                self._add_scanned_row(id_doc, res.get('key'))
-                self.hash_map.toast('Товар добавлен в документ')
-                self.hash_map.put('barcode_scanned', True)
+            self._barcode_scanned()
 
         elif listener == 'btn_barcodes':
             self.hash_map.show_dialog('ВвестиШтрихкод')
+
         elif listener in ['ON_BACK_PRESSED', 'BACK_BUTTON']:
             self.hash_map.put("ShowScreen", "Документы")
 
@@ -918,7 +924,7 @@ class GroupScanDocDetailsScreen(DocDetailsScreen):
             self.hash_map.remove('rows_filter')
             self.hash_map.refresh_screen()
 
-    def on_barcode_scanned(self, http_settings):
+    def post_barcode_scanned(self, http_settings):
         if self.hash_map.get_bool('barcode_scanned'):
             id_doc = self.hash_map.get('id_doc')
             answer = http_exchange.post_goods_to_server(id_doc, http_settings)
@@ -1083,46 +1089,7 @@ class DocumentsDocDetailScreen(DocDetailsScreen):
             self.hash_map.show_screen("Товар выбор")
 
         elif listener == 'barcode' or self._is_result_positive('ВвестиШтрихкод'):
-            doc = RsDoc(id_doc)
-            if self.hash_map.get("event") == "onResultPositive":
-                barcode = self.hash_map.get('fld_barcode')
-            else:
-                barcode = self.hash_map.get('barcode_camera')
-
-            if not barcode:
-                return
-
-            have_qtty_plan = self.hash_map.get_bool('have_qtty_plan')
-            have_zero_plan = self.hash_map.get_bool('have_zero_plan')
-            have_mark_plan = self.hash_map.get_bool('have_mark_plan')
-            control = self.hash_map.get_bool('control')
-
-            res = doc.process_the_barcode(
-                barcode,
-                have_qtty_plan,
-                have_zero_plan,
-                control,
-                have_mark_plan,
-                use_mark_setting=self.rs_settings.get('use_mark'))
-            if res is None:
-                self.hash_map.put('scanned_barcode', barcode)
-                self.hash_map.show_screen('Ошибка сканера')
-            elif res['Error']:
-                self.hash_map.put('beep_duration ', self.rs_settings.get('beep_duration'))
-                self.hash_map.put("beep", self.rs_settings.get('signal_num'))
-                if res['Error'] == 'AlreadyScanned':
-                    self.hash_map.put('barcode', json.dumps({'barcode': res['Barcode'], 'doc_info': res['doc_info']}))
-                    self.hash_map.show_screen('Удаление штрихкода')
-                elif res['Error'] == 'QuantityPlanReached':
-                    self.hash_map.toast('toast', res['Descr'])
-                elif res['Error'] == 'Zero_plan_error':
-                    self.hash_map.toast(res['Descr'])
-                else:
-                    self.hash_map.toast(res['Descr'])
-            else:
-                self._add_scanned_row(id_doc, res.get('key'))
-                self.hash_map.toast('Товар добавлен в документ')
-                self.hash_map.put('barcode_scanned', True)
+            self._barcode_scanned()
 
         elif listener == 'btn_barcodes':
             self.hash_map.show_dialog('ВвестиШтрихкод')
