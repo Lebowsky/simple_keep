@@ -46,8 +46,11 @@ class HsService:
 
         return answer
 
-    def reset_exchange(self):
-        pass
+    def reset_exchange(self, **kwargs):
+        self._hs = 'reset_exchange'
+        self._method = requests.post
+        answer = self._send_request(kwargs)
+        return answer
 
     def create_messages(self):
         pass

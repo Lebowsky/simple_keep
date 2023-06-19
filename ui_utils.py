@@ -156,7 +156,7 @@ class RsDoc(Rs_doc):
         pass
 
     def mark_verified(self, key):
-        pass
+        super().mark_verified(key)
 
     def find_barcode_in_table(self, search_value, func_compared='=?') -> dict:
         result = super().find_barcode_in_table(search_value, func_compared)
