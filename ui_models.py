@@ -293,10 +293,35 @@ class DocsListScreen(Screen):
         self.screen_values = {}
 
     def on_start(self) -> None:
-        pass
+        doc_types = self.service.get_doc_types()
+        self.hash_map['doc_type_select'] = ';'.join(['Все'] + doc_types)
+        self.hash_map['doc_status_select'] = 'Все;К выполнению;Выгружен;К выгрузке'
+
+        doc_type = self.hash_map['selected_tile_key'] or self.hash_map['doc_type_click']
+        doc_status = self.hash_map['selected_doc_status']
+        self.hash_map['doc_type_click'] = doc_type
+        self.hash_map['selected_tile_key'] = ''
+        list_data = self._get_doc_list_data(doc_type, doc_status)
+        if self.process_name == "Групповая обработка":
+            doc_cards = self._get_doc_cards_view(list_data, 'Удалить')
+        elif self.process_name == "Документы":
+            doc_cards = self._get_doc_cards_view(list_data,
+                                                 popup_menu_data='Удалить;Очистить данные пересчета;Отправить повторно')
+        self.hash_map['docCards'] = doc_cards.to_json()
 
     def on_input(self) -> None:
         super().on_input()
+        if self.listener == "doc_status_click":
+            self.hash_map['selected_doc_status'] = self.hash_map["doc_status_click"]
+
+        elif self.listener == 'LayoutAction':
+            self._layout_action()
+
+        elif self._is_result_positive('confirm_delete'):
+            self.confirm_delete_doc_listener()
+
+        elif self.listener == 'ON_BACK_PRESSED':
+            self.hash_map.show_screen('Плитки')
 
     def on_post_start(self):
         pass
@@ -475,18 +500,7 @@ class GroupScanDocsListScreen(DocsListScreen):
         super().__init__(hash_map, rs_settings)
 
     def on_start(self):
-        doc_types = self.service.get_doc_types()
-        self.hash_map['doc_type_select'] = ';'.join(['Все'] + doc_types)
-        self.hash_map['doc_status_select'] = 'Все;К выполнению;Выгружен;К выгрузке'
-
-        doc_type = self.hash_map['selected_tile_key'] or self.hash_map['doc_type_click']
-        doc_status = self.hash_map['selected_doc_status']
-        list_data = self._get_doc_list_data(doc_type, doc_status)
-        self.hash_map['doc_type_click'] = doc_type
-        self.hash_map['selected_tile_key'] = ''
-
-        doc_cards = self._get_doc_cards_view(list_data, 'Удалить')
-        self.hash_map['docCards'] = doc_cards.to_json()
+        super().on_start()
 
     def on_input(self):
         super().on_input()
@@ -494,12 +508,6 @@ class GroupScanDocsListScreen(DocsListScreen):
             self.hash_map.show_dialog('Подтвердите действие')
             selected_card_key = self.hash_map['selected_card_key']
             self.hash_map['id_doc'] = selected_card_key
-
-        elif self.listener == 'LayoutAction':
-            self._layout_action()
-
-        elif self._is_result_positive('confirm_delete'):
-            self.confirm_delete_doc_listener()
 
         elif self._is_result_positive('Подтвердите действие'):
             id_doc = self.hash_map['id_doc']
@@ -515,12 +523,6 @@ class GroupScanDocsListScreen(DocsListScreen):
 
             screen.show(args=self._get_selected_card_put_data())
 
-        elif self.listener == 'ON_BACK_PRESSED':
-            self.hash_map.show_screen('Плитки')
-
-        if self.listener == "doc_status_click":
-            self.hash_map['selected_doc_status'] = self.hash_map["doc_status_click"]
-
 
 class DocumentsDocsListScreen(DocsListScreen):
     screen_name = 'Документы'
@@ -530,22 +532,7 @@ class DocumentsDocsListScreen(DocsListScreen):
         super().__init__(hash_map, rs_settings)
 
     def on_start(self):
-        doc_types = self.service.get_doc_types()
-        self.hash_map['doc_type_select'] = ';'.join(['Все'] + doc_types)
-        self.hash_map['doc_status_select'] = 'Все;Выгружен;К выполнению;Не выгружен'
-
-        doc_type = self.hash_map['selected_tile_key'] or self.hash_map['doc_type_click']
-
-        if doc_type:
-            list_data = self._get_doc_list_data(doc_type)
-            self.hash_map['doc_type_click'] = doc_type
-            self.hash_map['selected_tile_key'] = ''
-        else:
-            list_data = self._get_doc_list_data()
-
-        doc_cards = self._get_doc_cards_view(list_data,
-                                             popup_menu_data='Удалить;Очистить данные пересчета;Отправить повторно')
-        self.hash_map['docCards'] = doc_cards.to_json()
+        super().on_start()
 
     def on_input(self):
         super().on_input()
@@ -561,12 +548,6 @@ class DocumentsDocsListScreen(DocsListScreen):
                 rs_settings=self.rs_settings)
 
             screen.show(args=self._get_selected_card_put_data())
-
-        elif self.listener == 'LayoutAction':
-            self._layout_action()
-
-        elif self._is_result_positive('confirm_delete'):
-            self.confirm_delete_doc_listener()
 
         elif self._is_result_positive('confirm_clear_barcode_data'):
             id_doc = self.get_id_doc()
@@ -586,9 +567,6 @@ class DocumentsDocsListScreen(DocsListScreen):
                 self.toast('Не удалось отправить документ повторно')
             else:
                 self.toast('Документ отправлен повторно')
-
-        elif self.listener == 'ON_BACK_PRESSED':
-            self.hash_map.show_screen('Плитки')
 
     def get_id_doc(self):
         card_data = self.hash_map.get_json("card_data")

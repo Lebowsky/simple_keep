@@ -119,10 +119,20 @@
                                                 "Value": "@doc_type_select",
                                                 "Variable": "doc_type_click",
                                                 "height": "wrap_content",
-                                                "width": "wrap_content",
+                                                "width": "match_parent",
                                                 "gravity_horizontal": "left",
                                                 "gravity_vertical": "center",
-                                                "weight": "0"
+                                                "weight": "1"
+                                            },
+                                            {
+                                                "type": "SpinnerLayout",
+                                                "Value": "@doc_status_select",
+                                                "Variable": "doc_status_click",
+                                                "height": "wrap_content",
+                                                "width": "match_parent",
+                                                "gravity_horizontal": "left",
+                                                "gravity_vertical": "center",
+                                                "weight": "1"
                                             },
                                             {
                                                 "TextBold": true,
@@ -7781,14 +7791,6 @@
             },
             {
                 "PyFileKey": "db_services",
-                "PyFileData": ""
-            },
-            {
-                "PyFileKey": "ui_barcodes",
-                "PyFileData": ""
-            },
-            {
-                "PyFileKey": "hs_services",
                 "PyFileData": ""
             }
         ],
