@@ -3,7 +3,6 @@ import json
 
 from ui_utils import HashMap, RsDoc
 from db_services import DocService
-from hs_services import HsService
 from http_exchange import post_changes_to_server
 import widgets
 
@@ -551,8 +550,7 @@ class DocumentsDocsListScreen(DocsListScreen):
     def on_input(self):
         super().on_input()
         if self.listener == "CardsClick":
-            id_doc = self.get_id_doc()
-            self.hash_map['id_doc'] = id_doc
+            id_doc = self.hash_map['id_doc']
             self.service.doc_id = id_doc
 
             screen_name = 'Документ товары'
@@ -593,11 +591,8 @@ class DocumentsDocsListScreen(DocsListScreen):
             self.hash_map.show_screen('Плитки')
 
     def get_id_doc(self):
-        card_data = self.hash_map.get_json("card_data") or {}
-        id_doc = card_data.get('key') or self.hash_map['selected_card_key']
-        return id_doc
-
-
+        card_data = self.hash_map.get_json("card_data")
+        return card_data['key']
 # ^^^^^^^^^^^^^^^^^^^^^ DocsList ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 # ==================== DocDetails =============================
@@ -1200,38 +1195,6 @@ class DocumentsDocDetailScreen(DocDetailsScreen):
         return self.service.get_doc_barcode_data(args)
 
 # ^^^^^^^^^^^^^^^^^^^^^ DocDetails ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-# ==================== Timer =============================
-
-
-class Timer:
-    def __init__(self, hash_map: HashMap, rs_settings):
-        self.hash_map = hash_map
-        self.rs_settings = rs_settings
-        self.http_settings = self._get_http_settings()
-        self.db_service = DocService()
-        self.http_service = HsService(self.http_settings)
-
-    def timer_on_start(self):
-        docs_data = self.http_service.get_data()
-        format_results = ['is_ok', 'is_data', 'no_data']
-        # if docs_data.get('data'):
-        #     try:
-        #         self.db_service.update_data_from_json(docs_data['data'])
-        #     except Exception as e:
-        #         raise e
-
-    def _get_http_settings(self):
-        http_settings = {
-            'url': self.rs_settings.get("URL"),
-            'user': self.rs_settings.get('USER'),
-            'pass': self.rs_settings.get('PASS'),
-            'device_model': self.hash_map['DEVICE_MODEL'],
-            'android_id': self.hash_map['ANDROID_ID'],
-            'user_name': self.rs_settings.get('user_name')}
-        return http_settings
-
-# ^^^^^^^^^^^^^^^^^^^^^ Timer ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 
 class ScreensFactory:
