@@ -1,5 +1,5 @@
 import json
-
+import widgets
 
 def get_doc_card(settings_global, AddMenu=''):
     doc_list = {"customcards": {
@@ -124,6 +124,51 @@ def get_doc_card(settings_global, AddMenu=''):
     }}
 
     return doc_list
+
+
+def get_doc_card_new(settings_global, table_data):
+    doc_list = widgets.CustomCards(
+        widgets.LinearLayout(
+            widgets.LinearLayout(
+                widgets.TextView(
+                    weight=8,
+                    width='match_parent',
+                    Value='@type',
+                    gravity_horizontal='right',
+                    TextSize=settings_global.get("TitleTextSize"),
+                ),
+                widgets.PopupMenuButton(
+                    weight=2,
+                    Value='Удалить',
+                    Variable="menu_delete"
+                ),
+                orientation='horizontal',
+                width='match_parent'
+            ),
+            widgets.LinearLayout(
+                widgets.TextView(
+                    Value='@number',
+                    TextBold=True,
+                    TextSize=settings_global.get('CardTitleTextSize')
+                )
+            ),
+            widgets.LinearLayout(
+                widgets.TextView(
+                    Value='@countragent',
+                    TextSize=settings_global.get('CardDateTextSize')
+                ),
+                widgets.TextView(
+                    Value='@warehouse',
+                    TextSize=settings_global.get('CardDateTextSize')
+                )
+            ),
+            width="match_parent"
+        ),
+        options=widgets.Options().options,
+        cardsdata=table_data
+    )
+
+    return doc_list.to_json()
 
 
 def get_doc_query(arg=''):
@@ -785,6 +830,90 @@ def get_doc_detail_cards(use_series, use_properties, settings_global, isAdr = Fa
         pass
 
     return list
+
+
+def get_doc_detail_cards_new(settings_global, cards_data: list, add_labels: list = None):
+    goods_text_size = settings_global.get('goodsTextSize')
+    header = widgets.LinearLayout(
+        orientation='horizontal',
+        height='match_parent',
+        width='match_parent',
+    )
+
+    # series_name, properties_name, cell_name
+    add_labels = add_labels or []
+    for label in add_labels:
+        header.append(
+            widgets.TextView(Value=f'@{label}', TextSize=settings_global.get('SeriesPropertiesTextSize')),
+        )
+
+    header.append(
+        widgets.TextView(
+            Value='@good_name',
+            TextBold=True,
+            TextSize=settings_global.get('GoodsCardTitleTextSize'),
+            weight='1'
+        ),
+        widgets.TextView(
+            Value='@picture',
+            TextSize='25',
+            TextColor='#DB7093',
+            BackgroundColor="#FFFFFF",
+            weight=1,
+            height=25,
+        ),
+    )
+
+    code_art = widgets.TextView(Value='@code_art', TextSize=settings_global.get('goodsTextSize'))
+    unit_name = widgets.TextView(Value='@unit_name', TextSize=settings_global.get('goodsTextSize'))
+    footer = widgets.LinearLayout(
+        widgets.LinearLayout(
+            widgets.TextView(Value='План', TextSize=goods_text_size),
+            widgets.TextView(Value='@qtty_plan', TextSize=goods_text_size),
+            width='match_parent',
+            weight=1,
+        ),
+        widgets.LinearLayout(
+            widgets.TextView(Value='Факт', TextSize=goods_text_size),
+            widgets.TextView(Value='@qtty', TextSize=goods_text_size),
+            width='match_parent',
+            weight=1,
+        ),
+        widgets.LinearLayout(
+            widgets.TextView(Value='Цена', TextSize=goods_text_size),
+            widgets.TextView(Value='@price', TextSize=goods_text_size),
+            width='match_parent',
+            weight=1,
+        ),
+        height='match_parent',
+        width='match_parent',
+        orientation='horizontal',
+        weight=1,
+    )
+
+    detail_cards = widgets.CustomCards(
+        widgets.LinearLayout(
+            widgets.LinearLayout(
+                widgets.LinearLayout(
+                    header,
+                    code_art,
+                    unit_name,
+                    footer,
+                    width='match_parent',
+                    weight='1'
+                ),
+                height='match_parent',
+                width='match_parent',
+                orientation='horizontal'
+            ),
+            height='match_parent',
+            width='match_parent'
+        ),
+        options=widgets.Options().options,
+        cardsdata=cards_data
+    )
+
+    return detail_cards.to_json()
 
 
 def get_doc_barc_flow_query():

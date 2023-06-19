@@ -3,6 +3,8 @@ from typing import Callable
 from functools import wraps
 
 from java import jclass
+from ui_global import Rs_doc, find_barcode_in_barcode_table
+from db_services import DocService
 
 noClass = jclass("ru.travelfood.simple_ui.NoSQL")
 rs_settings = noClass("rs_settings")
@@ -28,6 +30,13 @@ class HashMap:
 
     def toast(self, text, add_to_log=False):
         self.hash_map.put('toast', str(text))
+        if add_to_log:
+            self.error_log(text)
+
+    def notification(self, text, title=None, add_to_log=False):
+        if title is None:
+            title = self.get_current_screen()
+        self.hash_map.put("basic_notification", json.dumps([{'number': 1, 'title': title, 'message': text}]))
         if add_to_log:
             self.error_log(text)
 
@@ -72,81 +81,137 @@ class HashMap:
         else:
             return self.hash_map.get(item)
 
+    def get_json(self, item):
+        return json.loads(self.hash_map.get(item)) if self.hash_map.get(item) else None
+
+    def get_bool(self, item):
+        value = str(self.hash_map.get(item)).lower() not in ('0', 'false', 'none')
+        return value
+
     def put(self, key, value, to_json=False):
         if to_json:
             self.hash_map.put(key, json.dumps(value))
         else:
             self.hash_map.put(key, str(value))
 
+    def put_data(self, data: dict):
+        for key, value in data.items():
+            self[key] = value
 
-def json_to_sqlite_query(data):
-    table_list = (
-        'RS_doc_types', 'RS_goods', 'RS_properties', 'RS_units', 'RS_types_goods', 'RS_series', 'RS_countragents',
-        'RS_warehouses', 'RS_price_types', 'RS_cells', 'RS_barcodes', 'RS_prices', 'RS_doc_types', 'RS_docs',
-        'RS_docs_table', 'RS_docs_barcodes', 'RS_adr_docs', 'RS_adr_docs_table')  # ,, 'RS_barc_flow'
-    table_for_delete = ('RS_docs_table', 'RS_docs_barcodes, RS_adr_docs_table')  # , 'RS_barc_flow'
+    def containsKey(self, key):
+        return self.hash_map.containsKey(key)
 
-    queries = []
-    doc_id_list = []
+    def remove(self, key):
+        self.hash_map.remove(key)
 
-    # Цикл по именам таблиц
-    for table_name in table_list:
-        if not data.get(table_name):
-            continue
+    def delete(self, key):
+        self.hash_map.remove(key)
 
-        # Добавим в запросы удаление из базы строк тех документов, что мы загружаем
-        if table_name in table_for_delete:
-            query = f"DELETE FROM {table_name} WHERE id_doc in ({', '.join(doc_id_list)}) "
-            queries.append(query)
+    def export(self) -> list:
+        return self.hash_map.export()
 
-        column_names = data[table_name][0].keys()
-        if 'mark_code' in column_names:
-            query_col_names = list(column_names)
-            query_col_names.append('GTIN')
-            query_col_names.append('Series')
-            query_col_names.remove('mark_code')
-        else:
-            query_col_names = column_names
+    def to_json(self):
+        return json.dumps(self.export(), indent=4, ensure_ascii=False).encode('utf8').decode()
 
-        query = f"REPLACE INTO {table_name} ({', '.join(query_col_names)}) VALUES "
-        values = []
+    def show_screen(self, name, data=None):
+        self.put('ShowScreen', name)
+        if data:
+            self.put_data(data)
 
-        for row in data[table_name]:
-            row_values = []
-            list_quoted_fields = ('name', 'full_name', "mark_code")
-            for col in column_names:
-                if col in list_quoted_fields and "\"" in row[col]:
-                    row[col] = row[col].replace("\"", "\"\"")
-                if row[col] is None:
-                    row[col] = ''
-                if col == 'mark_code':  # Заменяем это поле на поля GTIN и Series
-                    barc_struct = parse_barcode(row[col])
-                    row_values.append(barc_struct['GTIN'])
-                    row_values.append(barc_struct['Series'])
-                else:
-                    row_values.append(row[col])  # (f'"{row[col]}"')
-                if col == 'id_doc' and table_name == 'RS_docs':
-                    doc_id_list.append('"' + row[col] + '"')
-            formatted_val = [f'"{x}"' if isinstance(x, str) else str(x) for x in row_values]
-            values.append(f"({', '.join(formatted_val)})")
-        query += ", ".join(values)
-        queries.append(query)
+    def show_dialog(self, listener, title='', buttons=None):
+        self.put("ShowDialog", listener)
 
-    return queries
+        if title or buttons:
+            dialog_style = {
+                'title': title or listener,
+                'yes': 'Ок',
+                'no': 'Отмена'
+            }
+            if buttons and len(buttons) > 1:
+                dialog_style['yes'] = buttons[0]
+                dialog_style['no'] = buttons[1]
+
+            self.put('ShowDialogStyle', dialog_style)
+
+    def get_current_screen(self):
+        return self['current_screen_name']
+
+    def get_current_process(self):
+        return self['current_process_name']
+
+class RsDoc(Rs_doc):
+    def __init__(self, id_doc):
+        self.id_doc = id_doc
+
+    def update_doc_str(self, price=0):
+        pass
+
+    def delete_doc(self):
+        pass
+
+    def clear_barcode_data(self):
+        pass
+
+    def mark_for_upload(self):
+        pass
+
+    def mark_verified(self, key):
+        super().mark_verified(key)
+
+    def find_barcode_in_table(self, search_value, func_compared='=?') -> dict:
+        result = super().find_barcode_in_table(search_value, func_compared)
+        if result:
+            return result[0]
 
 
-def parse_barcode(val):
-    if len(val) < 21:
-        return {'GTIN': '', 'Series': ''}
+    def find_barcode_in_mark_table(self, search_value: str, func_compared='=?'):
+        pass
 
-    val.replace('(01)','01')
-    val.replace('(21)', '21')
+    def update_doc_table_data(self, elem_for_add: dict, qtty=1, user_tmz=0):
+        pass
 
-    if val[:2] == '01':
-        GTIN = val[2:16]
-        Series = val[18:]
-    else:
-        GTIN = val[:14]
-        Series = val[14:]
+    def add_marked_codes_in_doc(self, barcode_info):
+        pass
 
-    return {'GTIN': GTIN, 'Series': Series}
+    def add_new_barcode_in_doc_barcodes_table(self, el, barcode_info):
+        pass
+
+    def process_the_barcode(
+            self,
+            barcode,
+            have_qtty_plan=False,
+            have_zero_plan=False,
+            control=False,
+            have_mark_plan=False,
+            elem=None,
+            use_mark_setting='false',
+            user_tmz=0):
+
+        Rs_doc.id_doc = self.id_doc
+        result = Rs_doc.process_the_barcode(
+            Rs_doc, barcode, have_qtty_plan, have_zero_plan, control, have_mark_plan, elem, use_mark_setting, user_tmz
+        )
+        if not result.get('Error'):
+            service = DocService(self.id_doc)
+            service.set_doc_value('sent', 0)
+
+            res = self.find_barcode_in_table(barcode)
+            if res.get('id'):
+                result['key'] = res['id']
+
+        return result
+
+    def add(self, args):
+        pass
+
+    def get_new_id(self):
+        pass
+
+    def find_barcode_in_barcode_table(self, barcode):
+        return find_barcode_in_barcode_table(barcode)
+
+
+def format_doc_date(date_string):
+    new_date_string = date_string[8:10] + "." + date_string[5:7] + "." + date_string[0:4] + " " + \
+                      date_string[11:13] + ":" + date_string[14:16] + ":" + date_string[17:19]
+    return new_date_string

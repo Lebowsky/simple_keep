@@ -222,7 +222,7 @@ def get_all_changes_from_database(doc_list=''):
     return json.dumps(res + res_adr)
 
 
-def post_changes_to_server(doc_list , htpparams):
+def post_changes_to_server(doc_list, htpparams):
     url = htpparams['url']
     username = htpparams['user']
     password = htpparams['pass']
@@ -254,75 +254,30 @@ def post_goods_to_server(doc_id, http_params):
     hs_service = HsService(http_params)
     doc_service = DocService(doc_id)
 
-    res = doc_service.get_last_edited_goods(to_json=True)
+    res = doc_service.get_last_edited_goods(to_json=False)
 
     if isinstance(res, dict) and res.get('Error'):
         answer = {'empty': True, 'Error': res.get('Error')}
         return answer
+    elif res:
+        hs_service.send_documents(res)
+        if not res or (isinstance(res, dict) and res.get('Error')):
+            answer = {'empty': True, 'Error': res.get('Error')}
+            return answer
+        else:
+            doc_service.update_sent_data(res)
 
-    answer = hs_service.send_documents(res)
-    return answer
-
-
-#
-# adr_string=input('Введите адрес: ')
-# adr_string.replace('\\','/')
-# adr_struct = adr_string.split(sep='/')
-# adr_format ={'protocol':('http:/','https:/'), 'BaseName':'', 'hs_pref':'hs'}
-# pass
-# #ipaddress.ip_address()
-# if adr_struct in adr_format['protocol']:
-#     res_adr =['http:/']
-#
-#
-# else:
+    timer_server_load_data(http_params)
 
 
-#
-# server_load_json()
-# post_changes_to_server(None)
+def timer_server_load_data(http_params):
+    hs_service = HsService(http_params)
+    doc_service = DocService('')
 
-
-#
-# ------------------- Блок загрузки данных -------------------
-# http_settings = {
-# 'url' : 'http://192.168.1.77/Mark/hs/',
-# 'user' : 'ADM',
-# 'pass' : '1',
-# 'device_model' : 'Python',
-# 'android_id':'f0559476b8a26877', #'c51133488568c92b',
-# 'user_name': 'Gerald'}
-# x=0
-# while x < 2:
-#
-#     # url =
-#     # android_id = 'c51133488568c92b' #'7b1bc913358b7049'
-#     result = server_load_data(http_settings)
-#     #if not result == 'ok':
-#     if result.get('res_for_sql') is not None:
-#         error_pool =[]
-#         for key in result['res_for_sql']:
-#             try:
-#                 ui_global.get_query_result(key)
-#                 # return 'ok'
-#             except Exception as e:
-#                 sql_error = True
-#                 error_pool.append(e.args[0])
-#                 print(e.args[0])
-#     else:
-#         print(result)
-#
-#     x+=1
-#     time.sleep(10)
-#     print('Цикл: '+ str(x))
-# ---------------------------------------------------------------------------------
-
-
-# --------- Удаление данных из всех таблиц ------------------------
-# qtext = '''
-# SELECT name FROM sqlite_master WHERE type='table'
-# '''
-# res = ui_global.get_query_result(qtext)
-# for el in res:
-#     del_text = 'DELETE FROM ' + el[0]
-#     ui_global.get_query_result(del_text)
+    docs_data = hs_service.get_data()
+    if docs_data.get('data'):
+        try:
+            doc_service.update_data_from_json(docs_data['data'])
+        except Exception as e:
+            raise e
+            # return {'empty': True, 'Error': e.args[0]}

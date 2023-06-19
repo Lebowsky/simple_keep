@@ -36,10 +36,7 @@ class HsService:
                     answer['batch'] = json_data.get('batch')
 
                 elif format_data == 'is_data':
-                    # Парсим, параметр data содержит список словарей с данными запроса
-                    res_for_sql = ui_utils.json_to_sqlite_query(json_data['data'])
-                    if res_for_sql:
-                        answer['res_for_sql'] = res_for_sql
+                    answer['data'] = json_data['data']
             else:
                 answer['format'] = None
         elif answer['status_code'] == 401:
@@ -49,8 +46,11 @@ class HsService:
 
         return answer
 
-    def reset_exchange(self):
-        pass
+    def reset_exchange(self, **kwargs):
+        self._hs = 'reset_exchange'
+        self._method = requests.post
+        answer = self._send_request(kwargs)
+        return answer
 
     def create_messages(self):
         pass
@@ -93,6 +93,7 @@ class HsService:
             else:
                 answer['Error'] = r.text
         except Exception as e:
-            answer['Error'] = e.args[0]
+            raise e
+            # answer['Error'] = e.args[0]
 
         return answer
