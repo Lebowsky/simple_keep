@@ -33,6 +33,13 @@ class HashMap:
         if add_to_log:
             self.error_log(text)
 
+    def notification(self, text, title=None, add_to_log=False):
+        if title is None:
+            title = self.get_current_screen()
+        self.hash_map.put("basic_notification", json.dumps([{'number': 1, 'title': title, 'message': text}]))
+        if add_to_log:
+            self.error_log(text)
+
     def debug(self, text):
         if self.debug_mode:
             self.toast(text, add_to_log=True)
