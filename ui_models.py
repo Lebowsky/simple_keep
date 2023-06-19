@@ -59,6 +59,9 @@ class Screen(ABC):
             'user_name': self.rs_settings.get('user_name')}
         return http_settings
 
+    def put_notification(self, text, title=None):
+        self.hash_map.notification(text, title)
+
 class GroupScanTiles(Screen):
     screen_name = 'Плитки'
     process_name = 'Групповая обработка'
@@ -321,12 +324,8 @@ class DocsListScreen(Screen):
                 title='Отправить документ повторно?'
             )
 
-    def _get_doc_list_data(self, doc_type='') -> list:
-        if doc_type and doc_type != 'Все':
-            results = self.service.get_doc_view_data(doc_type)
-        else:
-            results = self.service.get_doc_view_data()
-
+    def _get_doc_list_data(self, doc_type='', doc_status='') -> list:
+        results = self.service.get_doc_view_data(doc_type, doc_status)
         table_data = []
 
         for record in results:
@@ -478,15 +477,13 @@ class GroupScanDocsListScreen(DocsListScreen):
     def on_start(self):
         doc_types = self.service.get_doc_types()
         self.hash_map['doc_type_select'] = ';'.join(['Все'] + doc_types)
+        self.hash_map['doc_status_select'] = 'Все;К выполнению;Выгружен;К выгрузке'
 
         doc_type = self.hash_map['selected_tile_key'] or self.hash_map['doc_type_click']
-
-        if doc_type:
-            list_data = self._get_doc_list_data(doc_type)
-            self.hash_map['doc_type_click'] = doc_type
-            self.hash_map['selected_tile_key'] = ''
-        else:
-            list_data = self._get_doc_list_data()
+        doc_status = self.hash_map['selected_doc_status']
+        list_data = self._get_doc_list_data(doc_type, doc_status)
+        self.hash_map['doc_type_click'] = doc_type
+        self.hash_map['selected_tile_key'] = ''
 
         doc_cards = self._get_doc_cards_view(list_data, 'Удалить')
         self.hash_map['docCards'] = doc_cards.to_json()
@@ -521,6 +518,9 @@ class GroupScanDocsListScreen(DocsListScreen):
         elif self.listener == 'ON_BACK_PRESSED':
             self.hash_map.show_screen('Плитки')
 
+        if self.listener == "doc_status_click":
+            self.hash_map['selected_doc_status'] = self.hash_map["doc_status_click"]
+
 
 class DocumentsDocsListScreen(DocsListScreen):
     screen_name = 'Документы'
@@ -532,6 +532,7 @@ class DocumentsDocsListScreen(DocsListScreen):
     def on_start(self):
         doc_types = self.service.get_doc_types()
         self.hash_map['doc_type_select'] = ';'.join(['Все'] + doc_types)
+        self.hash_map['doc_status_select'] = 'Все;Выгружен;К выполнению;Не выгружен'
 
         doc_type = self.hash_map['selected_tile_key'] or self.hash_map['doc_type_click']
 
