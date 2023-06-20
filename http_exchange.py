@@ -277,7 +277,15 @@ def timer_server_load_data(http_params):
     docs_data = hs_service.get_data()
     if docs_data.get('data'):
         try:
+            existing_docs_list = doc_service.get_existing_docs_names_list()
             doc_service.update_data_from_json(docs_data['data'])
+            docs_list_after_load = doc_service.get_existing_docs_names_list()
+            diff = [x for x in docs_list_after_load if x not in existing_docs_list]
+            diff_str = str(diff)[1:-1].replace(",", " ").replace("(", "").replace(")", "").replace("'", "")
+            return diff_str
         except Exception as e:
             raise e
             # return {'empty': True, 'Error': e.args[0]}
+
+
+

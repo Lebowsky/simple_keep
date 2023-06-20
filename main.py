@@ -1769,10 +1769,18 @@ def barcode_flow_listener(hashMap,  _files=None, _data=None):
 
 def timer_update(hashMap,  _files=None, _data=None):
     url = get_http_settings(hashMap)
+
     #url = 'http://192.168.1.77/NSI/hs/simple_accounting/data'
 
     # hashMap.put('toast', 'Обмен') #url)
     result = http_exchange.timer_server_load_data(url)
+    if len(result) > 0:
+        hashMap.put("basic_notification", json.dumps([{'number': 1, 'title': "Добавлены документы:",
+                                                           'message': str(result)}]))
+
+    # if len(new_docs_list) > 0:
+    #     hashMap.put("basic_notification", json.dumps([{'number': 1, 'title': "Добавлены документы",
+    #                                                    'message': str(new_docs_list)}]))
     # if result.get('Error'):
     #     hashMap.put('error_log', )
 

@@ -445,3 +445,9 @@ class ModelsFactory:
 
     def create(self, table_name):
         return self.models.get(table_name)
+
+    @staticmethod
+    def get_existing_docs_names_list():
+        query_text = "SELECT doc_n FROM RS_docs"
+        res = get_query_result(query_text)
+        return res
