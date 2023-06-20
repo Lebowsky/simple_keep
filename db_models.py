@@ -113,17 +113,20 @@ class GoodsType(db.Entity):
     goods = Set(Goods)
     series = Set(Series)
 
-#
-#
-# class RS_units(db.Entity):
-#     id = PrimaryKey(int, auto=True)
-#     document_tables = Set('RS_docs_table')
-#     code = Optional(str)
-#     name = Optional(str)
-#     nominator = Optional(str)
-#     denominator = Optional(str)
-#     int_reruction = Optional(str)
-#     adr_docs_table = Set('RS_adr_docs_table')
+
+class GoodsUnit(db.Entity):
+    _table_ = 'RS_units'
+
+    id = PrimaryKey(str, auto=True)
+    code = Required(str)
+    name = Required(str)
+    nominator = Required(int)
+    denominator = Required(int)
+    int_reruction = Required(str)
+
+    id_owner = Required(Goods)
+    document_tables = Set(DocumentGoods)
+    adr_docs_table = Set('RS_adr_docs_table')
 #
 #
 # class RS_price_types(db.Entity):
@@ -212,7 +215,7 @@ models = [
     GoodsProperty,
     GoodsType,
     Series,
-    # RS_units,
+    GoodsUnit,
     # RS_price_types,
     # RS_cells,
     # RS_adr_docs,

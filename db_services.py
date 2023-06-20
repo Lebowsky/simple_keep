@@ -441,6 +441,7 @@ class DocDbService(DbService):
 
 class ModelsFactory:
     def __init__(self):
+        import db_models
         self.models = {model._table_: model for model in db_models.models}
 
     def create(self, table_name):
