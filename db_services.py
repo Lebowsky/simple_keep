@@ -379,3 +379,9 @@ class DocService:
         if res:
             return res[0].get('docs_count', 0)
         return 0
+
+    @staticmethod
+    def get_existing_docs_names_list():
+        query_text = "SELECT doc_n FROM RS_docs"
+        res = get_query_result(query_text)
+        return res
