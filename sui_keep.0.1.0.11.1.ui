@@ -2233,11 +2233,6 @@
                                 "type": "MenuItem",
                                 "Value": "Необработанные строки",
                                 "Variable": "btn_rows_filter_on"
-                            },
-                            {
-                                "type": "MenuItem",
-                                "Value": "Ввести штрихкод",
-                                "Variable": "btn_barcodes"
                             }
                         ],
                         "Handlers": [
@@ -2255,6 +2250,14 @@
                                 "action": "run",
                                 "type": "python",
                                 "method": "doc_details_listener",
+                                "postExecute": ""
+                            },
+                            {
+                                "event": "onInput",
+                                "listener": "",
+                                "action": "runasync",
+                                "type": "python",
+                                "method": "doc_details_barcode_scanned",
                                 "postExecute": ""
                             }
                         ],
@@ -7731,7 +7734,14 @@
         ],
         "Mediafile": [],
         "PyHandlers": "",
-        "PyTimerTask": [],
+        "PyTimerTask": [
+            {
+                "PyTimerTaskKey": "timer_update",
+                "PyTimerTaskDef": "timer_update",
+                "PyTimerTaskPeriod": "15000",
+                "PyTimerTaskBuilIn": false
+            }
+        ],
         "PyFiles": [
             {
                 "PyFileKey": "ui_csv",

@@ -174,7 +174,7 @@ class DocService:
         doc_types = [rec[0] for rec in self._get_query_result(query)]
         return doc_types
 
-    def get_doc_view_data(self, doc_type='') -> list:
+    def get_doc_view_data(self, doc_type='', doc_status='') -> list:
         query_text = '''
             SELECT RS_docs.id_doc,
                 RS_docs.doc_type,
@@ -184,8 +184,8 @@ class DocService:
                 RS_docs.id_warehouse,
                 ifnull(RS_countragents.full_name,'') as RS_countragent,
                 ifnull(RS_warehouses.name,'') as RS_warehouse,
-                RS_docs.verified,
-                RS_docs.sent,
+                ifnull(RS_docs.verified, 0) as verified,
+                ifnull(RS_docs.sent, 0) as sent,
                 RS_docs.add_mark_selection
 
             FROM RS_docs
@@ -194,7 +194,28 @@ class DocService:
             LEFT JOIN RS_warehouses as RS_warehouses
                 ON RS_warehouses.id=RS_docs.id_warehouse
         '''
-        where = '' if not doc_type else 'WHERE RS_docs.doc_type=?'
+
+        if doc_status:
+            if doc_status == "Выгружен":
+                where = "WHERE sent=1 AND verified=1"
+            elif doc_status == "К выгрузке":
+                where = "WHERE ifnull(verified,0)=1 AND ifnull(sent,0)=0"
+            elif doc_status == "К выполнению":
+                where = "WHERE ifnull(verified,0)=0 AND ifnull(sent,0)=0"
+            elif doc_status == "Все":
+                where = ""
+
+        if not doc_type or doc_type == "Все":
+            args_tuple = None
+            if not doc_status or doc_status == "Все":
+                where = ''
+
+        else:
+            args_tuple = (doc_type,)
+            if not doc_status or doc_status == "Все":
+                where = 'WHERE doc_type=?'
+            else:
+                where += ' AND doc_type=?'
 
         query_text = f'''
             {query_text}
@@ -202,9 +223,7 @@ class DocService:
             ORDER BY RS_docs.doc_date
         '''
 
-        args = (doc_type, ) if doc_type else None
-
-        result = self._get_query_result(query_text, args, return_dict=True)
+        result = self._get_query_result(query_text, args_tuple, return_dict=True)
         return result
 
     def delete_doc(self, id_doc):
