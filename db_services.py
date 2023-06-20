@@ -256,7 +256,7 @@ class DocService:
                 ELSE 
                     0 
                 END as qtty_plan_verified,
-                CASE WHEN ifnull(verified,0)=1 THEN 
+                CASE WHEN IFNULL(verified,0)=1 THEN 
                     SUM(RS_docs_table.qtty_plan)
                 ELSE 
                     0 
@@ -379,3 +379,69 @@ class DocService:
         if res:
             return res[0].get('docs_count', 0)
         return 0
+
+
+class DbService:
+    def __init__(self, _db_session, table_name):
+        self.db_session = _db_session
+        self.table_name = table_name
+        self.model = ModelsFactory().create(self.table_name)
+
+    def get(self, _filter):
+        with self.db_session:
+            # return self.model.select(**_filter)[:] or None
+            return self.model.get(**_filter)
+
+    def create(self, data):
+        with self.db_session:
+            return self.model(**data)
+
+    def update(self, _filter, data):
+        with self.db_session:
+            obj = self.get(_filter)
+
+            if obj:
+                obj.set(**data)
+            else:
+                obj = self.model(**data)
+
+            return obj
+
+    def delete(self, _filter):
+        with self.db_session:
+            obj = self.get(_filter)
+            if obj:
+                return obj.delete()
+
+
+class DocDbService(DbService):
+    def __init__(self, _db_session):
+        super().__init__(_db_session, 'RS_docs')
+
+    def update(self, _filter, data: dict):
+        with self.db_session:
+            doc = self.get(_filter)
+
+            if data.get('goods'):
+                goods_service = DbService(self.db_session, 'RS_docs_table')
+                goods = []
+                for row in data['goods']:
+                    item = goods_service.create(row)
+                    goods.append(item)
+
+                data['goods'] = goods
+
+            if doc:
+                doc.set(**data)
+            else:
+                self.model(**data)
+
+            return doc
+
+
+class ModelsFactory:
+    def __init__(self):
+        self.models = {model._table_: model for model in db_models.models}
+
+    def create(self, table_name):
+        return self.models.get(table_name)

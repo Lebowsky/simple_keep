@@ -94,8 +94,8 @@ def doc_details_listener(hash_map: HashMap):
 
 @HashMap()
 def doc_details_barcode_scanned(hash_map: HashMap):
-    screen = create_screen(hash_map)
-    screen.on_barcode_scanned(get_http_settings(hash_map))
+    screen = ui_models.GroupScanDocDetailsScreen(hash_map, rs_settings)
+    screen.post_barcode_scanned(get_http_settings(hash_map))
 
 
 # ^^^^^^^^^^^^^^^^^ Documents ^^^^^^^^^^^^^^^^^
