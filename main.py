@@ -5,7 +5,6 @@ import ui_barcodes
 import ui_csv
 import ui_global
 import ui_form_data
-import ui_form_data2 as ui_tables_structure
 import ui_models
 import socket
 import json
@@ -13,7 +12,6 @@ import requests
 import database_init_queryes
 import os
 from PIL import Image
-from datetime import datetime
 import importlib
 
 import widgets
@@ -33,7 +31,6 @@ rs_settings = noClass("rs_settings")
 importlib.reload(ui_csv)
 importlib.reload(ui_global)
 importlib.reload(ui_form_data)
-importlib.reload(ui_tables_structure)
 importlib.reload(database_init_queryes)
 importlib.reload(http_exchange)
 importlib.reload(ui_utils)
@@ -1019,7 +1016,7 @@ def get_good_variants(hashMap, _files=None, _data=None):
             "'")
 
     if len(goods_barcode) > 0:
-        barcode_cards = ui_tables_structure.barcode_cards
+        barcode_cards = ui_form_data.barcode_cards
         barcode_cards["customcards"]["cardsdata"] = []
         i = 0
         for element in goods_barcode:
