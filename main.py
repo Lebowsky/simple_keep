@@ -13,7 +13,7 @@ import requests
 import database_init_queryes
 import os
 from PIL import Image
-from datetime import datetime
+# from datetime import datetime
 import importlib
 
 import widgets
@@ -23,6 +23,7 @@ import http_exchange
 from requests.auth import HTTPBasicAuth
 import ui_utils
 from ui_utils import HashMap
+
 from ru.travelfood.simple_ui import ImportUtils as iuClass
 # from android.graphics.drawable import GradientDrawable as GradientDrawable
 # from android.graphics import Color
@@ -82,7 +83,7 @@ def docs_on_select(hash_map: HashMap):
 
 @HashMap()
 def doc_details_on_start(hash_map: HashMap):
-    screen = create_screen(hash_map)
+    screen: ui_models.GroupScanDocDetailsScreen = create_screen(hash_map)
     screen.on_start()
 
 
@@ -135,7 +136,7 @@ def settings_on_start(hashMap, _files=None, _data=None):
 def debug_on_start(hashMap, _files=None, _data=None):
     if not hashMap.containsKey('ip_host'):
         hashMap.put('ip_host', '192.168.1.77')
-    return hashMap
+
 
 
     hashMap.put('use_mark', rs_settings.get('use_mark')) #str(res[3]))
@@ -143,6 +144,7 @@ def debug_on_start(hashMap, _files=None, _data=None):
     hashMap.put('path', rs_settings.get('path')) #str(res[5]))
     hashMap.put('delete_files', rs_settings.get('delete_files')) #str(res[6]))
     hashMap.put('allow_overscan', rs_settings.get('allow_overscan')) #str(res[9]))
+    return hashMap
 
 def debug_listener(hashMap, _files=None, _data=None):
     delete_files = rs_settings.get('delete_files')
@@ -152,7 +154,7 @@ def debug_listener(hashMap, _files=None, _data=None):
 
     if listener == 'btn_copy_base':
         ip_host = hashMap.get('ip_host')
-        ip_host = '10.24.24.20'
+        ip_host = '192.168.1.77'
         if os.path.isfile('//data/data/ru.travelfood.simple_ui/databases/SimpleKeep'): #Keep'):
             with open('//data/data/ru.travelfood.simple_ui/databases/SimpleKeep', 'rb') as f:  # rightscan
                 r = requests.post('http://' + ip_host + ':2444/post', files={'Rightscan': f})  # rightscan
@@ -251,6 +253,8 @@ def settings_on_click(hashMap, _files=None, _data=None):
             hashMap.put('toast',str(e))
     elif listener == 'btn_sound_settings':
         hashMap.put('ShowScreen','Настройка звука')
+    elif listener == 'btn_clear_cache':
+        suClass.deleteCache()
     return hashMap
 
 
@@ -357,11 +361,11 @@ def remove_added_good_highlight(hashMap, good_id=None, property_id=None):
 def doc_details_on_load(hashMap, _files=None, _data=None):
 
     barcode_btn = iuClass.getView("btn_barcodes")
-    shape_2 = GradientDrawable()  # Создаем форму
-    shape_2.setShape(GradientDrawable.RECTANGLE)
-    shape_2.setCornerRadius(50)
-    shape_2.setColor(Color.WHITE)
-    barcode_btn.setBackground(shape_2)
+    # shape_2 = GradientDrawable()  # Создаем форму
+    # shape_2.setShape(GradientDrawable.RECTANGLE)
+    # shape_2.setCornerRadius(50)
+    # shape_2.setColor(Color.WHITE)
+    # barcode_btn.setBackground(shape_2)
     barcode_btn.setElevation(15)
     return hashMap
 

@@ -642,7 +642,8 @@ class Rs_adr_doc():
     # КОнтроль планов в документе - control
     # Есть план по маркируемой продукции have_mark_plan
     def process_the_barcode(self, barcode, have_qtty_plan = False, have_zero_plan = False, control = False,
-                            cell_name = None, user_tmz=0): # add_if_not_found=False, add_if_not_in_plan=False):
+                            cell_id = None, user_tmz=0): # add_if_not_found=False, add_if_not_in_plan=False):
+
         # Получим структуру баркода
         if barcode[0] == chr(29) and len(barcode) > 31:  # Remove first GS1 char from barcode
             barcode = barcode[1:]
