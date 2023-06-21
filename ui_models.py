@@ -1011,6 +1011,21 @@ class DocumentsDocDetailScreen(DocDetailsScreen):
     def _get_doc_barcode_data(self, args):
         return self.service.get_doc_barcode_data(args)
 
+
+# class ErrorLog(Screen, ABC):
+#     def __init__(self, hash_map: HashMap, rs_settings):
+#         super().__init__(hash_map, rs_settings)
+#         self.listener = self.hash_map['listener']
+#         self.event = self.hash_map['event']
+#         self.service = DocService()
+#         self.screen_values = {}
+#
+#     def on_start(self) -> None:
+#         pass
+#
+#     def on_input(self) -> None:
+#         super().on_input()
+
 # ^^^^^^^^^^^^^^^^^^^^^ DocDetails ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 
@@ -1027,12 +1042,20 @@ class Timer:
 
     def timer_on_start(self):
         docs_data = self.http_service.get_data()
-        format_results = ['is_ok', 'is_data', 'no_data']
-        # if docs_data.get('data'):
-        #     try:
-        #         self.db_service.update_data_from_json(docs_data['data'])
-        #     except Exception as e:
-        #         raise e
+        # format_results = ['is_ok', 'is_data', 'no_data']
+        if docs_data.get('data'):
+            try:
+                existing_docs_list = self.db_service.get_existing_docs_names_list()
+                self.db_service.update_data_from_json(docs_data['data'])
+                docs_list_after_load = self.db_service.get_existing_docs_names_list()
+                diff = [x for x in docs_list_after_load if x not in existing_docs_list]
+                diff_str = str(diff)[1:-1].replace(",", " ").replace("(", "").replace(")", "").replace("'", "")
+                self.put_notification(text=str(diff_str), title="Загружены документы:")
+            except Exception as e:
+                self.db_service.write_error_on_log(e)
+
+    def put_notification(self, text, title=None):
+        self.hash_map.notification(text, title)
 
     def _get_http_settings(self):
         http_settings = {

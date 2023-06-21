@@ -386,6 +386,12 @@ class DocService:
         res = get_query_result(query_text)
         return res
 
+    @staticmethod
+    def write_error_on_log(Err_value):
+        if Err_value:
+            qtext = 'Insert into Error_log(log) Values(?)'
+            get_query_result(qtext, (Err_value,))
+
 
 class DbService:
     def __init__(self, _db_session, table_name):
