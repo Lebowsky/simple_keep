@@ -1,5 +1,4 @@
 import collections
-from datetime import datetime
 import sqlite3
 from sqlite3 import Error
 import ui_barcodes
@@ -19,11 +18,11 @@ else:
 
 conn = None
 
-def text_to_bool(val):
-    pass
 
-# Функция получает строки маркировки документа по значению маркировки
+
 def find_barcode_in_marking_codes_table(self, struct_barcode: list) -> collections.Iterable:
+    """Функция получает строки маркировки документа по значению маркировки"""
+
     query_text = ui_form_data.get_query_mark_find_in_doc()
     args_dict = {}
     args_dict['GTIN'] = struct_barcode['GTIN']
@@ -40,31 +39,8 @@ def find_barcode_in_barcode_table(barcode: str) -> collections.Iterable:
     return res
 
 
-# Сравнивает количество-план товара в документе и количество марок, по этому товару там же.
-# Возвращает True, если количество марок меньше плана
-def check_mark_code_compliance(el_dict: dict, id_doc, gtin):
-    query_text = ui_form_data.get_mark_qtty_conformity()
-    args_dict = {}
-    args_dict['idDoc'] = id_doc
-    args_dict['barcode'] = '01' + gtin + '%'
-    args_dict['id_good'] = el_dict['id_good']
-    args_dict['id_properties'] = el_dict['id_property']
-    args_dict['id_series'] = el_dict['id_series']
-    #args_dict['id_unit'] = el_dict['id_unit']
-    args_dict['approved'] = '1'
-    res = get_query_result(query_text, args_dict)
-    if res:
-        if res[0][0] > 0:
-            return True
-        elif res[0][0] == 0:
-            return False
-        else:
-            return True
-    return True
-
-
 def check_barcode_compliance(el_dict: dict, id_doc):
-    # 1 Такой товар в принципе есть в документе
+    """ 1 Такой товар в принципе есть в документе """
 
     query_text = ui_form_data.get_plan_good_from_doc()
     args_dict = {}
@@ -80,7 +56,7 @@ def check_barcode_compliance(el_dict: dict, id_doc):
 
 
 def check_adr_barcode_compliance(el_dict: dict, id_doc):
-    # 1 Такой товар в принципе есть в документе
+    """ 1 Такой товар в принципе есть в документе """
 
     query_text =  '''
     SELECT ifnull(qtty_plan,0) as qtty_plan,
@@ -127,7 +103,6 @@ def get_query_result(query_text: object, args: object = "", return_dict=False) -
             cursor.execute(query_text)
     except Exception as e:
         raise e
-
 
     # Если надо - возвращаем не результат запроса, а словарь с импортированным результатом
     if return_dict:
@@ -203,32 +178,6 @@ def get_by_name(fld, table):
     else:
         return res[0][0]
 
-#
-# def get_constants(need_const=''):
-#     sql_text = 'Select * from RS_constants'
-#     res = get_query_result(sql_text)
-#
-#     # инициализируем константы
-#     if not res:  # len(res) == 0:
-#         get_query_result(
-#             'INSERT INTO RS_constants (use_series, use_properties, use_mark, add_if_not_in_plan, path, delete_files, reserved, allow_overscan) VALUES (?,?,?,?,?,?,?,?)',
-#             ('0', '0', '0', '0', '//storage/emulated/0/Android/data/ru.travelfood.simple_ui/', '0',
-#              '0', '0'))  # //storage/emulated/0/download/
-#
-#         res = get_query_result(sql_text)
-#
-#     else:  # len(res)>0:
-#         if need_const:
-#             ls = ['id', 'use_series', 'use_properties', 'use_mark', 'add_if_not_in_plan', 'path', 'delete_files',
-#                   'reserved', 'allow_overscan', 'release']
-#             x = ls.index(need_const)
-#
-#             if x > 0:
-#                 return res[0][x]
-#         else:
-#             return res[0]
-
-
 
 def Id_to_HEX(guid):
     x1 = guid[19:23]
@@ -239,8 +188,6 @@ def Id_to_HEX(guid):
 
     str_guid = x1 + x2 + x3 + x4 + x5
     return int(str_guid, 16)
-
-
 
 #
 class Rs_doc():
