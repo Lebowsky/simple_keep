@@ -3300,25 +3300,34 @@
                                 "Variable": "",
                                 "Elements": [
                                     {
-                                        "TextSize": "",
-                                        "TextColor": "",
-                                        "TextBold": false,
-                                        "TextItalic": false,
+                                        "type": "LinearLayout",
+                                        "height": "wrap_content",
+                                        "width": "match_parent",
+                                        "weight": "0",
+                                        "Value": "",
+                                        "Variable": "",
+                                        "orientation": "horizontal",
+                                        "Elements": [
+                                            {
+                                                "type": "ProgressButton",
+                                                "height": "wrap_content",
+                                                "width": "match_parent",
+                                                "weight": "1",
+                                                "Value": "Очистить",
+                                                "Variable": "btn_clear_err"
+                                            },
+                                            {
+                                                "type": "SpinnerLayout",
+                                                "height": "wrap_content",
+                                                "width": "match_parent",
+                                                "weight": "1",
+                                                "Value": "@date_sort_select",
+                                                "Variable": "date_sort_click"
+                                            }
+                                        ],
                                         "BackgroundColor": "",
                                         "StrokeWidth": "",
-                                        "Padding": "",
-                                        "orientation": "",
-                                        "height": "wrap_content",
-                                        "width": "wrap_content",
-                                        "gravity_horizontal": "center",
-                                        "gravity_vertical": "center",
-                                        "weight": "",
-                                        "height_value": "",
-                                        "width_value": "",
-                                        "type": "CardsLayout",
-                                        "Value": "@error_log",
-                                        "Variable": "error_log",
-                                        "style_name": ""
+                                        "Padding": ""
                                     },
                                     {
                                         "TextSize": "",
@@ -3336,9 +3345,9 @@
                                         "weight": "",
                                         "height_value": "",
                                         "width_value": "",
-                                        "type": "ProgressButton",
-                                        "Value": "Очистить",
-                                        "Variable": "btn_clear_err",
+                                        "type": "TableLayout",
+                                        "Value": "@error_log_table",
+                                        "Variable": "error_log_table",
                                         "style_name": ""
                                     }
                                 ]
@@ -3347,6 +3356,7 @@
                         "Handlers": [
                             {
                                 "event": "onStart",
+                                "listener": "",
                                 "action": "run",
                                 "type": "python",
                                 "method": "settings_errors_on_start",
@@ -3871,7 +3881,7 @@
             "handler_auth": "",
             "dictionaries": ""
         },
-        "ConfigurationTags": "Py,off-line,ActiveCV®",
+        "ConfigurationTags": "Py,off-line",
         "FaceRecognitionURL": "",
         "ForegroundService": false,
         "StopForegroundServiceOnExit": false,
@@ -3934,14 +3944,6 @@
             },
             {
                 "PyFileKey": "test_load_docs",
-                "PyFileData": ""
-            },
-            {
-                "PyFileKey": "ui_barcodes",
-                "PyFileData": ""
-            },
-            {
-                "PyFileKey": "hs_services",
                 "PyFileData": ""
             }
         ],

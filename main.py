@@ -1279,46 +1279,20 @@ def test_barcode_listener(hashMap, _files=None, _data=None):
     return hashMap
 
 
-def settings_errors_on_start(hashMap,  _files=None, _data=None):
+@HashMap()
+def settings_errors_on_start(hash_map: HashMap):
 
-    filter_value = ''
-    filter_fields = ('log',)
-    hashMap.put('error_log', get_table_cards('Error_log', filter_fields, filter_value))
-
-    return hashMap
+    screen = create_screen(hash_map)
+    screen.on_start()
 
 
-def settings_errors_on_click(hashMap,  _files=None, _data=None):
-    listener = hashMap.get('listener')
-    if listener == 'ON_BACK_PRESSED':
-        hashMap.put('ShowScreen', 'Настройки и обмен')
-        #hashMap.put('FinishProcess', '')
-
-    elif listener == 'btn_clear_err':
-        rs_settings.put('error_log','')
-        hashMap.put('error_log','')
-        hashMap.put('RefreshScreen','')
 
 
-    elif listener == "CardsClick":
-        pass
+@HashMap()
+def settings_errors_on_click(hash_map: HashMap):
 
-
-    elif listener == 'LayoutAction':
-        layout_listener = hashMap.get('layout_listener')
-        # Находим ID документа
-        current_card = json.loads(hashMap.get("current_card"))
-
-    elif listener == 'Search':
-        filter_value = hashMap.get('SearchString')
-        if len(filter_value) > 2:
-            filter_fields = hashMap.get('filter_fields').split(';')
-            hashMap.put('cards', get_table_cards(hashMap.get('table_for_select'), filter_fields, filter_value))
-
-            hashMap.put('RefreshScreen', '')
-        # universal_cards_on_start(hashMap)
-
-    return hashMap
+    screen = create_screen(hash_map)
+    screen.on_input()
 
 
 def http_settings_on_start(hashMap,  _files=None, _data=None):

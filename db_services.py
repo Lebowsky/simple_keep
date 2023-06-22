@@ -460,3 +460,18 @@ class ModelsFactory:
         return self.models.get(table_name)
 
 
+class ErrorService:
+    @staticmethod
+    def get_all_errors(date_sort):
+        if not date_sort or date_sort == "Новые":
+            query_text = "SELECT * FROM Error_log ORDER BY timestamp DESC"
+        elif date_sort == "Cтарые":
+            query_text = "SELECT * FROM Error_log ORDER BY timestamp ASC"
+        res = get_query_result(query_text)
+        return res
+
+    @staticmethod
+    def clear():
+        query_text = "DELETE FROM Error_log"
+        get_query_result(query_text)
+        return res

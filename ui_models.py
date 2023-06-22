@@ -2,7 +2,7 @@ from abc import ABC, abstractmethod
 import json
 
 from ui_utils import HashMap, RsDoc
-from db_services import DocService
+from db_services import DocService, ErrorService
 from hs_services import HsService
 import http_exchange
 from http_exchange import post_changes_to_server
@@ -64,6 +64,7 @@ class Screen(ABC):
 
     def put_notification(self, text, title=None):
         self.hash_map.notification(text, title)
+
 
 class Tiles(Screen):
     def on_start(self):
@@ -1012,20 +1013,134 @@ class DocumentsDocDetailScreen(DocDetailsScreen):
         return self.service.get_doc_barcode_data(args)
 
 
-# class ErrorLog(Screen, ABC):
-#     def __init__(self, hash_map: HashMap, rs_settings):
-#         super().__init__(hash_map, rs_settings)
-#         self.listener = self.hash_map['listener']
-#         self.event = self.hash_map['event']
-#         self.service = DocService()
-#         self.screen_values = {}
-#
-#     def on_start(self) -> None:
-#         pass
-#
-#     def on_input(self) -> None:
-#         super().on_input()
+class ErrorLog(Screen):
+    screen_name = 'Ошибки'
+    process_name = 'Параметры'
 
+    def __init__(self, hash_map: HashMap, rs_settings):
+        super().__init__(hash_map, rs_settings)
+        self.listener = self.hash_map['listener']
+        self.event = self.hash_map['event']
+        self.service = ErrorService()
+        self.screen_values = {}
+
+    def on_start(self) -> None:
+        date_sort = self.hash_map['selected_date_sort']
+        errors_table_data = self.service.get_all_errors(date_sort)
+        table_raws = self._get_errors_table_rows(errors_table_data)
+        table_view = self._get_errors_table_view(table_raws)
+        self.hash_map.put("error_log_table", table_view.to_json())
+        self.hash_map['date_sort_select'] = 'Новые;Cтарые'
+        self.toast(table_view.customtable['options'])
+
+    def on_input(self) -> None:
+        super().on_input()
+
+        if self.listener == "btn_clear_err":
+            self.service.clear()
+        if self.listener == 'ON_BACK_PRESSED':
+            self.hash_map.put("ShowScreen", "Настройки и обмен")
+
+        elif self.listener == "date_sort_click":
+            self.hash_map['selected_date_sort'] = self.hash_map["date_sort_click"]
+
+        elif self.listener == "CardsClick":
+            self.toast(self.hash_map['selected_card_key'])
+
+        elif listener == 'Search':
+            filter_value = hashMap.get('SearchString')
+            if len(filter_value) > 2:
+                filter_fields = hashMap.get('filter_fields').split(';')
+                hashMap.put('cards', get_table_cards(hashMap.get('table_for_select'), filter_fields, filter_value))
+
+                hashMap.put('RefreshScreen', '')
+
+    def on_post_start(self):
+        pass
+
+    def show(self, args=None):
+        self._validate_screen_values()
+        self.hash_map.show_screen(self.screen_name, args)
+
+    def _get_errors_table_rows(self, errors_table_data):
+        table_data = [{}]
+        i = 1
+        for record in errors_table_data:
+            error_row = {"key": i, "message": record[0], "time": record[1],
+                         '_layout': self._get_errors_table_row_layout()}
+            table_data.append(error_row)
+            i += 1
+
+        return table_data
+
+    def _get_errors_table_view(self, table_rows):
+        table_view = widgets.CustomTable(
+            widgets.LinearLayout(
+                self.LinearLayout(
+                    self.TextView('Время'),
+                    weight=1
+                ),
+                self.LinearLayout(
+                    self.TextView('Сообщение'),
+                    weight=3
+                ),
+                orientation='horizontal',
+                height="match_parent",
+                width="match_parent",
+                BackgroundColor='#FFFFFF'
+            ),
+            options=widgets.Options(search_enabled=True).options,
+            tabledata=table_rows
+        )
+        return table_view
+
+    def _get_errors_table_row_layout(self):
+        row_view = widgets.LinearLayout(
+            widgets.LinearLayout(
+                widgets.TextView(
+                    Value='@time',
+                    TextSize=15,
+                    width='match_parent'
+                ),
+                width='match_parent',
+                height='wrap_content',
+                weight=1,
+                StrokeWidth=0
+            ),
+            widgets.LinearLayout(
+                widgets.TextView(
+                    Value='@message',
+                    TextSize=15,
+                    width='match_parent',
+                ),
+                width='match_parent',
+                height='wrap_content',
+                weight=3,
+            ),
+            orientation='horizontal',
+            width='match_parent',
+            BackgroundColor='#FFFFFF',
+            height='wrap_content',
+            StrokeWidth=1
+        )
+
+        return row_view
+
+    class LinearLayout(widgets.LinearLayout):
+        def __init__(self, *args, **kwargs):
+            super().__init__(*args, **kwargs)
+            self.orientation = 'horizontal'
+            self.height = "match_parent"
+            self.width = "match_parent"
+            self.StrokeWidth = 1
+
+    class TextView(widgets.TextView):
+        def __init__(self, value):
+            super().__init__()
+            self.TextSize = '15'
+            self.TextBold = True
+            self.width = 'match_parent'
+            self.Value = value
 # ^^^^^^^^^^^^^^^^^^^^^ DocDetails ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 
@@ -1049,10 +1164,11 @@ class Timer:
                 self.db_service.update_data_from_json(docs_data['data'])
                 docs_list_after_load = self.db_service.get_existing_docs_names_list()
                 diff = [x for x in docs_list_after_load if x not in existing_docs_list]
-                diff_str = str(diff)[1:-1].replace(",", " ").replace("(", "").replace(")", "").replace("'", "")
-                self.put_notification(text=str(diff_str), title="Загружены документы:")
+                if diff:
+                    diff_str = str(diff)[1:-1].replace(",", " ").replace("(", "").replace(")", "").replace("'", "")
+                    self.put_notification(text=str(diff_str), title="Загружены документы:")
             except Exception as e:
-                self.db_service.write_error_on_log(e)
+                self.db_service.write_error_on_log(f'Ошибка загрузки документа:  {e}')
 
     def put_notification(self, text, title=None):
         self.hash_map.notification(text, title)
@@ -1077,7 +1193,8 @@ class ScreensFactory:
         GroupScanDocsListScreen,
         DocumentsDocsListScreen,
         GroupScanDocDetailsScreen,
-        DocumentsDocDetailScreen
+        DocumentsDocDetailScreen,
+        ErrorLog
     ]
 
     @staticmethod
