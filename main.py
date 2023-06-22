@@ -107,16 +107,20 @@ def app_on_start(hashMap, _files=None, _data=None):
     return hashMap
 
 
+@HashMap()
 def timer_update(hashMap,  _files=None, _data=None):
-    url = get_http_settings(hashMap)
+    timer = ui_models.Timer(hashMap, rs_settings)
+    timer.timer_on_start()
+    # url = get_http_settings(hashMap)
 
     #url = 'http://192.168.1.77/NSI/hs/simple_accounting/data'
 
     # hashMap.put('toast', 'Обмен') #url)
-    result = http_exchange.timer_server_load_data(url)
-    if len(result) > 0:
-        hashMap.put("basic_notification", json.dumps([{'number': 1, 'title': "Добавлены документы:",
-                                                           'message': str(result)}]))
+    # result = http_exchange.timer_server_load_data(url)
+    # new_docs_list = result['new_docs_list']
+    # if len(result) > 0:
+    #     hashMap.put("basic_notification", json.dumps([{'number': 1, 'title': "Добавлены документы:",
+    #                                                        'message': str(result)}]))
 
     # if len(new_docs_list) > 0:
     #     hashMap.put("basic_notification", json.dumps([{'number': 1, 'title': "Добавлены документы",
@@ -171,29 +175,29 @@ def timer_update(hashMap,  _files=None, _data=None):
     #
     #     hashMap.put('toast', str(result['error_pool']))
 
-    qtext = '''SELECT id_doc FROM RS_docs WHERE verified = 1  and (sent <> 1 or sent is null)
-                UNION
-                SELECT id_doc FROM RS_adr_docs WHERE verified = 1  and (sent <> 1 or sent is null)'''
-    res  = ui_global.get_query_result(qtext,None,True)
+    # qtext = '''SELECT id_doc FROM RS_docs WHERE verified = 1  and (sent <> 1 or sent is null)
+    #             UNION
+    #             SELECT id_doc FROM RS_adr_docs WHERE verified = 1  and (sent <> 1 or sent is null)'''
+    # res  = ui_global.get_query_result(qtext,None,True)
+    #
+    # if res:
+    #     doc_list = []
+    #     for el in res:
+    #         doc_list.append('"'+ el['id_doc']+'"')
+    #     doc_in_str = ','.join(doc_list)
+    #     #htpparams = {'username':hashMap.get('onlineUser'), 'password':hashMap.get('onlinePass'), 'url':url}
+    #     answer = http_exchange.post_changes_to_server(doc_in_str , url)
+    #     if answer.get('Error') is not None:
+    #         ui_global.write_error_on_log(str(answer.get('Error')))
+    #     else:
+    #
+    #         qtext = f'UPDATE RS_docs SET sent = 1  WHERE id_doc in ({doc_in_str}) '
+    #         ui_global.get_query_result(qtext)
+    #
+    #         qtext = f'UPDATE RS_adr_docs SET sent = 1  WHERE id_doc in ({doc_in_str}) '
+    #         ui_global.get_query_result(qtext)
 
-    if res:
-        doc_list = []
-        for el in res:
-            doc_list.append('"'+ el['id_doc']+'"')
-        doc_in_str = ','.join(doc_list)
-        #htpparams = {'username':hashMap.get('onlineUser'), 'password':hashMap.get('onlinePass'), 'url':url}
-        answer = http_exchange.post_changes_to_server(doc_in_str , url)
-        if answer.get('Error') is not None:
-            ui_global.write_error_on_log(str(answer.get('Error')))
-        else:
-
-            qtext = f'UPDATE RS_docs SET sent = 1  WHERE id_doc in ({doc_in_str}) '
-            ui_global.get_query_result(qtext)
-
-            qtext = f'UPDATE RS_adr_docs SET sent = 1  WHERE id_doc in ({doc_in_str}) '
-            ui_global.get_query_result(qtext)
-
-    return hashMap
+    # return hashMap
 
 
 def event_service(hashMap, _files=None, _data=None):
@@ -1275,46 +1279,20 @@ def test_barcode_listener(hashMap, _files=None, _data=None):
     return hashMap
 
 
-def settings_errors_on_start(hashMap,  _files=None, _data=None):
+@HashMap()
+def settings_errors_on_start(hash_map: HashMap):
 
-    filter_value = ''
-    filter_fields = ('log',)
-    hashMap.put('cards', get_table_cards('Error_log', filter_fields, filter_value))
-
-    return hashMap
+    screen = create_screen(hash_map)
+    screen.on_start()
 
 
-def settings_errors_on_click(hashMap,  _files=None, _data=None):
-    listener = hashMap.get('listener')
-    if listener == 'ON_BACK_PRESSED':
-        hashMap.put('ShowScreen', 'Настройки и обмен')
-        #hashMap.put('FinishProcess', '')
-
-    elif listener == 'btn_clear_err':
-        rs_settings.put('error_log','')
-        hashMap.put('error_log','')
-        hashMap.put('RefreshScreen','')
 
 
-    elif listener == "CardsClick":
-        pass
+@HashMap()
+def settings_errors_on_click(hash_map: HashMap):
 
-
-    elif listener == 'LayoutAction':
-        layout_listener = hashMap.get('layout_listener')
-        # Находим ID документа
-        current_card = json.loads(hashMap.get("current_card"))
-
-    elif listener == 'Search':
-        filter_value = hashMap.get('SearchString')
-        if len(filter_value) > 2:
-            filter_fields = hashMap.get('filter_fields').split(';')
-            hashMap.put('cards', get_table_cards(hashMap.get('table_for_select'), filter_fields, filter_value))
-
-            hashMap.put('RefreshScreen', '')
-        # universal_cards_on_start(hashMap)
-
-    return hashMap
+    screen = create_screen(hash_map)
+    screen.on_input()
 
 
 def http_settings_on_start(hashMap,  _files=None, _data=None):
