@@ -261,7 +261,7 @@ def docs_on_select(hash_map: HashMap):
 
 @HashMap()
 def doc_details_on_start(hash_map: HashMap):
-    screen = create_screen(hash_map)
+    screen: ui_models.GroupScanDocDetailsScreen = create_screen(hash_map)
     screen.on_start()
 
 

@@ -134,7 +134,8 @@ class HashMap:
             self.put('ShowDialogStyle', dialog_style)
 
     def get_current_screen(self):
-        return self['current_screen_name']
+
+        return self['current_screen_name'] if self.containsKey('current_screen_name') else  ''
 
     def get_current_process(self):
         return self['current_process_name']

@@ -133,19 +133,6 @@
                                                 "gravity_horizontal": "left",
                                                 "gravity_vertical": "center",
                                                 "weight": "1"
-                                            },
-                                            {
-                                                "TextBold": true,
-                                                "height": 0,
-                                                "width": 0,
-                                                "gravity_horizontal": "center",
-                                                "gravity_vertical": "center",
-                                                "weight": "0",
-                                                "height_value": "0",
-                                                "width_value": "0",
-                                                "type": "Button",
-                                                "Value": "+",
-                                                "Variable": "btn_add_doc"
                                             }
                                         ]
                                     },
@@ -204,8 +191,6 @@
                                 "gravity_horizontal": "center",
                                 "gravity_vertical": "center",
                                 "weight": "0",
-                                "height_value": "",
-                                "width_value": "",
                                 "type": "LinearLayout",
                                 "Variable": "",
                                 "Elements": [
@@ -219,8 +204,6 @@
                                         "gravity_horizontal": "center",
                                         "gravity_vertical": "center",
                                         "weight": "0",
-                                        "height_value": "",
-                                        "width_value": "",
                                         "type": "LinearLayout",
                                         "Variable": "",
                                         "Elements": [
@@ -1997,8 +1980,6 @@
                                 "gravity_horizontal": "center",
                                 "gravity_vertical": "center",
                                 "weight": "0",
-                                "height_value": "",
-                                "width_value": "",
                                 "type": "LinearLayout",
                                 "Variable": "",
                                 "Elements": [
@@ -2087,8 +2068,6 @@
                                 "gravity_horizontal": "center",
                                 "gravity_vertical": "center",
                                 "weight": "0",
-                                "height_value": "",
-                                "width_value": "",
                                 "type": "LinearLayout",
                                 "Variable": "",
                                 "Elements": [
@@ -2102,8 +2081,6 @@
                                         "gravity_horizontal": "center",
                                         "gravity_vertical": "center",
                                         "weight": "0",
-                                        "height_value": "",
-                                        "width_value": "",
                                         "type": "LinearLayout",
                                         "Variable": "",
                                         "Elements": [
@@ -5579,6 +5556,25 @@
                                         "type": "ProgressButton",
                                         "Value": "Обмен с HTTP 1c сервером",
                                         "Variable": "btn_timer"
+                                    },
+                                    {
+                                        "TextSize": "",
+                                        "TextColor": "",
+                                        "TextBold": false,
+                                        "TextItalic": false,
+                                        "BackgroundColor": "",
+                                        "StrokeWidth": "",
+                                        "Padding": "",
+                                        "orientation": "",
+                                        "height": "wrap_content",
+                                        "width": "wrap_content",
+                                        "gravity_horizontal": "center",
+                                        "gravity_vertical": "center",
+                                        "weight": "",
+                                        "type": "ProgressButton",
+                                        "Value": "Сбросить кэш приложения _",
+                                        "Variable": "btn_clear_cache",
+                                        "style_name": ""
                                     }
                                 ]
                             }
@@ -7794,7 +7790,11 @@
                 "PyFileData": ""
             },
             {
-                "PyFileKey": "test_load_docs",
+                "PyFileKey": "ui_barcodes",
+                "PyFileData": ""
+            },
+            {
+                "PyFileKey": "hs_services",
                 "PyFileData": ""
             }
         ],
