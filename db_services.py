@@ -430,6 +430,14 @@ class DocDbService(DbService):
     def __init__(self, _db_session):
         super().__init__(_db_session, 'RS_docs')
 
+    def get(self, _filter, to_dict=False):
+        with self.db_session:
+            if to_dict:
+                import db_models
+                return self.model.get(**_filter).to_dict(with_collections=True, related_objects=True)
+            else:
+                return self.model.get(**_filter)
+
     def update(self, _filter, data: dict):
         with self.db_session:
             doc = self.get(_filter)

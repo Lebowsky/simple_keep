@@ -924,6 +924,28 @@ def goods_on_input(hashMap, _files=None, _data=None):
     return hashMap
 
 
+def identify_barcode_goods(hashMap, _files=None, _data=None):
+    if hashMap.get('barcode'):
+        barcode = hashMap.get('barcode')
+
+        good_id = ui_global.get_query_result("SELECT id_good FROM RS_barcodes where barcode = '" + barcode + "'")
+
+        properties_query = ui_global.get_query_result(
+            "SELECT id_property FROM RS_barcodes where barcode = '" + barcode + "'")
+
+        if properties_query:
+            property_id = str(properties_query).split("'")[1]
+            hashMap.put('property_id', property_id)
+
+        if len(good_id) > 0:
+            hashMap.put('selected_good_id', str(good_id).split("'")[1])
+
+            hashMap.put('ShowScreen', 'Карточка товара')
+        else:
+            hashMap.put('error_txt', 'Товар не распознан по штрихкоду')
+
+    return hashMap
+
 def good_card_on_start(hashMap, _files=None, _data=None):
 
     hashMap.put("Show_buttons", "-1")  # Пока спрятали переход к процессам "остатки" и "цены"
