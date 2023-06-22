@@ -395,7 +395,8 @@ class DocService:
 
 class DbService:
     def __init__(self, _db_session, table_name):
-        self.db_session = _db_session
+        import db_models
+        self.db_session = db_models.db_session
         self.table_name = table_name
         self.model = ModelsFactory().create(self.table_name)
 

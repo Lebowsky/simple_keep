@@ -4,7 +4,7 @@ import json
 import http_exchange
 import ui_global
 from ui_utils import HashMap, RsDoc
-from db_services import DocService, ErrorService
+from db_services import DocService, ErrorService, DbService
 from hs_services import HsService
 import http_exchange
 from http_exchange import post_changes_to_server
@@ -198,11 +198,12 @@ class DocumentsTiles(GroupScanTiles):
     screen_name = 'Плитки'
     process_name = 'Документы'
 
+
 # ==================== DocsList =============================
 
 
 class DocsListScreen(Screen):
-    def __init__(self, hash_map: HashMap,  rs_settings):
+    def __init__(self, hash_map: HashMap, rs_settings):
         super().__init__(hash_map, rs_settings)
         self.listener = self.hash_map['listener']
         self.event = self.hash_map['event']
@@ -761,7 +762,7 @@ class DocDetailsScreen(Screen):
             # raise ValueError(f'Row key must be set not {row_key}')
 
         added_goods = self.hash_map.get_json('added_goods') or {}
-        #Пока что отключил раскраску всех отсканированных
+        # Пока что отключил раскраску всех отсканированных
         # added_goods_doc = added_goods.get(id_doc, [row_key])
         # if row_key not in added_goods_doc:
         #     added_goods_doc.append(row_key)
@@ -925,7 +926,6 @@ class DocumentsDocDetailScreen(DocDetailsScreen):
             # Формируем список карточек баркодов
             cards['customcards']['cardsdata'] = []
             for el in res:
-
                 picture = '#f00c' if el['approved'] in ['True', 'true', '1'] else ''
                 row = {
                     'barcode': el['mark_code'],
@@ -1143,6 +1143,8 @@ class ErrorLog(Screen):
             self.TextBold = True
             self.width = 'match_parent'
             self.Value = value
+
+
 # ^^^^^^^^^^^^^^^^^^^^^ DocDetails ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 
@@ -1154,12 +1156,11 @@ class Timer:
         self.hash_map = hash_map
         self.rs_settings = rs_settings
         self.http_settings = self._get_http_settings()
-        self.db_service = DocService()
+        self.db_service = DbService
         self.http_service = HsService(self.http_settings)
 
     def timer_on_start(self):
         docs_data = self.http_service.get_data()
-        # format_results = ['is_ok', 'is_data', 'no_data']
         if docs_data.get('data'):
             try:
                 existing_docs_list = self.db_service.get_existing_docs_names_list()
@@ -1171,6 +1172,31 @@ class Timer:
                     self.put_notification(text=str(diff_str), title="Загружены документы:")
             except Exception as e:
                 self.db_service.write_error_on_log(f'Ошибка загрузки документа:  {e}')
+
+    def save_data_to_db(self, data: dict):
+        if not data:
+            return
+
+        table_list = {
+            'RS_countragents': 'id',
+            'RS_warehouses': 'id',
+            'RS_cells': 'id',
+            'RS_types_goods': 'id',
+            'RS_goods': 'id',
+            'RS_properties': 'id',
+            'RS_series': 'id',
+            'RS_units': 'id',
+            'RS_price_types': 'id',
+            'RS_prices': 'id',
+            'RS_barcodes': 'barcode'
+        }
+
+        for table_name, pk in table_list.items():
+            table = data.get(table_name, [])
+
+            for item_data in table:
+                service = self.db_service(None, table_name=table_name)
+                service.update({pk: item_data[pk]}, item_data)
 
     def put_notification(self, text, title=None):
         self.hash_map.notification(text, title)
@@ -1184,6 +1210,7 @@ class Timer:
             'android_id': self.hash_map['ANDROID_ID'],
             'user_name': self.rs_settings.get('user_name')}
         return http_settings
+
 
 # ^^^^^^^^^^^^^^^^^^^^^ Timer ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 

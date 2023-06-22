@@ -178,7 +178,7 @@ class ErrorLog(db.Entity):
     log = Optional(str, default="")
     timestamp = Required(datetime, sql_default='CURRENT_TIMESTAMP')
 
-#
+
 #
 # class RS_adr_docs(db.Entity):
 #     id_doc = Required(str)
@@ -209,27 +209,6 @@ class ErrorLog(db.Entity):
 #     is_plan = Optional(bool, sql_default='True')
 #     table_type = Required(str, sql_default='out')
 #
-#
-#
-#
-# class RS_classifier_units(db.Entity):
-#     id = PrimaryKey(str, auto=True)
-#     code = Required(str)
-#     name = Required(str)
-#
-#
-# class RS_constants(db.Entity):
-#     id = PrimaryKey(int, auto=True)
-#     use_series = Required(bool)
-#     use_properties = Required(bool)
-#     use_mark = Optional(bool)
-#     add_if_not_in_plan = Required(bool)
-#     path = Optional(str)
-#     delete_files = Required(bool)
-#     reserved = Optional(bool)
-#     max_id_doc = Optional(int)
-#     allow_overscan = Optional(str)
-#     release = Optional(str)
 
 
 models = [
