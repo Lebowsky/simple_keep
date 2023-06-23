@@ -16,7 +16,6 @@ class HsService:
         self.params = {'user_name': self.user_name, 'device_model': self.device_model}
         self._hs = ''
         self._method = requests.get
-
         self.auth = HTTPBasicAuth(self.username, self.password)
         self.headers = {'Content-Type': 'application/x-www-form-urlencoded; charset=utf-8'}
 
