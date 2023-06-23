@@ -5,7 +5,21 @@ db = Database()
 db.bind(provider='sqlite', filename='database.sqlite', create_db=True)
 
 
-class Document(db.Entity):
+class BaseEntity(object):
+    _pk_attrs_ = []
+    _table_ = ''
+
+    @classmethod
+    def get_pk(cls):
+        pk_list = [str(pk).split('.')[1] for pk in cls._pk_attrs_]
+        return pk_list[0] if pk_list else None
+
+    @classmethod
+    def get_table_name(cls):
+        return cls._table_
+
+
+class Document(BaseEntity, db.Entity):
     _table_ = 'RS_docs'
 
     id_doc = PrimaryKey(str, auto=True)
@@ -25,7 +39,7 @@ class Document(db.Entity):
     goods = Set('DocumentGoods')
 
 
-class Countragent(db.Entity):
+class Countragent(BaseEntity, db.Entity):
     _table_ = 'RS_countragents'
 
     id = PrimaryKey(str, auto=True)
@@ -37,7 +51,7 @@ class Countragent(db.Entity):
     documents = Set(Document)
 
 
-class Warehouse(db.Entity):
+class Warehouse(BaseEntity, db.Entity):
     _table_ = 'RS_warehouses'
 
     id = PrimaryKey(str, auto=True)
@@ -47,7 +61,7 @@ class Warehouse(db.Entity):
     # adr_documents = Set('RS_adr_docs')
 
 
-class DocumentGoods(db.Entity):
+class DocumentGoods(BaseEntity, db.Entity):
     _table_ = 'RS_docs_table'
 
     id = PrimaryKey(int, auto=True)
@@ -67,7 +81,7 @@ class DocumentGoods(db.Entity):
     id_cell = Optional('Cell')
 
 
-class Goods(db.Entity):
+class Goods(BaseEntity, db.Entity):
     _table_ = 'RS_goods'
 
     id = PrimaryKey(str, auto=True)
@@ -82,9 +96,10 @@ class Goods(db.Entity):
     type_good = Required('GoodsType')
     goods_unit = Optional('GoodsUnit')
     barcodes = Set('Barcode')
+    unit = Required('ClassifierUnit')
 
 
-class GoodsProperty(db.Entity):
+class GoodsProperty(BaseEntity, db.Entity):
     _table_ = 'RS_properties'
 
     id = PrimaryKey(str, auto=True)
@@ -95,7 +110,7 @@ class GoodsProperty(db.Entity):
     barcodes = Set('Barcode')
 
 
-class Series(db.Entity):
+class Series(BaseEntity, db.Entity):
     _table_ = 'RS_series'
 
     id = PrimaryKey(str, auto=True)
@@ -110,7 +125,7 @@ class Series(db.Entity):
     barcodes = Set('Barcode')
 
 
-class GoodsType(db.Entity):
+class GoodsType(BaseEntity, db.Entity):
     _table_ = 'RS_types_goods'
     id = PrimaryKey(str, auto=True)
     name = Required(str)
@@ -119,7 +134,7 @@ class GoodsType(db.Entity):
     series = Set(Series)
 
 
-class GoodsUnit(db.Entity):
+class GoodsUnit(BaseEntity, db.Entity):
     _table_ = 'RS_units'
 
     id = PrimaryKey(str, auto=True)
@@ -135,7 +150,7 @@ class GoodsUnit(db.Entity):
     barcodes = Set('Barcode')
 
 
-class PriceType(db.Entity):
+class PriceType(BaseEntity, db.Entity):
     _table_ = 'RS_price_types'
 
     id = PrimaryKey(str, auto=True)
@@ -144,7 +159,7 @@ class PriceType(db.Entity):
     document_tables = Set(DocumentGoods)
 
 
-class Cell(db.Entity):
+class Cell(BaseEntity, db.Entity):
     _table_ = 'RS_cells'
 
     id = PrimaryKey(str, auto=True)
@@ -155,14 +170,14 @@ class Cell(db.Entity):
     # adr_docs_table = Set('RS_adr_docs_table')
 
 
-class BarcFlow(db.Entity):
+class BarcFlow(BaseEntity, db.Entity):
     _table_ = 'RS_barc_flow'
 
     id_doc = Required(Document)
     barcode = Optional(str)
 
 
-class Barcode(db.Entity):
+class Barcode(BaseEntity, db.Entity):
     _table_ = 'RS_barcodes'
 
     barcode = PrimaryKey(str)
@@ -173,10 +188,20 @@ class Barcode(db.Entity):
     id_unit = Optional(GoodsUnit)
 
 
-class ErrorLog(db.Entity):
+class ErrorLog(BaseEntity, db.Entity):
     _table_ = 'Error_log'
     log = Optional(str, default="")
     timestamp = Required(datetime, sql_default='CURRENT_TIMESTAMP')
+
+
+class ClassifierUnit(BaseEntity, db.Entity):
+    _table_ = 'RS_classifier_units'
+
+    id = PrimaryKey(str)
+    code = Required(str)
+    name = Optional(str)
+
+    goods = Set(Goods)
 
 
 #
@@ -225,7 +250,8 @@ models = [
     Cell,
     Barcode,
     BarcFlow,
-    ErrorLog
+    ErrorLog,
+    ClassifierUnit
     # RS_constants,
     # RS_adr_docs,
     # RS_adr_docs_table,
