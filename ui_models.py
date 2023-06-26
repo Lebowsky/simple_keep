@@ -1158,10 +1158,9 @@ class Timer:
                 existing_docs_list = self.db_service.get_existing_docs_names_list()
                 self.db_service.update_data_from_json(docs_data['data'])
                 docs_list_after_load = self.db_service.get_existing_docs_names_list()
-                diff = [x for x in docs_list_after_load if x not in existing_docs_list]
+                diff = [x[0] for x in docs_list_after_load if x not in existing_docs_list]
                 if diff:
-                    diff_str = str(diff)[1:-1].replace(",", " ").replace("(", "").replace(")", "").replace("'", "")
-                    self.put_notification(text=str(diff_str), title="Загружены документы:")
+                    self.put_notification(text=" ".join(diff), title="Загружены документы:")
             except Exception as e:
                 self.db_service.write_error_on_log(f'Ошибка загрузки документа:  {e}')
 
