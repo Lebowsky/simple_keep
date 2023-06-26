@@ -4,39 +4,22 @@ import requests
 from requests.auth import HTTPBasicAuth
 import os
 from PIL import Image
-import importlib
 
 from java import jclass
 
-import db_services
 import ui_barcodes
 import ui_csv
 import ui_global
 import ui_form_data
 import ui_models
 import database_init_queryes
-import widgets
 import http_exchange
-import ui_utils
 from ui_utils import HashMap
 
-from ru.travelfood.simple_ui import ImportUtils as iuClass
 from ru.travelfood.simple_ui import SimpleUtilites as suClass
-# from android.graphics.drawable import GradientDrawable as GradientDrawable
-# from android.graphics import Color
 
 noClass = jclass("ru.travelfood.simple_ui.NoSQL")
 rs_settings = noClass("rs_settings")
-
-# importlib.reload(ui_csv)
-# importlib.reload(ui_global)
-# importlib.reload(ui_form_data)
-# importlib.reload(database_init_queryes)
-# importlib.reload(http_exchange)
-# importlib.reload(ui_utils)
-# importlib.reload(db_services)
-# importlib.reload(widgets)
-# importlib.reload(ui_models)
 
 
 def create_screen(hash_map):
@@ -54,21 +37,15 @@ def create_screen(hash_map):
 
 @HashMap()
 def app_on_start(hashMap, _files=None, _data=None):
-    # hashMap.put('InstallConfiguration', '')
-    # hashMap.put('UpdateMenu', '')
-    # hashMap.put('toast', 'Конфа установлена!!!')
-
     # TODO Обработчики обновления!
     if rs_settings.get('Release') is None or (rs_settings.get('Release') != '0.1.11.2'):
         hashMap.put('UpdateConfigurations', '')
         rs_settings.put('Release', '0.1.11.2', True)
 
     # Создаем таблицы если их нет
-    shema = database_init_queryes.database_shema()
-    for el in shema:
-        res = ui_global.get_query_result(el)
-        # for parameter_name, value in parameters.items():
-        #     set_params.put(parameter_name,value)
+    schema = database_init_queryes.database_shema()
+    for el in schema:
+        ui_global.get_query_result(el)
 
     rs_default_settings = {
         'TitleTextSize': 18,
@@ -98,11 +75,6 @@ def app_on_start(hashMap, _files=None, _data=None):
 
     hashMap.put('toast', 'Готов к работе')
 
-    # Проверим, свопадают ли текущий релиз конфы и запись о нем в БД, если нет - то надо выполнить процедуру обновления
-    # if not ui_global.get_constants('release') == hashMap.get('release'):
-    # update_proc.update_on_release(current_release)
-    # ui_global.get_query_result('Update RS_constants set release = ?',(hashMap.get('release'),))
-
     return hashMap
 
 
@@ -113,7 +85,6 @@ def timer_update(hashMap,  _files=None, _data=None):
 
 
 def event_service(hashMap, _files=None, _data=None):
-    # hashMap.put('_configuration','')
     hashMap.put('ws_body', hashMap.get('ANDROID_ID'))
 
     return hashMap
@@ -1222,17 +1193,13 @@ def test_barcode_listener(hashMap, _files=None, _data=None):
 
 @HashMap()
 def settings_errors_on_start(hash_map: HashMap):
-
-    screen = create_screen(hash_map)
+    screen: ui_models.ErrorLogScreen = create_screen(hash_map)
     screen.on_start()
-
-
 
 
 @HashMap()
 def settings_errors_on_click(hash_map: HashMap):
-
-    screen = create_screen(hash_map)
+    screen: ui_models.ErrorLogScreen = create_screen(hash_map)
     screen.on_input()
 
 
