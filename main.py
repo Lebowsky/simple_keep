@@ -28,15 +28,15 @@ from ru.travelfood.simple_ui import SimpleUtilites as suClass
 noClass = jclass("ru.travelfood.simple_ui.NoSQL")
 rs_settings = noClass("rs_settings")
 
-importlib.reload(ui_csv)
-importlib.reload(ui_global)
-importlib.reload(ui_form_data)
-importlib.reload(database_init_queryes)
-importlib.reload(http_exchange)
-importlib.reload(ui_utils)
-importlib.reload(db_services)
-importlib.reload(widgets)
-importlib.reload(ui_models)
+# importlib.reload(ui_csv)
+# importlib.reload(ui_global)
+# importlib.reload(ui_form_data)
+# importlib.reload(database_init_queryes)
+# importlib.reload(http_exchange)
+# importlib.reload(ui_utils)
+# importlib.reload(db_services)
+# importlib.reload(widgets)
+# importlib.reload(ui_models)
 
 
 def create_screen(hash_map):
@@ -57,43 +57,42 @@ def app_on_start(hashMap, _files=None, _data=None):
     # hashMap.put('InstallConfiguration', '')
     # hashMap.put('UpdateMenu', '')
     # hashMap.put('toast', 'Конфа установлена!!!')
+
+    # TODO Обработчики обновелния!
+    if rs_settings.get('Release') is None or (rs_settings.get('Release') != '0.1.11.2'):
+        hashMap.put('UpdateConfigurations', '')
+        rs_settings.put('Release', '0.1.11.2', True)
+
+    # Создаем таблицы если их нет
     shema = database_init_queryes.database_shema()
     for el in shema:
         res = ui_global.get_query_result(el)
         # for parameter_name, value in parameters.items():
         #     set_params.put(parameter_name,value)
-    if rs_settings.get('TitleTextSize') is None:
-        rs_settings.put("TitleTextSize", "18", True)
-    if rs_settings.get('titleDocTypeCardTextSize') is None:
-        rs_settings.put("titleDocTypeCardTextSize", "18", True)
-    if rs_settings.get('CardTitleTextSize') is None:
-        rs_settings.put("CardTitleTextSize", "20", True)
-    if rs_settings.get('CardDateTextSize') is None:
-        rs_settings.put("CardDateTextSize", "10", True)
-    if rs_settings.get('CardTextSize') is None:
-        rs_settings.put("CardTextSize", "15", True)
-    if rs_settings.get('GoodsCardTitleTextSize') is None:
-        rs_settings.put("GoodsCardTitleTextSize", "18", True)
-    if rs_settings.get('goodsTextSize') is None:
-        rs_settings.put("goodsTextSize", "18", True)
-    if rs_settings.get('SeriesPropertiesTextSize') is None:
-        rs_settings.put("SeriesPropertiesTextSize", "16", True)
-    if rs_settings.get('DocTypeCardTextSize') is None:
-        rs_settings.put("DocTypeCardTextSize", "15", True)
-    if rs_settings.get('signal_num') is None:
-        rs_settings.put('signal_num', '83', True)
-    if rs_settings.get('beep_duration') is None:
-        rs_settings.put('beep_duration', '1000', True)
-    if rs_settings.get('use_mark')  is None:
-        rs_settings.put('use_mark', 'false', True)
-    if rs_settings.get('add_if_not_in_plan')  is None:
-        rs_settings.put('add_if_not_in_plan', 'false', True)
-    if rs_settings.get('path')  is None:
-        rs_settings.put('path', '', True)
-    if rs_settings.get('delete_files')  is None:
-        rs_settings.put('delete_files', 'false', True)
-    if rs_settings.get('allow_overscan')  is None:
-        rs_settings.put('allow_overscan', 'false', True)
+
+    rs_default_settings = {
+        'TitleTextSize': 18,
+        'titleDocTypeCardTextSize': 18,
+        'CardTitleTextSize': 20,
+        'CardDateTextSize': 20,
+        'CardTextSize': 15,
+        'GoodsCardTitleTextSize': 18,
+        'goodsTextSize': 18,
+        'SeriesPropertiesTextSize': 16,
+        'DocTypeCardTextSize': 15,
+        'signal_num': 83,
+        'beep_duration': 1000,
+        'use_mark': 'false',
+        'add_if_not_in_plan': 'false',
+        'path': '',
+        'delete_files': 'false',
+        'allow_overscan': 'false',
+        'path_to_databases': '//data/data/ru.travelfood.simple_ui/databases',
+    }
+
+    for k, v in rs_default_settings.items():
+        if rs_settings.get(k) in None:
+            rs_settings.put(k, v)
 
     hashMap.put('toast', 'Готов к работе')
 
