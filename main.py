@@ -1,6 +1,5 @@
+import time
 import db_services
-from ru.travelfood.simple_ui import SimpleUtilites as suClass
-
 import ui_barcodes
 import ui_csv
 import ui_global
@@ -11,15 +10,17 @@ import json
 import requests
 import database_init_queryes
 import os
-from PIL import Image
 import importlib
-
-import widgets
-# from rs_settings import RSSettings
-from java import jclass
 import http_exchange
-from requests.auth import HTTPBasicAuth
+import widgets
 import ui_utils
+
+
+# from rs_settings import RSSettings
+from ru.travelfood.simple_ui import SimpleUtilites as suClass
+from java import jclass
+from PIL import Image
+from requests.auth import HTTPBasicAuth
 from ui_utils import HashMap
 from ru.travelfood.simple_ui import ImportUtils as iuClass
 # from android.graphics.drawable import GradientDrawable as GradientDrawable
@@ -398,6 +399,13 @@ def elem_on_click(hashMap, _files=None, _data=None):
             # hashMap.put("toast","#2"+json.dumps(jphotoarr))
 
     return hashMap
+
+
+@HashMap()
+def highlight_scanned_item(hash_map: HashMap):
+    screen = ui_models.DocDetailsScreen(hash_map, rs_settings)
+    time.sleep(2)
+    screen.disable_highlight()
 
 
 def elem_viev_on_start(hashMap, _files=None, _data=None):
