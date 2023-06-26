@@ -529,6 +529,11 @@ class DocDetailsScreen(Screen):
         table_data = self._prepare_table_data(doc_details)
         table_view = self._get_doc_table_view(table_data=table_data)
 
+        if self.hash_map['highlight'] == "True":
+            self.hash_map['highlight'] = "False"
+            self.enable_highlight(table_view.customtable)
+            self.hash_map.run_event_async('highlight_scanned_item')
+
         if doc_details:
             self.hash_map['table_lines_qtty'] = len(doc_details)
             have_zero_plan = True
@@ -582,8 +587,8 @@ class DocDetailsScreen(Screen):
             else:
                 self.hash_map.toast(res['Descr'])
         else:
-            self._add_scanned_row(id_doc, res.get('key'))
             # self.hash_map.toast('Товар добавлен в документ')
+            self._add_scanned_row()
             self.hash_map.put('barcode_scanned', True)
 
     def _set_visibility_on_start(self):
@@ -733,10 +738,7 @@ class DocDetailsScreen(Screen):
         qtty, qtty_plan = float(product_row['qtty']), float(product_row['qtty_plan'])
 
         if qtty_plan > qtty:
-            if self._added_goods_has_key(product_row['key']):
-                background_color = '#F0F8FF'
-            else:
-                background_color = "#FBE9E7"
+            background_color = "#FBE9E7"
 
         elif qtty_plan < qtty:
             background_color = "#FFF9C4"
@@ -750,24 +752,21 @@ class DocDetailsScreen(Screen):
         if added_goods:
             added_goods_doc = added_goods.get(self.id_doc, [])
             result = str(key) in [str(item) for item in added_goods_doc]
+            self.toast(result)
 
         return result
 
-    def _add_scanned_row(self, id_doc, row_key):
-        if not row_key:
-            return
-            # raise ValueError(f'Row key must be set not {row_key}')
+    def _add_scanned_row(self): 
+        self.hash_map['highlight'] = "True"
+        self.hash_map['highlight'] = "True"
 
-        added_goods = self.hash_map.get_json('added_goods') or {}
-        #Пока что отключил раскраску всех отсканированных
-        # added_goods_doc = added_goods.get(id_doc, [row_key])
-        # if row_key not in added_goods_doc:
-        #     added_goods_doc.append(row_key)
+    def enable_highlight(self, customtable):
+        customtable['tabledata'][1]['_layout'].BackgroundColor = '#F0F8FF'
 
-        # added_goods[id_doc] = added_goods_doc
-        added_goods[id_doc] = [row_key]
 
-        self.hash_map.put('added_goods', added_goods, to_json=True)
+    def disable_highlight(self):
+        self._on_start()
+        self.hash_map.refresh_screen()
 
     def _fill_none_values(self, data, keys, default=''):
         none_list = [None, 'None']
@@ -1031,7 +1030,7 @@ class ErrorLog(Screen):
         table_view = self._get_errors_table_view(table_raws)
         self.hash_map.put("error_log_table", table_view.to_json())
         self.hash_map['date_sort_select'] = 'Новые;Cтарые'
-        self.toast(table_view.customtable['options'])
+        # self.toast(table_view.customtable['options'])
 
     def on_input(self) -> None:
         super().on_input()
@@ -1089,7 +1088,7 @@ class ErrorLog(Screen):
                 width="match_parent",
                 BackgroundColor='#FFFFFF'
             ),
-            options=widgets.Options(search_enabled=True).options,
+            options=widgets.Options().options,
             tabledata=table_rows
         )
         return table_view
@@ -1129,7 +1128,7 @@ class ErrorLog(Screen):
     class LinearLayout(widgets.LinearLayout):
         def __init__(self, *args, **kwargs):
             super().__init__(*args, **kwargs)
-            self.orientation = 'horizontal'
+            self.orientation = 'vertical'
             self.height = "match_parent"
             self.width = "match_parent"
             self.StrokeWidth = 1

@@ -78,9 +78,9 @@ class Options:
 class CustomCards:
     def __init__(self, layout: LinearLayout, options: Options, cardsdata: List[dict] = []):
         self.customcards = {
+            'options': options or Options(),
             'layout': layout,
-            'cardsdata': cardsdata,
-            'options': options or Options()
+            'cardsdata': cardsdata
         }
 
     def to_json(self):
@@ -90,9 +90,9 @@ class CustomCards:
 class CustomTable:
     def __init__(self, layout: LinearLayout, options: Options, tabledata: List[dict]):
         self.customtable = {
+            'options': options or Options(),
             'layout': layout,
-            'tabledata': tabledata,
-            'options': options or Options()
+            'tabledata': tabledata
         }
 
     def to_json(self):

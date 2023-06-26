@@ -335,6 +335,14 @@
                                                 "Variable": ""
                                             }
                                         ]
+                                    },
+                                    {
+                                        "type": "TextView",
+                                        "height": "wrap_content",
+                                        "width": "match_parent",
+                                        "weight": "0",
+                                        "Value": "@new_text",
+                                        "Variable": "new_text"
                                     }
                                 ]
                             },
@@ -1232,6 +1240,7 @@
                             },
                             {
                                 "event": "onInput",
+                                "listener": "",
                                 "action": "run",
                                 "type": "python",
                                 "method": "elem_viev_on_click",
@@ -3300,34 +3309,33 @@
                                 "Variable": "",
                                 "Elements": [
                                     {
-                                        "type": "LinearLayout",
+                                        "BackgroundColor": "",
+                                        "StrokeWidth": "",
+                                        "Padding": "",
+                                        "orientation": "horizontal",
                                         "height": "wrap_content",
                                         "width": "match_parent",
                                         "weight": "0",
-                                        "Value": "",
+                                        "type": "LinearLayout",
                                         "Variable": "",
-                                        "orientation": "horizontal",
                                         "Elements": [
                                             {
-                                                "type": "ProgressButton",
                                                 "height": "wrap_content",
                                                 "width": "match_parent",
                                                 "weight": "1",
+                                                "type": "ProgressButton",
                                                 "Value": "Очистить",
                                                 "Variable": "btn_clear_err"
                                             },
                                             {
                                                 "type": "SpinnerLayout",
+                                                "Value": "@date_sort_select",
+                                                "Variable": "date_sort_click",
                                                 "height": "wrap_content",
                                                 "width": "match_parent",
-                                                "weight": "1",
-                                                "Value": "@date_sort_select",
-                                                "Variable": "date_sort_click"
+                                                "weight": "1"
                                             }
-                                        ],
-                                        "BackgroundColor": "",
-                                        "StrokeWidth": "",
-                                        "Padding": ""
+                                        ]
                                     },
                                     {
                                         "TextSize": "",
