@@ -52,13 +52,13 @@ def create_screen(hash_map):
 
 # =============== Main events =================
 
-
+@HashMap()
 def app_on_start(hashMap, _files=None, _data=None):
     # hashMap.put('InstallConfiguration', '')
     # hashMap.put('UpdateMenu', '')
     # hashMap.put('toast', 'Конфа установлена!!!')
 
-    # TODO Обработчики обновелния!
+    # TODO Обработчики обновления!
     if rs_settings.get('Release') is None or (rs_settings.get('Release') != '0.1.11.2'):
         hashMap.put('UpdateConfigurations', '')
         rs_settings.put('Release', '0.1.11.2', True)
@@ -88,11 +88,13 @@ def app_on_start(hashMap, _files=None, _data=None):
         'delete_files': 'false',
         'allow_overscan': 'false',
         'path_to_databases': '//data/data/ru.travelfood.simple_ui/databases',
+        'sqlite_name': 'SimpleKeep',
+        'log_name': 'log.json'
     }
 
     for k, v in rs_default_settings.items():
-        if rs_settings.get(k) in None:
-            rs_settings.put(k, v)
+        if rs_settings.get(k) is None:
+            rs_settings.put(k, v, True)
 
     hashMap.put('toast', 'Готов к работе')
 
@@ -1328,37 +1330,16 @@ def sound_settings_listener(hashMap, _files=None, _data=None):
 
 # =============== Debug =================
 
+@HashMap()
+def debug_on_start(hash_map: HashMap):
+    screen: ui_models.DebugSettingsScreen = create_screen(hash_map)
+    screen.on_start()
 
-def debug_listener(hashMap, _files=None, _data=None):
-    delete_files = rs_settings.get('delete_files')
-    if delete_files is None: delete_files = 'false'
 
-    listener = hashMap.get('listener')
-
-    if listener == 'btn_copy_base':
-        ip_host = hashMap.get('ip_host')
-        ip_host = '10.24.24.20'
-        if os.path.isfile('//data/data/ru.travelfood.simple_ui/databases/SimpleKeep'): #Keep'):
-            with open('//data/data/ru.travelfood.simple_ui/databases/SimpleKeep', 'rb') as f:  # rightscan
-                r = requests.post('http://' + ip_host + ':2444/post', files={'Rightscan': f})  # rightscan
-            if r.status_code == 200:
-                hashMap.put('toast', 'База SQLite успешно выгружена')
-            else:
-                hashMap.put('toast', 'Ошибка соединения')
-        else:
-            hashMap.put('toast', 'Файл не найден')
-    elif listener == 'btn_local_files':
-        # path = hashMap.get('localpath')
-        path = hashMap.get('path')
-        delete_files = hashMap.get('delete_files')
-        if not delete_files:
-            delete_files = '0'
-        if not path: path = '//storage/emulated/0/download/'
-
-        ret_text = ui_csv.list_folder(path, delete_files)
-
-        hashMap.put('toast', ret_text)
-    return hashMap
+@HashMap()
+def debug_listener(hash_map, _files=None, _data=None):
+    screen: ui_models.DebugSettingsScreen = create_screen(hash_map)
+    screen.on_input()
 
 
 # ^^^^^^^^^^^^^^^^^ Debug ^^^^^^^^^^^^^^^^^

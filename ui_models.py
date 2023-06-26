@@ -1,6 +1,8 @@
 from abc import ABC, abstractmethod
 import json
+import os
 
+import hs_services
 import http_exchange
 import ui_global
 from ui_utils import HashMap, RsDoc
@@ -545,7 +547,6 @@ class DocDetailsScreen(Screen):
         self.hash_map['control'] = control
 
         self.hash_map.put("doc_goods_table", table_view.to_json())
-
 
     def _barcode_scanned(self):
         id_doc = self.hash_map.get('id_doc')
@@ -1216,6 +1217,101 @@ class Timer:
 # ^^^^^^^^^^^^^^^^^^^^^ Timer ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 
+# ==================== Debug settings =============================
+
+
+class DebugSettingsScreen(Screen):
+    process_name = 'Отладка'
+    screen_name = 'Отладочный экран'
+
+    def __init__(self, hash_map: HashMap, rs_settings):
+        super().__init__(hash_map, rs_settings)
+        self.hs_service = hs_services.DebugService
+        self.listener = self.hash_map['listener']
+        self.event = self.hash_map['event']
+
+    def on_start(self):
+        debug_host_ip = self.rs_settings.get('debug_host_ip') or self.hash_map['ip_host']
+        self.hash_map.put(
+            'ip_host',
+            {'hint': 'IP-адрес для выгрузки базы/лога', 'default_text': debug_host_ip or ''},
+            to_json=True)
+
+    def on_input(self):
+        listeners = {
+            'btn_copy_base': self._copy_base,
+            'btn_unload_log': self._unload_log,
+            'btn_local_files': self._local_files,
+            'ON_BACK_PRESSED': self._on_back_pressed
+        }
+        if self.listener in listeners:
+            listeners[self.listener]()
+
+    def on_post_start(self):
+        pass
+
+    def show(self, args=None):
+        pass
+
+    def _copy_base(self):
+        ip_host = self.hash_map['ip_host']
+        path_to_databases = self.rs_settings.get('path_to_databases')
+        base_name = self.rs_settings.get('sqlite_name')
+        file_path = os.path.join(path_to_databases, base_name)
+
+        if os.path.isfile(file_path):
+            with open(file_path, 'rb') as f:
+                res = self.hs_service(ip_host).export_database(f)
+
+                if res['status_code'] == 200:
+                    self.hash_map.toast('База SQLite успешно выгружена')
+                else:
+                    self.hash_map.toast('Ошибка соединения')
+        else:
+            self.hash_map.toast('Файл не найден')
+
+    def _unload_log(self):
+        ip_host = self.hash_map['ip_host']
+
+        path_to_databases = self.rs_settings.get('path_to_databases')
+        base_name = self.rs_settings.get('log_name')
+        file_path = os.path.join(path_to_databases, base_name)
+
+        # TODO Здесь нужно будет вызывать класс-сервис для взаимодействия с TinyDB
+        from tinydb import TinyDB
+
+        db = TinyDB(file_path)
+        data = db.all()
+
+        res = self.hs_service(ip_host).export_log(data)
+        if res['status_code'] == 200:
+            self.hash_map.toast('Лог успешно выгружен')
+        else:
+            self.hash_map.toast('Ошибка соединения')
+
+    def _local_files(self):
+        import ui_csv
+
+        path = self.hash_map['path']
+        delete_files = self.hash_map['delete_files']
+
+        if not delete_files:
+            delete_files = '0'
+        if not path:
+            path = '//storage/emulated/0/download/'
+
+        ret_text = ui_csv.list_folder(path, delete_files)
+
+        self.hash_map.toast(ret_text)
+
+    def _on_back_pressed(self):
+        ip_host = self.hash_map['ip_host']
+        self.rs_settings.put('debug_host_ip', ip_host, True)
+        self.hash_map.put('FinishProcess', '')
+
+
+# ^^^^^^^^^^^^^^^^^^^^^ Debug settings ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
 class ScreensFactory:
     screens = [
         GroupScanTiles,
@@ -1224,7 +1320,8 @@ class ScreensFactory:
         DocumentsDocsListScreen,
         GroupScanDocDetailsScreen,
         DocumentsDocDetailScreen,
-        ErrorLog
+        ErrorLog,
+        DebugSettingsScreen
     ]
 
     @staticmethod
