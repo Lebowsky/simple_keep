@@ -28,15 +28,18 @@ from ru.travelfood.simple_ui import ImportUtils as iuClass
 noClass = jclass("ru.travelfood.simple_ui.NoSQL")
 rs_settings = noClass("rs_settings")
 
-importlib.reload(ui_csv)
-importlib.reload(ui_global)
-importlib.reload(ui_form_data)
-importlib.reload(database_init_queryes)
-importlib.reload(http_exchange)
-importlib.reload(ui_utils)
-importlib.reload(db_services)
-importlib.reload(widgets)
-importlib.reload(ui_models)
+
+
+#
+# importlib.reload(ui_csv)
+# importlib.reload(ui_global)
+# importlib.reload(ui_form_data)
+# importlib.reload(database_init_queryes)
+# importlib.reload(http_exchange)
+# importlib.reload(ui_utils)
+# importlib.reload(db_services)
+# importlib.reload(widgets)
+# importlib.reload(ui_models)
 
 
 def create_screen(hash_map):
@@ -53,6 +56,9 @@ def create_screen(hash_map):
 # =============== Main events =================
 
 def app_on_start(hashMap, _files=None, _data=None):
+    if rs_settings.get('Release') is None or (rs_settings.get('Release') != '0.1.11.2'):
+        hashMap.put('UpdateConfigurations','')
+        rs_settings.put('Release','0.1.11.2',True)
     # hashMap.put('InstallConfiguration', '')
     # hashMap.put('UpdateMenu', '')
     # hashMap.put('toast', 'Конфа установлена!!!')
@@ -253,7 +259,7 @@ def tiles_on_input(hash_map: HashMap):
 
 @HashMap()
 def docs_on_start(hash_map: HashMap):
-    screen = create_screen(hash_map)
+    screen: ui_models.DocsListScreen = create_screen(hash_map)
     screen.on_start()
 
 
@@ -271,6 +277,31 @@ def doc_details_on_start(hash_map: HashMap):
 
 @HashMap()
 def doc_details_listener(hash_map: HashMap):
+    screen = create_screen(hash_map)
+    screen.on_input()
+
+
+
+@HashMap()
+def adr_docs_on_start(hash_map: HashMap):
+    screen: ui_models.AdrDocsListScreen = create_screen(hash_map)
+    screen.on_start()
+
+
+@HashMap()
+def adr_docs_on_select(hash_map: HashMap):
+    screen = create_screen(hash_map)
+    screen.on_input()
+
+
+@HashMap()
+def adr_doc_details_on_start(hash_map: HashMap):
+    screen = create_screen(hash_map)
+    screen.on_start()
+
+
+@HashMap()
+def adr_doc_details_listener(hash_map: HashMap):
     screen = create_screen(hash_map)
     screen.on_input()
 
@@ -1188,6 +1219,14 @@ def settings_on_click(hashMap, _files=None, _data=None):
             hashMap.put('toast',str(e))
     elif listener == 'btn_sound_settings':
         hashMap.put('ShowScreen','Настройка звука')
+    elif listener == 'btn_test_sql':
+        for i in 1000:
+            #
+            time =0
+            res = ui_global.get_query_result('Select * FROM RS_adr_docs_table LIMIT 1 ')
+            ui_global.get_query_result('Update RS_adr_docs_table set qtty = qtty +1 Where id = ?', (res[0][0],))
+            ui_global.write_error_on_log(str(time))
+
     return hashMap
 
 

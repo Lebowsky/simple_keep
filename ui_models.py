@@ -409,6 +409,221 @@ class DocsListScreen(Screen):
             self.hash_map.toast('Ошибка удаления документа')
 
 
+class AdrDocsListScreen(Screen):
+    def __init__(self, hash_map: HashMap,  rs_settings):
+        super().__init__(hash_map, rs_settings)
+        self.listener = self.hash_map['listener']
+        self.event = self.hash_map['event']
+        self.service = AdrDocService()
+        self.screen_values = {}
+
+    def on_start(self) -> None:
+        # Заполним поле фильтра по виду документов
+        self.hash_map['doc_adr_type_select'] = ';'.join(['Все', 'Отбор', 'Размещение', 'Перемещение'])
+        # Перезаполним список документов
+        if self.hash_map['doc_adr_type_click'] is None:
+            ls = refill_adr_docs_list()
+        else:
+            ls = refill_adr_docs_list(self.hash_map['doc_adr_type_click'])
+
+        self.hash_map["docAdrCards"] = ls
+
+        self.hash_map['doc_status_select'] = 'Все;К выполнению;Выгружен;К выгрузке'
+
+        doc_type = self.hash_map['doc_type_click']
+        doc_status = self.hash_map['selected_doc_status']
+        self.hash_map['doc_adr_type_click'] = doc_type
+        self.hash_map['selected_tile_key'] = ''
+        list_data = self._get_doc_list_data(doc_type, doc_status)
+        if self.process_name == "Групповая обработка":
+            doc_cards = self._get_doc_cards_view(list_data, 'Удалить')
+        elif self.process_name == "Документы":
+            doc_cards = self._get_doc_cards_view(list_data,
+                                                 popup_menu_data='Удалить;Очистить данные пересчета;Отправить повторно')
+        self.hash_map['docCards'] = doc_cards.to_json()
+
+    def on_input(self) -> None:
+        super().on_input()
+        if self.listener == "doc_status_click":
+            self.hash_map['selected_doc_status'] = self.hash_map["doc_status_click"]
+
+        elif self.listener == 'LayoutAction':
+            self._layout_action()
+
+        elif self._is_result_positive('confirm_delete'):
+            self.confirm_delete_doc_listener()
+
+        elif self.listener == 'ON_BACK_PRESSED':
+            self.hash_map.show_screen('Плитки')
+
+    def on_post_start(self):
+        pass
+
+    def show(self, args=None):
+        self._validate_screen_values()
+        self.hash_map.show_screen(self.screen_name, args)
+
+    def _layout_action(self) -> None:
+        layout_listener = self.hash_map['layout_listener']
+
+        if layout_listener == 'Удалить':
+            self.hash_map.show_dialog(
+                listener='confirm_delete',
+                title='Удалить документ с устройства?'
+            )
+        elif layout_listener == 'Очистить данные пересчета':
+            self.hash_map.show_dialog(
+                listener='confirm_clear_barcode_data',
+                title='Очистить данные пересчета?'
+            )
+        elif layout_listener == 'Отправить повторно':
+            self.hash_map.show_dialog(
+                listener='confirm_resend_doc',
+                title='Отправить документ повторно?'
+            )
+
+    def _get_doc_list_data(self, doc_type='', doc_status='') -> list:
+        results = self.service.get_doc_view_data(doc_type, doc_status)
+        table_data = []
+
+        for record in results:
+            doc_status = ''
+
+            if record['verified'] and record['sent']:
+                doc_status = 'Выгружен'
+            elif record['verified']:
+                doc_status = 'К выгрузке'
+            elif not (record['verified'] and record['sent']):
+                doc_status = 'К выполнению'
+
+            table_data.append({
+                'key': record['id_doc'],
+                'type': record['doc_type'],
+                'number': record['doc_n'],
+                'data': record['doc_date'],
+                'warehouse': record['RS_warehouse'],
+                'countragent': record['RS_countragent'],
+                'add_mark_selection': record['add_mark_selection'],
+                'status': doc_status
+            })
+
+        return table_data
+
+    def _get_doc_cards_view(self, table_data, popup_menu_data):
+        title_text_size = self.rs_settings.get("TitleTextSize")
+        card_title_text_size = self.rs_settings.get('CardTitleTextSize')
+        card_date_text_size = self.rs_settings.get('CardDateTextSize')
+
+        doc_cards = widgets.CustomCards(
+            widgets.LinearLayout(
+                widgets.LinearLayout(
+                    widgets.TextView(
+                        Value='@status',
+                        width='match_parent',
+                        gravity_horizontal='left',
+                        weight=2
+                    ),
+                    widgets.TextView(
+                        Value='@type',
+                        TextSize=title_text_size,
+                    ),
+                    widgets.PopupMenuButton(
+                        Value=popup_menu_data,
+                        Variable="menu_delete",
+                    ),
+
+                    orientation='horizontal',
+                    width='match_parent',
+
+                ),
+                widgets.LinearLayout(
+                    widgets.TextView(
+                        Value='@number',
+                        TextBold=True,
+                        TextSize=card_title_text_size
+                    )
+                ),
+                widgets.LinearLayout(
+                    widgets.TextView(
+                        Value='@countragent',
+                        TextSize=card_date_text_size
+                    ),
+                    widgets.TextView(
+                        Value='@warehouse',
+                        TextSize=card_date_text_size
+                    )
+                ),
+                width="match_parent"
+            ),
+            options=widgets.Options().options,
+            cardsdata=table_data
+        )
+
+        return doc_cards
+
+    def _get_selected_card(self):
+        current_str = self.hash_map.get("selected_card_position")
+        jlist = self.hash_map.get_json("docCards")
+        selected_card = jlist['customcards']['cardsdata'][int(current_str)]
+
+        return selected_card
+
+    def _get_selected_card_put_data(self, put_data=None):
+        card_data = self._get_selected_card()
+
+        put_data = put_data or {}
+        put_data['id_doc'] = card_data['key']
+        put_data['doc_type'] = card_data['type']
+        put_data['doc_n'] = card_data['number']
+        put_data['doc_date'] = card_data['data']
+        put_data['warehouse'] = card_data['warehouse']
+        put_data['countragent'] = card_data['countragent']
+
+        return put_data
+
+    def _set_doc_verified(self, id_doc, value=True):
+        service = DocService(id_doc)
+        value = str(int(value))
+
+        try:
+            service.set_doc_value('verified', value)
+        except Exception as e:
+            self.hash_map.error_log(e.args[0])
+
+    def _doc_delete(self, id_doc):
+        service = DocService(id_doc)
+        result = True
+
+        try:
+            service.delete_doc(id_doc)
+        except Exception as e:
+            self.hash_map.error_log(e.args[0])
+            result = False
+
+        return result
+
+    def _get_docs_count(self, doc_type=''):
+        doc_type = '' if not doc_type or doc_type == 'Все' else doc_type
+        return self.service.get_docs_count(doc_type)
+
+    def _clear_barcode_data(self, id_doc):
+        return self.service.clear_barcode_data(id_doc)
+
+    def confirm_delete_doc_listener(self):
+        card_data = self.hash_map.get_json("card_data")
+        id_doc = card_data['key']
+        doc_type = self.hash_map['doc_type_click']
+
+        if self._doc_delete(id_doc):
+            docs_count = self._get_docs_count(doc_type=doc_type)
+            self.hash_map.toast('Документ успешно удалён')
+            if docs_count:
+                self.on_start()
+            else:
+                self.hash_map.show_screen('Плитки')
+        else:
+            self.hash_map.toast('Ошибка удаления документа')
+
 class GroupScanDocsListScreen(DocsListScreen):
     screen_name = 'Документы'
     process_name = 'Групповая обработка'

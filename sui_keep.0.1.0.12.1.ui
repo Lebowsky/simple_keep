@@ -2,7 +2,7 @@
     "ClientConfiguration": {
         "ConfigurationName": "Simple Учет",
         "ConfigurationDescription": "Простое решение для работы с штрихкодами товаров. Поставляется в комплекте с расширением для 1С. Подробнее про расширение Вы можете узнать по ссылке: https://www.simple-kit.ru/products/simple-uchet/ ",
-        "ConfigurationVersion": "0.1.11.0",
+        "ConfigurationVersion": "0.1.11.2",
         "Processes": [
             {
                 "type": "Process",
@@ -3294,61 +3294,28 @@
                                 "gravity_horizontal": "center",
                                 "gravity_vertical": "center",
                                 "weight": "0",
-                                "height_value": "",
-                                "width_value": "",
                                 "type": "LinearLayout",
                                 "Variable": "",
                                 "Elements": [
                                     {
-                                        "type": "LinearLayout",
-                                        "height": "wrap_content",
+                                        "height": "match_parent",
                                         "width": "match_parent",
-                                        "weight": "0",
-                                        "Value": "",
-                                        "Variable": "",
-                                        "orientation": "horizontal",
-                                        "Elements": [
-                                            {
-                                                "type": "ProgressButton",
-                                                "height": "wrap_content",
-                                                "width": "match_parent",
-                                                "weight": "1",
-                                                "Value": "Очистить",
-                                                "Variable": "btn_clear_err"
-                                            },
-                                            {
-                                                "type": "SpinnerLayout",
-                                                "height": "wrap_content",
-                                                "width": "match_parent",
-                                                "weight": "1",
-                                                "Value": "@date_sort_select",
-                                                "Variable": "date_sort_click"
-                                            }
-                                        ],
-                                        "BackgroundColor": "",
-                                        "StrokeWidth": "",
-                                        "Padding": ""
-                                    },
-                                    {
-                                        "TextSize": "",
-                                        "TextColor": "",
-                                        "TextBold": false,
-                                        "TextItalic": false,
-                                        "BackgroundColor": "",
-                                        "StrokeWidth": "",
-                                        "Padding": "",
-                                        "orientation": "",
-                                        "height": "wrap_content",
-                                        "width": "wrap_content",
                                         "gravity_horizontal": "center",
                                         "gravity_vertical": "center",
-                                        "weight": "",
-                                        "height_value": "",
-                                        "width_value": "",
-                                        "type": "TableLayout",
-                                        "Value": "@error_log_table",
-                                        "Variable": "error_log_table",
-                                        "style_name": ""
+                                        "weight": "0",
+                                        "type": "MultilineText",
+                                        "Value": "@error_log",
+                                        "Variable": "error_log"
+                                    },
+                                    {
+                                        "height": "wrap_content",
+                                        "width": "match_parent",
+                                        "gravity_horizontal": "center",
+                                        "gravity_vertical": "center",
+                                        "weight": "0",
+                                        "type": "ProgressButton",
+                                        "Value": "Очистить",
+                                        "Variable": "btn_clear_err"
                                     }
                                 ]
                             }
@@ -3356,7 +3323,6 @@
                         "Handlers": [
                             {
                                 "event": "onStart",
-                                "listener": "",
                                 "action": "run",
                                 "type": "python",
                                 "method": "settings_errors_on_start",
@@ -3881,7 +3847,7 @@
             "handler_auth": "",
             "dictionaries": ""
         },
-        "ConfigurationTags": "Py,off-line",
+        "ConfigurationTags": "Py,off-line,ActiveCV®",
         "FaceRecognitionURL": "",
         "ForegroundService": false,
         "StopForegroundServiceOnExit": false,
@@ -3945,6 +3911,14 @@
             {
                 "PyFileKey": "test_load_docs",
                 "PyFileData": ""
+            },
+            {
+                "PyFileKey": "ui_barcodes",
+                "PyFileData": ""
+            },
+            {
+                "PyFileKey": "hs_services",
+                "PyFileData": ""
             }
         ],
         "StyleTemplates": [],
@@ -3952,6 +3926,7 @@
         "CommonHandlers": [
             {
                 "event": "onLaunch",
+                "listener": "",
                 "action": "run",
                 "type": "python",
                 "method": "app_on_start",
