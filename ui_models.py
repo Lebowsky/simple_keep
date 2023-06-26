@@ -1011,8 +1011,12 @@ class DocumentsDocDetailScreen(DocDetailsScreen):
     def _get_doc_barcode_data(self, args):
         return self.service.get_doc_barcode_data(args)
 
+# ^^^^^^^^^^^^^^^^^^^^^ DocDetails ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-class ErrorLog(Screen):
+
+# ==================== Settings =============================
+
+class ErrorLogScreen(Screen):
     screen_name = 'Ошибки'
     process_name = 'Параметры'
 
@@ -1030,7 +1034,6 @@ class ErrorLog(Screen):
         table_view = self._get_errors_table_view(table_raws)
         self.hash_map.put("error_log_table", table_view.to_json())
         self.hash_map['date_sort_select'] = 'Новые;Cтарые'
-        # self.toast(table_view.customtable['options'])
 
     def on_input(self) -> None:
         super().on_input()
@@ -1042,17 +1045,6 @@ class ErrorLog(Screen):
 
         elif self.listener == "date_sort_click":
             self.hash_map['selected_date_sort'] = self.hash_map["date_sort_click"]
-
-        elif self.listener == "CardsClick":
-            self.toast(self.hash_map['selected_card_key'])
-
-        elif listener == 'Search':
-            filter_value = hashMap.get('SearchString')
-            if len(filter_value) > 2:
-                filter_fields = hashMap.get('filter_fields').split(';')
-                hashMap.put('cards', get_table_cards(hashMap.get('table_for_select'), filter_fields, filter_value))
-
-                hashMap.put('RefreshScreen', '')
 
     def on_post_start(self):
         pass
@@ -1141,74 +1133,7 @@ class ErrorLog(Screen):
             self.width = 'match_parent'
             self.Value = value
 
-
-# ^^^^^^^^^^^^^^^^^^^^^ DocDetails ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-
-# ==================== Timer =============================
-
-
-class Timer:
-    def __init__(self, hash_map: HashMap, rs_settings):
-        self.hash_map = hash_map
-        self.rs_settings = rs_settings
-        self.http_settings = self._get_http_settings()
-        self.db_service = DocService()
-        self.http_service = HsService(self.http_settings)
-
-    def timer_on_start(self):
-        docs_data = self.http_service.get_data()
-        if docs_data.get('data'):
-            try:
-                existing_docs_list = self.db_service.get_existing_docs_names_list()
-                self.db_service.update_data_from_json(docs_data['data'])
-                docs_list_after_load = self.db_service.get_existing_docs_names_list()
-                diff = [x for x in docs_list_after_load if x not in existing_docs_list]
-                if diff:
-                    self.put_notification(text=" ".join(diff), title="Загружены документы:")
-            except Exception as e:
-                self.db_service.write_error_on_log(f'Ошибка загрузки документа:  {e}')
-
-    def save_data_to_db(self, data: dict):
-        if not data:
-            return
-
-        table_list = [
-            'RS_countragents',
-            'RS_warehouses',
-            'RS_cells',
-            'RS_types_goods',
-            'RS_classifier_units',
-            'RS_goods',
-            'RS_properties',
-            'RS_series',
-            'RS_units',
-            'RS_price_types',
-            'RS_prices',
-            'RS_barcodes',
-        ]
-
-        for table_name in table_list:
-            table = data.get(table_name, {})
-            service = self.db_service(None, table_name=table_name)
-            for item_data in table:
-                service.update(item_data)
-
-    def put_notification(self, text, title=None):
-        self.hash_map.notification(text, title)
-
-    def _get_http_settings(self):
-        http_settings = {
-            'url': self.rs_settings.get("URL"),
-            'user': self.rs_settings.get('USER'),
-            'pass': self.rs_settings.get('PASS'),
-            'device_model': self.hash_map['DEVICE_MODEL'],
-            'android_id': self.hash_map['ANDROID_ID'],
-            'user_name': self.rs_settings.get('user_name')}
-        return http_settings
-
-
-# ^^^^^^^^^^^^^^^^^^^^^ Timer ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+# ^^^^^^^^^^^^^^^^^^^^^ Settings ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 
 # ==================== Debug settings =============================
@@ -1306,6 +1231,75 @@ class DebugSettingsScreen(Screen):
 
 # ^^^^^^^^^^^^^^^^^^^^^ Debug settings ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+
+# ==================== Timer =============================
+
+
+class Timer:
+    def __init__(self, hash_map: HashMap, rs_settings):
+        self.hash_map = hash_map
+        self.rs_settings = rs_settings
+        self.http_settings = self._get_http_settings()
+        self.db_service = DocService()
+        self.http_service = HsService(self.http_settings)
+
+    def timer_on_start(self):
+        docs_data = self.http_service.get_data()
+        if docs_data.get('data'):
+            try:
+                existing_docs_list = self.db_service.get_existing_docs_names_list()
+                self.db_service.update_data_from_json(docs_data['data'])
+                docs_list_after_load = self.db_service.get_existing_docs_names_list()
+                diff = [x for x in docs_list_after_load if x not in existing_docs_list]
+                if diff:
+                    self.put_notification(text=" ".join(diff), title="Загружены документы:")
+            except Exception as e:
+                self.db_service.write_error_on_log(f'Ошибка загрузки документа:  {e}')
+
+    def save_data_to_db(self, data: dict):
+        if not data:
+            return
+
+        table_list = [
+            'RS_countragents',
+            'RS_warehouses',
+            'RS_cells',
+            'RS_types_goods',
+            'RS_classifier_units',
+            'RS_goods',
+            'RS_properties',
+            'RS_series',
+            'RS_units',
+            'RS_price_types',
+            'RS_prices',
+            'RS_barcodes',
+        ]
+
+        for table_name in table_list:
+            table = data.get(table_name, {})
+            service = self.db_service(None, table_name=table_name)
+            for item_data in table:
+                service.update(item_data)
+
+    def put_notification(self, text, title=None):
+        self.hash_map.notification(text, title)
+
+    def _get_http_settings(self):
+        http_settings = {
+            'url': self.rs_settings.get("URL"),
+            'user': self.rs_settings.get('USER'),
+            'pass': self.rs_settings.get('PASS'),
+            'device_model': self.hash_map['DEVICE_MODEL'],
+            'android_id': self.hash_map['ANDROID_ID'],
+            'user_name': self.rs_settings.get('user_name')}
+        return http_settings
+
+
+# ^^^^^^^^^^^^^^^^^^^^^ Timer ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+
+
+
 class ScreensFactory:
     screens = [
         GroupScanTiles,
@@ -1314,7 +1308,7 @@ class ScreensFactory:
         DocumentsDocsListScreen,
         GroupScanDocDetailsScreen,
         DocumentsDocDetailScreen,
-        ErrorLog,
+        ErrorLogScreen,
         DebugSettingsScreen
     ]
 
