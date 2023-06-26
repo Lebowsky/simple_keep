@@ -2,9 +2,8 @@ from abc import ABC, abstractmethod
 import json
 import os
 
+import db_services
 import hs_services
-import http_exchange
-import ui_global
 from ui_utils import HashMap, RsDoc
 from db_services import DocService, ErrorService, DbService
 from hs_services import HsService
@@ -69,6 +68,8 @@ class Screen(ABC):
     def put_notification(self, text, title=None):
         self.hash_map.notification(text, title)
 
+
+# ==================== Tiles =============================
 
 class Tiles(Screen):
     def on_start(self):
@@ -200,6 +201,8 @@ class DocumentsTiles(GroupScanTiles):
     screen_name = 'Плитки'
     process_name = 'Документы'
 
+
+# ^^^^^^^^^^^^^^^^^^^^^ Tiles ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 # ==================== DocsList =============================
 
@@ -1011,6 +1014,7 @@ class DocumentsDocDetailScreen(DocDetailsScreen):
     def _get_doc_barcode_data(self, args):
         return self.service.get_doc_barcode_data(args)
 
+
 # ^^^^^^^^^^^^^^^^^^^^^ DocDetails ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 
@@ -1132,6 +1136,7 @@ class ErrorLogScreen(Screen):
             self.TextBold = True
             self.width = 'match_parent'
             self.Value = value
+
 
 # ^^^^^^^^^^^^^^^^^^^^^ Settings ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -1298,7 +1303,91 @@ class Timer:
 # ^^^^^^^^^^^^^^^^^^^^^ Timer ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 
+# ==================== Main events =============================
 
+class MainEvents:
+    def __init__(self, hash_map: HashMap, rs_settings):
+        self.hash_map = hash_map
+        self.rs_settings = rs_settings
+
+    def app_on_start(self):
+        # TODO Обработчики обновления!
+        release = self.rs_settings.get('Release') or ''
+        current_release = '0.1.12.1'
+
+        if release != current_release:
+            self.hash_map.put('UpdateConfigurations', '')
+            self.rs_settings.put('Release', current_release, True)
+
+        self._create_tables()
+
+        rs_default_settings = {
+            'TitleTextSize': 18,
+            'titleDocTypeCardTextSize': 18,
+            'CardTitleTextSize': 20,
+            'CardDateTextSize': 20,
+            'CardTextSize': 15,
+            'GoodsCardTitleTextSize': 18,
+            'goodsTextSize': 18,
+            'SeriesPropertiesTextSize': 16,
+            'DocTypeCardTextSize': 15,
+            'signal_num': 83,
+            'beep_duration': 1000,
+            'use_mark': 'false',
+            'add_if_not_in_plan': 'false',
+            'path': '',
+            'delete_files': 'false',
+            'allow_overscan': 'false',
+            'path_to_databases': '//data/data/ru.travelfood.simple_ui/databases',
+            'sqlite_name': 'SimpleKeep',
+            'log_name': 'log.json'
+        }
+
+        for k, v in rs_default_settings.items():
+            if self.rs_settings.get(k) is None:
+                self.rs_settings.put(k, v, True)
+
+        self.hash_map.toast('toast', 'Готов к работе')
+
+    def put_notification(self):
+        self.hash_map['_configuration'] = ''
+        qtext = '''
+        SELECT 
+            doc_type, 
+            count(id_doc) as count, 
+            max(created_at) as dt 
+        FROM RS_docs 
+        WHERE created_at > ? 
+        GROUP BY doc_type 
+        '''
+
+        last_date = self.rs_settings.get('lastDate')
+        if not last_date:
+            last_date = '2020-01-01 00:00:00'
+
+        res = ui_global.get_query_result(qtext, (last_date,), True)
+
+        doc_list = ''
+        if res:
+            for el in res:
+                doc_list = doc_list + (' ' + el['doc_type'] + ': ' + str(el['count']))
+
+            self.hash_map.put(
+                'basic_notification',
+                json.dumps([{'number': 1, 'title': 'Новые документы', 'message': doc_list}]))
+
+            qtext = 'SELECT max(created_at) as dt FROM RS_docs'
+            res2 = ui_global.get_query_result(qtext)
+
+            self.rs_settings.put('lastDate', res2[0][0], True)
+            self.hash_map.toast(last_date)
+
+    def _create_tables(self):
+        service = db_services.DbCreator()
+        service.create_tables()
+
+
+# ^^^^^^^^^^^^^^^^^^^^^ Main events ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 class ScreensFactory:
     screens = [

@@ -35,86 +35,33 @@ def create_screen(hash_map):
 
 # =============== Main events =================
 
+
 @HashMap()
-def app_on_start(hashMap, _files=None, _data=None):
-    # TODO Обработчики обновления!
-    if rs_settings.get('Release') is None or (rs_settings.get('Release') != '0.1.11.2'):
-        hashMap.put('UpdateConfigurations', '')
-        rs_settings.put('Release', '0.1.11.2', True)
-
-    # Создаем таблицы если их нет
-    schema = database_init_queryes.database_shema()
-    for el in schema:
-        ui_global.get_query_result(el)
-
-    rs_default_settings = {
-        'TitleTextSize': 18,
-        'titleDocTypeCardTextSize': 18,
-        'CardTitleTextSize': 20,
-        'CardDateTextSize': 20,
-        'CardTextSize': 15,
-        'GoodsCardTitleTextSize': 18,
-        'goodsTextSize': 18,
-        'SeriesPropertiesTextSize': 16,
-        'DocTypeCardTextSize': 15,
-        'signal_num': 83,
-        'beep_duration': 1000,
-        'use_mark': 'false',
-        'add_if_not_in_plan': 'false',
-        'path': '',
-        'delete_files': 'false',
-        'allow_overscan': 'false',
-        'path_to_databases': '//data/data/ru.travelfood.simple_ui/databases',
-        'sqlite_name': 'SimpleKeep',
-        'log_name': 'log.json'
-    }
-
-    for k, v in rs_default_settings.items():
-        if rs_settings.get(k) is None:
-            rs_settings.put(k, v, True)
-
-    hashMap.put('toast', 'Готов к работе')
-
-    return hashMap
+def app_on_start(hash_map: HashMap):
+    model = ui_models.MainEvents(hash_map, rs_settings)
+    model.app_on_start()
 
 
 @HashMap()
-def timer_update(hashMap,  _files=None, _data=None):
-    timer = ui_models.Timer(hashMap, rs_settings)
+def timer_update(hash_map):
+    timer = ui_models.Timer(hash_map, rs_settings)
     timer.timer_on_start()
 
 
-def event_service(hashMap, _files=None, _data=None):
-    hashMap.put('ws_body', hashMap.get('ANDROID_ID'))
-
-    return hashMap
-
-
-def put_notification(hashMap, _files=None, _data=None):
-    hashMap.put('_configuration','')
-    qtext = 'SELECT doc_type, count(id_doc) as count, max(created_at) as dt FROM RS_docs WHERE created_at>? GROUP BY doc_type'
-    lastDate = rs_settings.get('lastDate')
-    if not lastDate:
-        lastDate = '2020-01-01 00:00:00'  # one_month_ago.strftime('%Y-%m-%d-%H-%M-%S')
-    res = ui_global.get_query_result(qtext,(lastDate,),True)
-    DocList = ''
-    if res:
-        for el in res:
-            DocList = DocList + (' ' + el['doc_type'] + ': ' + str(el['count']))
-
-        hashMap.put('basic_notification', json.dumps([{'number':1, 'title':'Новые документы', 'message': DocList }]))
-        qtext = 'SELECT max(created_at) as dt FROM RS_docs'
-        res2 = ui_global.get_query_result(qtext)
-
-        rs_settings.put('lastDate',res2[0][0],True)
-        hashMap.put('toast',lastDate)
-
-    return hashMap
+@HashMap()
+def event_service(hash_map, _files=None, _data=None):
+    hash_map['ws_body'] = hash_map['ANDROID_ID']
 
 
-def on_close_app(hashMap, _files=None, _data=None):
+@HashMap()
+def put_notification(hash_map):
+    model = ui_models.MainEvents(hash_map, rs_settings)
+    model.put_notification()
+
+
+@HashMap()
+def on_close_app(hash_map):
     suClass.deleteCache()
-    return hashMap
 
 # ^^^^^^^^^^^^^^^^^ Main events ^^^^^^^^^^^^^^^^^
 

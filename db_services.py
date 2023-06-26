@@ -393,6 +393,15 @@ class DocService:
             get_query_result(qtext, (Err_value,))
 
 
+class DbCreator:
+    def create_tables(self):
+        import database_init_queryes
+        # Создаем таблицы если их нет
+        schema = database_init_queryes.database_shema()
+        for el in schema:
+            get_query_result(el)
+
+
 class DbService:
     def __init__(self, _db_session, table_name):
         import db_models
