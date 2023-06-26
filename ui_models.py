@@ -1,10 +1,12 @@
 from abc import ABC, abstractmethod
 import json
+import os
 
+import hs_services
 import http_exchange
 import ui_global
 from ui_utils import HashMap, RsDoc
-from db_services import DocService, ErrorService
+from db_services import DocService, ErrorService, DbService
 from hs_services import HsService
 import http_exchange
 from http_exchange import post_changes_to_server
@@ -198,11 +200,12 @@ class DocumentsTiles(GroupScanTiles):
     screen_name = 'Плитки'
     process_name = 'Документы'
 
+
 # ==================== DocsList =============================
 
 
 class DocsListScreen(Screen):
-    def __init__(self, hash_map: HashMap,  rs_settings):
+    def __init__(self, hash_map: HashMap, rs_settings):
         super().__init__(hash_map, rs_settings)
         self.listener = self.hash_map['listener']
         self.event = self.hash_map['event']
@@ -920,7 +923,6 @@ class DocumentsDocDetailScreen(DocDetailsScreen):
             # Формируем список карточек баркодов
             cards['customcards']['cardsdata'] = []
             for el in res:
-
                 picture = '#f00c' if el['approved'] in ['True', 'true', '1'] else ''
                 row = {
                     'barcode': el['mark_code'],
@@ -1138,6 +1140,8 @@ class ErrorLog(Screen):
             self.TextBold = True
             self.width = 'match_parent'
             self.Value = value
+
+
 # ^^^^^^^^^^^^^^^^^^^^^ DocDetails ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 
@@ -1154,17 +1158,41 @@ class Timer:
 
     def timer_on_start(self):
         docs_data = self.http_service.get_data()
-        # format_results = ['is_ok', 'is_data', 'no_data']
         if docs_data.get('data'):
             try:
                 existing_docs_list = self.db_service.get_existing_docs_names_list()
                 self.db_service.update_data_from_json(docs_data['data'])
                 docs_list_after_load = self.db_service.get_existing_docs_names_list()
-                diff = [x[0] for x in docs_list_after_load if x not in existing_docs_list]
+                diff = [x for x in docs_list_after_load if x not in existing_docs_list]
                 if diff:
                     self.put_notification(text=" ".join(diff), title="Загружены документы:")
             except Exception as e:
                 self.db_service.write_error_on_log(f'Ошибка загрузки документа:  {e}')
+
+    def save_data_to_db(self, data: dict):
+        if not data:
+            return
+
+        table_list = [
+            'RS_countragents',
+            'RS_warehouses',
+            'RS_cells',
+            'RS_types_goods',
+            'RS_classifier_units',
+            'RS_goods',
+            'RS_properties',
+            'RS_series',
+            'RS_units',
+            'RS_price_types',
+            'RS_prices',
+            'RS_barcodes',
+        ]
+
+        for table_name in table_list:
+            table = data.get(table_name, {})
+            service = self.db_service(None, table_name=table_name)
+            for item_data in table:
+                service.update(item_data)
 
     def put_notification(self, text, title=None):
         self.hash_map.notification(text, title)
@@ -1179,8 +1207,104 @@ class Timer:
             'user_name': self.rs_settings.get('user_name')}
         return http_settings
 
+
 # ^^^^^^^^^^^^^^^^^^^^^ Timer ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+
+# ==================== Debug settings =============================
+
+
+class DebugSettingsScreen(Screen):
+    process_name = 'Отладка'
+    screen_name = 'Отладочный экран'
+
+    def __init__(self, hash_map: HashMap, rs_settings):
+        super().__init__(hash_map, rs_settings)
+        self.hs_service = hs_services.DebugService
+        self.listener = self.hash_map['listener']
+        self.event = self.hash_map['event']
+
+    def on_start(self):
+        debug_host_ip = self.rs_settings.get('debug_host_ip') or self.hash_map['ip_host']
+        self.hash_map.put(
+            'ip_host',
+            {'hint': 'IP-адрес для выгрузки базы/лога', 'default_text': debug_host_ip or ''},
+            to_json=True)
+
+    def on_input(self):
+        listeners = {
+            'btn_copy_base': self._copy_base,
+            'btn_unload_log': self._unload_log,
+            'btn_local_files': self._local_files,
+            'ON_BACK_PRESSED': self._on_back_pressed
+        }
+        if self.listener in listeners:
+            listeners[self.listener]()
+
+    def on_post_start(self):
+        pass
+
+    def show(self, args=None):
+        pass
+
+    def _copy_base(self):
+        ip_host = self.hash_map['ip_host']
+        path_to_databases = self.rs_settings.get('path_to_databases')
+        base_name = self.rs_settings.get('sqlite_name')
+        file_path = os.path.join(path_to_databases, base_name)
+
+        if os.path.isfile(file_path):
+            with open(file_path, 'rb') as f:
+                res = self.hs_service(ip_host).export_database(f)
+
+                if res['status_code'] == 200:
+                    self.hash_map.toast('База SQLite успешно выгружена')
+                else:
+                    self.hash_map.toast('Ошибка соединения')
+        else:
+            self.hash_map.toast('Файл не найден')
+
+    def _unload_log(self):
+        ip_host = self.hash_map['ip_host']
+
+        path_to_databases = self.rs_settings.get('path_to_databases')
+        base_name = self.rs_settings.get('log_name')
+        file_path = os.path.join(path_to_databases, base_name)
+
+        # TODO Здесь нужно будет вызывать класс-сервис для взаимодействия с TinyDB
+        from tinydb import TinyDB
+
+        db = TinyDB(file_path)
+        data = db.all()
+
+        res = self.hs_service(ip_host).export_log(data)
+        if res['status_code'] == 200:
+            self.hash_map.toast('Лог успешно выгружен')
+        else:
+            self.hash_map.toast('Ошибка соединения')
+
+    def _local_files(self):
+        import ui_csv
+
+        path = self.hash_map['path']
+        delete_files = self.hash_map['delete_files']
+
+        if not delete_files:
+            delete_files = '0'
+        if not path:
+            path = '//storage/emulated/0/download/'
+
+        ret_text = ui_csv.list_folder(path, delete_files)
+
+        self.hash_map.toast(ret_text)
+
+    def _on_back_pressed(self):
+        ip_host = self.hash_map['ip_host']
+        self.rs_settings.put('debug_host_ip', ip_host, True)
+        self.hash_map.put('FinishProcess', '')
+
+
+# ^^^^^^^^^^^^^^^^^^^^^ Debug settings ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 class ScreensFactory:
     screens = [
@@ -1190,7 +1314,8 @@ class ScreensFactory:
         DocumentsDocsListScreen,
         GroupScanDocDetailsScreen,
         DocumentsDocDetailScreen,
-        ErrorLog
+        ErrorLog,
+        DebugSettingsScreen
     ]
 
     @staticmethod

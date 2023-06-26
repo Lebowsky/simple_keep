@@ -395,7 +395,8 @@ class DocService:
 
 class DbService:
     def __init__(self, _db_session, table_name):
-        self.db_session = _db_session
+        import db_models
+        self.db_session = db_models.db_session
         self.table_name = table_name
         self.model = ModelsFactory().create(self.table_name)
 
@@ -408,9 +409,16 @@ class DbService:
         with self.db_session:
             return self.model(**data)
 
-    def update(self, _filter, data):
+    def update(self, data, _filter=None):
         with self.db_session:
-            obj = self.get(_filter)
+            if _filter:
+                obj = self.get(_filter)
+            else:
+                pk = self.model.get_pk()
+                if not data.get(pk):
+                    raise ValueError(f'data: {data} has not constraint key {pk}')
+                else:
+                    obj = self.get({pk: data[pk]})
 
             if obj:
                 obj.set(**data)
@@ -435,6 +443,7 @@ class DocDbService(DbService):
             if to_dict:
                 import db_models
                 return self.model.get(**_filter).to_dict(with_collections=True, related_objects=True)
+            #only=None, exclude=None, with_collections=False, with_lazy=False, related_objects=False
             else:
                 return self.model.get(**_filter)
 
