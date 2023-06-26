@@ -3849,6 +3849,14 @@
                                         "type": "ProgressButton",
                                         "Value": "Очистить базу",
                                         "Variable": "bnt_clear_tables"
+                                    },
+                                    {
+                                        "height": "wrap_content",
+                                        "width": "match_parent",
+                                        "weight": "0",
+                                        "type": "ProgressButton",
+                                        "Value": "Выгрузить лог",
+                                        "Variable": "btn_unload_log"
                                     }
                                 ]
                             }
