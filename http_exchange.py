@@ -281,6 +281,7 @@ def timer_server_load_data(http_params):
             doc_service.update_data_from_json(docs_data['data'])
             docs_list_after_load = doc_service.get_existing_docs_names_list()
             diff = [x for x in docs_list_after_load if x not in existing_docs_list]
+            # TODO переделать через json (Олег)
             diff_str = str(diff)[1:-1].replace(",", " ").replace("(", "").replace(")", "").replace("'", "")
             return diff_str
         except Exception as e:

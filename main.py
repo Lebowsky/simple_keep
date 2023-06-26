@@ -404,8 +404,7 @@ def elem_on_click(hashMap, _files=None, _data=None):
 @HashMap()
 def highlight_scanned_item(hash_map: HashMap):
     screen = ui_models.DocDetailsScreen(hash_map, rs_settings)
-
-    time.sleep(3)
+    time.sleep(2)
     screen.disable_highlight()
 
 

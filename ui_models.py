@@ -529,8 +529,8 @@ class DocDetailsScreen(Screen):
         table_data = self._prepare_table_data(doc_details)
         table_view = self._get_doc_table_view(table_data=table_data)
 
-        if self.hash_map['highlight'] == "True":
-            self.hash_map['highlight'] = "False"
+        if self.hash_map.get_bool('highlight'):
+            self.hash_map.put('highlight', False)
             self.enable_highlight(table_view.customtable)
             self.hash_map.run_event_async('highlight_scanned_item')
 
@@ -588,7 +588,7 @@ class DocDetailsScreen(Screen):
                 self.hash_map.toast(res['Descr'])
         else:
             # self.hash_map.toast('Товар добавлен в документ')
-            self._add_scanned_row()
+            self.hash_map.put('highlight', True)
             self.hash_map.put('barcode_scanned', True)
 
     def _set_visibility_on_start(self):
@@ -756,13 +756,9 @@ class DocDetailsScreen(Screen):
 
         return result
 
-    def _add_scanned_row(self): 
-        self.hash_map['highlight'] = "True"
-        self.hash_map['highlight'] = "True"
-
-    def enable_highlight(self, customtable):
+    @staticmethod
+    def enable_highlight(customtable):
         customtable['tabledata'][1]['_layout'].BackgroundColor = '#F0F8FF'
-
 
     def disable_highlight(self):
         self._on_start()
