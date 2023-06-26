@@ -2,7 +2,7 @@
     "ClientConfiguration": {
         "ConfigurationName": "Simple Учет",
         "ConfigurationDescription": "Простое решение для работы с штрихкодами товаров. Поставляется в комплекте с расширением для 1С. Подробнее про расширение Вы можете узнать по ссылке: https://www.simple-kit.ru/products/simple-uchet/ ",
-        "ConfigurationVersion": "0.1.11.0",
+        "ConfigurationVersion": "0.1.12.1",
         "Processes": [
             {
                 "type": "Process",
@@ -337,10 +337,10 @@
                                         ]
                                     },
                                     {
-                                        "type": "TextView",
                                         "height": "wrap_content",
                                         "width": "match_parent",
                                         "weight": "0",
+                                        "type": "TextView",
                                         "Value": "@new_text",
                                         "Variable": "new_text"
                                     }
@@ -3967,11 +3967,11 @@
                 "PyFileData": ""
             },
             {
-                "PyFileKey": "test_load_docs",
+                "PyFileKey": "hs_services",
                 "PyFileData": ""
             },
             {
-                "PyFileKey": "hs_services",
+                "PyFileKey": "ui_barcodes",
                 "PyFileData": ""
             }
         ],
