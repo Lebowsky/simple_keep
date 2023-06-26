@@ -3751,12 +3751,12 @@
                                         "Variable": "use_mark"
                                     },
                                     {
-                                        "height": "0",
-                                        "width": "0",
+                                        "height": "wrap_content",
+                                        "width": "match_parent",
                                         "gravity_horizontal": "center",
                                         "gravity_vertical": "center",
                                         "weight": "0",
-                                        "type": "EditTextText",
+                                        "type": "ModernEditText",
                                         "Value": "@ip_host",
                                         "Variable": "ip_host"
                                     },
@@ -3769,6 +3769,14 @@
                                         "type": "ProgressButton",
                                         "Value": "Скопировать базу на компьютер",
                                         "Variable": "btn_copy_base"
+                                    },
+                                    {
+                                        "height": "wrap_content",
+                                        "width": "match_parent",
+                                        "weight": "0",
+                                        "type": "ProgressButton",
+                                        "Value": "Выгрузить лог",
+                                        "Variable": "btn_unload_log"
                                     },
                                     {
                                         "height": "wrap_content",
@@ -3849,14 +3857,6 @@
                                         "type": "ProgressButton",
                                         "Value": "Очистить базу",
                                         "Variable": "bnt_clear_tables"
-                                    },
-                                    {
-                                        "height": "wrap_content",
-                                        "width": "match_parent",
-                                        "weight": "0",
-                                        "type": "ProgressButton",
-                                        "Value": "Выгрузить лог",
-                                        "Variable": "btn_unload_log"
                                     }
                                 ]
                             }
@@ -3868,6 +3868,14 @@
                                 "action": "run",
                                 "type": "python",
                                 "method": "debug_listener",
+                                "postExecute": ""
+                            },
+                            {
+                                "event": "onStart",
+                                "listener": "",
+                                "action": "run",
+                                "type": "python",
+                                "method": "debug_on_start",
                                 "postExecute": ""
                             }
                         ],
@@ -3953,6 +3961,10 @@
             {
                 "PyFileKey": "test_load_docs",
                 "PyFileData": ""
+            },
+            {
+                "PyFileKey": "hs_services",
+                "PyFileData": ""
             }
         ],
         "StyleTemplates": [],
@@ -3960,6 +3972,7 @@
         "CommonHandlers": [
             {
                 "event": "onLaunch",
+                "listener": "",
                 "action": "run",
                 "type": "python",
                 "method": "app_on_start",
