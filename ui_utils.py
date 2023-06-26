@@ -34,9 +34,12 @@ class HashMap:
             self.error_log(text)
 
     def notification(self, text, title=None, add_to_log=False):
+        notification_id = rs_settings.get("notification_id") + 1 if rs_settings.get("notification_id") else 1
         if title is None:
             title = self.get_current_screen()
-        self.hash_map.put("basic_notification", json.dumps([{'number': 1, 'title': title, 'message': text}]))
+        self.hash_map.put("basic_notification", json.dumps([{'number': notification_id,
+                                                             'title': title, 'message': text}]))
+        rs_settings.put("notification_id", notification_id, True)
         if add_to_log:
             self.error_log(text)
 
