@@ -21,8 +21,8 @@ class Screen(ABC):
         self.hash_map: HashMap = hash_map
         self.screen_values = {}
         self.rs_settings = rs_settings
-        self.listener: str = ''
-        self.event: str = ''
+        self.listener = self.hash_map['listener']
+        self.event: str = self.hash_map['event']
 
     @abstractmethod
     def on_start(self):
@@ -161,8 +161,6 @@ class GroupScanTiles(Tiles):
 
     def __init__(self, hash_map: HashMap, rs_settings):
         super().__init__(hash_map, rs_settings)
-        self.listener = self.hash_map['listener']
-        self.name = 'Плитки'
         self.db_service = DocService()
         self.screen_name = self.hash_map.get_current_screen()
         self.process_name = self.hash_map.get_current_process()
@@ -194,7 +192,7 @@ class GroupScanTiles(Tiles):
         pass
 
     def show(self, args=None):
-        self.hash_map.show_screen(self.name, args)
+        self.hash_map.show_screen(self.screen_name, args)
 
 
 class DocumentsTiles(GroupScanTiles):
@@ -210,8 +208,6 @@ class DocumentsTiles(GroupScanTiles):
 class DocsListScreen(Screen):
     def __init__(self, hash_map: HashMap, rs_settings):
         super().__init__(hash_map, rs_settings)
-        self.listener = self.hash_map['listener']
-        self.event = self.hash_map['event']
         self.service = DocService()
         self.screen_values = {}
 
@@ -506,8 +502,6 @@ class DocumentsDocsListScreen(DocsListScreen):
 class DocDetailsScreen(Screen):
     def __init__(self, hash_map, rs_settings):
         super().__init__(hash_map, rs_settings)
-        self.listener = self.hash_map['listener']
-        self.event = self.hash_map['event']
         self.rs_settings = rs_settings
         self.id_doc = self.hash_map['id_doc']
         self.service = DocService(self.id_doc)
@@ -741,7 +735,7 @@ class DocDetailsScreen(Screen):
 
         return row_view
 
-    def _set_background_row_color(self, product_row, id_doc):
+    def _set_background_row_color(self, product_row):
         background_color = '#FFFFFF'
         qtty, qtty_plan = float(product_row['qtty']), float(product_row['qtty_plan'])
 
@@ -1017,6 +1011,77 @@ class DocumentsDocDetailScreen(DocDetailsScreen):
 
 # ^^^^^^^^^^^^^^^^^^^^^ DocDetails ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+# ==================== Goods select =============================
+
+
+class GoodsSelectScreen(Screen):
+    def __init__(self, hash_map: HashMap, rs_settings):
+        super().__init__(hash_map, rs_settings)
+
+    def on_start(self):
+        pass
+
+    def on_input(self):
+        listener = self.listener
+
+        # if listener == "btn_ok":
+        #     # получим текущую строку документа
+        #     current_str = hashMap.get("selected_card_position")
+        #
+        #     # Если строка не существует, создадим ее
+        #     doc = ui_global.Rs_doc
+        #     doc.id_doc = hashMap.get('id_doc')
+        #     # if current_str =='0':
+        #     #     pass
+        #     # jlist['customcards']['cardsdata']
+        #     # else:
+        #     current_elem = get_current_elem_doc_goods(hashMap, current_str)
+        #     doc.id_str = int(current_elem['key'])
+        #     # ... и запишем ее в базу
+        #
+        #     qtty = hashMap.get('qtty')
+        #     doc.qtty = float(qtty) if qtty else 0
+        #
+        #     doc.update_doc_str(doc, hashMap.get('price'))  # (doc, )
+        #
+        #     remove_added_good_highlight(hashMap, str(current_elem['id_good']), str(current_elem['id_properties']))
+        #
+        #     hashMap.put("ShowScreen", "Документ товары")
+        #
+        # elif listener in ["btn_cancel", 'BACK_BUTTON', 'ON_BACK_PRESSED']:
+        #     self.hash_map.show_screen("Документ товары")
+        # elif listener == "":
+        #     hashMap.put("qtty", str(float(hashMap.get('qtty'))))
+        #
+        # elif listener == "photo":
+        #     # Можно вообще этого не делать-оставлять как есть. Это для примера.
+        #     image_file = str(
+        #         hashMap.get("photo_path"))  # "переменная"+"_path" - сюда помещается путь к полученной фотографии
+        #
+        #     image = Image.open(image_file)
+        #
+        #     # сразу сделаем фотку - квадратной - это простой вариант. Можно сделать например отдельо миниатюры для списка, это немного сложнее
+        #     im = image.resize((500, 500))
+        #     im.save(image_file)
+        #
+        #     jphotoarr = json.loads(hashMap.get("photoGallery"))
+        #     hashMap.put("photoGallery", json.dumps(jphotoarr))
+        #
+        # elif listener == "gallery_change":  # пользователь может удалить фото из галереи. Новый массив надо поместить к документу
+        #     if hashMap.containsKey("photoGallery"):  # эти 2 обработчика - аналогичные, просто для разных событий
+        #         jphotoarr = json.loads(hashMap.get("photoGallery"))
+        #         hashMap.put("photoGallery", json.dumps(jphotoarr))
+
+
+    def on_post_start(self):
+        pass
+
+    def show(self, args=None):
+        pass
+
+
+# ^^^^^^^^^^^^^^^^^^^^^ Goods select ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
 
 # ==================== Settings =============================
 
@@ -1026,8 +1091,6 @@ class ErrorLogScreen(Screen):
 
     def __init__(self, hash_map: HashMap, rs_settings):
         super().__init__(hash_map, rs_settings)
-        self.listener = self.hash_map['listener']
-        self.event = self.hash_map['event']
         self.service = ErrorService()
         self.screen_values = {}
 
@@ -1151,8 +1214,6 @@ class DebugSettingsScreen(Screen):
     def __init__(self, hash_map: HashMap, rs_settings):
         super().__init__(hash_map, rs_settings)
         self.hs_service = hs_services.DebugService
-        self.listener = self.hash_map['listener']
-        self.event = self.hash_map['event']
 
     def on_start(self):
         debug_host_ip = self.rs_settings.get('debug_host_ip') or self.hash_map['ip_host']

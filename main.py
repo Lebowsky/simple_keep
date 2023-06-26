@@ -4,6 +4,7 @@ import requests
 from requests.auth import HTTPBasicAuth
 import os
 from PIL import Image
+import time
 
 from java import jclass
 
@@ -12,7 +13,6 @@ import ui_csv
 import ui_global
 import ui_form_data
 import ui_models
-import database_init_queryes
 import http_exchange
 from ui_utils import HashMap
 
@@ -111,9 +111,16 @@ def doc_details_barcode_scanned(hash_map: HashMap):
     screen.post_barcode_scanned(get_http_settings(hash_map))
 
 
-def elem_on_start(hashMap, _files=None, _data=None):
-    hashMap.put('mm_local', '')
-    return hashMap
+@HashMap()
+def highlight_scanned_item(hash_map: HashMap):
+    time.sleep(2)
+    screen = ui_models.DocDetailsScreen(hash_map, rs_settings)
+    screen.disable_highlight()
+
+
+@HashMap()
+def elem_on_start(hash_map):
+    hash_map['mm_local'] = ''
 
 
 def elem_on_click(hashMap, _files=None, _data=None):
@@ -231,15 +238,8 @@ def elem_on_click(hashMap, _files=None, _data=None):
 
 
 @HashMap()
-def highlight_scanned_item(hash_map: HashMap):
-    screen = ui_models.DocDetailsScreen(hash_map, rs_settings)
-    time.sleep(2)
-    screen.disable_highlight()
-
-
-def elem_viev_on_start(hashMap, _files=None, _data=None):
-    hashMap.put('mm_local', '')
-    return hashMap
+def elem_viev_on_start(hash_map):
+    hash_map['mm_local'] = ''
 
 
 def elem_viev_on_click(hashMap, _files=None, _data=None):
