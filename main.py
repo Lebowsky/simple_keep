@@ -22,7 +22,12 @@ noClass = jclass("ru.travelfood.simple_ui.NoSQL")
 rs_settings = noClass("rs_settings")
 
 
-def create_screen(hash_map):
+def create_screen(hash_map: HashMap):
+    """
+    Метод для получения модели соответствующей текущему процессу и экрану.
+    Если модель не реализована возвращает заглушку
+    """
+
     screen_params = {
         'hash_map': hash_map,
         'rs_settings': rs_settings
@@ -38,29 +43,38 @@ def create_screen(hash_map):
 
 @HashMap()
 def app_on_start(hash_map: HashMap):
+    """ Обработчик при старте приложения """
+
     model = ui_models.MainEvents(hash_map, rs_settings)
     model.app_on_start()
 
 
 @HashMap()
 def timer_update(hash_map):
+    """ Обработчик для фонового обмена """
+
     timer = ui_models.Timer(hash_map, rs_settings)
     timer.timer_on_start()
 
 
 @HashMap()
 def event_service(hash_map, _files=None, _data=None):
+    """ Обработчик для работы МП в режиме сервера. В ws_body по умолчанию лежит текст конфигурации """
+
     hash_map['ws_body'] = hash_map['ANDROID_ID']
 
 
 @HashMap()
 def put_notification(hash_map):
+    """ Обработчик для работы МП в режиме сервера. Уведомления о входящих документах """
+
     model = ui_models.MainEvents(hash_map, rs_settings)
     model.put_notification()
 
 
 @HashMap()
 def on_close_app(hash_map):
+    # Попытка очистки кэша при выходе с приложения
     suClass.deleteCache()
 
 # ^^^^^^^^^^^^^^^^^ Main events ^^^^^^^^^^^^^^^^^
@@ -107,12 +121,16 @@ def doc_details_listener(hash_map: HashMap):
 
 @HashMap()
 def doc_details_barcode_scanned(hash_map: HashMap):
+    """ Обработчик для асинхронной отправки и получения данных после сканирования ШК"""
+
     screen = ui_models.GroupScanDocDetailsScreen(hash_map, rs_settings)
     screen.post_barcode_scanned(get_http_settings(hash_map))
 
 
 @HashMap()
 def highlight_scanned_item(hash_map: HashMap):
+    """ Обработчик для отмены раскраски отсканированного товара """
+
     time.sleep(2)
     screen = ui_models.DocDetailsScreen(hash_map, rs_settings)
     screen.disable_highlight()
@@ -120,6 +138,7 @@ def highlight_scanned_item(hash_map: HashMap):
 
 @HashMap()
 def elem_on_start(hash_map):
+    # Режим работы с мультимедиа и файлами по ссылкам (флаг mm_local)
     hash_map['mm_local'] = ''
 
 
@@ -239,6 +258,7 @@ def elem_on_click(hashMap, _files=None, _data=None):
 
 @HashMap()
 def elem_viev_on_start(hash_map):
+    # Режим работы с мультимедиа и файлами по ссылкам (флаг mm_local)
     hash_map['mm_local'] = ''
 
 
