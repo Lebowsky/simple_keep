@@ -1374,10 +1374,10 @@ class MainEvents:
     def app_on_start(self):
         # TODO Обработчики обновления!
         release = self.rs_settings.get('Release') or ''
-        current_release = '0.1.12.1'
+        current_release = '0.1.0.12.1'
 
         if release != current_release:
-            self.hash_map.put('UpdateConfigurations', '')
+            # self.hash_map.put('UpdateConfigurations', '')
             self.rs_settings.put('Release', current_release, True)
 
         self._create_tables()
@@ -1408,7 +1408,7 @@ class MainEvents:
             if self.rs_settings.get(k) is None:
                 self.rs_settings.put(k, v, True)
 
-        self.hash_map.toast('toast', 'Готов к работе')
+        self.hash_map.toast('Готов к работе')
 
     def put_notification(self):
         self.hash_map['_configuration'] = ''
