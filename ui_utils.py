@@ -143,6 +143,8 @@ class HashMap:
     def get_current_process(self):
         return self['current_process_name']
 
+    def set_title(self, title):
+        self['SetTitle'] = title
 
 class RsDoc(Rs_doc):
     def __init__(self, id_doc):

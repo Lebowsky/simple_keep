@@ -3402,21 +3402,11 @@
                                 "gravity_horizontal": "center",
                                 "gravity_vertical": "center",
                                 "weight": "0",
+                                "height_value": "",
+                                "width_value": "",
                                 "type": "LinearLayout",
                                 "Variable": "",
                                 "Elements": [
-                                    {
-                                        "TextSize": "25",
-                                        "TextBold": true,
-                                        "height": "wrap_content",
-                                        "width": "match_parent",
-                                        "gravity_horizontal": "center",
-                                        "gravity_vertical": "center",
-                                        "weight": "0",
-                                        "type": "TextView",
-                                        "Value": "Адрес сервера",
-                                        "Variable": ""
-                                    },
                                     {
                                         "height": "wrap_content",
                                         "width": "match_parent",
@@ -3426,17 +3416,6 @@
                                         "type": "ModernEditText",
                                         "Value": "@url",
                                         "Variable": "url"
-                                    },
-                                    {
-                                        "TextSize": "20",
-                                        "height": "wrap_content",
-                                        "width": "match_parent",
-                                        "gravity_horizontal": "center",
-                                        "gravity_vertical": "center",
-                                        "weight": "0",
-                                        "type": "TextView",
-                                        "Value": "Пользователь",
-                                        "Variable": ""
                                     },
                                     {
                                         "height": "wrap_content",
@@ -3449,17 +3428,6 @@
                                         "Variable": "user"
                                     },
                                     {
-                                        "TextSize": "20",
-                                        "height": "wrap_content",
-                                        "width": "match_parent",
-                                        "gravity_horizontal": "center",
-                                        "gravity_vertical": "center",
-                                        "weight": "0",
-                                        "type": "TextView",
-                                        "Value": "Пароль",
-                                        "Variable": ""
-                                    },
-                                    {
                                         "height": "wrap_content",
                                         "width": "match_parent",
                                         "gravity_horizontal": "center",
@@ -3468,16 +3436,6 @@
                                         "type": "ModernEditText",
                                         "Value": "@pass",
                                         "Variable": "pass"
-                                    },
-                                    {
-                                        "height": "wrap_content",
-                                        "width": "match_parent",
-                                        "gravity_horizontal": "center",
-                                        "gravity_vertical": "center",
-                                        "weight": "0",
-                                        "type": "TextView",
-                                        "Value": "Ваше имя для идентификации в 1С",
-                                        "Variable": ""
                                     },
                                     {
                                         "height": "wrap_content",

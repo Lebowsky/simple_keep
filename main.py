@@ -1170,16 +1170,10 @@ def settings_errors_on_click(hash_map: HashMap):
     screen.on_input()
 
 
-def http_settings_on_start(hashMap,  _files=None, _data=None):
-    url = hashMap.get('url')
-    hashMap.put('btn_test_connection', 'Тест соединения')
-    if url == '' or 'not found':  #Обновляем только если ранее не установлены
-        http_settings = get_http_settings(hashMap)
-        hashMap.put('url',  ui_form_data.ModernField(hint='url', default_text=http_settings['url'], password=False).to_json()) #  )
-        hashMap.put('user', ui_form_data.ModernField(hint='user', default_text=http_settings['user'], password=False).to_json())
-        hashMap.put('pass', ui_form_data.ModernField(hint='pass', default_text=http_settings['pass'], password=True).to_json())
-        hashMap.put('user_name',ui_form_data.ModernField(hint='user_name', default_text=http_settings['user_name'], password=False).to_json())
-    return hashMap
+@HashMap()
+def http_settings_on_start(hash_map):
+    screen: ui_models.HttpSettingsScreen = create_screen(hash_map)
+    screen.on_start()
 
 
 def http_settings_on_click(hashMap,  _files=None, _data=None):

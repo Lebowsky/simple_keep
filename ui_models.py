@@ -1072,7 +1072,6 @@ class GoodsSelectScreen(Screen):
         #         jphotoarr = json.loads(hashMap.get("photoGallery"))
         #         hashMap.put("photoGallery", json.dumps(jphotoarr))
 
-
     def on_post_start(self):
         pass
 
@@ -1084,6 +1083,36 @@ class GoodsSelectScreen(Screen):
 
 
 # ==================== Settings =============================
+
+
+class HttpSettingsScreen(Screen):
+    screen_name = 'Настройки http соединения'
+    process_name = 'Параметры'
+
+    def __init__(self, hash_map: HashMap, rs_settings):
+        super().__init__(hash_map, rs_settings)
+
+    def on_start(self) -> None:
+        self.hash_map['btn_test_connection'] = 'Тест соединения'
+        http_settings = self.get_http_settings()
+        put_data = {
+            'url': widgets.ModernField(hint='Адрес сервера', default_text=http_settings['url'] or '').to_json(),
+            'user': widgets.ModernField(hint='Пользователь', default_text=http_settings['user'] or '').to_json(),
+            'pass': widgets.ModernField(hint='Пароль', default_text=http_settings['pass'] or '', password=True).to_json(),
+            'user_name': widgets.ModernField(hint='Ваше имя для идентификации в 1С',
+                                             default_text=http_settings['user_name'] or '').to_json(),
+        }
+        self.hash_map.put_data(put_data)
+
+    def on_input(self) -> None:
+        pass
+
+    def on_post_start(self):
+        pass
+
+    def show(self, args=None):
+        pass
+
 
 class ErrorLogScreen(Screen):
     screen_name = 'Ошибки'
@@ -1459,7 +1488,8 @@ class ScreensFactory:
         GroupScanDocDetailsScreen,
         DocumentsDocDetailScreen,
         ErrorLogScreen,
-        DebugSettingsScreen
+        DebugSettingsScreen,
+        HttpSettingsScreen
     ]
 
     @staticmethod
