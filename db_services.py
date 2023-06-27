@@ -571,53 +571,53 @@ class AdrDocService(DocService):
         doc_types = [rec[0] for rec in self._get_query_result(query)]
         return doc_types
 
-    def get_doc_view_data(self, doc_type='', doc_status='') -> list:
-        query_text = """
-        SELECT RS_adr_docs.id_doc,
-        RS_adr_docs.doc_type,
-        RS_adr_docs.doc_n,
-        RS_adr_docs.doc_date,
-        RS_adr_docs.id_warehouse,
-        ifnull(RS_warehouses.name,'') as RS_warehouse,
-        RS_adr_docs.verified,
-        RS_adr_docs.sent,
-        RS_adr_docs.add_mark_selection
-
-         FROM RS_adr_docs
-
-         LEFT JOIN RS_warehouses as RS_warehouses
-         ON RS_warehouses.id=RS_adr_docs.id_warehouse
-         """
-        where = []
-        if not (doc_type == '' or doc_type == 'Все'):
-            where.append("RS_adr_docs.doc_type=?")
-
-        if doc_status:
-            if doc_status == "Выгружен":
-                where.append("sent=1 AND verified=1")
-            elif doc_status == "К выгрузке":
-                where.append("ifnull(verified,0)=1 AND ifnull(sent,0)=0")
-            elif doc_status == "К выполнению":
-                where.append("ifnull(verified,0)=0 AND ifnull(sent,0)=0")
-            elif doc_status == "Все":
-                where = ""
-
-        where_text = ' WHERE ' + ' AND '.join(where)
-
-        if not doc_type or doc_type == "Все":
-            args_tuple = None
-
-        else:
-            args_tuple = (doc_type,)
-
-        query_text = f'''
-             {query_text}
-             {where_text}
-             ORDER BY RS_adr_docs.doc_date
-         '''
-
-        result = self._get_query_result(query_text, args_tuple, return_dict=True)
-        return result
+    # def get_doc_view_data(self, doc_type='', doc_status='') -> list:
+    #     query_text = """
+    #     SELECT RS_adr_docs.id_doc,
+    #     RS_adr_docs.doc_type,
+    #     RS_adr_docs.doc_n,
+    #     RS_adr_docs.doc_date,
+    #     RS_adr_docs.id_warehouse,
+    #     ifnull(RS_warehouses.name,'') as RS_warehouse,
+    #     RS_adr_docs.verified,
+    #     RS_adr_docs.sent,
+    #     RS_adr_docs.add_mark_selection
+    #
+    #      FROM RS_adr_docs
+    #
+    #      LEFT JOIN RS_warehouses as RS_warehouses
+    #      ON RS_warehouses.id=RS_adr_docs.id_warehouse
+    #      """
+    #     where = []
+    #     if not (doc_type == '' or doc_type == 'Все'):
+    #         where.append("RS_adr_docs.doc_type=?")
+    #
+    #     if doc_status:
+    #         if doc_status == "Выгружен":
+    #             where.append("sent=1 AND verified=1")
+    #         elif doc_status == "К выгрузке":
+    #             where.append("ifnull(verified,0)=1 AND ifnull(sent,0)=0")
+    #         elif doc_status == "К выполнению":
+    #             where.append("ifnull(verified,0)=0 AND ifnull(sent,0)=0")
+    #         elif doc_status == "Все":
+    #             where = ""
+    #
+    #     where_text = ' WHERE ' + ' AND '.join(where)
+    #
+    #     if not doc_type or doc_type == "Все":
+    #         args_tuple = None
+    #
+    #     else:
+    #         args_tuple = (doc_type,)
+    #
+    #     query_text = f'''
+    #          {query_text}
+    #          {where_text}
+    #          ORDER BY RS_adr_docs.doc_date
+    #      '''
+    #
+    #     result = self._get_query_result(query_text, args_tuple, return_dict=True)
+    #     return result
 
     def delete_doc(self, id_doc):
         query_doc = 'DELETE FROM RS_docs WHERE id_doc = ?'

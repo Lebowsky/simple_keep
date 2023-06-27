@@ -30,7 +30,7 @@ rs_settings = noClass("rs_settings")
 
 
 
-#
+
 # importlib.reload(ui_csv)
 # importlib.reload(ui_global)
 # importlib.reload(ui_form_data)
@@ -290,7 +290,7 @@ def adr_docs_on_start(hash_map: HashMap):
 
 @HashMap()
 def adr_docs_on_select(hash_map: HashMap):
-    screen = create_screen(hash_map)
+    screen: ui_models.AdrDocsListScreen = create_screen(hash_map)
     screen.on_input()
 
 

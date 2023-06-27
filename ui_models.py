@@ -421,10 +421,10 @@ class AdrDocsListScreen(Screen):
         # Заполним поле фильтра по виду документов
         self.hash_map['doc_adr_type_select'] = ';'.join(['Все', 'Отбор', 'Размещение', 'Перемещение'])
         # Перезаполним список документов
-        if self.hash_map['doc_adr_type_click'] is None:
-            ls = refill_adr_docs_list()
-        else:
-            ls = refill_adr_docs_list(self.hash_map['doc_adr_type_click'])
+        # if self.hash_map['doc_adr_type_click'] is None:
+        #     ls = refill_adr_docs_list()
+        # else:
+        #     ls = refill_adr_docs_list(self.hash_map['doc_adr_type_click'])
 
         self.hash_map["docAdrCards"] = ls
 
@@ -433,17 +433,67 @@ class AdrDocsListScreen(Screen):
         doc_type = self.hash_map['doc_type_click']
         doc_status = self.hash_map['selected_doc_status']
         self.hash_map['doc_adr_type_click'] = doc_type
-        self.hash_map['selected_tile_key'] = ''
+
         list_data = self._get_doc_list_data(doc_type, doc_status)
-        if self.process_name == "Групповая обработка":
-            doc_cards = self._get_doc_cards_view(list_data, 'Удалить')
-        elif self.process_name == "Документы":
-            doc_cards = self._get_doc_cards_view(list_data,
+        doc_cards = self._get_doc_cards_view(list_data,
                                                  popup_menu_data='Удалить;Очистить данные пересчета;Отправить повторно')
         self.hash_map['docCards'] = doc_cards.to_json()
 
     def on_input(self) -> None:
         super().on_input()
+        listener = hash_map["listener"]
+
+        if listener == "CardsClick":
+            open_adr_doc_table(hashMap)
+            hashMap.put("ShowScreen", "Документ товары")
+
+        elif listener == "doc_adr_type_click":
+
+            ls = refill_adr_docs_list(hashMap.get('doc_adr_type_click'))
+            hashMap.put('docCards', ls)
+            hashMap.put('ShowScreen', 'Документы')
+        elif listener == 'LayoutAction':
+            layout_listener = hashMap.get('layout_listener')
+            # Находим ID документа
+            current_doc = json.loads(hashMap.get("card_data"))
+            doc = ui_global.Rs_adr_doc
+            doc.id_doc = current_doc['key']
+
+            if layout_listener == 'CheckBox1':
+                if current_doc['completed'] == 'false':
+                    doc.mark_verified(doc, 1)
+                else:
+                    doc.mark_verified(doc, 0)
+
+            elif layout_listener == 'Подтвердить':
+                doc.mark_verified(doc, 1)
+                hashMap.put('ShowScreen', 'Документы')
+            elif layout_listener == 'Очистить данные пересчета':
+                doc.clear_barcode_data(doc)
+                hashMap.put('toast', 'Данные пересчета и маркировки очищены')
+            elif layout_listener == 'Удалить':
+                doc.delete_doc(doc)
+                hashMap.put('ShowScreen', 'Документы')
+            elif layout_listener == 'Удалить':
+                doc.delete_doc(doc)
+            elif layout_listener == 'Открыть отбор':
+
+                open_adr_doc_table(hashMap, 'out')
+                hashMap.put("ShowScreen", "Документ товары")
+            elif layout_listener == 'Открыть размещение':
+                open_adr_doc_table(hashMap, 'in')
+                hashMap.put("ShowScreen", "Документ товары")
+
+        elif listener == "btn_add_doc":
+            hashMap.put('ShowScreen', 'Новый документ')
+
+        elif listener == 'ON_BACK_PRESSED':
+
+            hashMap.put('FinishProcess', '')
+
+            # hashMap.put('ShowScreen', 'Новый документ')
+        return hashMap
+
         if self.listener == "doc_status_click":
             self.hash_map['selected_doc_status'] = self.hash_map["doc_status_click"]
 
@@ -542,21 +592,12 @@ class AdrDocsListScreen(Screen):
                         TextBold=True,
                         TextSize=card_title_text_size
                     )
-                ),
-                widgets.LinearLayout(
-                    widgets.TextView(
-                        Value='@countragent',
-                        TextSize=card_date_text_size
-                    ),
-                    widgets.TextView(
-                        Value='@warehouse',
-                        TextSize=card_date_text_size
-                    )
+
                 ),
                 width="match_parent"
             ),
-            options=widgets.Options().options,
-            cardsdata=table_data
+            options = widgets.Options().options,
+            cardsdata = table_data
         )
 
         return doc_cards
