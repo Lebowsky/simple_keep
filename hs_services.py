@@ -88,7 +88,7 @@ class HsService:
             if r.status_code == 200:
                 answer['empty'] = False
                 answer['text'] = r.text.encode("utf-8")
-                answer['reason'] =  r.reason
+                answer['reason'] = r.reason
             else:
                 answer['Error'] = r.text
         except Exception as e:

@@ -25,6 +25,10 @@ class DocService:
         if not res_goods:
             return None
 
+        return self.form_data_for_request(res_docs, res_goods, to_json)
+
+    @staticmethod
+    def form_data_for_request(res_docs, res_goods, to_json):
         for item in res_docs:
             filtered_list = [d for d in res_goods if d['id_doc'] == item['id_doc']]
             item['RS_docs_table'] = filtered_list
@@ -391,6 +395,27 @@ class DocService:
         if Err_value:
             qtext = 'Insert into Error_log(log) Values(?)'
             get_query_result(qtext, (Err_value,))
+
+    def get_docs_and_goods_for_upload(self):
+        query_docs = '''SELECT * FROM RS_docs WHERE verified = 1  and (sent <> 1 or sent is null)'''
+        query_goods = '''SELECT * FROM RS_docs_table WHERE sent <> 1 or sent is null'''
+        try:
+            res_docs = get_query_result(query_docs, None, True)
+            res_goods = get_query_result(query_goods, None, True)
+        except Exception as e:
+            raise e
+        if not res_goods:
+            return None
+        return self.form_data_for_request(res_docs, res_goods, False)
+
+
+    @staticmethod
+    def update_uploaded_docs_status(doc_in_str):
+        qtext = f'UPDATE RS_docs SET sent = 1  WHERE id_doc in ({doc_in_str}) '
+        get_query_result(qtext)
+
+        qtext = f'UPDATE RS_adr_docs SET sent = 1  WHERE id_doc in ({doc_in_str}) '
+        get_query_result(qtext)
 
 
 class DbCreator:
