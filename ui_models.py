@@ -822,8 +822,8 @@ class GroupScanDocDetailsScreen(DocDetailsScreen):
 
         elif listener == 'barcode' or self._is_result_positive('ВвестиШтрихкод'):
             self._update_document_data()
-            self._barcode_scanned()
-            self.hash_map.run_event_async('doc_details_barcode_scanned')
+            # self._barcode_scanned()
+            # self.hash_map.run_event_async('doc_details_barcode_scanned')
 
         elif listener == 'btn_barcodes':
             self.hash_map.show_dialog('ВвестиШтрихкод')
@@ -854,28 +854,39 @@ class GroupScanDocDetailsScreen(DocDetailsScreen):
             self.hash_map.refresh_screen()
 
     def _update_document_data(self):
-        doc_data = self._get_update_current_doc_data()
+        docs_data = self._get_update_current_doc_data()
+        self.toast(docs_data)
+        if docs_data:
+            try:
+                self.service.update_data_from_json()
+            except Exception as e:
+                self.service.write_error_on_log(f'Ошибка записи документа:  {e}')
 
-        if doc_data:
-            from db_models import db_session
-            db_service = db_services.DocDbService(db_session)
-            db_service.update(data=doc_data, _filter={'id_doc': self.id_doc})
+
+
+
+            # from db_models import db_session
+            # db_service = db_services.DocDbService(db_session)
+            # db_service.update(data=doc_data, goods=goods, _filter={'id_doc': self.id_doc})
 
     def _get_update_current_doc_data(self):
         hs_service = HsService(self.get_http_settings())
         answer = hs_service.get_data()
+        if answer['status_code'] != 200:
+            err = answer.get('error_pool')
+            self.service.write_error_on_log(f'Ошибка загрузки документа:  {err}')
+        else:
+            return answer.get('data')
 
-        valid_data = answer.get('data') and answer['data'].get('RS_docs') and answer['data'].get('RS_docs_table')
-        if not valid_data:
-            return
+        # valid_data = answer.get('data') and answer['data'].get('RS_docs') and answer['data'].get('RS_docs_table')
+        # if not valid_data:
+        #     return
 
-        doc_data = [item for item in answer['data']['RS_docs'] if item['id_doc'] == self.id_doc]
-        goods = [item for item in answer['data']['RS_docs_table'] if item['id_doc'] == self.id_doc]
+        # doc_data = [item for item in answer['data']['RS_docs'] if item['id_doc'] == self.id_doc]
+        # goods = [item or None for item in answer['data']['RS_docs_table'] if item['id_doc'] == self.id_doc]
 
-        if doc_data:
-            doc_data[0]['goods'] = goods
-
-        return doc_data[0]
+        # if doc_data:
+        #     return doc_data[0], goods
 
 
 class DocumentsDocDetailScreen(DocDetailsScreen):
