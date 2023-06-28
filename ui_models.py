@@ -5,7 +5,7 @@ import os
 import db_services
 import hs_services
 from ui_utils import HashMap, RsDoc
-from db_services import DocService, ErrorService, DbService
+from db_services import DocService, ErrorService
 from hs_services import HsService
 import http_exchange
 from http_exchange import post_changes_to_server
@@ -200,6 +200,7 @@ class DocumentsTiles(GroupScanTiles):
     process_name = 'Документы'
 
 
+
 # ^^^^^^^^^^^^^^^^^^^^^ Tiles ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 # ==================== DocsList =============================
@@ -223,7 +224,8 @@ class DocsListScreen(Screen):
         list_data = self._get_doc_list_data(doc_type, doc_status)
         if self.process_name == "Групповая обработка":
             doc_cards = self._get_doc_cards_view(list_data, 'Удалить')
-        elif self.process_name == "Документы":
+        #elif self.process_name == "Документы":     #******* При таком выражении существует вероятность что doc_cards никогдла не заполнится
+        else:
             doc_cards = self._get_doc_cards_view(list_data,
                                                  popup_menu_data='Удалить;Очистить данные пересчета;Отправить повторно')
         self.hash_map['docCards'] = doc_cards.to_json()
@@ -411,13 +413,18 @@ class DocsListScreen(Screen):
             self.hash_map.toast('Ошибка удаления документа')
 
 
-class AdrDocsListScreen(Screen):
+class AdrDocsListScreen(DocsListScreen):
+    screen_name = 'Документы'
+    process_name = 'Адресное хранение'
     def __init__(self, hash_map: HashMap,  rs_settings):
         super().__init__(hash_map, rs_settings)
         self.listener = self.hash_map['listener']
         self.event = self.hash_map['event']
-        self.service = AdrDocService()
+        self.service = DocService()
+        self.service.docs_table_name = 'RS_adr_docs'
+        self.service.details_table_name = 'RS_adr_docs_table'
         self.screen_values = {}
+
 
     def on_start(self) -> None:
         # Заполним поле фильтра по виду документов
@@ -428,8 +435,6 @@ class AdrDocsListScreen(Screen):
         # else:
         #     ls = refill_adr_docs_list(self.hash_map['doc_adr_type_click'])
 
-        self.hash_map["docAdrCards"] = ls
-
         self.hash_map['doc_status_select'] = 'Все;К выполнению;Выгружен;К выгрузке'
 
         doc_type = self.hash_map['doc_type_click']
@@ -439,63 +444,10 @@ class AdrDocsListScreen(Screen):
         list_data = self._get_doc_list_data(doc_type, doc_status)
         doc_cards = self._get_doc_cards_view(list_data,
                                                  popup_menu_data='Удалить;Очистить данные пересчета;Отправить повторно')
-        self.hash_map['docCards'] = doc_cards.to_json()
+        self.hash_map['docAdrCards'] = doc_cards.to_json()
 
     def on_input(self) -> None:
         super().on_input()
-        listener = hash_map["listener"]
-
-        if listener == "CardsClick":
-            open_adr_doc_table(hashMap)
-            hashMap.put("ShowScreen", "Документ товары")
-
-        elif listener == "doc_adr_type_click":
-
-            ls = refill_adr_docs_list(hashMap.get('doc_adr_type_click'))
-            hashMap.put('docCards', ls)
-            hashMap.put('ShowScreen', 'Документы')
-        elif listener == 'LayoutAction':
-            layout_listener = hashMap.get('layout_listener')
-            # Находим ID документа
-            current_doc = json.loads(hashMap.get("card_data"))
-            doc = ui_global.Rs_adr_doc
-            doc.id_doc = current_doc['key']
-
-            if layout_listener == 'CheckBox1':
-                if current_doc['completed'] == 'false':
-                    doc.mark_verified(doc, 1)
-                else:
-                    doc.mark_verified(doc, 0)
-
-            elif layout_listener == 'Подтвердить':
-                doc.mark_verified(doc, 1)
-                hashMap.put('ShowScreen', 'Документы')
-            elif layout_listener == 'Очистить данные пересчета':
-                doc.clear_barcode_data(doc)
-                hashMap.put('toast', 'Данные пересчета и маркировки очищены')
-            elif layout_listener == 'Удалить':
-                doc.delete_doc(doc)
-                hashMap.put('ShowScreen', 'Документы')
-            elif layout_listener == 'Удалить':
-                doc.delete_doc(doc)
-            elif layout_listener == 'Открыть отбор':
-
-                open_adr_doc_table(hashMap, 'out')
-                hashMap.put("ShowScreen", "Документ товары")
-            elif layout_listener == 'Открыть размещение':
-                open_adr_doc_table(hashMap, 'in')
-                hashMap.put("ShowScreen", "Документ товары")
-
-        elif listener == "btn_add_doc":
-            hashMap.put('ShowScreen', 'Новый документ')
-
-        elif listener == 'ON_BACK_PRESSED':
-
-            hashMap.put('FinishProcess', '')
-
-            # hashMap.put('ShowScreen', 'Новый документ')
-        return hashMap
-
         if self.listener == "doc_status_click":
             self.hash_map['selected_doc_status'] = self.hash_map["doc_status_click"]
 
@@ -507,6 +459,30 @@ class AdrDocsListScreen(Screen):
 
         elif self.listener == 'ON_BACK_PRESSED':
             self.hash_map.show_screen('Плитки')
+
+        if self.listener == "CardsClick":
+            pass
+            # open_adr_doc_table(hashMap)
+            # hashMap.put("ShowScreen", "Документ товары")
+
+
+        elif self.listener == "doc_adr_type_click":
+            pass
+            # ls = refill_adr_docs_list(hashMap.get('doc_adr_type_click'))
+            # hashMap.put('docCards', ls)
+            # hashMap.put('ShowScreen', 'Документы')
+
+
+        elif self.listener == "btn_add_doc":
+            pass
+            #hashMap.put('ShowScreen', 'Новый документ')
+
+        elif self.listener == 'ON_BACK_PRESSED':
+            pass
+            #hashMap.put('FinishProcess', '')
+
+            # hashMap.put('ShowScreen', 'Новый документ')
+
 
     def on_post_start(self):
         pass
@@ -554,7 +530,6 @@ class AdrDocsListScreen(Screen):
                 'number': record['doc_n'],
                 'data': record['doc_date'],
                 'warehouse': record['RS_warehouse'],
-                'countragent': record['RS_countragent'],
                 'add_mark_selection': record['add_mark_selection'],
                 'status': doc_status
             })
@@ -775,37 +750,6 @@ class DocDetailsScreen(Screen):
         self.hash_map.show_screen(self.screen_name, args)
         self._validate_screen_values()
 
-    def _on_start(self):
-        self._set_visibility_on_start()
-        self.hash_map.put('SetTitle', self.hash_map["doc_type"])
-
-        have_qtty_plan = False
-        have_zero_plan = False
-        have_mark_plan = False
-
-        doc_details = self._get_doc_details_data()
-        table_data = self._prepare_table_data(doc_details)
-        table_view = self._get_doc_table_view(table_data=table_data)
-
-        if self.hash_map.get_bool('highlight'):
-            self.hash_map.put('highlight', False)
-            self.enable_highlight(table_view.customtable)
-            self.hash_map.run_event_async('highlight_scanned_item')
-
-        if doc_details:
-            self.hash_map['table_lines_qtty'] = len(doc_details)
-            have_zero_plan = True
-            have_qtty_plan = sum([item['qtty_plan'] for item in doc_details if item['qtty_plan']]) > 0
-
-        self.hash_map['have_qtty_plan'] = have_qtty_plan
-        self.hash_map['have_zero_plan'] = have_zero_plan
-        self.hash_map['have_mark_plan'] = have_mark_plan
-
-        control = self.service.get_doc_value('control', self.id_doc) not in (0, '0', 'false', 'False', None)
-        self.hash_map['control'] = control
-
-        self.hash_map.put("doc_goods_table", table_view.to_json())
-
     def _barcode_scanned(self):
         id_doc = self.hash_map.get('id_doc')
         doc = RsDoc(id_doc)
@@ -848,6 +792,37 @@ class DocDetailsScreen(Screen):
             # self.hash_map.toast('Товар добавлен в документ')
             self.hash_map.put('highlight', True)
             self.hash_map.put('barcode_scanned', True)
+
+    def _on_start(self):
+        self._set_visibility_on_start()
+        self.hash_map.put('SetTitle', self.hash_map["doc_type"])
+
+        have_qtty_plan = False
+        have_zero_plan = False
+        have_mark_plan = False
+
+        doc_details = self._get_doc_details_data()
+        table_data = self._prepare_table_data(doc_details)
+        table_view = self._get_doc_table_view(table_data=table_data)
+
+        if self.hash_map.get_bool('highlight'):
+            self.hash_map.put('highlight', False)
+            self.enable_highlight(table_view.customtable)
+            self.hash_map.run_event_async('highlight_scanned_item')
+
+        if doc_details:
+            self.hash_map['table_lines_qtty'] = len(doc_details)
+            have_zero_plan = True
+            have_qtty_plan = sum([item['qtty_plan'] for item in doc_details if item['qtty_plan']]) > 0
+
+        self.hash_map['have_qtty_plan'] = have_qtty_plan
+        self.hash_map['have_zero_plan'] = have_zero_plan
+        self.hash_map['have_mark_plan'] = have_mark_plan
+
+        control = self.service.get_doc_value('control', self.id_doc) not in (0, '0', 'false', 'False', None)
+        self.hash_map['control'] = control
+
+        self.hash_map.put("doc_goods_table", table_view.to_json())
 
     def _set_visibility_on_start(self):
         _vars = ['warehouse', 'countragent']
@@ -1737,6 +1712,7 @@ class MainEvents:
 
 class ScreensFactory:
     screens = [
+        AdrDocsListScreen,
         GroupScanTiles,
         DocumentsTiles,
         GroupScanDocsListScreen,

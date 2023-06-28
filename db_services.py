@@ -94,14 +94,14 @@ class DocService:
 
                 self._get_query_result(query)
 
-    def json_to_sqlite_query(self, data, docs=None):
+    def json_to_sqlite_query(self, data, docs = None):
         qlist = []
         # Цикл по именам таблиц
         table_list = (
             'RS_doc_types', 'RS_goods', 'RS_properties', 'RS_units', 'RS_types_goods', 'RS_series', 'RS_countragents',
             'RS_warehouses', 'RS_price_types', 'RS_cells', 'RS_barcodes', 'RS_prices', 'RS_doc_types', 'RS_docs',
             'RS_docs_table', 'RS_docs_barcodes', 'RS_adr_docs', 'RS_adr_docs_table')  # ,, 'RS_barc_flow'
-        table_for_delete = ('RS_docs_table', 'RS_docs_barcodes, RS_adr_docs_table', 'RS_adr_docs_table', )  # , 'RS_barc_flow'
+        table_for_delete = ('RS_docs_table', 'RS_docs_barcodes, RS_barc_flow', 'RS_adr_docs_table', )  # , 'RS_barc_flow'
         doc_id_list = []
         for table_name in table_list:
             if not data.get(table_name):
@@ -121,7 +121,7 @@ class DocService:
             else:
                 query_col_names = list(column_names)
 
-            if docs and table_name == 'RS_docs' or 'RS_adr_docs':
+            if table_name in ('RS_docs','RS_adr_docs'):  #
                 query_col_names.append('verified')
 
             query = f"REPLACE INTO {table_name} ({', '.join(query_col_names)}) VALUES "
@@ -130,19 +130,26 @@ class DocService:
             for row in data[table_name]:
                 row_values = []
                 list_quoted_fields = ('name', 'full_name', "mark_code")
-                for col in column_names:
+                for col in query_col_names:
                     if col in list_quoted_fields and "\"" in row[col]:
                         row[col] = row[col].replace("\"", "\"\"")
-                    if row[col] is None:
+                    if col == 'verified' and (table_name in ['RS_docs','RS_adr_docs']):
+                        row_values.append(0)
+                    elif col == 'verified' and (table_name == 'RS_adr_docs_table'):
+                        continue
+                    elif row.get(col) is None:
+
                         row[col] = ''
-                    if col == 'mark_code':  # Заменяем это поле на поля GTIN и Series
+                    elif col == 'mark_code':  # Заменяем это поле на поля GTIN и Series
                         barc_struct = self.parse_barcode(row[col])
                         row_values.append(barc_struct['GTIN'])
                         row_values.append(barc_struct['Series'])
                     else:
                         row_values.append(row[col])  # (f'"{row[col]}"')
-                    if col == 'id_doc' and table_name == 'RS_docs':
+                    if col == 'id_doc' and (table_name in ['RS_docs','RS_adr_docs']):
                         doc_id_list.append('"' + row[col] + '"')
+
+
 
                 if docs and table_name == 'RS_docs':
                     row_values.append(docs[row['id_doc']])
@@ -184,7 +191,7 @@ class DocService:
                 {self.docs_table_name}.doc_type,
                 {self.docs_table_name}.doc_n,
                 {self.docs_table_name}.doc_date,
-                {self.docs_table_name}.id_countragents,
+                {self.docs_table_name + '.id_countragents,' if self.docs_table_name == 'Rs_docs' else ''}
                 {self.docs_table_name}.id_warehouse,
                 ifnull(RS_warehouses.name,'') as RS_warehouse,
                 ifnull({self.docs_table_name}.verified, 0) as verified,
@@ -196,7 +203,7 @@ class DocService:
             ifnull(RS_countragents.full_name, '') as RS_countragent,
                             FROM {self.docs_table_name}''')
 
-        joins =    f'''
+        joins =    f'''FROM {self.docs_table_name}
             LEFT JOIN RS_warehouses as RS_warehouses
                 ON RS_warehouses.id = {self.docs_table_name}.id_warehouse
         '''
@@ -231,6 +238,7 @@ class DocService:
 
         query_text = f'''
             {query_text}
+            {joins}
             {where}
             ORDER BY {self.docs_table_name}.doc_date
         '''
@@ -251,8 +259,8 @@ class DocService:
                 doc_type,
                 {self.docs_table_name}.id_doc,
                 1 as doc_Count,
-                IFNULL({self.docs_table_name},0) as sent,
-                IFNULL(verified,0) as verified, 
+                IFNULL({self.docs_table_name}.sent,0) as sent,
+                IFNULL({self.docs_table_name}.verified,0) as verified, 
                 CASE WHEN IFNULL(verified,0)=0 THEN 
                     COUNT({self.details_table_name}.id)
                 ELSE 
@@ -413,7 +421,7 @@ class AdrDocService(DocService):
 
 
     def get_current_cell(self):
-
+        pass
 
 
     def get_doc_details_data(self, id_doc) -> list:
@@ -460,79 +468,8 @@ class AdrDocService(DocService):
             '''
 
         query_text = query_text + ' ORDER BY RS_cells.name, RS_adr_docs_table.last_updated DESC'
-        res = self._get_query_result(query, (id_doc,), return_dict=True)
+        res = self._get_query_result(query_text, (id_doc,), return_dict=True)
         return res
-
-    def parse_barcode(self, val):
-        if len(val) < 21:
-            return {'GTIN': '', 'Series': ''}
-
-        val.replace('(01)', '01')
-        val.replace('(21)', '21')
-
-        if val[:2] == '01':
-            GTIN = val[2:16]
-            Series = val[18:]
-        else:
-            GTIN = val[:14]
-            Series = val[14:]
-
-        return {'GTIN': GTIN, 'Series': Series}
-
-    def clear_barcode_data(self, id_doc):
-        query_text = ('Update RS_docs_barcodes Set approved = 0 Where id_doc=:id_doc',
-                      'Delete From RS_docs_barcodes Where  id_doc=:id_doc And is_plan = 0',
-                      'Update RS_docs_table Set qtty = 0 Where id_doc=:id_doc',
-                      'Delete From RS_docs_table Where id_doc=:id_doc and is_plan = "False"')
-        try:
-            for el in query_text:
-                get_query_result(el, ({'id_doc': id_doc}))
-        except Exception as e:
-            return {'result': False, 'error': e.args[0]}
-
-        return {'result': True, 'error': ''}
-
-    def get_doc_barcode_data(self, args):
-        query = '''
-            SELECT
-            "(01)" || GTIN || "(21)" || Series as mark_code,
-            approved
-            FROM RS_docs_barcodes
-            Where
-            id_doc = :id_doc AND
-            id_good = :id_good AND
-            id_property = :id_property AND
-            id_series = :id_series 
-            --AND  id_unit = :id_unit
-         '''
-
-        res = self._get_query_result(query, args, return_dict=True)
-        return res
-
-    def get_docs_count(self, doc_type=''):
-        query = 'SELECT COUNT(*) AS docs_count FROM RS_docs'
-        args = None
-
-        if doc_type:
-            query = '\n'.join([query, 'WHERE doc_type = ?'])
-            args = (doc_type,)
-
-        res = self._get_query_result(query, args, True)
-        if res:
-            return res[0].get('docs_count', 0)
-        return 0
-
-    @staticmethod
-    def get_existing_docs_names_list():
-        query_text = "SELECT doc_n FROM RS_docs"
-        res = get_query_result(query_text)
-        return res
-
-    @staticmethod
-    def write_error_on_log(Err_value):
-        if Err_value:
-            qtext = 'Insert into Error_log(log) Values(?)'
-            get_query_result(qtext, (Err_value,))
 
 class DbCreator:
     def create_tables(self):

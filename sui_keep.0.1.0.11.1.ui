@@ -60,6 +60,7 @@
                         "Handlers": [
                             {
                                 "event": "onStart",
+                                "listener": "",
                                 "action": "run",
                                 "type": "python",
                                 "method": "tiles_on_start",
@@ -1984,34 +1985,33 @@
                                 "Variable": "",
                                 "Elements": [
                                     {
-                                        "type": "LinearLayout",
+                                        "BackgroundColor": "",
+                                        "StrokeWidth": "",
+                                        "Padding": "",
+                                        "orientation": "horizontal",
                                         "height": "wrap_content",
                                         "width": "match_parent",
                                         "weight": "0",
-                                        "Value": "",
+                                        "type": "LinearLayout",
                                         "Variable": "",
-                                        "orientation": "horizontal",
                                         "Elements": [
                                             {
                                                 "type": "SpinnerLayout",
+                                                "Value": "@doc_type_select",
+                                                "Variable": "doc_type_click",
                                                 "height": "wrap_content",
                                                 "width": "match_parent",
-                                                "weight": "1",
-                                                "Value": "@doc_type_select",
-                                                "Variable": "doc_type_click"
+                                                "weight": "1"
                                             },
                                             {
                                                 "type": "SpinnerLayout",
+                                                "Value": "@doc_status_select",
+                                                "Variable": "doc_status_click",
                                                 "height": "wrap_content",
                                                 "width": "match_parent",
-                                                "weight": "1",
-                                                "Value": "@doc_status_select",
-                                                "Variable": "doc_status_click"
+                                                "weight": "1"
                                             }
-                                        ],
-                                        "BackgroundColor": "",
-                                        "StrokeWidth": "",
-                                        "Padding": ""
+                                        ]
                                     },
                                     {
                                         "height": "wrap_content",
@@ -3568,8 +3568,11 @@
             {
                 "type": "Process",
                 "ProcessName": "Адресное хранение",
-                "hidden": true,
+                "hidden": false,
                 "DefineOnBackPressed": true,
+                "login_screen": false,
+                "PlanFactHeader": "",
+                "SC": false,
                 "Operations": [
                     {
                         "type": "Operation",
@@ -3646,6 +3649,7 @@
                         "Handlers": [
                             {
                                 "event": "onStart",
+                                "listener": "",
                                 "action": "run",
                                 "type": "python",
                                 "method": "docs_adr_on_start",
@@ -3653,6 +3657,7 @@
                             },
                             {
                                 "event": "onInput",
+                                "listener": "",
                                 "action": "run",
                                 "type": "python",
                                 "method": "docs_adr_on_select",
@@ -5590,8 +5595,9 @@
                             },
                             {
                                 "event": "onInput",
+                                "listener": "",
                                 "action": "run",
-                                "type": "python",
+                                "type": "online",
                                 "method": "settings_on_click",
                                 "postExecute": ""
                             }
@@ -7740,14 +7746,7 @@
         ],
         "Mediafile": [],
         "PyHandlers": "",
-        "PyTimerTask": [
-            {
-                "PyTimerTaskKey": "timer_update",
-                "PyTimerTaskDef": "timer_update",
-                "PyTimerTaskPeriod": "15000",
-                "PyTimerTaskBuilIn": false
-            }
-        ],
+        "PyTimerTask": [],
         "PyFiles": [
             {
                 "PyFileKey": "ui_csv",
