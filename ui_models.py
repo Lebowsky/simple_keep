@@ -484,6 +484,8 @@ class DocumentsDocsListScreen(DocsListScreen):
             answer = post_changes_to_server(f"'{id_doc}'", http_params)
             if answer.get('Error') is not None:
                 ui_global.write_error_on_log(str(answer.get('Error')))
+                self.put_notification(text=f'Ошибка при отправке документа {self.get_doc_number()}, '
+                                           f'подробнее в логе ошибок.')
                 self.toast('Не удалось отправить документ повторно')
             else:
                 self.toast('Документ отправлен повторно')
@@ -492,6 +494,11 @@ class DocumentsDocsListScreen(DocsListScreen):
         card_data = self.hash_map.get_json("card_data") or {}
         id_doc = card_data.get('key') or self.hash_map['selected_card_key']
         return id_doc
+
+    def get_doc_number(self):
+        card_data = self.hash_map.get_json("card_data") or {}
+        doc_number = card_data.get('number')
+        return doc_number
 
 
 # ^^^^^^^^^^^^^^^^^^^^^ DocsList ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -650,7 +657,7 @@ class DocDetailsScreen(Screen):
             product_row['good_info'] = ''.join(props)
 
             product_row['_layout'] = self._get_doc_table_row_view()
-            self._set_background_row_color(product_row, self.id_doc)
+            self._set_background_row_color(product_row)
 
             if self._added_goods_has_key(product_row['key']):
                 table_data.insert(1, product_row)
@@ -835,7 +842,6 @@ class GroupScanDocDetailsScreen(DocDetailsScreen):
         if self.hash_map.get_bool('barcode_scanned'):
             id_doc = self.hash_map.get('id_doc')
             answer = http_exchange.post_goods_to_server(id_doc, http_settings)
-
             if answer and answer.get('Error') is not None:
                 self.hash_map.debug(answer.get('Error'))
 
@@ -1310,17 +1316,11 @@ class Timer:
         self.http_service = HsService(self.http_settings)
 
     def timer_on_start(self):
-        docs_data = self.http_service.get_data()
-        if docs_data.get('data'):
-            try:
-                existing_docs_list = self.db_service.get_existing_docs_names_list()
-                self.db_service.update_data_from_json(docs_data['data'])
-                docs_list_after_load = self.db_service.get_existing_docs_names_list()
-                diff = [x for x in docs_list_after_load if x not in existing_docs_list]
-                if diff:
-                    self.put_notification(text=" ".join(diff), title="Загружены документы:")
-            except Exception as e:
-                self.db_service.write_error_on_log(f'Ошибка загрузки документа:  {e}')
+
+        pass
+        self.load_docs()
+        self.upload_docs()
+
 
     def save_data_to_db(self, data: dict):
         if not data:
@@ -1359,6 +1359,35 @@ class Timer:
             'android_id': self.hash_map['ANDROID_ID'],
             'user_name': self.rs_settings.get('user_name')}
         return http_settings
+
+    def load_docs(self):
+        try:
+            docs_data = self.http_service.get_data()
+            if docs_data.get('data'):
+                existing_docs_list = self.db_service.get_existing_docs_names_list()
+            self.db_service.update_data_from_json(docs_data['data'])
+            docs_list_after_load = self.db_service.get_existing_docs_names_list()
+            diff = [x[0] for x in docs_list_after_load if x not in existing_docs_list]
+            if diff:
+                self.put_notification(text=" ".join(diff), title="Загружены документы:")
+        except Exception as e:
+            self.db_service.write_error_on_log(f'Ошибка загрузки документа:  {e}')
+
+    def upload_docs(self):
+        try:
+            docs_goods_list = self.db_service.get_docs_and_goods_for_upload()
+            answer = self.http_service.send_documents(docs_goods_list)
+        except Exception as e:
+            self.hash_map.toast(e)
+        if answer.get('Error') is not None:
+            self.put_notification(text=f'Ошибка при отправке документов {",".join(doc_list)}, ')
+        else:
+            docs_list_string = ', '.join([f"'{d['id_doc']}'" for d in docs_goods_list])
+            try:
+                self.db_service.update_uploaded_docs_status(docs_list_string)
+            except Exception as e:
+                self.hash_map.toast(e)
+
 
 
 # ^^^^^^^^^^^^^^^^^^^^^ Timer ^^^^^^^^^^^^^^^^^^^^^^^^^^^^

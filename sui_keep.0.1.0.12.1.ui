@@ -2,7 +2,7 @@
     "ClientConfiguration": {
         "ConfigurationName": "Simple Учет",
         "ConfigurationDescription": "Простое решение для работы с штрихкодами товаров. Поставляется в комплекте с расширением для 1С. Подробнее про расширение Вы можете узнать по ссылке: https://www.simple-kit.ru/products/simple-uchet/ ",
-        "ConfigurationVersion": "0.1.12.1",
+        "ConfigurationVersion": "0.1.11.0",
         "Processes": [
             {
                 "type": "Process",
@@ -337,10 +337,10 @@
                                         ]
                                     },
                                     {
+                                        "type": "TextView",
                                         "height": "wrap_content",
                                         "width": "match_parent",
                                         "weight": "0",
-                                        "type": "TextView",
                                         "Value": "@new_text",
                                         "Variable": "new_text"
                                     }
@@ -3759,12 +3759,12 @@
                                         "Variable": "use_mark"
                                     },
                                     {
-                                        "height": "wrap_content",
-                                        "width": "match_parent",
+                                        "height": "0",
+                                        "width": "0",
                                         "gravity_horizontal": "center",
                                         "gravity_vertical": "center",
                                         "weight": "0",
-                                        "type": "ModernEditText",
+                                        "type": "EditTextText",
                                         "Value": "@ip_host",
                                         "Variable": "ip_host"
                                     },
@@ -3777,14 +3777,6 @@
                                         "type": "ProgressButton",
                                         "Value": "Скопировать базу на компьютер",
                                         "Variable": "btn_copy_base"
-                                    },
-                                    {
-                                        "height": "wrap_content",
-                                        "width": "match_parent",
-                                        "weight": "0",
-                                        "type": "ProgressButton",
-                                        "Value": "Выгрузить лог",
-                                        "Variable": "btn_unload_log"
                                     },
                                     {
                                         "height": "wrap_content",
@@ -3877,14 +3869,6 @@
                                 "type": "python",
                                 "method": "debug_listener",
                                 "postExecute": ""
-                            },
-                            {
-                                "event": "onStart",
-                                "listener": "",
-                                "action": "run",
-                                "type": "python",
-                                "method": "debug_on_start",
-                                "postExecute": ""
                             }
                         ],
                         "onlineOnStart": false,
@@ -3967,11 +3951,7 @@
                 "PyFileData": ""
             },
             {
-                "PyFileKey": "hs_services",
-                "PyFileData": ""
-            },
-            {
-                "PyFileKey": "ui_barcodes",
+                "PyFileKey": "test_load_docs",
                 "PyFileData": ""
             }
         ],
@@ -3980,7 +3960,6 @@
         "CommonHandlers": [
             {
                 "event": "onLaunch",
-                "listener": "",
                 "action": "run",
                 "type": "python",
                 "method": "app_on_start",
