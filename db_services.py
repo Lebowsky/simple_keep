@@ -456,7 +456,7 @@ class DocDbService(DbService):
             else:
                 return self.model.get(**_filter)
 
-    def update(self, _filter, data: dict):
+    def update(self, data, _filter=None):
         with self.db_session:
             doc = self.get(_filter)
 
