@@ -385,10 +385,11 @@ class DocService:
         return 0
 
     @staticmethod
-    def get_existing_docs_names_list():
-        query_text = "SELECT doc_n FROM RS_docs"
+    def get_existing_docs():
+        query_text = "SELECT doc_n,doc_type FROM RS_docs" # doc_n,
         res = get_query_result(query_text)
         return res
+
 
     @staticmethod
     def write_error_on_log(Err_value):

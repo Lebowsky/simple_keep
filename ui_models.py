@@ -483,7 +483,8 @@ class DocumentsDocsListScreen(DocsListScreen):
             http_params = self.get_http_settings()
             answer = post_changes_to_server(f"'{id_doc}'", http_params)
             if answer.get('Error') is not None:
-                ui_global.write_error_on_log(str(answer.get('Error')))
+                ui_global.write_error_on_log(f'Ошибка повторной отправки документа {self.get_doc_number()}: '
+                                             f'{str(answer.get("Error"))}')
                 self.put_notification(text=f'Ошибка при отправке документа {self.get_doc_number()}, '
                                            f'подробнее в логе ошибок.')
                 self.toast('Не удалось отправить документ повторно')
@@ -1316,11 +1317,8 @@ class Timer:
         self.http_service = HsService(self.http_settings)
 
     def timer_on_start(self):
-
-        pass
         self.load_docs()
         self.upload_docs()
-
 
     def save_data_to_db(self, data: dict):
         if not data:
@@ -1364,24 +1362,24 @@ class Timer:
         try:
             docs_data = self.http_service.get_data()
             if docs_data.get('data'):
-                existing_docs_list = self.db_service.get_existing_docs_names_list()
+                existing_docs = self.db_service.get_existing_docs()
                 self.db_service.update_data_from_json(docs_data['data'])
-                docs_list_after_load = self.db_service.get_existing_docs_names_list()
-                diff = [x[0] for x in docs_list_after_load if x not in existing_docs_list]
+                docs_after_load = self.db_service.get_existing_docs()
+                diff = [f'{x[1]}: {x[0]}' for x in docs_after_load if x not in existing_docs]
                 if diff:
                     self.put_notification(text=" ".join(diff), title="Загружены документы:")
         except Exception as e:
-            self.db_service.write_error_on_log(f'Ошибка загрузки документа:  {e}')
+            self.db_service.write_error_on_log(f'Ошибка загрузки документов {str(diff)}: {e}')
 
     def upload_docs(self):
         try:
-            docs_goods_list = self.db_service.get_docs_and_goods_for_upload()
-            answer = self.http_service.send_documents(docs_goods_list)
+            docs_goods_formatted_list = self.db_service.get_docs_and_goods_for_upload()
+            answer = self.http_service.send_documents(docs_goods_formatted_list)
         except Exception as e:
             self.hash_map.toast(e)
         if answer.get('Error') is not None:
-            self.put_notification(text=f'Ошибка при отправке документов {",".join(doc_list)}, ')
-            self.db_service.write_error_on_log(f'Ошибка выгрузки документа:  {e}')
+            self.put_notification(text=f'Ошибка при отправке документов {",".join(docs_goods_list)}, ')
+            self.db_service.write_error_on_log(f'Ошибка выгрузки документов {str(docs_goods_list)}:  {e}')
         else:
             docs_list_string = ', '.join([f"'{d['id_doc']}'" for d in docs_goods_list])
             self.db_service.update_uploaded_docs_status(docs_list_string)
