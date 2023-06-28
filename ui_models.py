@@ -1,10 +1,11 @@
 from abc import ABC, abstractmethod
 import json
+import os
 
-import http_exchange
-import ui_global
+import db_services
+import hs_services
 from ui_utils import HashMap, RsDoc
-from db_services import DocService, ErrorService
+from db_services import DocService, ErrorService, DbService
 from hs_services import HsService
 import http_exchange
 from http_exchange import post_changes_to_server
@@ -20,8 +21,8 @@ class Screen(ABC):
         self.hash_map: HashMap = hash_map
         self.screen_values = {}
         self.rs_settings = rs_settings
-        self.listener: str = ''
-        self.event: str = ''
+        self.listener = self.hash_map['listener']
+        self.event: str = self.hash_map['event']
 
     @abstractmethod
     def on_start(self):
@@ -67,6 +68,8 @@ class Screen(ABC):
     def put_notification(self, text, title=None):
         self.hash_map.notification(text, title)
 
+
+# ==================== Tiles =============================
 
 class Tiles(Screen):
     def on_start(self):
@@ -158,8 +161,6 @@ class GroupScanTiles(Tiles):
 
     def __init__(self, hash_map: HashMap, rs_settings):
         super().__init__(hash_map, rs_settings)
-        self.listener = self.hash_map['listener']
-        self.name = 'Плитки'
         self.db_service = DocService()
         self.screen_name = self.hash_map.get_current_screen()
         self.process_name = self.hash_map.get_current_process()
@@ -191,21 +192,22 @@ class GroupScanTiles(Tiles):
         pass
 
     def show(self, args=None):
-        self.hash_map.show_screen(self.name, args)
+        self.hash_map.show_screen(self.screen_name, args)
 
 
 class DocumentsTiles(GroupScanTiles):
     screen_name = 'Плитки'
     process_name = 'Документы'
 
+
+# ^^^^^^^^^^^^^^^^^^^^^ Tiles ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
 # ==================== DocsList =============================
 
 
 class DocsListScreen(Screen):
-    def __init__(self, hash_map: HashMap,  rs_settings):
+    def __init__(self, hash_map: HashMap, rs_settings):
         super().__init__(hash_map, rs_settings)
-        self.listener = self.hash_map['listener']
-        self.event = self.hash_map['event']
         self.service = DocService()
         self.screen_values = {}
 
@@ -756,8 +758,6 @@ class DocumentsDocsListScreen(DocsListScreen):
 class DocDetailsScreen(Screen):
     def __init__(self, hash_map, rs_settings):
         super().__init__(hash_map, rs_settings)
-        self.listener = self.hash_map['listener']
-        self.event = self.hash_map['event']
         self.rs_settings = rs_settings
         self.id_doc = self.hash_map['id_doc']
         self.service = DocService(self.id_doc)
@@ -786,6 +786,11 @@ class DocDetailsScreen(Screen):
         doc_details = self._get_doc_details_data()
         table_data = self._prepare_table_data(doc_details)
         table_view = self._get_doc_table_view(table_data=table_data)
+
+        if self.hash_map.get_bool('highlight'):
+            self.hash_map.put('highlight', False)
+            self.enable_highlight(table_view.customtable)
+            self.hash_map.run_event_async('highlight_scanned_item')
 
         if doc_details:
             self.hash_map['table_lines_qtty'] = len(doc_details)
@@ -840,8 +845,8 @@ class DocDetailsScreen(Screen):
             else:
                 self.hash_map.toast(res['Descr'])
         else:
-            self._add_scanned_row(id_doc, res.get('key'))
             # self.hash_map.toast('Товар добавлен в документ')
+            self.hash_map.put('highlight', True)
             self.hash_map.put('barcode_scanned', True)
 
     def _set_visibility_on_start(self):
@@ -986,15 +991,12 @@ class DocDetailsScreen(Screen):
 
         return row_view
 
-    def _set_background_row_color(self, product_row, id_doc):
+    def _set_background_row_color(self, product_row):
         background_color = '#FFFFFF'
         qtty, qtty_plan = float(product_row['qtty']), float(product_row['qtty_plan'])
 
         if qtty_plan > qtty:
-            if self._added_goods_has_key(product_row['key']):
-                background_color = '#F0F8FF'
-            else:
-                background_color = "#FBE9E7"
+            background_color = "#FBE9E7"
 
         elif qtty_plan < qtty:
             background_color = "#FFF9C4"
@@ -1008,24 +1010,17 @@ class DocDetailsScreen(Screen):
         if added_goods:
             added_goods_doc = added_goods.get(self.id_doc, [])
             result = str(key) in [str(item) for item in added_goods_doc]
+            self.toast(result)
 
         return result
 
-    def _add_scanned_row(self, id_doc, row_key):
-        if not row_key:
-            return
-            # raise ValueError(f'Row key must be set not {row_key}')
+    @staticmethod
+    def enable_highlight(customtable):
+        customtable['tabledata'][1]['_layout'].BackgroundColor = '#F0F8FF'
 
-        added_goods = self.hash_map.get_json('added_goods') or {}
-        #Пока что отключил раскраску всех отсканированных
-        # added_goods_doc = added_goods.get(id_doc, [row_key])
-        # if row_key not in added_goods_doc:
-        #     added_goods_doc.append(row_key)
-
-        # added_goods[id_doc] = added_goods_doc
-        added_goods[id_doc] = [row_key]
-
-        self.hash_map.put('added_goods', added_goods, to_json=True)
+    def disable_highlight(self):
+        self._on_start()
+        self.hash_map.refresh_screen()
 
     def _fill_none_values(self, data, keys, default=''):
         none_list = [None, 'None']
@@ -1181,7 +1176,6 @@ class DocumentsDocDetailScreen(DocDetailsScreen):
             # Формируем список карточек баркодов
             cards['customcards']['cardsdata'] = []
             for el in res:
-
                 picture = '#f00c' if el['approved'] in ['True', 'true', '1'] else ''
                 row = {
                     'barcode': el['mark_code'],
@@ -1271,14 +1265,117 @@ class DocumentsDocDetailScreen(DocDetailsScreen):
         return self.service.get_doc_barcode_data(args)
 
 
-class ErrorLog(Screen):
+# ^^^^^^^^^^^^^^^^^^^^^ DocDetails ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+# ==================== Goods select =============================
+
+
+class GoodsSelectScreen(Screen):
+    def __init__(self, hash_map: HashMap, rs_settings):
+        super().__init__(hash_map, rs_settings)
+
+    def on_start(self):
+        pass
+
+    def on_input(self):
+        listener = self.listener
+
+        # if listener == "btn_ok":
+        #     # получим текущую строку документа
+        #     current_str = hashMap.get("selected_card_position")
+        #
+        #     # Если строка не существует, создадим ее
+        #     doc = ui_global.Rs_doc
+        #     doc.id_doc = hashMap.get('id_doc')
+        #     # if current_str =='0':
+        #     #     pass
+        #     # jlist['customcards']['cardsdata']
+        #     # else:
+        #     current_elem = get_current_elem_doc_goods(hashMap, current_str)
+        #     doc.id_str = int(current_elem['key'])
+        #     # ... и запишем ее в базу
+        #
+        #     qtty = hashMap.get('qtty')
+        #     doc.qtty = float(qtty) if qtty else 0
+        #
+        #     doc.update_doc_str(doc, hashMap.get('price'))  # (doc, )
+        #
+        #     remove_added_good_highlight(hashMap, str(current_elem['id_good']), str(current_elem['id_properties']))
+        #
+        #     hashMap.put("ShowScreen", "Документ товары")
+        #
+        # elif listener in ["btn_cancel", 'BACK_BUTTON', 'ON_BACK_PRESSED']:
+        #     self.hash_map.show_screen("Документ товары")
+        # elif listener == "":
+        #     hashMap.put("qtty", str(float(hashMap.get('qtty'))))
+        #
+        # elif listener == "photo":
+        #     # Можно вообще этого не делать-оставлять как есть. Это для примера.
+        #     image_file = str(
+        #         hashMap.get("photo_path"))  # "переменная"+"_path" - сюда помещается путь к полученной фотографии
+        #
+        #     image = Image.open(image_file)
+        #
+        #     # сразу сделаем фотку - квадратной - это простой вариант. Можно сделать например отдельо миниатюры для списка, это немного сложнее
+        #     im = image.resize((500, 500))
+        #     im.save(image_file)
+        #
+        #     jphotoarr = json.loads(hashMap.get("photoGallery"))
+        #     hashMap.put("photoGallery", json.dumps(jphotoarr))
+        #
+        # elif listener == "gallery_change":  # пользователь может удалить фото из галереи. Новый массив надо поместить к документу
+        #     if hashMap.containsKey("photoGallery"):  # эти 2 обработчика - аналогичные, просто для разных событий
+        #         jphotoarr = json.loads(hashMap.get("photoGallery"))
+        #         hashMap.put("photoGallery", json.dumps(jphotoarr))
+
+    def on_post_start(self):
+        pass
+
+    def show(self, args=None):
+        pass
+
+
+# ^^^^^^^^^^^^^^^^^^^^^ Goods select ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+
+# ==================== Settings =============================
+
+
+class HttpSettingsScreen(Screen):
+    screen_name = 'Настройки http соединения'
+    process_name = 'Параметры'
+
+    def __init__(self, hash_map: HashMap, rs_settings):
+        super().__init__(hash_map, rs_settings)
+
+    def on_start(self) -> None:
+        self.hash_map['btn_test_connection'] = 'Тест соединения'
+        http_settings = self.get_http_settings()
+        put_data = {
+            'url': widgets.ModernField(hint='Адрес сервера', default_text=http_settings['url'] or '').to_json(),
+            'user': widgets.ModernField(hint='Пользователь', default_text=http_settings['user'] or '').to_json(),
+            'pass': widgets.ModernField(hint='Пароль', default_text=http_settings['pass'] or '', password=True).to_json(),
+            'user_name': widgets.ModernField(hint='Ваше имя для идентификации в 1С',
+                                             default_text=http_settings['user_name'] or '').to_json(),
+        }
+        self.hash_map.put_data(put_data)
+
+    def on_input(self) -> None:
+        pass
+
+    def on_post_start(self):
+        pass
+
+    def show(self, args=None):
+        pass
+
+
+class ErrorLogScreen(Screen):
     screen_name = 'Ошибки'
     process_name = 'Параметры'
 
     def __init__(self, hash_map: HashMap, rs_settings):
         super().__init__(hash_map, rs_settings)
-        self.listener = self.hash_map['listener']
-        self.event = self.hash_map['event']
         self.service = ErrorService()
         self.screen_values = {}
 
@@ -1289,7 +1386,6 @@ class ErrorLog(Screen):
         table_view = self._get_errors_table_view(table_raws)
         self.hash_map.put("error_log_table", table_view.to_json())
         self.hash_map['date_sort_select'] = 'Новые;Cтарые'
-        self.toast(table_view.customtable['options'])
 
     def on_input(self) -> None:
         super().on_input()
@@ -1301,17 +1397,6 @@ class ErrorLog(Screen):
 
         elif self.listener == "date_sort_click":
             self.hash_map['selected_date_sort'] = self.hash_map["date_sort_click"]
-
-        elif self.listener == "CardsClick":
-            self.toast(self.hash_map['selected_card_key'])
-
-        elif listener == 'Search':
-            filter_value = hashMap.get('SearchString')
-            if len(filter_value) > 2:
-                filter_fields = hashMap.get('filter_fields').split(';')
-                hashMap.put('cards', get_table_cards(hashMap.get('table_for_select'), filter_fields, filter_value))
-
-                hashMap.put('RefreshScreen', '')
 
     def on_post_start(self):
         pass
@@ -1347,7 +1432,7 @@ class ErrorLog(Screen):
                 width="match_parent",
                 BackgroundColor='#FFFFFF'
             ),
-            options=widgets.Options(search_enabled=True).options,
+            options=widgets.Options().options,
             tabledata=table_rows
         )
         return table_view
@@ -1387,7 +1472,7 @@ class ErrorLog(Screen):
     class LinearLayout(widgets.LinearLayout):
         def __init__(self, *args, **kwargs):
             super().__init__(*args, **kwargs)
-            self.orientation = 'horizontal'
+            self.orientation = 'vertical'
             self.height = "match_parent"
             self.width = "match_parent"
             self.StrokeWidth = 1
@@ -1399,7 +1484,103 @@ class ErrorLog(Screen):
             self.TextBold = True
             self.width = 'match_parent'
             self.Value = value
-# ^^^^^^^^^^^^^^^^^^^^^ DocDetails ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+
+# ^^^^^^^^^^^^^^^^^^^^^ Settings ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+
+# ==================== Debug settings =============================
+
+
+class DebugSettingsScreen(Screen):
+    process_name = 'Отладка'
+    screen_name = 'Отладочный экран'
+
+    def __init__(self, hash_map: HashMap, rs_settings):
+        super().__init__(hash_map, rs_settings)
+        self.hs_service = hs_services.DebugService
+
+    def on_start(self):
+        debug_host_ip = self.rs_settings.get('debug_host_ip') or self.hash_map['ip_host']
+        self.hash_map.put(
+            'ip_host',
+            {'hint': 'IP-адрес для выгрузки базы/лога', 'default_text': debug_host_ip or ''},
+            to_json=True)
+
+    def on_input(self):
+        listeners = {
+            'btn_copy_base': self._copy_base,
+            'btn_unload_log': self._unload_log,
+            'btn_local_files': self._local_files,
+            'ON_BACK_PRESSED': self._on_back_pressed
+        }
+        if self.listener in listeners:
+            listeners[self.listener]()
+
+    def on_post_start(self):
+        pass
+
+    def show(self, args=None):
+        pass
+
+    def _copy_base(self):
+        ip_host = self.hash_map['ip_host']
+        path_to_databases = self.rs_settings.get('path_to_databases')
+        base_name = self.rs_settings.get('sqlite_name')
+        file_path = os.path.join(path_to_databases, base_name)
+
+        if os.path.isfile(file_path):
+            with open(file_path, 'rb') as f:
+                res = self.hs_service(ip_host).export_database(f)
+
+                if res['status_code'] == 200:
+                    self.hash_map.toast('База SQLite успешно выгружена')
+                else:
+                    self.hash_map.toast('Ошибка соединения')
+        else:
+            self.hash_map.toast('Файл не найден')
+
+    def _unload_log(self):
+        ip_host = self.hash_map['ip_host']
+
+        path_to_databases = self.rs_settings.get('path_to_databases')
+        base_name = self.rs_settings.get('log_name')
+        file_path = os.path.join(path_to_databases, base_name)
+
+        # TODO Здесь нужно будет вызывать класс-сервис для взаимодействия с TinyDB
+        from tinydb import TinyDB
+
+        db = TinyDB(file_path)
+        data = db.all()
+
+        res = self.hs_service(ip_host).export_log(data)
+        if res['status_code'] == 200:
+            self.hash_map.toast('Лог успешно выгружен')
+        else:
+            self.hash_map.toast('Ошибка соединения')
+
+    def _local_files(self):
+        import ui_csv
+
+        path = self.hash_map['path']
+        delete_files = self.hash_map['delete_files']
+
+        if not delete_files:
+            delete_files = '0'
+        if not path:
+            path = '//storage/emulated/0/download/'
+
+        ret_text = ui_csv.list_folder(path, delete_files)
+
+        self.hash_map.toast(ret_text)
+
+    def _on_back_pressed(self):
+        ip_host = self.hash_map['ip_host']
+        self.rs_settings.put('debug_host_ip', ip_host, True)
+        self.hash_map.put('FinishProcess', '')
+
+
+# ^^^^^^^^^^^^^^^^^^^^^ Debug settings ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 
 # ==================== Timer =============================
@@ -1415,7 +1596,6 @@ class Timer:
 
     def timer_on_start(self):
         docs_data = self.http_service.get_data()
-        # format_results = ['is_ok', 'is_data', 'no_data']
         if docs_data.get('data'):
             try:
                 existing_docs_list = self.db_service.get_existing_docs_names_list()
@@ -1423,10 +1603,34 @@ class Timer:
                 docs_list_after_load = self.db_service.get_existing_docs_names_list()
                 diff = [x for x in docs_list_after_load if x not in existing_docs_list]
                 if diff:
-                    diff_str = str(diff)[1:-1].replace(",", " ").replace("(", "").replace(")", "").replace("'", "")
-                    self.put_notification(text=str(diff_str), title="Загружены документы:")
+                    self.put_notification(text=" ".join(diff), title="Загружены документы:")
             except Exception as e:
                 self.db_service.write_error_on_log(f'Ошибка загрузки документа:  {e}')
+
+    def save_data_to_db(self, data: dict):
+        if not data:
+            return
+
+        table_list = [
+            'RS_countragents',
+            'RS_warehouses',
+            'RS_cells',
+            'RS_types_goods',
+            'RS_classifier_units',
+            'RS_goods',
+            'RS_properties',
+            'RS_series',
+            'RS_units',
+            'RS_price_types',
+            'RS_prices',
+            'RS_barcodes',
+        ]
+
+        for table_name in table_list:
+            table = data.get(table_name, {})
+            service = self.db_service(None, table_name=table_name)
+            for item_data in table:
+                service.update(item_data)
 
     def put_notification(self, text, title=None):
         self.hash_map.notification(text, title)
@@ -1441,8 +1645,95 @@ class Timer:
             'user_name': self.rs_settings.get('user_name')}
         return http_settings
 
+
 # ^^^^^^^^^^^^^^^^^^^^^ Timer ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+
+# ==================== Main events =============================
+
+class MainEvents:
+    def __init__(self, hash_map: HashMap, rs_settings):
+        self.hash_map = hash_map
+        self.rs_settings = rs_settings
+
+    def app_on_start(self):
+        # TODO Обработчики обновления!
+        release = self.rs_settings.get('Release') or ''
+        current_release = '0.1.0.12.1'
+
+        if release != current_release:
+            # self.hash_map.put('UpdateConfigurations', '')
+            self.rs_settings.put('Release', current_release, True)
+
+        self._create_tables()
+
+        rs_default_settings = {
+            'TitleTextSize': 18,
+            'titleDocTypeCardTextSize': 18,
+            'CardTitleTextSize': 20,
+            'CardDateTextSize': 20,
+            'CardTextSize': 15,
+            'GoodsCardTitleTextSize': 18,
+            'goodsTextSize': 18,
+            'SeriesPropertiesTextSize': 16,
+            'DocTypeCardTextSize': 15,
+            'signal_num': 83,
+            'beep_duration': 1000,
+            'use_mark': 'false',
+            'add_if_not_in_plan': 'false',
+            'path': '',
+            'delete_files': 'false',
+            'allow_overscan': 'false',
+            'path_to_databases': '//data/data/ru.travelfood.simple_ui/databases',
+            'sqlite_name': 'SimpleKeep',
+            'log_name': 'log.json'
+        }
+
+        for k, v in rs_default_settings.items():
+            if self.rs_settings.get(k) is None:
+                self.rs_settings.put(k, v, True)
+
+        self.hash_map.toast('Готов к работе')
+
+    def put_notification(self):
+        self.hash_map['_configuration'] = ''
+        qtext = '''
+        SELECT 
+            doc_type, 
+            count(id_doc) as count, 
+            max(created_at) as dt 
+        FROM RS_docs 
+        WHERE created_at > ? 
+        GROUP BY doc_type 
+        '''
+
+        last_date = self.rs_settings.get('lastDate')
+        if not last_date:
+            last_date = '2020-01-01 00:00:00'
+
+        res = ui_global.get_query_result(qtext, (last_date,), True)
+
+        doc_list = ''
+        if res:
+            for el in res:
+                doc_list = doc_list + (' ' + el['doc_type'] + ': ' + str(el['count']))
+
+            self.hash_map.put(
+                'basic_notification',
+                json.dumps([{'number': 1, 'title': 'Новые документы', 'message': doc_list}]))
+
+            qtext = 'SELECT max(created_at) as dt FROM RS_docs'
+            res2 = ui_global.get_query_result(qtext)
+
+            self.rs_settings.put('lastDate', res2[0][0], True)
+            self.hash_map.toast(last_date)
+
+    def _create_tables(self):
+        service = db_services.DbCreator()
+        service.create_tables()
+
+
+# ^^^^^^^^^^^^^^^^^^^^^ Main events ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 class ScreensFactory:
     screens = [
@@ -1452,7 +1743,9 @@ class ScreensFactory:
         DocumentsDocsListScreen,
         GroupScanDocDetailsScreen,
         DocumentsDocDetailScreen,
-        ErrorLog
+        ErrorLogScreen,
+        DebugSettingsScreen,
+        HttpSettingsScreen
     ]
 
     @staticmethod

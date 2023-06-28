@@ -1,48 +1,33 @@
-import db_services
-from ru.travelfood.simple_ui import SimpleUtilites as suClass
+import json
+import socket
+import requests
+from requests.auth import HTTPBasicAuth
+import os
+from PIL import Image
+import time
+
+from java import jclass
 
 import ui_barcodes
 import ui_csv
 import ui_global
 import ui_form_data
 import ui_models
-import socket
-import json
-import requests
-import database_init_queryes
-import os
-from PIL import Image
-import importlib
-
-import widgets
-# from rs_settings import RSSettings
-from java import jclass
 import http_exchange
-from requests.auth import HTTPBasicAuth
-import ui_utils
 from ui_utils import HashMap
-from ru.travelfood.simple_ui import ImportUtils as iuClass
-# from android.graphics.drawable import GradientDrawable as GradientDrawable
-# from android.graphics import Color
+
+from ru.travelfood.simple_ui import SimpleUtilites as suClass
 
 noClass = jclass("ru.travelfood.simple_ui.NoSQL")
 rs_settings = noClass("rs_settings")
 
 
+def create_screen(hash_map: HashMap):
+    """
+    Метод для получения модели соответствующей текущему процессу и экрану.
+    Если модель не реализована возвращает заглушку
+    """
 
-
-# importlib.reload(ui_csv)
-# importlib.reload(ui_global)
-# importlib.reload(ui_form_data)
-# importlib.reload(database_init_queryes)
-# importlib.reload(http_exchange)
-# importlib.reload(ui_utils)
-# importlib.reload(db_services)
-# importlib.reload(widgets)
-# importlib.reload(ui_models)
-
-
-def create_screen(hash_map):
     screen_params = {
         'hash_map': hash_map,
         'rs_settings': rs_settings
@@ -55,189 +40,42 @@ def create_screen(hash_map):
 
 # =============== Main events =================
 
-def app_on_start(hashMap, _files=None, _data=None):
-    if rs_settings.get('Release') is None or (rs_settings.get('Release') != '0.1.11.2'):
-        hashMap.put('UpdateConfigurations','')
-        rs_settings.put('Release','0.1.11.2',True)
-    # hashMap.put('InstallConfiguration', '')
-    # hashMap.put('UpdateMenu', '')
-    # hashMap.put('toast', 'Конфа установлена!!!')
-    shema = database_init_queryes.database_shema()
-    for el in shema:
-        res = ui_global.get_query_result(el)
 
+@HashMap()
+def app_on_start(hash_map: HashMap):
+    """ Обработчик при старте приложения """
 
-        # for parameter_name, value in parameters.items():
-        #     set_params.put(parameter_name,value)
-    if rs_settings.get('TitleTextSize') is None:
-        rs_settings.put("TitleTextSize", "18", True)
-    if rs_settings.get('titleDocTypeCardTextSize') is None:
-        rs_settings.put("titleDocTypeCardTextSize", "18", True)
-    if rs_settings.get('CardTitleTextSize') is None:
-        rs_settings.put("CardTitleTextSize", "20", True)
-    if rs_settings.get('CardDateTextSize') is None:
-        rs_settings.put("CardDateTextSize", "10", True)
-    if rs_settings.get('CardTextSize') is None:
-        rs_settings.put("CardTextSize", "15", True)
-    if rs_settings.get('GoodsCardTitleTextSize') is None:
-        rs_settings.put("GoodsCardTitleTextSize", "18", True)
-    if rs_settings.get('goodsTextSize') is None:
-        rs_settings.put("goodsTextSize", "18", True)
-    if rs_settings.get('SeriesPropertiesTextSize') is None:
-        rs_settings.put("SeriesPropertiesTextSize", "16", True)
-    if rs_settings.get('DocTypeCardTextSize') is None:
-        rs_settings.put("DocTypeCardTextSize", "15", True)
-    if rs_settings.get('signal_num') is None:
-        rs_settings.put('signal_num', '83', True)
-    if rs_settings.get('beep_duration') is None:
-        rs_settings.put('beep_duration', '1000', True)
-    if rs_settings.get('use_mark')  is None:
-        rs_settings.put('use_mark', 'false', True)
-    if rs_settings.get('add_if_not_in_plan')  is None:
-        rs_settings.put('add_if_not_in_plan', 'false', True)
-    if rs_settings.get('path')  is None:
-        rs_settings.put('path', '', True)
-    if rs_settings.get('delete_files')  is None:
-        rs_settings.put('delete_files', 'false', True)
-    if rs_settings.get('allow_overscan')  is None:
-        rs_settings.put('allow_overscan', 'false', True)
-
-
-    hashMap.put('toast', 'Готов к работе')
-
-    # Проверим, свопадают ли текущий релиз конфы и запись о нем в БД, если нет - то надо выполнить процедуру обновления
-    # if not ui_global.get_constants('release') == hashMap.get('release'):
-    # update_proc.update_on_release(current_release)
-    # ui_global.get_query_result('Update RS_constants set release = ?',(hashMap.get('release'),))
-
-    return hashMap
+    model = ui_models.MainEvents(hash_map, rs_settings)
+    model.app_on_start()
 
 
 @HashMap()
-def timer_update(hashMap,  _files=None, _data=None):
-    timer = ui_models.Timer(hashMap, rs_settings)
+def timer_update(hash_map):
+    """ Обработчик для фонового обмена """
+
+    timer = ui_models.Timer(hash_map, rs_settings)
     timer.timer_on_start()
-    # url = get_http_settings(hashMap)
-
-    #url = 'http://192.168.1.77/NSI/hs/simple_accounting/data'
-
-    # hashMap.put('toast', 'Обмен') #url)
-    # result = http_exchange.timer_server_load_data(url)
-    # new_docs_list = result['new_docs_list']
-    # if len(result) > 0:
-    #     hashMap.put("basic_notification", json.dumps([{'number': 1, 'title': "Добавлены документы:",
-    #                                                        'message': str(result)}]))
-
-    # if len(new_docs_list) > 0:
-    #     hashMap.put("basic_notification", json.dumps([{'number': 1, 'title': "Добавлены документы",
-    #                                                    'message': str(new_docs_list)}]))
-    # if result.get('Error'):
-    #     hashMap.put('error_log', )
-
-    # try:
-    #     result = http_exchange.server_load_data(url)
-    # except:
-    #     raise 'Ошибка запроса к HTTP'
-    # if result['status_code'] ==200:
-    #     if result.get('batch') is not None:
-    #         rs_settings.put('batch', result.get('batch'),True)
-    #         rs_settings.put('number_of_received','0', True)
-    #
-    #     if result.get('res_for_sql') is not None:
-    #
-    #         if rs_settings.get('batch') is not None:  #Мы выполняем пакет загрузки, данные разбиты на несколько файлов, их количество в batch
-    #             number_of_received = 0 if rs_settings.get('number_of_received')== 'not found' else int(rs_settings.get('number_of_received'))
-    #             total_received = int(rs_settings.get('batch'))
-    #             number_of_received =+1
-    #         else:
-    #             total_received = None
-    #
-    #         sql_error = False
-    #         error_pool = []
-    #         for key in result['res_for_sql']:
-    #             try:
-    #                 ui_global.get_query_result(key)
-    #                 # return 'ok'
-    #             except Exception as e:
-    #                 sql_error = True
-    #                 error_pool.append(e.args[0])
-    #
-    #
-    #         if total_received:
-    #             hashMap.put('toast', 'Идет загрузка большого объема данных. Получено '+ str(number_of_received*50000) + 'из, примерно '+ str(total_received*50000))
-    #             rs_settings.put('number_of_received',str(number_of_received), True)
-    #
-    #         if sql_error:
-    #             rs_settings.put('error_log', str(error_pool), True)
-    #             hashMap.put('toast', 'При загрузке были ошибки. Проверьте их в настройках (кнопка посмотреть ошибки)')
-    #     if hashMap.get('current_screen_name') == 'Документы':
-    #         hashMap.put('toast', 'Документы')
-    #         #docs_on_start(hashMap)
-    #     #tiles_on_start(hashMap)
-    #         docs_adr_on_start(hashMap)
-    #         hashMap.put('RefreshScreen','')
-    #
-    # else:
-    #
-    #     hashMap.put('toast', str(result['error_pool']))
-
-    # qtext = '''SELECT id_doc FROM RS_docs WHERE verified = 1  and (sent <> 1 or sent is null)
-    #             UNION
-    #             SELECT id_doc FROM RS_adr_docs WHERE verified = 1  and (sent <> 1 or sent is null)'''
-    # res  = ui_global.get_query_result(qtext,None,True)
-    #
-    # if res:
-    #     doc_list = []
-    #     for el in res:
-    #         doc_list.append('"'+ el['id_doc']+'"')
-    #     doc_in_str = ','.join(doc_list)
-    #     #htpparams = {'username':hashMap.get('onlineUser'), 'password':hashMap.get('onlinePass'), 'url':url}
-    #     answer = http_exchange.post_changes_to_server(doc_in_str , url)
-    #     if answer.get('Error') is not None:
-    #         ui_global.write_error_on_log(str(answer.get('Error')))
-    #     else:
-    #
-    #         qtext = f'UPDATE RS_docs SET sent = 1  WHERE id_doc in ({doc_in_str}) '
-    #         ui_global.get_query_result(qtext)
-    #
-    #         qtext = f'UPDATE RS_adr_docs SET sent = 1  WHERE id_doc in ({doc_in_str}) '
-    #         ui_global.get_query_result(qtext)
-
-    # return hashMap
 
 
-def event_service(hashMap, _files=None, _data=None):
-    # hashMap.put('_configuration','')
-    hashMap.put('ws_body', hashMap.get('ANDROID_ID'))
+@HashMap()
+def event_service(hash_map, _files=None, _data=None):
+    """ Обработчик для работы МП в режиме сервера. В ws_body по умолчанию лежит текст конфигурации """
 
-    return hashMap
-
-
-def put_notification(hashMap, _files=None, _data=None):
-    hashMap.put('_configuration','')
-    qtext = 'SELECT doc_type, count(id_doc) as count, max(created_at) as dt FROM RS_docs WHERE created_at>? GROUP BY doc_type'
-    lastDate = rs_settings.get('lastDate')
-    if not lastDate:
-        lastDate = '2020-01-01 00:00:00'  # one_month_ago.strftime('%Y-%m-%d-%H-%M-%S')
-    res = ui_global.get_query_result(qtext,(lastDate,),True)
-    DocList = ''
-    if res:
-        for el in res:
-            DocList = DocList + (' ' + el['doc_type'] + ': ' + str(el['count']))
-
-        hashMap.put('basic_notification', json.dumps([{'number':1, 'title':'Новые документы', 'message': DocList }]))
-        qtext = 'SELECT max(created_at) as dt FROM RS_docs'
-        res2 = ui_global.get_query_result(qtext)
-
-        rs_settings.put('lastDate',res2[0][0],True)
-        hashMap.put('toast',lastDate)
-
-    return hashMap
+    hash_map['ws_body'] = hash_map['ANDROID_ID']
 
 
-def on_close_app(hashMap, _files=None, _data=None):
+@HashMap()
+def put_notification(hash_map):
+    """ Обработчик для работы МП в режиме сервера. Уведомления о входящих документах """
+
+    model = ui_models.MainEvents(hash_map, rs_settings)
+    model.put_notification()
+
+
+@HashMap()
+def on_close_app(hash_map):
+    # Попытка очистки кэша при выходе с приложения
     suClass.deleteCache()
-    return hashMap
 
 # ^^^^^^^^^^^^^^^^^ Main events ^^^^^^^^^^^^^^^^^
 
@@ -271,7 +109,7 @@ def docs_on_select(hash_map: HashMap):
 
 @HashMap()
 def doc_details_on_start(hash_map: HashMap):
-    screen = create_screen(hash_map)
+    screen: ui_models.GroupScanDocDetailsScreen = create_screen(hash_map)
     screen.on_start()
 
 
@@ -308,13 +146,25 @@ def adr_doc_details_listener(hash_map: HashMap):
 
 @HashMap()
 def doc_details_barcode_scanned(hash_map: HashMap):
+    """ Обработчик для асинхронной отправки и получения данных после сканирования ШК"""
+
     screen = ui_models.GroupScanDocDetailsScreen(hash_map, rs_settings)
     screen.post_barcode_scanned(get_http_settings(hash_map))
 
 
-def elem_on_start(hashMap, _files=None, _data=None):
-    hashMap.put('mm_local', '')
-    return hashMap
+@HashMap()
+def highlight_scanned_item(hash_map: HashMap):
+    """ Обработчик для отмены раскраски отсканированного товара """
+
+    time.sleep(2)
+    screen = ui_models.DocDetailsScreen(hash_map, rs_settings)
+    screen.disable_highlight()
+
+
+@HashMap()
+def elem_on_start(hash_map):
+    # Режим работы с мультимедиа и файлами по ссылкам (флаг mm_local)
+    hash_map['mm_local'] = ''
 
 
 def elem_on_click(hashMap, _files=None, _data=None):
@@ -431,9 +281,10 @@ def elem_on_click(hashMap, _files=None, _data=None):
     return hashMap
 
 
-def elem_viev_on_start(hashMap, _files=None, _data=None):
-    hashMap.put('mm_local', '')
-    return hashMap
+@HashMap()
+def elem_viev_on_start(hash_map):
+    # Режим работы с мультимедиа и файлами по ссылкам (флаг mm_local)
+    hash_map['mm_local'] = ''
 
 
 def elem_viev_on_click(hashMap, _files=None, _data=None):
@@ -1219,14 +1070,6 @@ def settings_on_click(hashMap, _files=None, _data=None):
             hashMap.put('toast',str(e))
     elif listener == 'btn_sound_settings':
         hashMap.put('ShowScreen','Настройка звука')
-    elif listener == 'btn_test_sql':
-        for i in 1000:
-            #
-            time =0
-            res = ui_global.get_query_result('Select * FROM RS_adr_docs_table LIMIT 1 ')
-            ui_global.get_query_result('Update RS_adr_docs_table set qtty = qtty +1 Where id = ?', (res[0][0],))
-            ui_global.write_error_on_log(str(time))
-
     return hashMap
 
 
@@ -1342,30 +1185,20 @@ def test_barcode_listener(hashMap, _files=None, _data=None):
 
 @HashMap()
 def settings_errors_on_start(hash_map: HashMap):
-
-    screen = create_screen(hash_map)
+    screen: ui_models.ErrorLogScreen = create_screen(hash_map)
     screen.on_start()
-
-
 
 
 @HashMap()
 def settings_errors_on_click(hash_map: HashMap):
-
-    screen = create_screen(hash_map)
+    screen: ui_models.ErrorLogScreen = create_screen(hash_map)
     screen.on_input()
 
 
-def http_settings_on_start(hashMap,  _files=None, _data=None):
-    url = hashMap.get('url')
-    hashMap.put('btn_test_connection', 'Тест соединения')
-    if url == '' or 'not found':  #Обновляем только если ранее не установлены
-        http_settings = get_http_settings(hashMap)
-        hashMap.put('url',  ui_form_data.ModernField(hint='url', default_text=http_settings['url'], password=False).to_json()) #  )
-        hashMap.put('user', ui_form_data.ModernField(hint='user', default_text=http_settings['user'], password=False).to_json())
-        hashMap.put('pass', ui_form_data.ModernField(hint='pass', default_text=http_settings['pass'], password=True).to_json())
-        hashMap.put('user_name',ui_form_data.ModernField(hint='user_name', default_text=http_settings['user_name'], password=False).to_json())
-    return hashMap
+@HashMap()
+def http_settings_on_start(hash_map):
+    screen: ui_models.HttpSettingsScreen = create_screen(hash_map)
+    screen.on_start()
 
 
 def http_settings_on_click(hashMap,  _files=None, _data=None):
@@ -1457,37 +1290,16 @@ def sound_settings_listener(hashMap, _files=None, _data=None):
 
 # =============== Debug =================
 
+@HashMap()
+def debug_on_start(hash_map: HashMap):
+    screen: ui_models.DebugSettingsScreen = create_screen(hash_map)
+    screen.on_start()
 
-def debug_listener(hashMap, _files=None, _data=None):
-    delete_files = rs_settings.get('delete_files')
-    if delete_files is None: delete_files = 'false'
 
-    listener = hashMap.get('listener')
-
-    if listener == 'btn_copy_base':
-        ip_host = hashMap.get('ip_host')
-        ip_host = '10.24.24.20'
-        if os.path.isfile('//data/data/ru.travelfood.simple_ui/databases/SimpleKeep'): #Keep'):
-            with open('//data/data/ru.travelfood.simple_ui/databases/SimpleKeep', 'rb') as f:  # rightscan
-                r = requests.post('http://' + ip_host + ':2444/post', files={'Rightscan': f})  # rightscan
-            if r.status_code == 200:
-                hashMap.put('toast', 'База SQLite успешно выгружена')
-            else:
-                hashMap.put('toast', 'Ошибка соединения')
-        else:
-            hashMap.put('toast', 'Файл не найден')
-    elif listener == 'btn_local_files':
-        # path = hashMap.get('localpath')
-        path = hashMap.get('path')
-        delete_files = hashMap.get('delete_files')
-        if not delete_files:
-            delete_files = '0'
-        if not path: path = '//storage/emulated/0/download/'
-
-        ret_text = ui_csv.list_folder(path, delete_files)
-
-        hashMap.put('toast', ret_text)
-    return hashMap
+@HashMap()
+def debug_listener(hash_map, _files=None, _data=None):
+    screen: ui_models.DebugSettingsScreen = create_screen(hash_map)
+    screen.on_input()
 
 
 # ^^^^^^^^^^^^^^^^^ Debug ^^^^^^^^^^^^^^^^^

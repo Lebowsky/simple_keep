@@ -534,9 +534,19 @@ class AdrDocService(DocService):
             qtext = 'Insert into Error_log(log) Values(?)'
             get_query_result(qtext, (Err_value,))
 
+class DbCreator:
+    def create_tables(self):
+        import database_init_queryes
+        # Создаем таблицы если их нет
+        schema = database_init_queryes.database_shema()
+        for el in schema:
+            get_query_result(el)
+
+
 class DbService:
     def __init__(self, _db_session, table_name):
-        self.db_session = _db_session
+        import db_models
+        self.db_session = db_models.db_session
         self.table_name = table_name
         self.model = ModelsFactory().create(self.table_name)
 
@@ -549,9 +559,16 @@ class DbService:
         with self.db_session:
             return self.model(**data)
 
-    def update(self, _filter, data):
+    def update(self, data, _filter=None):
         with self.db_session:
-            obj = self.get(_filter)
+            if _filter:
+                obj = self.get(_filter)
+            else:
+                pk = self.model.get_pk()
+                if not data.get(pk):
+                    raise ValueError(f'data: {data} has not constraint key {pk}')
+                else:
+                    obj = self.get({pk: data[pk]})
 
             if obj:
                 obj.set(**data)
@@ -576,6 +593,7 @@ class DocDbService(DbService):
             if to_dict:
                 import db_models
                 return self.model.get(**_filter).to_dict(with_collections=True, related_objects=True)
+            #only=None, exclude=None, with_collections=False, with_lazy=False, related_objects=False
             else:
                 return self.model.get(**_filter)
 
@@ -612,15 +630,9 @@ class ModelsFactory:
 class ErrorService:
     @staticmethod
     def get_all_errors(date_sort):
-        if not date_sort or date_sort == "Новые":
-            query_text = "SELECT * FROM Error_log ORDER BY timestamp DESC"
-        elif date_sort == "Cтарые":
-            query_text = "SELECT * FROM Error_log ORDER BY timestamp ASC"
-        res = get_query_result(query_text)
-        return res
+        sort = "DESC" if not date_sort or date_sort == "Новые" else "ASC"
+        return get_query_result(f"SELECT * FROM Error_log ORDER BY timestamp {sort}")
 
     @staticmethod
     def clear():
-        query_text = "DELETE FROM Error_log"
-        get_query_result(query_text)
-        return res
+        return get_query_result("DELETE FROM Error_log")

@@ -2,7 +2,7 @@
     "ClientConfiguration": {
         "ConfigurationName": "Simple Учет",
         "ConfigurationDescription": "Простое решение для работы с штрихкодами товаров. Поставляется в комплекте с расширением для 1С. Подробнее про расширение Вы можете узнать по ссылке: https://www.simple-kit.ru/products/simple-uchet/ ",
-        "ConfigurationVersion": "0.1.11.2",
+        "ConfigurationVersion": "0.1.0.12.1",
         "Processes": [
             {
                 "type": "Process",
@@ -335,6 +335,14 @@
                                                 "Variable": ""
                                             }
                                         ]
+                                    },
+                                    {
+                                        "height": "wrap_content",
+                                        "width": "match_parent",
+                                        "weight": "0",
+                                        "type": "TextView",
+                                        "Value": "@new_text",
+                                        "Variable": "new_text"
                                     }
                                 ]
                             },
@@ -1232,6 +1240,7 @@
                             },
                             {
                                 "event": "onInput",
+                                "listener": "",
                                 "action": "run",
                                 "type": "python",
                                 "method": "elem_viev_on_click",
@@ -3294,28 +3303,60 @@
                                 "gravity_horizontal": "center",
                                 "gravity_vertical": "center",
                                 "weight": "0",
+                                "height_value": "",
+                                "width_value": "",
                                 "type": "LinearLayout",
                                 "Variable": "",
                                 "Elements": [
                                     {
-                                        "height": "match_parent",
-                                        "width": "match_parent",
-                                        "gravity_horizontal": "center",
-                                        "gravity_vertical": "center",
-                                        "weight": "0",
-                                        "type": "MultilineText",
-                                        "Value": "@error_log",
-                                        "Variable": "error_log"
-                                    },
-                                    {
+                                        "BackgroundColor": "",
+                                        "StrokeWidth": "",
+                                        "Padding": "",
+                                        "orientation": "horizontal",
                                         "height": "wrap_content",
                                         "width": "match_parent",
+                                        "weight": "0",
+                                        "type": "LinearLayout",
+                                        "Variable": "",
+                                        "Elements": [
+                                            {
+                                                "height": "wrap_content",
+                                                "width": "match_parent",
+                                                "weight": "1",
+                                                "type": "ProgressButton",
+                                                "Value": "Очистить",
+                                                "Variable": "btn_clear_err"
+                                            },
+                                            {
+                                                "type": "SpinnerLayout",
+                                                "Value": "@date_sort_select",
+                                                "Variable": "date_sort_click",
+                                                "height": "wrap_content",
+                                                "width": "match_parent",
+                                                "weight": "1"
+                                            }
+                                        ]
+                                    },
+                                    {
+                                        "TextSize": "",
+                                        "TextColor": "",
+                                        "TextBold": false,
+                                        "TextItalic": false,
+                                        "BackgroundColor": "",
+                                        "StrokeWidth": "",
+                                        "Padding": "",
+                                        "orientation": "",
+                                        "height": "wrap_content",
+                                        "width": "wrap_content",
                                         "gravity_horizontal": "center",
                                         "gravity_vertical": "center",
-                                        "weight": "0",
-                                        "type": "ProgressButton",
-                                        "Value": "Очистить",
-                                        "Variable": "btn_clear_err"
+                                        "weight": "",
+                                        "height_value": "",
+                                        "width_value": "",
+                                        "type": "TableLayout",
+                                        "Value": "@error_log_table",
+                                        "Variable": "error_log_table",
+                                        "style_name": ""
                                     }
                                 ]
                             }
@@ -3323,6 +3364,7 @@
                         "Handlers": [
                             {
                                 "event": "onStart",
+                                "listener": "",
                                 "action": "run",
                                 "type": "python",
                                 "method": "settings_errors_on_start",
@@ -3360,21 +3402,11 @@
                                 "gravity_horizontal": "center",
                                 "gravity_vertical": "center",
                                 "weight": "0",
+                                "height_value": "",
+                                "width_value": "",
                                 "type": "LinearLayout",
                                 "Variable": "",
                                 "Elements": [
-                                    {
-                                        "TextSize": "25",
-                                        "TextBold": true,
-                                        "height": "wrap_content",
-                                        "width": "match_parent",
-                                        "gravity_horizontal": "center",
-                                        "gravity_vertical": "center",
-                                        "weight": "0",
-                                        "type": "TextView",
-                                        "Value": "Адрес сервера",
-                                        "Variable": ""
-                                    },
                                     {
                                         "height": "wrap_content",
                                         "width": "match_parent",
@@ -3384,17 +3416,6 @@
                                         "type": "ModernEditText",
                                         "Value": "@url",
                                         "Variable": "url"
-                                    },
-                                    {
-                                        "TextSize": "20",
-                                        "height": "wrap_content",
-                                        "width": "match_parent",
-                                        "gravity_horizontal": "center",
-                                        "gravity_vertical": "center",
-                                        "weight": "0",
-                                        "type": "TextView",
-                                        "Value": "Пользователь",
-                                        "Variable": ""
                                     },
                                     {
                                         "height": "wrap_content",
@@ -3407,17 +3428,6 @@
                                         "Variable": "user"
                                     },
                                     {
-                                        "TextSize": "20",
-                                        "height": "wrap_content",
-                                        "width": "match_parent",
-                                        "gravity_horizontal": "center",
-                                        "gravity_vertical": "center",
-                                        "weight": "0",
-                                        "type": "TextView",
-                                        "Value": "Пароль",
-                                        "Variable": ""
-                                    },
-                                    {
                                         "height": "wrap_content",
                                         "width": "match_parent",
                                         "gravity_horizontal": "center",
@@ -3426,16 +3436,6 @@
                                         "type": "ModernEditText",
                                         "Value": "@pass",
                                         "Variable": "pass"
-                                    },
-                                    {
-                                        "height": "wrap_content",
-                                        "width": "match_parent",
-                                        "gravity_horizontal": "center",
-                                        "gravity_vertical": "center",
-                                        "weight": "0",
-                                        "type": "TextView",
-                                        "Value": "Ваше имя для идентификации в 1С",
-                                        "Variable": ""
                                     },
                                     {
                                         "height": "wrap_content",
@@ -3717,12 +3717,12 @@
                                         "Variable": "use_mark"
                                     },
                                     {
-                                        "height": "0",
-                                        "width": "0",
+                                        "height": "wrap_content",
+                                        "width": "match_parent",
                                         "gravity_horizontal": "center",
                                         "gravity_vertical": "center",
                                         "weight": "0",
-                                        "type": "EditTextText",
+                                        "type": "ModernEditText",
                                         "Value": "@ip_host",
                                         "Variable": "ip_host"
                                     },
@@ -3735,6 +3735,14 @@
                                         "type": "ProgressButton",
                                         "Value": "Скопировать базу на компьютер",
                                         "Variable": "btn_copy_base"
+                                    },
+                                    {
+                                        "height": "wrap_content",
+                                        "width": "match_parent",
+                                        "weight": "0",
+                                        "type": "ProgressButton",
+                                        "Value": "Выгрузить лог",
+                                        "Variable": "btn_unload_log"
                                     },
                                     {
                                         "height": "wrap_content",
@@ -3827,6 +3835,14 @@
                                 "type": "python",
                                 "method": "debug_listener",
                                 "postExecute": ""
+                            },
+                            {
+                                "event": "onStart",
+                                "listener": "",
+                                "action": "run",
+                                "type": "python",
+                                "method": "debug_on_start",
+                                "postExecute": ""
                             }
                         ],
                         "onlineOnStart": false,
@@ -3847,7 +3863,7 @@
             "handler_auth": "",
             "dictionaries": ""
         },
-        "ConfigurationTags": "Py,off-line,ActiveCV®",
+        "ConfigurationTags": "Py,off-line",
         "FaceRecognitionURL": "",
         "ForegroundService": false,
         "StopForegroundServiceOnExit": false,
@@ -3909,15 +3925,11 @@
                 "PyFileData": ""
             },
             {
-                "PyFileKey": "test_load_docs",
+                "PyFileKey": "hs_services",
                 "PyFileData": ""
             },
             {
                 "PyFileKey": "ui_barcodes",
-                "PyFileData": ""
-            },
-            {
-                "PyFileKey": "hs_services",
                 "PyFileData": ""
             }
         ],
@@ -3928,7 +3940,7 @@
                 "event": "onLaunch",
                 "listener": "",
                 "action": "run",
-                "type": "python",
+                "type": "pythonreload",
                 "method": "app_on_start",
                 "postExecute": "",
                 "alias": "on_start"

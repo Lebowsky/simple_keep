@@ -96,3 +96,37 @@ class HsService:
             # answer['Error'] = e.args[0]
 
         return answer
+
+
+class DebugService:
+    def __init__(self, ip_host, port=2444):
+        self.ip_host = ip_host
+        self.port = port
+        self.url = f'http://{self.ip_host}:{self.port}'
+        self._hs = ''
+        self._method = requests.post
+
+    def export_database(self, file):
+        self._hs = 'post'
+        return self._send_request({'files': {'Rightscan': file}})
+
+    def export_log(self, data):
+        self._hs = 'unload_log'
+        return self._send_request({'json': json.dumps(data)})
+
+    def _send_request(self, kwargs) -> dict:
+        answer = {'empty': True}
+        try:
+            r = self._method(f'{self.url}/{self._hs}', **kwargs)
+
+            answer['status_code'] = r.status_code
+            if r.status_code == 200:
+                answer['empty'] = False
+                answer['text'] = r.text.encode("utf-8")
+                answer['reason'] =  r.reason
+            else:
+                answer['Error'] = r.text
+        except Exception as e:
+            raise e
+
+        return answer

@@ -2,3 +2,4 @@ requests~=2.31.0
 pillow~=9.5.0
 Flask~=2.3.2
 pony~=0.7.16
+tinydb~=4.8.0
