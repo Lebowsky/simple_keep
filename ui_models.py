@@ -1479,11 +1479,11 @@ class Timer:
             docs_data = self.http_service.get_data()
             if docs_data.get('data'):
                 existing_docs_list = self.db_service.get_existing_docs_names_list()
-            self.db_service.update_data_from_json(docs_data['data'])
-            docs_list_after_load = self.db_service.get_existing_docs_names_list()
-            diff = [x[0] for x in docs_list_after_load if x not in existing_docs_list]
-            if diff:
-                self.put_notification(text=" ".join(diff), title="Загружены документы:")
+                self.db_service.update_data_from_json(docs_data['data'])
+                docs_list_after_load = self.db_service.get_existing_docs_names_list()
+                diff = [x[0] for x in docs_list_after_load if x not in existing_docs_list]
+                if diff:
+                    self.put_notification(text=" ".join(diff), title="Загружены документы:")
         except Exception as e:
             self.db_service.write_error_on_log(f'Ошибка загрузки документа:  {e}')
 
@@ -1495,12 +1495,11 @@ class Timer:
             self.hash_map.toast(e)
         if answer.get('Error') is not None:
             self.put_notification(text=f'Ошибка при отправке документов {",".join(doc_list)}, ')
+            self.db_service.write_error_on_log(f'Ошибка выгрузки документа:  {e}')
         else:
             docs_list_string = ', '.join([f"'{d['id_doc']}'" for d in docs_goods_list])
-            try:
-                self.db_service.update_uploaded_docs_status(docs_list_string)
-            except Exception as e:
-                self.hash_map.toast(e)
+            self.db_service.update_uploaded_docs_status(docs_list_string)
+
 
 
 
