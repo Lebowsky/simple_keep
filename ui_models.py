@@ -1118,17 +1118,16 @@ class HttpSettingsScreen(Screen):
         super().__init__(hash_map, rs_settings)
 
     def on_start(self) -> None:
-        pass
-        # http_settings = self.get_http_settings()
-        #
-        # put_data = {
-        #     'url': widgets.ModernField(hint='Адрес сервера', default_text=http_settings['url'] or '').to_json(),
-        #     'user': widgets.ModernField(hint='Пользователь', default_text=http_settings['user'] or '').to_json(),
-        #     'pass': widgets.ModernField(hint='Пароль', default_text=http_settings['pass'] or '', password=True).to_json(),
-        #     'user_name': widgets.ModernField(hint='Ваше имя для идентификации в 1С',
-        #                                      default_text=http_settings['user_name'] or '').to_json(),
-        # }
-        # self.hash_map.put_data(put_data)
+        self.hash_map['btn_test_connection'] = 'Тест соединения'
+        http_settings = self.get_http_settings()
+        put_data = {
+            'url': widgets.ModernField(hint='Адрес сервера', default_text=http_settings['url'] or '').to_json(),
+            'user': widgets.ModernField(hint='Пользователь', default_text=http_settings['user'] or '').to_json(),
+            'pass': widgets.ModernField(hint='Пароль', default_text=http_settings['pass'] or '', password=True).to_json(),
+            'user_name': widgets.ModernField(hint='Ваше имя для идентификации в 1С',
+                                             default_text=http_settings['user_name'] or '').to_json(),
+        }
+        self.hash_map.put_data(put_data)
 
     def on_input(self) -> None:
         pass
