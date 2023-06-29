@@ -1521,14 +1521,29 @@ class MainEvents:
         self.hash_map = hash_map
         self.rs_settings = rs_settings
 
+    def app_before_on_start(self):
+        self.hash_map.put('getJSONConfiguration', '')
+
     def app_on_start(self):
         # TODO Обработчики обновления!
         release = self.rs_settings.get('Release') or ''
-        current_release = '0.1.0.12.3'
+        conf = self.hash_map.get_json('_configuration')
+        current_release = None
+        toast = 'Готов к работе'
 
-        if release != current_release:
+        try:
+            current_release = conf['ClientConfiguration']['ConfigurationVersion']
+        except Exception as e:
+            toast = 'Не удалось определить версию конфигурации'
+            service = db_services.DocService()
+            service.write_error_on_log(e.args[0])
+        finally:
+            self.hash_map.remove('_configuration')
+
+        if current_release and release != current_release:
             self.hash_map.put('UpdateConfigurations', '')
             self.rs_settings.put('Release', current_release, True)
+            toast = f'Выполнено обновление на версию {current_release}'
 
         self._create_tables()
 
@@ -1559,7 +1574,10 @@ class MainEvents:
             if self.rs_settings.get(k) is None:
                 self.rs_settings.put(k, v, True)
 
-        self.hash_map.toast('Готов к работе')
+        self.hash_map.toast(toast)
+
+
+
 
     def put_notification(self):
         self.hash_map['_configuration'] = ''
