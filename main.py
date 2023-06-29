@@ -95,13 +95,13 @@ def on_close_app(hash_map):
 
 @HashMap()
 def tiles_on_start(hash_map: HashMap):
-    screen = create_screen(hash_map)
+    screen: ui_models.DocumentsTiles = create_screen(hash_map)
     screen.on_start()
 
 
 @HashMap()
 def tiles_on_input(hash_map: HashMap):
-    screen = create_screen(hash_map)
+    screen: ui_models.DocumentsTiles = create_screen(hash_map)
     screen.on_input()
 
 
@@ -2000,10 +2000,28 @@ def debug_on_start(hash_map: HashMap):
     screen.on_start()
 
 
-@HashMap()
-def debug_listener(hash_map, _files=None, _data=None):
-    screen: ui_models.DebugSettingsScreen = create_screen(hash_map)
-    screen.on_input()
+# @HashMap()
+# def debug_listener(hash_map, _files=None, _data=None):
+#     screen: ui_models.DebugSettingsScreen = create_screen(hash_map)
+#     screen.on_input()
+def debug_listener(hashMap, _files=None, _data=None):
+    hashMap.put('toast','начало КФопирования')
+    listener = hashMap.get('listener')
+
+    if listener == 'btn_copy_base':
+        ip_host = hashMap.get('ip_host')
+        if os.path.isfile('//data/data/ru.travelfood.simple_ui/databases/SimpleKeep'): #Keep'):
+            with open('//data/data/ru.travelfood.simple_ui/databases/SimpleKeep', 'rb') as f:  # rightscan
+                #r = requests.post('http://' + ip_host + ':2444/post', files={'Rightscan': f})  # rightscan
+                r = requests.post('http://192.168.1.77:2444/post', files={'Rightscan': f})  # rightscan
+            if r.status_code == 200:
+                hashMap.put('toast', 'База SQLite успешно выгружена')
+            else:
+                hashMap.put('toast', 'Ошибка соединения')
+        else:
+            hashMap.put('toast', 'Файл не найден')
+
+    return hashMap
 
 
 # ^^^^^^^^^^^^^^^^^ Debug ^^^^^^^^^^^^^^^^^
