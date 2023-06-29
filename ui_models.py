@@ -822,8 +822,8 @@ class GroupScanDocDetailsScreen(DocDetailsScreen):
 
         elif listener == 'barcode' or self._is_result_positive('ВвестиШтрихкод'):
             self._update_document_data()
-            # self._barcode_scanned()
-            # self.hash_map.run_event_async('doc_details_barcode_scanned')
+            self._barcode_scanned()
+            self.hash_map.run_event_async('doc_details_barcode_scanned')
 
         elif listener == 'btn_barcodes':
             self.hash_map.show_dialog('ВвестиШтрихкод')
@@ -855,12 +855,11 @@ class GroupScanDocDetailsScreen(DocDetailsScreen):
 
     def _update_document_data(self):
         docs_data = self._get_update_current_doc_data()
-        self.toast(docs_data)
-        # if docs_data:
-        #     try:
-        #         self.service.update_data_from_json(docs_data)
-        #     except Exception as e:
-        #         self.service.write_error_on_log(f'Ошибка записи документа:  {e}')
+        if docs_data:
+            try:
+                self.service.update_data_from_json(docs_data)
+            except Exception as e:
+                self.service.write_error_on_log(f'Ошибка записи документа:  {e}')
 
     def _get_update_current_doc_data(self):
         hs_service = HsService(self.get_http_settings())
