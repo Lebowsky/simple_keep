@@ -2,7 +2,7 @@
     "ClientConfiguration": {
         "ConfigurationName": "Simple Учет",
         "ConfigurationDescription": "Простое решение для работы с штрихкодами товаров. Поставляется в комплекте с расширением для 1С. Подробнее про расширение Вы можете узнать по ссылке: https://www.simple-kit.ru/products/simple-uchet/ ",
-        "ConfigurationVersion": "0.1.11.0",
+        "ConfigurationVersion": "0.1.0.12.1",
         "Processes": [
             {
                 "type": "Process",
@@ -337,10 +337,10 @@
                                         ]
                                     },
                                     {
-                                        "type": "TextView",
                                         "height": "wrap_content",
                                         "width": "match_parent",
                                         "weight": "0",
+                                        "type": "TextView",
                                         "Value": "@new_text",
                                         "Variable": "new_text"
                                     }
@@ -3406,18 +3406,6 @@
                                 "Variable": "",
                                 "Elements": [
                                     {
-                                        "TextSize": "25",
-                                        "TextBold": true,
-                                        "height": "wrap_content",
-                                        "width": "match_parent",
-                                        "gravity_horizontal": "center",
-                                        "gravity_vertical": "center",
-                                        "weight": "0",
-                                        "type": "TextView",
-                                        "Value": "Адрес сервера",
-                                        "Variable": ""
-                                    },
-                                    {
                                         "height": "wrap_content",
                                         "width": "match_parent",
                                         "gravity_horizontal": "center",
@@ -3426,17 +3414,6 @@
                                         "type": "ModernEditText",
                                         "Value": "@url",
                                         "Variable": "url"
-                                    },
-                                    {
-                                        "TextSize": "20",
-                                        "height": "wrap_content",
-                                        "width": "match_parent",
-                                        "gravity_horizontal": "center",
-                                        "gravity_vertical": "center",
-                                        "weight": "0",
-                                        "type": "TextView",
-                                        "Value": "Пользователь",
-                                        "Variable": ""
                                     },
                                     {
                                         "height": "wrap_content",
@@ -3449,17 +3426,6 @@
                                         "Variable": "user"
                                     },
                                     {
-                                        "TextSize": "20",
-                                        "height": "wrap_content",
-                                        "width": "match_parent",
-                                        "gravity_horizontal": "center",
-                                        "gravity_vertical": "center",
-                                        "weight": "0",
-                                        "type": "TextView",
-                                        "Value": "Пароль",
-                                        "Variable": ""
-                                    },
-                                    {
                                         "height": "wrap_content",
                                         "width": "match_parent",
                                         "gravity_horizontal": "center",
@@ -3468,16 +3434,6 @@
                                         "type": "ModernEditText",
                                         "Value": "@pass",
                                         "Variable": "pass"
-                                    },
-                                    {
-                                        "height": "wrap_content",
-                                        "width": "match_parent",
-                                        "gravity_horizontal": "center",
-                                        "gravity_vertical": "center",
-                                        "weight": "0",
-                                        "type": "TextView",
-                                        "Value": "Ваше имя для идентификации в 1С",
-                                        "Variable": ""
                                     },
                                     {
                                         "height": "wrap_content",
@@ -3759,12 +3715,12 @@
                                         "Variable": "use_mark"
                                     },
                                     {
-                                        "height": "0",
-                                        "width": "0",
+                                        "height": "wrap_content",
+                                        "width": "match_parent",
                                         "gravity_horizontal": "center",
                                         "gravity_vertical": "center",
                                         "weight": "0",
-                                        "type": "EditTextText",
+                                        "type": "ModernEditText",
                                         "Value": "@ip_host",
                                         "Variable": "ip_host"
                                     },
@@ -3777,6 +3733,14 @@
                                         "type": "ProgressButton",
                                         "Value": "Скопировать базу на компьютер",
                                         "Variable": "btn_copy_base"
+                                    },
+                                    {
+                                        "height": "wrap_content",
+                                        "width": "match_parent",
+                                        "weight": "0",
+                                        "type": "ProgressButton",
+                                        "Value": "Выгрузить лог",
+                                        "Variable": "btn_unload_log"
                                     },
                                     {
                                         "height": "wrap_content",
@@ -3869,6 +3833,14 @@
                                 "type": "python",
                                 "method": "debug_listener",
                                 "postExecute": ""
+                            },
+                            {
+                                "event": "onStart",
+                                "listener": "",
+                                "action": "run",
+                                "type": "python",
+                                "method": "debug_on_start",
+                                "postExecute": ""
                             }
                         ],
                         "onlineOnStart": false,
@@ -3951,7 +3923,11 @@
                 "PyFileData": ""
             },
             {
-                "PyFileKey": "test_load_docs",
+                "PyFileKey": "hs_services",
+                "PyFileData": ""
+            },
+            {
+                "PyFileKey": "ui_barcodes",
                 "PyFileData": ""
             }
         ],
@@ -3960,8 +3936,9 @@
         "CommonHandlers": [
             {
                 "event": "onLaunch",
+                "listener": "",
                 "action": "run",
-                "type": "python",
+                "type": "pythonreload",
                 "method": "app_on_start",
                 "postExecute": "",
                 "alias": "on_start"

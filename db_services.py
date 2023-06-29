@@ -482,23 +482,23 @@ class DocDbService(DbService):
             else:
                 return self.model.get(**_filter)
 
-    def update(self, _filter, data: dict):
+    def update(self, data, goods, _filter=None):
         with self.db_session:
             doc = self.get(_filter)
-
-            if data.get('goods'):
-                goods_service = DbService(self.db_session, 'RS_docs_table')
-                goods = []
-                for row in data['goods']:
-                    item = goods_service.create(row)
-                    goods.append(item)
-
-                data['goods'] = goods
 
             if doc:
                 doc.set(**data)
             else:
-                self.model(**data)
+                doc = self.model(**data)
+
+            if goods:
+                goods_service = DbService(self.db_session, 'RS_docs_table')
+                goods = []
+                for row in goods:
+                    item = goods_service.create(row)
+                    goods.append(item)
+
+                doc.goods = goods
 
             return doc
 
