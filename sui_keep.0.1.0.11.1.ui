@@ -7553,7 +7553,11 @@
             {
                 "type": "Process",
                 "ProcessName": "Отладка",
-                "hidden": true,
+                "hidden": false,
+                "DefineOnBackPressed": false,
+                "login_screen": false,
+                "PlanFactHeader": "",
+                "SC": false,
                 "Operations": [
                     {
                         "type": "Operation",
@@ -7575,6 +7579,8 @@
                                 "gravity_horizontal": "center",
                                 "gravity_vertical": "center",
                                 "weight": "0",
+                                "height_value": "",
+                                "width_value": "",
                                 "type": "LinearLayout",
                                 "Variable": "",
                                 "Elements": [
@@ -7598,16 +7604,6 @@
                                         "type": "CheckBox",
                                         "Value": "ИспользоватьМаркировку",
                                         "Variable": "use_mark"
-                                    },
-                                    {
-                                        "height": "0",
-                                        "width": "0",
-                                        "gravity_horizontal": "center",
-                                        "gravity_vertical": "center",
-                                        "weight": "0",
-                                        "type": "EditTextText",
-                                        "Value": "@ip_host",
-                                        "Variable": "ip_host"
                                     },
                                     {
                                         "height": "wrap_content",
@@ -7698,6 +7694,27 @@
                                         "type": "ProgressButton",
                                         "Value": "Очистить базу",
                                         "Variable": "bnt_clear_tables"
+                                    },
+                                    {
+                                        "TextSize": "",
+                                        "TextColor": "",
+                                        "TextBold": false,
+                                        "TextItalic": false,
+                                        "BackgroundColor": "",
+                                        "StrokeWidth": "",
+                                        "Padding": "",
+                                        "orientation": "",
+                                        "height": "wrap_content",
+                                        "width": "wrap_content",
+                                        "gravity_horizontal": "center",
+                                        "gravity_vertical": "center",
+                                        "weight": "",
+                                        "height_value": "",
+                                        "width_value": "",
+                                        "type": "EditTextText",
+                                        "Value": "@ip_host",
+                                        "Variable": "ip_host",
+                                        "style_name": ""
                                     }
                                 ]
                             }
@@ -7709,6 +7726,14 @@
                                 "action": "run",
                                 "type": "python",
                                 "method": "debug_listener",
+                                "postExecute": ""
+                            },
+                            {
+                                "event": "onStart",
+                                "listener": "",
+                                "action": "run",
+                                "type": "python",
+                                "method": "debug_on_start",
                                 "postExecute": ""
                             }
                         ],

@@ -20,7 +20,7 @@ conn = None
 
 
 
-def find_barcode_in_marking_codes_table(self, struct_barcode: list) -> collections.Iterable:
+def find_barcode_in_marking_codes_table(self, struct_barcode: list):
     """Функция получает строки маркировки документа по значению маркировки"""
 
     query_text = ui_form_data.get_query_mark_find_in_doc()
@@ -33,7 +33,7 @@ def find_barcode_in_marking_codes_table(self, struct_barcode: list) -> collectio
     return res
 
 
-def find_barcode_in_barcode_table(barcode: str) -> collections.Iterable:
+def find_barcode_in_barcode_table(barcode: str):
     query_text = ui_form_data.get_barcode_query()
     res = get_query_result(query_text, (barcode,), True)
     return res

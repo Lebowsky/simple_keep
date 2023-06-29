@@ -38,7 +38,7 @@ class HashMap:
         if title is None:
             title = self.get_current_screen()
         self.hash_map.put("basic_notification", json.dumps([{'number': notification_id,
-                                                             'title': title, 'message': text}]))
+                                                             'title': str(title), 'message': text}]))
         rs_settings.put("notification_id", notification_id, True)
         if add_to_log:
             self.error_log(text)

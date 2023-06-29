@@ -715,6 +715,8 @@ class DocumentsDocsListScreen(DocsListScreen):
             answer = post_changes_to_server(f"'{id_doc}'", http_params)
             if answer.get('Error') is not None:
                 ui_global.write_error_on_log(str(answer.get('Error')))
+                self.put_notification(text=f'Ошибка при отправке документа {self.get_doc_number()}, '
+                                           f'подробнее в логе ошибок.')
                 self.toast('Не удалось отправить документ повторно')
             else:
                 self.toast('Документ отправлен повторно')
@@ -723,6 +725,11 @@ class DocumentsDocsListScreen(DocsListScreen):
         card_data = self.hash_map.get_json("card_data") or {}
         id_doc = card_data.get('key') or self.hash_map['selected_card_key']
         return id_doc
+
+    def get_doc_number(self):
+        card_data = self.hash_map.get_json("card_data") or {}
+        doc_number = card_data.get('number')
+        return doc_number
 
 
 # ^^^^^^^^^^^^^^^^^^^^^ DocsList ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -1046,6 +1053,7 @@ class GroupScanDocDetailsScreen(DocDetailsScreen):
             pass
 
         elif listener == 'barcode' or self._is_result_positive('ВвестиШтрихкод'):
+            self._update_document_data()
             self._barcode_scanned()
             self.hash_map.run_event_async('doc_details_barcode_scanned')
 
@@ -1076,6 +1084,29 @@ class GroupScanDocDetailsScreen(DocDetailsScreen):
             table_view = self._get_doc_table_view(table_data=table_data)
             self.hash_map.put("doc_goods_table", table_view.to_json())
             self.hash_map.refresh_screen()
+
+    def _update_document_data(self):
+        docs_data = self._get_update_current_doc_data()
+        if docs_data:
+            try:
+                self.service.update_data_from_json(docs_data)
+            except Exception as e:
+                self.service.write_error_on_log(f'Ошибка записи документа:  {e}')
+
+    def _get_update_current_doc_data(self):
+        hs_service = HsService(self.get_http_settings())
+        hs_service.get_data()
+        answer = hs_service.http_answer
+
+        if answer.unauthorized:
+            self.hash_map.toast('Ошибка авторизации сервера 1С')
+        elif answer.forbidden:
+            self.hash_map.notification(answer.error_text, title='Ошибка обмена')
+            self.hash_map.toast(answer.error_text)
+        elif answer.error:
+            self.service.write_error_on_log(f'Ошибка загрузки документа:  {answer.error_text}')
+        else:
+            return answer.data
 
 
 class DocumentsDocDetailScreen(DocDetailsScreen):
@@ -1340,11 +1371,71 @@ class HttpSettingsScreen(Screen):
     def on_input(self) -> None:
         pass
 
+        # if listener == 'btn_save':
+        #     hashMap.toast('saved')
+        #     hashMap.toast(hashMap.get('pass'))
+        #     rs_settings.put('url', hashMap.get('url'), True)
+        #     rs_settings.put('user', hashMap.get('user'), True)
+        #     rs_settings.put('pass', hashMap.get('pass'), True)
+        #     rs_settings.put('user_name', hashMap.get('user_name'), True)
+        #
+        #     hashMap.put('url', ui_form_data.ModernField(hint='url', default_text=rs_settings.get('url')).to_json())
+        #     hashMap.put('user', ui_form_data.ModernField(hint='user', default_text=rs_settings.get('user')).to_json())
+        #     hashMap.put('pass', ui_form_data.ModernField(hint='pass', default_text=rs_settings.get('pass')).to_json())
+        #     hashMap.put('user_name',
+        #                 ui_form_data.ModernField(hint='user_name', default_text=rs_settings.get('user_name')).to_json())
+        #
+        #     # hashMap.put('ShowScreen', 'Настройки и обмен')
+        # elif listener == 'btn_cancel':
+        #     hashMap.put('ShowScreen', 'Настройки и обмен')
+        # elif listener == 'ON_BACK_PRESSED':
+        #     hashMap.put('ShowScreen', 'Настройки и обмен')
+        # elif listener == 'barcode':
+        #     barcode = hashMap.get('barcode_camera2')
+        #     try:
+        #         barc_struct = json.loads(barcode)
+        #
+        #         rs_settings.put('url', barc_struct.get('url'), True)
+        #         rs_settings.put('user', barc_struct.get('user'), True)
+        #         rs_settings.put('pass', barc_struct.get('pass'), True)
+        #         rs_settings.put('user_name', barc_struct.get('user_name'), True)
+        #
+        #         hashMap.put('url', ui_form_data.ModernField(hint='url', default_text=barc_struct.get('url')).to_json())
+        #         hashMap.put('user',
+        #                     ui_form_data.ModernField(hint='user', default_text=barc_struct.get('user')).to_json())
+        #         hashMap.put('pass',
+        #                     ui_form_data.ModernField(hint='pass', default_text=barc_struct.get('pass')).to_json())
+        #         hashMap.put('user_name', ui_form_data.ModernField(hint='user_name',
+        #                                                           default_text=barc_struct.get('user_name')).to_json())
+        #     except:
+        #         hashMap.put('toast', 'неверный формат QR-кода')
+        # elif listener == 'btn_test_connection':
+        #     # /communication_test
+        #     http = get_http_settings(hashMap)
+        #     r = requests.get(http['url'] + '/simple_accounting/communication_test?android_id=' + http['android_id'],
+        #                      auth=HTTPBasicAuth(http['user'], http['pass']),
+        #                      headers={'Content-Type': 'application/x-www-form-urlencoded; charset=utf-8'},
+        #                      params={'user_name': http['user_name'], 'device_model': http['device_model']})
+        #     if r.status_code == 200:
+        #         hashMap.put('btn_test_connection', 'Соединение установлено')
+        #         hashMap.put('toast', 'Соединение установлено')
+        #     else:
+        #         hashMap.put('btn_test_connection', 'Тест соединения')
+        #         hashMap.put('toast', 'Не удалось установить соединение')
+        #
+        # elif listener == 'timer_is_disabled':
+        #     rs_settings.put('timer_is_disabled', hashMap['timer_is_disabled'], True)
+        #
+        # return hashMap
+
     def on_post_start(self):
         pass
 
     def show(self, args=None):
         pass
+
+    def get_modern_field(self, **data):
+        return widgets.ModernField(**data).to_json()
 
 
 class ErrorLogScreen(Screen):
@@ -1572,19 +1663,11 @@ class Timer:
         self.http_service = HsService(self.http_settings)
 
     def timer_on_start(self):
-        docs_data = self.http_service.get_data()
-        if docs_data.get('data'):
-            try:
-                existing_docs_list = self.db_service.get_existing_docs_names_list()
-                self.db_service.update_data_from_json(docs_data['data'])
-                docs_list_after_load = self.db_service.get_existing_docs_names_list()
-                diff = [x for x in docs_list_after_load if x not in existing_docs_list]
-                if diff:
-                    self.put_notification(text=" ".join(diff), title="Загружены документы:")
-            except Exception as e:
-                self.db_service.write_error_on_log(f'Ошибка загрузки документа:  {e}')
+        self.load_docs()
+        self.upload_docs()
 
     def save_data_to_db(self, data: dict):
+        # TODO доделать через пони
         if not data:
             return
 
@@ -1622,6 +1705,32 @@ class Timer:
             'user_name': self.rs_settings.get('user_name')}
         return http_settings
 
+    def load_docs(self):
+        try:
+            docs_data = self.http_service.get_data()
+            if docs_data.get('data'):
+                existing_docs_list = self.db_service.get_existing_docs_names_list()
+                self.db_service.update_data_from_json(docs_data['data'])
+                docs_list_after_load = self.db_service.get_existing_docs_names_list()
+                diff = [x[0] for x in docs_list_after_load if x not in existing_docs_list]
+                if diff:
+                    self.put_notification(text=" ".join(diff), title="Загружены документы:")
+        except Exception as e:
+            self.db_service.write_error_on_log(f'Ошибка загрузки документа:  {e}')
+
+    def upload_docs(self):
+        try:
+            docs_goods_list = self.db_service.get_docs_and_goods_for_upload()
+            answer = self.http_service.send_documents(docs_goods_list)
+        except Exception as e:
+            self.hash_map.toast(e)
+        if answer.get('Error') is not None:
+            self.put_notification(text=f'Ошибка при отправке документов {",".join(doc_list)}, ')
+            self.db_service.write_error_on_log(f'Ошибка выгрузки документа:  {e}')
+        else:
+            docs_list_string = ', '.join([f"'{d['id_doc']}'" for d in docs_goods_list])
+            self.db_service.update_uploaded_docs_status(docs_list_string)
+
 
 # ^^^^^^^^^^^^^^^^^^^^^ Timer ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -1639,7 +1748,7 @@ class MainEvents:
         current_release = '0.1.0.12.1'
 
         if release != current_release:
-            # self.hash_map.put('UpdateConfigurations', '')
+            self.hash_map.put('UpdateConfigurations', '')
             self.rs_settings.put('Release', current_release, True)
 
         self._create_tables()
@@ -1648,7 +1757,7 @@ class MainEvents:
             'TitleTextSize': 18,
             'titleDocTypeCardTextSize': 18,
             'CardTitleTextSize': 20,
-            'CardDateTextSize': 20,
+            'CardDateTextSize': 10,
             'CardTextSize': 15,
             'GoodsCardTitleTextSize': 18,
             'goodsTextSize': 18,
@@ -1663,7 +1772,8 @@ class MainEvents:
             'allow_overscan': 'false',
             'path_to_databases': '//data/data/ru.travelfood.simple_ui/databases',
             'sqlite_name': 'SimpleKeep',
-            'log_name': 'log.json'
+            'log_name': 'log.json',
+            'timer_is_disabled': False
         }
 
         for k, v in rs_default_settings.items():

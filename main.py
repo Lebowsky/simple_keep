@@ -5,6 +5,7 @@ from requests.auth import HTTPBasicAuth
 import os
 from PIL import Image
 import time
+import importlib
 
 from java import jclass
 
@@ -15,11 +16,20 @@ import ui_form_data
 import ui_models
 import http_exchange
 from ui_utils import HashMap
+import widgets
 
 from ru.travelfood.simple_ui import SimpleUtilites as suClass
 
 noClass = jclass("ru.travelfood.simple_ui.NoSQL")
 rs_settings = noClass("rs_settings")
+
+
+importlib.reload(ui_barcodes)
+importlib.reload(ui_csv)
+importlib.reload(ui_global)
+importlib.reload(ui_form_data)
+importlib.reload(ui_models)
+importlib.reload(http_exchange)
 
 
 def create_screen(hash_map: HashMap):
@@ -50,7 +60,7 @@ def app_on_start(hash_map: HashMap):
 
 
 @HashMap()
-def timer_update(hash_map):
+def timer_update(hash_map: HashMap):
     """ Обработчик для фонового обмена """
 
     timer = ui_models.Timer(hash_map, rs_settings)
@@ -85,13 +95,13 @@ def on_close_app(hash_map):
 
 @HashMap()
 def tiles_on_start(hash_map: HashMap):
-    screen = create_screen(hash_map)
+    screen: ui_models.DocumentsTiles = create_screen(hash_map)
     screen.on_start()
 
 
 @HashMap()
 def tiles_on_input(hash_map: HashMap):
-    screen = create_screen(hash_map)
+    screen: ui_models.DocumentsTiles = create_screen(hash_map)
     screen.on_input()
 
 
@@ -1687,6 +1697,7 @@ def settings_on_start(hashMap, _files=None, _data=None):
     return hashMap
 
 
+@HashMap()
 def settings_on_click(hashMap, _files=None, _data=None):
     #Использовать маркировку
     use_mark = hashMap.get('use_mark')
@@ -1893,6 +1904,7 @@ def http_settings_on_start(hash_map):
     screen.on_start()
 
 
+@HashMap()
 def http_settings_on_click(hashMap,  _files=None, _data=None):
     listener = hashMap.get('listener')
     if listener == 'btn_save':
@@ -1988,10 +2000,28 @@ def debug_on_start(hash_map: HashMap):
     screen.on_start()
 
 
-@HashMap()
-def debug_listener(hash_map, _files=None, _data=None):
-    screen: ui_models.DebugSettingsScreen = create_screen(hash_map)
-    screen.on_input()
+# @HashMap()
+# def debug_listener(hash_map, _files=None, _data=None):
+#     screen: ui_models.DebugSettingsScreen = create_screen(hash_map)
+#     screen.on_input()
+def debug_listener(hashMap, _files=None, _data=None):
+    hashMap.put('toast','начало КФопирования')
+    listener = hashMap.get('listener')
+
+    if listener == 'btn_copy_base':
+        ip_host = hashMap.get('ip_host')
+        if os.path.isfile('//data/data/ru.travelfood.simple_ui/databases/SimpleKeep'): #Keep'):
+            with open('//data/data/ru.travelfood.simple_ui/databases/SimpleKeep', 'rb') as f:  # rightscan
+                #r = requests.post('http://' + ip_host + ':2444/post', files={'Rightscan': f})  # rightscan
+                r = requests.post('http://192.168.1.77:2444/post', files={'Rightscan': f})  # rightscan
+            if r.status_code == 200:
+                hashMap.put('toast', 'База SQLite успешно выгружена')
+            else:
+                hashMap.put('toast', 'Ошибка соединения')
+        else:
+            hashMap.put('toast', 'Файл не найден')
+
+    return hashMap
 
 
 # ^^^^^^^^^^^^^^^^^ Debug ^^^^^^^^^^^^^^^^^
