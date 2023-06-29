@@ -387,7 +387,7 @@ class DocService:
     @staticmethod
     def get_existing_docs():
         query_text = "SELECT doc_n,doc_type FROM RS_docs" # doc_n,
-        res = get_query_result(query_text)
+        res = get_query_result(query_text, return_dict=True)
         return res
 
 

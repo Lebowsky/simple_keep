@@ -55,6 +55,29 @@
                                         "Variable": ""
                                     }
                                 ]
+                            },
+                            {
+                                "Value": "",
+                                "Variable": "",
+                                "type": "LinearLayout",
+                                "weight": "0",
+                                "height": "wrap_content",
+                                "width": "match_parent",
+                                "orientation": "vertical",
+                                "Elements": [
+                                    {
+                                        "type": "TextView",
+                                        "height": "wrap_content",
+                                        "width": "match_parent",
+                                        "weight": "0",
+                                        "Value": "@no_data_note",
+                                        "Variable": "no_data_note",
+                                        "TextSize": "20"
+                                    }
+                                ],
+                                "BackgroundColor": "",
+                                "StrokeWidth": "",
+                                "Padding": ""
                             }
                         ],
                         "Handlers": [
@@ -3923,11 +3946,7 @@
                 "PyFileData": ""
             },
             {
-                "PyFileKey": "hs_services",
-                "PyFileData": ""
-            },
-            {
-                "PyFileKey": "ui_barcodes",
+                "PyFileKey": "test_load_docs",
                 "PyFileData": ""
             }
         ],

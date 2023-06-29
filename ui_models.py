@@ -167,21 +167,25 @@ class GroupScanTiles(Tiles):
 
     def on_start(self) -> None:
         data = self.db_service.get_docs_stat()
-        layout = json.loads(self._get_tile_view().to_json())
+        if data:
+            layout = json.loads(self._get_tile_view().to_json())
 
-        tiles_list = [self._get_tile_row(layout, item) for item in data]
+            tiles_list = [self._get_tile_row(layout, item) for item in data]
 
-        # split list by two element in row
-        count_row_elements = 2
-        tiles = {
-            'tiles': [
-                tiles_list[i:i + count_row_elements]
-                for i in range(0, len(tiles_list), count_row_elements)
-            ],
-            'background_color': '#f5f5f5'
-        }
+            # split list by two element in row
+            count_row_elements = 2
+            tiles = {
+                'tiles': [
+                    tiles_list[i:i + count_row_elements]
+                    for i in range(0, len(tiles_list), count_row_elements)
+                ],
+                'background_color': '#f5f5f5'
+            }
 
-        self.hash_map.put('tiles', tiles, to_json=True)
+            self.hash_map.put('tiles', tiles, to_json=True)
+        else:
+            self.hash_map.put("no_data_note", "Нет загруженных документов")
+            self.hash_map.put('tiles', "")
 
     def on_input(self) -> None:
         super().on_input()
@@ -1481,11 +1485,12 @@ class Timer:
                 existing_docs = self.db_service.get_existing_docs()
                 self.db_service.update_data_from_json(docs_data['data'])
                 docs_after_load = self.db_service.get_existing_docs()
-                diff = [f'{x[1]}: {x[0]}' for x in docs_after_load if x not in existing_docs]
-                if diff:
-                    self.put_notification(text=" ".join(diff), title="Загружены документы:")
+                diff = [x for x in docs_after_load if x not in existing_docs]
+                str_diff = ", ".join([f'{el["doc_type"]}: {el["doc_n"]}' for el in diff])
+                if str_diff:
+                    self.put_notification(text=str_diff, title="Загружены документы:")
         except Exception as e:
-            self.db_service.write_error_on_log(f'Ошибка загрузки документов {str(diff)}: {e}')
+            self.db_service.write_error_on_log(f'Ошибка загрузки документов: {e}')
 
     def upload_docs(self):
         try:
