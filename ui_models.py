@@ -1085,28 +1085,27 @@ class GroupScanDocDetailsScreen(DocDetailsScreen):
             self.hash_map.refresh_screen()
 
     def _update_document_data(self):
-        doc_data = self._get_update_current_doc_data()
-
-        if doc_data:
-            from db_models import db_session
-            db_service = db_services.DocDbService(db_session)
-            db_service.update(data=doc_data, _filter={'id_doc': self.id_doc})
+        docs_data = self._get_update_current_doc_data()
+        if docs_data:
+            try:
+                self.service.update_data_from_json(docs_data)
+            except Exception as e:
+                self.service.write_error_on_log(f'Ошибка записи документа:  {e}')
 
     def _get_update_current_doc_data(self):
         hs_service = HsService(self.get_http_settings())
-        answer = hs_service.get_data()
+        hs_service.get_data()
+        answer = hs_service.http_answer
 
-        valid_data = answer.get('data') and answer['data'].get('RS_docs') and answer['data'].get('RS_docs_table')
-        if not valid_data:
-            return
-
-        doc_data = [item for item in answer['data']['RS_docs'] if item['id_doc'] == self.id_doc]
-        goods = [item for item in answer['data']['RS_docs_table'] if item['id_doc'] == self.id_doc]
-
-        if doc_data:
-            doc_data[0]['goods'] = goods
-
-        return doc_data[0]
+        if answer.unauthorized:
+            self.hash_map.toast('Ошибка авторизации сервера 1С')
+        elif answer.forbidden:
+            self.hash_map.notification(answer.error_text, title='Ошибка обмена')
+            self.hash_map.toast(answer.error_text)
+        elif answer.error:
+            self.service.write_error_on_log(f'Ошибка загрузки документа:  {answer.error_text}')
+        else:
+            return answer.data
 
 
 class DocumentsDocDetailScreen(DocDetailsScreen):
@@ -1335,7 +1334,6 @@ class GoodsSelectScreen(Screen):
         #         jphotoarr = json.loads(hashMap.get("photoGallery"))
         #         hashMap.put("photoGallery", json.dumps(jphotoarr))
 
-
     def on_post_start(self):
         pass
 
@@ -1362,7 +1360,8 @@ class HttpSettingsScreen(Screen):
         put_data = {
             'url': widgets.ModernField(hint='Адрес сервера', default_text=http_settings['url'] or '').to_json(),
             'user': widgets.ModernField(hint='Пользователь', default_text=http_settings['user'] or '').to_json(),
-            'pass': widgets.ModernField(hint='Пароль', default_text=http_settings['pass'] or '', password=True).to_json(),
+            'pass': widgets.ModernField(hint='Пароль', default_text=http_settings['pass'] or '',
+                                        password=True).to_json(),
             'user_name': widgets.ModernField(hint='Ваше имя для идентификации в 1С',
                                              default_text=http_settings['user_name'] or '').to_json(),
         }
@@ -1436,6 +1435,7 @@ class HttpSettingsScreen(Screen):
 
     def get_modern_field(self, **data):
         return widgets.ModernField(**data).to_json()
+
 
 class ErrorLogScreen(Screen):
     screen_name = 'Ошибки'
@@ -1665,7 +1665,6 @@ class Timer:
         self.load_docs()
         self.upload_docs()
 
-
     def save_data_to_db(self, data: dict):
         # TODO доделать через пони
         if not data:
@@ -1730,8 +1729,6 @@ class Timer:
         else:
             docs_list_string = ', '.join([f"'{d['id_doc']}'" for d in docs_goods_list])
             self.db_service.update_uploaded_docs_status(docs_list_string)
-
-
 
 
 # ^^^^^^^^^^^^^^^^^^^^^ Timer ^^^^^^^^^^^^^^^^^^^^^^^^^^^^

@@ -1,8 +1,8 @@
 import requests
 import json
+from dataclasses import dataclass, fields
 from requests.auth import HTTPBasicAuth
-
-import ui_utils
+from typing import Optional
 
 
 class HsService:
@@ -18,6 +18,7 @@ class HsService:
         self._method = requests.get
         self.auth = HTTPBasicAuth(self.username, self.password)
         self.headers = {'Content-Type': 'application/x-www-form-urlencoded; charset=utf-8'}
+        self.http_answer: Optional[HsService.HttpAnswer] = None
 
     def get_data(self, **kwargs) -> dict:
         self._hs = 'data'
@@ -39,10 +40,12 @@ class HsService:
             else:
                 answer['format'] = None
         elif answer['status_code'] == 401:
+            print(answer)
             answer['error_pool'] = answer['reason']
         else:
-            answer['error_pool'] = answer['text']
+            answer['error_pool'] = answer.get('text')
 
+        self.http_answer = self._create_http_answer(answer)
         return answer
 
     def reset_exchange(self, **kwargs):
@@ -57,7 +60,9 @@ class HsService:
     def communication_test(self, **kwargs) -> dict:
         self._hs = 'communication_test'
         self._method = requests.get
-        return self._send_request(kwargs)
+        answer = self._send_request(kwargs)
+        self.http_answer = self._create_http_answer(answer)
+        return answer
 
     def get_balances_goods(self, warehouses=False, cells=False):
         pass
@@ -73,7 +78,9 @@ class HsService:
         self._hs = 'documents'
         self._method = requests.post
 
-        return self._send_request(kwargs)
+        answer = self._send_request(kwargs)
+        self.http_answer = self._create_http_answer(answer)
+        return answer
 
     def _send_request(self, kwargs) -> dict:
         answer = {'empty': True}
@@ -85,17 +92,56 @@ class HsService:
                              **kwargs)
 
             answer['status_code'] = r.status_code
+            answer['url'] = r.url
+            answer['reason'] = r.reason
+            answer['text'] = r.text.encode("utf-8")
+
             if r.status_code == 200:
                 answer['empty'] = False
-                answer['text'] = r.text.encode("utf-8")
-                answer['reason'] = r.reason
             else:
-                answer['Error'] = r.text
+                answer['Error'] = r.reason
+                answer['reason'] = r.reason
         except Exception as e:
             raise e
             # answer['Error'] = e.args[0]
 
         return answer
+
+    def _create_http_answer(self, answer: dict):
+        answer_data = {
+            'status_code': answer.get('status_code'),
+            'url': answer.get('url'),
+        }
+
+        if answer_data['status_code'] == 200:
+            answer_data['data'] = answer.get('data')
+        else:
+            answer_data['error_text'] = answer.get('Error') or answer.get('error')
+            if answer_data['status_code'] == 401:
+                answer_data['unauthorized'] = True
+            elif answer_data['status_code'] == 403:
+                error_text = ''
+                if answer.get('text'):
+                    try:
+                        json_result = json.loads(answer['text'])
+                        error_text = json_result.get('error')
+                    except Exception as e:
+                        error_text = answer['text'].decode()
+
+                answer_data['error_text'] = error_text
+                answer_data['forbidden'] = True
+
+        return self.HttpAnswer(**answer_data)
+
+    @dataclass
+    class HttpAnswer:
+        url: str
+        status_code: int
+        error_text: Optional[str] = ''
+        data: Optional = None
+        unauthorized: bool = False
+        forbidden: bool = False
+        error: bool = False
 
 
 class DebugService:
@@ -123,7 +169,7 @@ class DebugService:
             if r.status_code == 200:
                 answer['empty'] = False
                 answer['text'] = r.text.encode("utf-8")
-                answer['reason'] =  r.reason
+                answer['reason'] = r.reason
             else:
                 answer['Error'] = r.text
         except Exception as e:
