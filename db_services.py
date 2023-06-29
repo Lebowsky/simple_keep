@@ -186,33 +186,36 @@ class DocService:
         return doc_types
 
     def get_doc_view_data(self, doc_type='', doc_status='') -> list:
-        query_text = f'''
-            SELECT {self.docs_table_name}.id_doc,
-                {self.docs_table_name}.doc_type,
-                {self.docs_table_name}.doc_n,
-                {self.docs_table_name}.doc_date,
-                {self.docs_table_name + '.id_countragents,' if self.docs_table_name == 'Rs_docs' else ''}
-                {self.docs_table_name}.id_warehouse,
-                ifnull(RS_warehouses.name,'') as RS_warehouse,
-                ifnull({self.docs_table_name}.verified, 0) as verified,
-                ifnull({self.docs_table_name}.sent, 0) as sent,
-                {self.docs_table_name}.add_mark_selection
-                '''
-        if self.docs_table_name == 'RS_docs':
-            query_text.join('''
-            ifnull(RS_countragents.full_name, '') as RS_countragent,
-                            FROM {self.docs_table_name}''')
+        fields = [
+            f'{self.docs_table_name}.id_doc',
+            f'{self.docs_table_name}.doc_type',
+            f'{self.docs_table_name}.doc_n',
+            f'{self.docs_table_name}.doc_date',
+            f'{self.docs_table_name}.id_warehouse',
+            f'ifnull(RS_warehouses.name,"") as RS_warehouse',
+            f'ifnull({self.docs_table_name}.verified, 0) as verified',
+            f'ifnull({self.docs_table_name}.sent, 0) as sent',
+            f'{self.docs_table_name}.add_mark_selection',
+        ]
 
-        joins =    f'''FROM {self.docs_table_name}
+        if self.docs_table_name == 'RS_docs':
+            fields.append(f'{self.docs_table_name}.id_countragents')
+            fields.append(f'ifnull(RS_countragents.full_name, "") as RS_countragent')
+
+        query_text = 'SELECT ' + ',\n'.join(fields)
+
+        joins = f'''FROM {self.docs_table_name}
             LEFT JOIN RS_warehouses as RS_warehouses
                 ON RS_warehouses.id = {self.docs_table_name}.id_warehouse
         '''
+
         if self.docs_table_name == 'RS_docs':
-            joins.join(f'''
+            joins += f'''
             LEFT JOIN RS_countragents as RS_countragents
                 ON RS_countragents.id = {self.docs_table_name}.id_countragents
-                ''')
+                '''
 
+        where = ''
 
         if doc_status:
             if doc_status == "Выгружен":
@@ -221,14 +224,9 @@ class DocService:
                 where = "WHERE ifnull(verified,0)=1 AND ifnull(sent,0)=0"
             elif doc_status == "К выполнению":
                 where = "WHERE ifnull(verified,0)=0 AND ifnull(sent,0)=0"
-            elif doc_status == "Все":
-                where = ""
 
         if not doc_type or doc_type == "Все":
             args_tuple = None
-            if not doc_status or doc_status == "Все":
-                where = ''
-
         else:
             args_tuple = (doc_type,)
             if not doc_status or doc_status == "Все":
@@ -242,7 +240,7 @@ class DocService:
             {where}
             ORDER BY {self.docs_table_name}.doc_date
         '''
-
+        print(query_text)
         result = self._get_query_result(query_text, args_tuple, return_dict=True)
         return result
 
@@ -323,7 +321,7 @@ class DocService:
             RS_price_types.name as price_name,
             RS_docs_table.qtty_plan -RS_docs_table.qtty as IsDone
             
-            FROMRS_docs_table 
+            FROM RS_docs_table 
 
             LEFT JOIN RS_goods 
             ON RS_goods.id=RS_docs_table.id_good
@@ -337,7 +335,7 @@ class DocService:
             ON RS_price_types.id =RS_docs_table.id_price
 
             WHERE id_doc = $arg1
-            ORDER BYRS_docs_table.last_updated DESC 
+            ORDER BY RS_docs_table.last_updated DESC 
             """
         res = self._get_query_result(query, (id_doc,), return_dict=True)
         return res

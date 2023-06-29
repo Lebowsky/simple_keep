@@ -200,7 +200,6 @@ class DocumentsTiles(GroupScanTiles):
     process_name = 'Документы'
 
 
-
 # ^^^^^^^^^^^^^^^^^^^^^ Tiles ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 # ==================== DocsList =============================
@@ -224,7 +223,7 @@ class DocsListScreen(Screen):
         list_data = self._get_doc_list_data(doc_type, doc_status)
         if self.process_name == "Групповая обработка":
             doc_cards = self._get_doc_cards_view(list_data, 'Удалить')
-        #elif self.process_name == "Документы":     #******* При таком выражении существует вероятность что doc_cards никогдла не заполнится
+        # elif self.process_name == "Документы":     #******* При таком выражении существует вероятность что doc_cards никогдла не заполнится
         else:
             doc_cards = self._get_doc_cards_view(list_data,
                                                  popup_menu_data='Удалить;Очистить данные пересчета;Отправить повторно')
@@ -416,7 +415,8 @@ class DocsListScreen(Screen):
 class AdrDocsListScreen(DocsListScreen):
     screen_name = 'Документы'
     process_name = 'Адресное хранение'
-    def __init__(self, hash_map: HashMap,  rs_settings):
+
+    def __init__(self, hash_map: HashMap, rs_settings):
         super().__init__(hash_map, rs_settings)
         self.listener = self.hash_map['listener']
         self.event = self.hash_map['event']
@@ -424,7 +424,6 @@ class AdrDocsListScreen(DocsListScreen):
         self.service.docs_table_name = 'RS_adr_docs'
         self.service.details_table_name = 'RS_adr_docs_table'
         self.screen_values = {}
-
 
     def on_start(self) -> None:
         # Заполним поле фильтра по виду документов
@@ -443,7 +442,7 @@ class AdrDocsListScreen(DocsListScreen):
 
         list_data = self._get_doc_list_data(doc_type, doc_status)
         doc_cards = self._get_doc_cards_view(list_data,
-                                                 popup_menu_data='Удалить;Очистить данные пересчета;Отправить повторно')
+                                             popup_menu_data='Удалить;Очистить данные пересчета;Отправить повторно')
         self.hash_map['docAdrCards'] = doc_cards.to_json()
 
     def on_input(self) -> None:
@@ -475,14 +474,13 @@ class AdrDocsListScreen(DocsListScreen):
 
         elif self.listener == "btn_add_doc":
             pass
-            #hashMap.put('ShowScreen', 'Новый документ')
+            # hashMap.put('ShowScreen', 'Новый документ')
 
         elif self.listener == 'ON_BACK_PRESSED':
             pass
-            #hashMap.put('FinishProcess', '')
+            # hashMap.put('FinishProcess', '')
 
             # hashMap.put('ShowScreen', 'Новый документ')
-
 
     def on_post_start(self):
         pass
@@ -573,8 +571,8 @@ class AdrDocsListScreen(DocsListScreen):
                 ),
                 width="match_parent"
             ),
-            options = widgets.Options().options,
-            cardsdata = table_data
+            options=widgets.Options().options,
+            cardsdata=table_data
         )
 
         return doc_cards
@@ -642,6 +640,7 @@ class AdrDocsListScreen(DocsListScreen):
         else:
             self.hash_map.toast('Ошибка удаления документа')
 
+
 class GroupScanDocsListScreen(DocsListScreen):
     screen_name = 'Документы'
     process_name = 'Групповая обработка'
@@ -680,6 +679,7 @@ class DocumentsDocsListScreen(DocsListScreen):
 
     def __init__(self, hash_map, rs_settings):
         super().__init__(hash_map, rs_settings)
+        self.service.docs_table_name = 'RS_docs'
 
     def on_start(self):
         super().on_start()
@@ -881,7 +881,7 @@ class DocDetailsScreen(Screen):
             product_row['good_info'] = ''.join(props)
 
             product_row['_layout'] = self._get_doc_table_row_view()
-            self._set_background_row_color(product_row, self.id_doc)
+            self._set_background_row_color(product_row)
 
             if self._added_goods_has_key(product_row['key']):
                 table_data.insert(1, product_row)
@@ -1329,7 +1329,8 @@ class HttpSettingsScreen(Screen):
         put_data = {
             'url': widgets.ModernField(hint='Адрес сервера', default_text=http_settings['url'] or '').to_json(),
             'user': widgets.ModernField(hint='Пользователь', default_text=http_settings['user'] or '').to_json(),
-            'pass': widgets.ModernField(hint='Пароль', default_text=http_settings['pass'] or '', password=True).to_json(),
+            'pass': widgets.ModernField(hint='Пароль', default_text=http_settings['pass'] or '',
+                                        password=True).to_json(),
             'user_name': widgets.ModernField(hint='Ваше имя для идентификации в 1С',
                                              default_text=http_settings['user_name'] or '').to_json(),
         }
