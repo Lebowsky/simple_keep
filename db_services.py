@@ -318,6 +318,7 @@ class DocService:
             RS_units.name as units_name,
             RS_docs_table.qtty,
             RS_docs_table.qtty_plan,
+            RS_docs_table.price,
             RS_price_types.name as price_name,
             RS_docs_table.qtty_plan -RS_docs_table.qtty as IsDone
             

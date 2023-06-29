@@ -824,6 +824,7 @@ class DocDetailsScreen(Screen):
 
         self.hash_map.put("doc_goods_table", table_view.to_json())
 
+
     def _set_visibility_on_start(self):
         _vars = ['warehouse', 'countragent']
 
