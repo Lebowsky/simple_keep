@@ -157,8 +157,7 @@ def json_to_sqlite_query(data):
     return qlist
 
 
-
-def get_all_changes_from_database(doc_list=''):
+def get_all_changes_from_database(doc_list: str = ''):
     try:
         qtext = f'''
         SELECT * FROM RS_docs WHERE id_doc in ({doc_list})'''
@@ -222,7 +221,7 @@ def get_all_changes_from_database(doc_list=''):
     return json.dumps(res + res_adr)
 
 
-def post_changes_to_server(doc_list, htpparams):
+def post_changes_to_server(doc_list: str, htpparams):
     url = htpparams['url']
     username = htpparams['user']
     password = htpparams['pass']
@@ -230,23 +229,24 @@ def post_changes_to_server(doc_list, htpparams):
     res = get_all_changes_from_database(doc_list)
     if type(res) == type(dict) and res.get('Error'):
         answer = {'empty': True, 'Error':res.get('Error')}
-
         return answer
     answer = {'empty':True}
     if res is not None:
-
-        r = requests.post(url + '/simple_accounting/documents?android_id=' + android_id,
-                         auth=HTTPBasicAuth(username, password, ),
-                         headers={'Content-Type': 'application/x-www-form-urlencoded; charset=utf-8'},
-                         params={'user_name': htpparams['user_name'], 'device_model': htpparams['device_model']},
-                          data=res )
-        answer['status_code'] =r.status_code
-        if r.status_code == 200:
-            answer['empty']=False
-        else:
+        try:
+            r = requests.post(url + '/simple_accounting/documents?android_id=' + android_id,
+                             auth=HTTPBasicAuth(username, password, ),
+                             headers={'Content-Type': 'application/x-www-form-urlencoded; charset=utf-8'},
+                             params={'user_name': htpparams['user_name'], 'device_model': htpparams['device_model']},
+                              data=res)
+            answer['status_code'] = r.status_code
+            if r.status_code == 200:
+                answer['empty'] = False
+            else:
+                answer['empty'] = True
+                answer['Error'] = r.text
+        except Exception as e:
             answer['empty'] = True
-            answer['Error'] = r.text
-
+            answer["Error"] = str(e)
     return answer
 
 

@@ -5,6 +5,7 @@ from requests.auth import HTTPBasicAuth
 import os
 from PIL import Image
 import time
+import importlib
 
 from java import jclass
 
@@ -15,11 +16,20 @@ import ui_form_data
 import ui_models
 import http_exchange
 from ui_utils import HashMap
+import widgets
 
 from ru.travelfood.simple_ui import SimpleUtilites as suClass
 
 noClass = jclass("ru.travelfood.simple_ui.NoSQL")
 rs_settings = noClass("rs_settings")
+
+
+importlib.reload(ui_barcodes)
+importlib.reload(ui_csv)
+importlib.reload(ui_global)
+importlib.reload(ui_form_data)
+importlib.reload(ui_models)
+importlib.reload(http_exchange)
 
 
 def create_screen(hash_map: HashMap):
@@ -50,7 +60,7 @@ def app_on_start(hash_map: HashMap):
 
 
 @HashMap()
-def timer_update(hash_map):
+def timer_update(hash_map: HashMap):
     """ Обработчик для фонового обмена """
 
     timer = ui_models.Timer(hash_map, rs_settings)
@@ -1687,6 +1697,7 @@ def settings_on_start(hashMap, _files=None, _data=None):
     return hashMap
 
 
+@HashMap()
 def settings_on_click(hashMap, _files=None, _data=None):
     #Использовать маркировку
     use_mark = hashMap.get('use_mark')
@@ -1893,6 +1904,7 @@ def http_settings_on_start(hash_map):
     screen.on_start()
 
 
+@HashMap()
 def http_settings_on_click(hashMap,  _files=None, _data=None):
     listener = hashMap.get('listener')
     if listener == 'btn_save':

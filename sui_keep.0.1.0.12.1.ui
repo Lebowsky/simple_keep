@@ -2,7 +2,7 @@
     "ClientConfiguration": {
         "ConfigurationName": "Simple Учет",
         "ConfigurationDescription": "Простое решение для работы с штрихкодами товаров. Поставляется в комплекте с расширением для 1С. Подробнее про расширение Вы можете узнать по ссылке: https://www.simple-kit.ru/products/simple-uchet/ ",
-        "ConfigurationVersion": "0.1.0.12.1",
+        "ConfigurationVersion": "0.1.12.1",
         "Processes": [
             {
                 "type": "Process",
@@ -3402,8 +3402,6 @@
                                 "gravity_horizontal": "center",
                                 "gravity_vertical": "center",
                                 "weight": "0",
-                                "height_value": "",
-                                "width_value": "",
                                 "type": "LinearLayout",
                                 "Variable": "",
                                 "Elements": [

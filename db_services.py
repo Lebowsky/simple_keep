@@ -28,6 +28,10 @@ class DocService:
         if not res_goods:
             return None
 
+        return self.form_data_for_request(res_docs, res_goods, to_json)
+
+
+    def form_data_for_request(self, res_docs, res_goods, to_json):
         for item in res_docs:
             filtered_list = [d for d in res_goods if d['id_doc'] == item['id_doc']]
             item[self.docs_table_name] = filtered_list
@@ -148,8 +152,6 @@ class DocService:
                         row_values.append(row[col])  # (f'"{row[col]}"')
                     if col == 'id_doc' and (table_name in ['RS_docs','RS_adr_docs']):
                         doc_id_list.append('"' + row[col] + '"')
-
-
 
                 if docs and table_name == 'RS_docs':
                     row_values.append(docs[row['id_doc']])
@@ -337,7 +339,7 @@ class DocService:
             ON RS_price_types.id =RS_docs_table.id_price
 
             WHERE id_doc = $arg1
-            ORDER BYRS_docs_table.last_updated DESC 
+            ORDER BY RS_docs_table.last_updated DESC 
             """
         res = self._get_query_result(query, (id_doc,), return_dict=True)
         return res
@@ -412,6 +414,27 @@ class DocService:
         if Err_value:
             qtext = 'Insert into Error_log(log) Values(?)'
             get_query_result(qtext, (Err_value,))
+
+    def get_docs_and_goods_for_upload(self):
+        query_docs = '''SELECT * FROM RS_docs WHERE verified = 1  and (sent <> 1 or sent is null)'''
+        query_goods = '''SELECT * FROM RS_docs_table WHERE sent <> 1 or sent is null'''
+        try:
+            res_docs = get_query_result(query_docs, None, True)
+            res_goods = get_query_result(query_goods, None, True)
+        except Exception as e:
+            raise e
+        if not res_goods:
+            return None
+        return self.form_data_for_request(res_docs, res_goods, False)
+
+
+    @staticmethod
+    def update_uploaded_docs_status(doc_in_str):
+        qtext = f'UPDATE RS_docs SET sent = 1  WHERE id_doc in ({doc_in_str}) '
+        get_query_result(qtext)
+
+        qtext = f'UPDATE RS_adr_docs SET sent = 1  WHERE id_doc in ({doc_in_str}) '
+        get_query_result(qtext)
 
 class AdrDocService(DocService):
     def __init__(self):
@@ -534,7 +557,7 @@ class DocDbService(DbService):
             else:
                 return self.model.get(**_filter)
 
-    def update(self, _filter, data: dict):
+    def update(self, data, _filter=None):
         with self.db_session:
             doc = self.get(_filter)
 
