@@ -790,7 +790,9 @@ class DocDetailsScreen(Screen):
                 self.hash_map.put('barcode', json.dumps({'barcode': res['Barcode'], 'doc_info': res['doc_info']}))
                 self.hash_map.show_screen('Удаление штрихкода')
             elif res['Error'] == 'QuantityPlanReached':
-                self.hash_map.toast('toast', res['Descr'])
+                self.hash_map.put('Error_description', 'Количество план в документе превышено')
+                self.hash_map.show_screen('Ошибка превышения плана')
+                #self.hash_map.toast('toast', res['Descr'])
             elif res['Error'] == 'Zero_plan_error':
                 self.hash_map.toast(res['Descr'])
             else:
@@ -1747,9 +1749,9 @@ class MainEvents:
         release = self.rs_settings.get('Release') or ''
         current_release = '0.1.0.12.1'
 
-        if release != current_release:
-            self.hash_map.put('UpdateConfigurations', '')
-            self.rs_settings.put('Release', current_release, True)
+        # if release != current_release:
+        #     self.hash_map.put('UpdateConfigurations', '')
+        #     self.rs_settings.put('Release', current_release, True)
 
         self._create_tables()
 

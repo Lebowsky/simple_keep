@@ -5,7 +5,7 @@ from requests.auth import HTTPBasicAuth
 import os
 from PIL import Image
 import time
-import importlib
+#import importlib
 
 from java import jclass
 
@@ -16,20 +16,20 @@ import ui_form_data
 import ui_models
 import http_exchange
 from ui_utils import HashMap
-import widgets
+#import widgets
 
 from ru.travelfood.simple_ui import SimpleUtilites as suClass
 
 noClass = jclass("ru.travelfood.simple_ui.NoSQL")
 rs_settings = noClass("rs_settings")
 
-
-importlib.reload(ui_barcodes)
-importlib.reload(ui_csv)
-importlib.reload(ui_global)
-importlib.reload(ui_form_data)
-importlib.reload(ui_models)
-importlib.reload(http_exchange)
+#
+# importlib.reload(ui_barcodes)
+# importlib.reload(ui_csv)
+# importlib.reload(ui_global)
+# importlib.reload(ui_form_data)
+# importlib.reload(ui_models)
+# importlib.reload(http_exchange)
 
 
 def create_screen(hash_map: HashMap):
@@ -1166,7 +1166,14 @@ def barcode_error_screen_listener(hashMap, _files=None, _data=None):
         hashMap.put("ShowScreen", "Документ товары")
     return hashMap
 
-
+def plan_excess_error_screen_listener(hashMap, _files=None, _data=None):
+    if hashMap.get('listener') == 'ON_BACK_PRESSED':
+        # suClass.urovo_set_lock_trigger(False)
+        hashMap.put("ShowScreen", "Документ товары")
+    elif hashMap.get('listener') == 'btn_continue_scan':
+        # suClass.urovo_set_lock_trigger(False)
+        hashMap.put("ShowScreen", "Документ товары")
+    return hashMap
 def barcode_flow_on_start(hashMap, _files=None, _data=None):
     id_doc = hashMap.get('id_doc')
     falseValueList = (0, '0', 'false', 'False', None)
@@ -2005,7 +2012,7 @@ def debug_on_start(hash_map: HashMap):
 #     screen: ui_models.DebugSettingsScreen = create_screen(hash_map)
 #     screen.on_input()
 def debug_listener(hashMap, _files=None, _data=None):
-    hashMap.put('toast','начало КФопирования')
+
     listener = hashMap.get('listener')
 
     if listener == 'btn_copy_base':
@@ -2020,10 +2027,18 @@ def debug_listener(hashMap, _files=None, _data=None):
                 hashMap.put('toast', 'Ошибка соединения')
         else:
             hashMap.put('toast', 'Файл не найден')
+    elif listener == 'btn_plan':
+
+        hashMap.put('descr_text', 'Тестовое сообщение')
+#        hashMap.put('StartScreen', 'ЭкранПлан')
+        hashMap.put('StartScreen', 'ЭкранПлан')
 
     return hashMap
 
-
+def test_screen_input(hashMap,  _files=None, _data=None):
+    if hashMap.get('listener') == 'btn_ok' or 'ON_BACK_PRESSED':
+        hashMap.put('FinishProcess','')
+    return hashMap
 # ^^^^^^^^^^^^^^^^^ Debug ^^^^^^^^^^^^^^^^^
 
 

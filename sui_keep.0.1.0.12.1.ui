@@ -1717,6 +1717,74 @@
                         "onlineOnStart": false,
                         "onlineOnAfterStart": false,
                         "onlineOnInput": false
+                    },
+                    {
+                        "type": "Operation",
+                        "Name": "Ошибка превышения плана",
+                        "Timer": false,
+                        "noScroll": false,
+                        "hideBottomBarScreen": true,
+                        "hideToolBarScreen": false,
+                        "handleKeyUp": false,
+                        "Elements": [
+                            {
+                                "orientation": "vertical",
+                                "height": "wrap_content",
+                                "width": "match_parent",
+                                "gravity_horizontal": "center",
+                                "gravity_vertical": "center",
+                                "weight": "0",
+                                "type": "LinearLayout",
+                                "Variable": "",
+                                "Elements": [
+                                    {
+                                        "TextSize": "18",
+                                        "height": "wrap_content",
+                                        "width": "wrap_content",
+                                        "gravity_horizontal": "center",
+                                        "gravity_vertical": "center",
+                                        "weight": "0",
+                                        "type": "TextView",
+                                        "Value": "@Error_description",
+                                        "Variable": "Error_description"
+                                    },
+                                    {
+                                        "TextSize": "24",
+                                        "TextColor": "",
+                                        "height": "wrap_content",
+                                        "width": "match_parent",
+                                        "gravity_horizontal": "center",
+                                        "gravity_vertical": "center",
+                                        "weight": "0",
+                                        "type": "TextView",
+                                        "Value": "ОШИБКА",
+                                        "Variable": ""
+                                    },
+                                    {
+                                        "height": "wrap_content",
+                                        "width": "match_parent",
+                                        "gravity_horizontal": "center",
+                                        "gravity_vertical": "center",
+                                        "weight": "0",
+                                        "type": "Button",
+                                        "Value": "Продолжить сканирование",
+                                        "Variable": "btn_continue_scan"
+                                    }
+                                ]
+                            }
+                        ],
+                        "Handlers": [
+                            {
+                                "event": "onInput",
+                                "action": "run",
+                                "type": "python",
+                                "method": "barcode_error_screen_listener",
+                                "postExecute": ""
+                            }
+                        ],
+                        "onlineOnStart": false,
+                        "onlineOnAfterStart": false,
+                        "onlineOnInput": false
                     }
                 ]
             },
