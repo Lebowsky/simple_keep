@@ -540,8 +540,8 @@ class DocDetailsScreen(Screen):
 
         if self.hash_map.get_bool('highlight'):
             self.hash_map.put('highlight', False)
-            self.enable_highlight(table_view.customtable)
-            self.hash_map.run_event_async('highlight_scanned_item')
+            # self.enable_highlight(table_view.customtable)
+            # self.hash_map.run_event_async('highlight_scanned_item')
 
         if doc_details:
             self.hash_map['table_lines_qtty'] = len(doc_details)
@@ -1513,7 +1513,7 @@ class MainEvents:
     def app_on_start(self):
         # TODO Обработчики обновления!
         release = self.rs_settings.get('Release') or ''
-        current_release = '0.1.0.12.1'
+        current_release = '0.1.0.12.3'
 
         if release != current_release:
             self.hash_map.put('UpdateConfigurations', '')

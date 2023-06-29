@@ -141,7 +141,7 @@ def doc_details_barcode_scanned(hash_map: HashMap):
 def highlight_scanned_item(hash_map: HashMap):
     """ Обработчик для отмены раскраски отсканированного товара """
 
-    time.sleep(2)
+    # time.sleep(2)
     screen = ui_models.DocDetailsScreen(hash_map, rs_settings)
     screen.disable_highlight()
 
