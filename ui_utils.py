@@ -146,6 +146,15 @@ class HashMap:
     def set_title(self, title):
         self['SetTitle'] = title
 
+    def run_py_thread_progress(self, handlers_name: str):
+        """
+        Запускает асинхронное фоновое выполнение скрипта c блокирующим прогресс-баром, который блокирует UI-поток.
+        В качестве аргумента - имя функции-хендлера.
+        """
+
+        self['RunPyThreadProgressDef'] = handlers_name
+
+
 class RsDoc(Rs_doc):
     def __init__(self, id_doc):
         self.id_doc = id_doc

@@ -820,7 +820,10 @@ class GroupScanDocDetailsScreen(DocDetailsScreen):
         if listener == "CardsClick":
             pass
 
-        elif listener == 'barcode' or self._is_result_positive('ВвестиШтрихкод'):
+        elif listener == 'barcode':
+            self._run_progress_barcode_scanning()
+
+        elif self._is_result_positive('ВвестиШтрихкод'):
             self._update_document_data()
             self._barcode_scanned()
             self.hash_map.run_event_async('doc_details_barcode_scanned')
@@ -852,6 +855,14 @@ class GroupScanDocDetailsScreen(DocDetailsScreen):
             table_view = self._get_doc_table_view(table_data=table_data)
             self.hash_map.put("doc_goods_table", table_view.to_json())
             self.hash_map.refresh_screen()
+
+    def _run_progress_barcode_scanning(self):
+        self.hash_map.run_py_thread_progress('doc_details_before_process_barcode')
+
+    def before_process_barcode(self):
+        self._update_document_data()
+        self._barcode_scanned()
+        self.hash_map.run_event_async('doc_details_barcode_scanned')
 
     def _update_document_data(self):
         docs_data = self._get_update_current_doc_data()

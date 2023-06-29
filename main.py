@@ -130,6 +130,13 @@ def doc_details_listener(hash_map: HashMap):
 
 
 @HashMap()
+def doc_details_before_process_barcode(hash_map):
+    """ Обработчик для синхронного запроса и обновления данных после сканирования и перед обработкой ШК"""
+
+    screen = ui_models.GroupScanDocDetailsScreen(hash_map, rs_settings)
+    screen.before_process_barcode()
+
+@HashMap()
 def doc_details_barcode_scanned(hash_map: HashMap):
     """ Обработчик для асинхронной отправки и получения данных после сканирования ШК"""
 
