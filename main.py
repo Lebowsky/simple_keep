@@ -5,7 +5,7 @@ from requests.auth import HTTPBasicAuth
 import os
 from PIL import Image
 import time
-#import importlib
+import importlib
 
 from java import jclass
 
@@ -23,13 +23,13 @@ from ru.travelfood.simple_ui import SimpleUtilites as suClass
 noClass = jclass("ru.travelfood.simple_ui.NoSQL")
 rs_settings = noClass("rs_settings")
 
-#
-# importlib.reload(ui_barcodes)
-# importlib.reload(ui_csv)
-# importlib.reload(ui_global)
-# importlib.reload(ui_form_data)
-# importlib.reload(ui_models)
-# importlib.reload(http_exchange)
+
+importlib.reload(ui_barcodes)
+importlib.reload(ui_csv)
+importlib.reload(ui_global)
+importlib.reload(ui_form_data)
+importlib.reload(ui_models)
+importlib.reload(http_exchange)
 
 
 def create_screen(hash_map: HashMap):
@@ -90,6 +90,7 @@ def check_docs_data_on_start(hash_map: HashMap):
     hash_map.show_screen("Плитки")
     # check_screen = ui_models.CheckTiles(hash_map, rs_settings)
     # check_screen.on_start()
+
 
 @HashMap()
 def check_docs_data_on_input(hash_map: HashMap):

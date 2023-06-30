@@ -8,7 +8,7 @@ class DocService:
         self.doc_id = doc_id
         self.docs_table_name = 'RS_docs'
         self.details_table_name = 'RS_docs_table'
-        self.isAdr  = False
+        self.isAdr = False
 
     def get_last_edited_goods(self, to_json=False):
         query_docs = f'SELECT * FROM {self.docs_table_name} WHERE id_doc = ? and verified = 1'
@@ -98,14 +98,14 @@ class DocService:
 
                 self._get_query_result(query)
 
-    def json_to_sqlite_query(self, data, docs = None):
+    def json_to_sqlite_query(self, data: dict, docs=None):
         qlist = []
         # Цикл по именам таблиц
         table_list = (
             'RS_doc_types', 'RS_goods', 'RS_properties', 'RS_units', 'RS_types_goods', 'RS_series', 'RS_countragents',
             'RS_warehouses', 'RS_price_types', 'RS_cells', 'RS_barcodes', 'RS_prices', 'RS_doc_types', 'RS_docs',
             'RS_docs_table', 'RS_docs_barcodes', 'RS_adr_docs', 'RS_adr_docs_table')  # ,, 'RS_barc_flow'
-        table_for_delete = ('RS_docs_table', 'RS_docs_barcodes, RS_barc_flow', 'RS_adr_docs_table', )  # , 'RS_barc_flow'
+        table_for_delete = ('RS_docs_table', 'RS_docs_barcodes, RS_barc_flow', 'RS_adr_docs_table')  # , 'RS_barc_flow'
         doc_id_list = []
         for table_name in table_list:
             if not data.get(table_name):
@@ -125,7 +125,7 @@ class DocService:
             else:
                 query_col_names = list(column_names)
 
-            if table_name in ('RS_docs','RS_adr_docs'):  #
+            if table_name in ('RS_docs', 'RS_adr_docs'):  #
                 query_col_names.append('verified')
 
             query = f"REPLACE INTO {table_name} ({', '.join(query_col_names)}) VALUES "
@@ -137,19 +137,20 @@ class DocService:
                 for col in query_col_names:
                     if col in list_quoted_fields and "\"" in row[col]:
                         row[col] = row[col].replace("\"", "\"\"")
-                    if col == 'verified' and (table_name in ['RS_docs','RS_adr_docs']):
+                    if col == 'verified' and (table_name in ['RS_docs', 'RS_adr_docs']):
                         row_values.append(0)
                     elif col == 'verified' and (table_name == 'RS_adr_docs_table'):
                         continue
-                    if row.get(col) is None:
+                    elif row.get(col) is None:
+
                         row[col] = ''
-                    if col == 'mark_code':  # Заменяем это поле на поля GTIN и Series
+                    elif col == 'mark_code':  # Заменяем это поле на поля GTIN и Series
                         barc_struct = self.parse_barcode(row[col])
                         row_values.append(barc_struct['GTIN'])
                         row_values.append(barc_struct['Series'])
                     else:
                         row_values.append(row[col])  # (f'"{row[col]}"')
-                    if col == 'id_doc' and (table_name in ['RS_docs','RS_adr_docs']):
+                    if col == 'id_doc' and (table_name in ['RS_docs', 'RS_adr_docs']):
                         doc_id_list.append('"' + row[col] + '"')
 
                 if docs and table_name == 'RS_docs':
@@ -407,7 +408,6 @@ class DocService:
         res = get_query_result(query_text)
         return res
 
-
     @staticmethod
     def write_error_on_log(Err_value):
         if Err_value:
@@ -426,7 +426,6 @@ class DocService:
             return None
         return self.form_data_for_request(res_docs, res_goods, False)
 
-
     @staticmethod
     def update_uploaded_docs_status(doc_in_str):
         qtext = f'UPDATE RS_docs SET sent = 1  WHERE id_doc in ({doc_in_str}) '
@@ -435,16 +434,15 @@ class DocService:
         qtext = f'UPDATE RS_adr_docs SET sent = 1  WHERE id_doc in ({doc_in_str}) '
         get_query_result(qtext)
 
+
 class AdrDocService(DocService):
     def __init__(self):
         self.docs_table_name = 'RS_Adr_docs'
         self.details_table_name = 'RS_adr_docs_table'
         self.isAdr = True
 
-
     def get_current_cell(self):
         pass
-
 
     def get_doc_details_data(self, id_doc) -> list:
         query_text = '''SELECT
@@ -493,6 +491,7 @@ class AdrDocService(DocService):
         res = self._get_query_result(query_text, (id_doc,), return_dict=True)
         return res
 
+
 class DbCreator:
     def create_tables(self):
         import database_init_queryes
@@ -500,90 +499,6 @@ class DbCreator:
         schema = database_init_queryes.database_shema()
         for el in schema:
             get_query_result(el)
-
-
-class DbService:
-    def __init__(self, _db_session, table_name):
-        import db_models
-        self.db_session = db_models.db_session
-        self.table_name = table_name
-        self.model = ModelsFactory().create(self.table_name)
-
-    def get(self, _filter):
-        with self.db_session:
-            # return self.model.select(**_filter)[:] or None
-            return self.model.get(**_filter)
-
-    def create(self, data):
-        with self.db_session:
-            return self.model(**data)
-
-    def update(self, data, _filter=None):
-        with self.db_session:
-            if _filter:
-                obj = self.get(_filter)
-            else:
-                pk = self.model.get_pk()
-                if not data.get(pk):
-                    raise ValueError(f'data: {data} has not constraint key {pk}')
-                else:
-                    obj = self.get({pk: data[pk]})
-
-            if obj:
-                obj.set(**data)
-            else:
-                obj = self.model(**data)
-
-            return obj
-
-    def delete(self, _filter):
-        with self.db_session:
-            obj = self.get(_filter)
-            if obj:
-                return obj.delete()
-
-
-class DocDbService(DbService):
-    def __init__(self, _db_session):
-        super().__init__(_db_session, 'RS_docs')
-
-    def get(self, _filter, to_dict=False):
-        with self.db_session:
-            if to_dict:
-                import db_models
-                return self.model.get(**_filter).to_dict(with_collections=True, related_objects=True)
-            #only=None, exclude=None, with_collections=False, with_lazy=False, related_objects=False
-            else:
-                return self.model.get(**_filter)
-
-    def update(self, data, goods, _filter=None):
-        with self.db_session:
-            doc = self.get(_filter)
-
-            if doc:
-                doc.set(**data)
-            else:
-                doc = self.model(**data)
-
-            if goods:
-                goods_service = DbService(self.db_session, 'RS_docs_table')
-                goods = []
-                for row in goods:
-                    item = goods_service.create(row)
-                    goods.append(item)
-
-                doc.goods = goods
-
-            return doc
-
-
-class ModelsFactory:
-    def __init__(self):
-        import db_models
-        self.models = {model._table_: model for model in db_models.models}
-
-    def create(self, table_name):
-        return self.models.get(table_name)
 
 
 class ErrorService:
