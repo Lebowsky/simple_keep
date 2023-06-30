@@ -34,9 +34,12 @@ class HashMap:
             self.error_log(text)
 
     def notification(self, text, title=None, add_to_log=False):
+        notification_id = rs_settings.get("notification_id") + 1 if rs_settings.get("notification_id") else 1
         if title is None:
             title = self.get_current_screen()
-        self.hash_map.put("basic_notification", json.dumps([{'number': 1, 'title': title, 'message': text}]))
+        self.hash_map.put("basic_notification", json.dumps([{'number': notification_id,
+                                                             'title': str(title), 'message': text}]))
+        rs_settings.put("notification_id", notification_id, True)
         if add_to_log:
             self.error_log(text)
 
@@ -134,10 +137,23 @@ class HashMap:
             self.put('ShowDialogStyle', dialog_style)
 
     def get_current_screen(self):
-        return self['current_screen_name']
+
+        return self['current_screen_name'] if self.containsKey('current_screen_name') else  ''
 
     def get_current_process(self):
         return self['current_process_name']
+
+    def set_title(self, title):
+        self['SetTitle'] = title
+
+    def run_py_thread_progress(self, handlers_name: str):
+        """
+        Запускает асинхронное фоновое выполнение скрипта c блокирующим прогресс-баром, который блокирует UI-поток.
+        В качестве аргумента - имя функции-хендлера.
+        """
+
+        self['RunPyThreadProgressDef'] = handlers_name
+
 
 class RsDoc(Rs_doc):
     def __init__(self, id_doc):

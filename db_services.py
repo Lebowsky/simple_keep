@@ -25,6 +25,10 @@ class DocService:
         if not res_goods:
             return None
 
+        return self.form_data_for_request(res_docs, res_goods, to_json)
+
+    @staticmethod
+    def form_data_for_request(res_docs, res_goods, to_json):
         for item in res_docs:
             filtered_list = [d for d in res_goods if d['id_doc'] == item['id_doc']]
             item['RS_docs_table'] = filtered_list
@@ -256,7 +260,7 @@ class DocService:
                 ELSE 
                     0 
                 END as qtty_plan_verified,
-                CASE WHEN ifnull(verified,0)=1 THEN 
+                CASE WHEN IFNULL(verified,0)=1 THEN 
                     SUM(RS_docs_table.qtty_plan)
                 ELSE 
                     0 
@@ -379,3 +383,141 @@ class DocService:
         if res:
             return res[0].get('docs_count', 0)
         return 0
+
+    @staticmethod
+    def get_existing_docs():
+        query_text = "SELECT doc_n,doc_type FROM RS_docs" # doc_n,
+        res = get_query_result(query_text)
+        return res
+
+
+    @staticmethod
+    def write_error_on_log(Err_value):
+        if Err_value:
+            qtext = 'Insert into Error_log(log) Values(?)'
+            get_query_result(qtext, (Err_value,))
+
+    def get_docs_and_goods_for_upload(self):
+        query_docs = '''SELECT * FROM RS_docs WHERE verified = 1  and (sent <> 1 or sent is null)'''
+        query_goods = '''SELECT * FROM RS_docs_table WHERE sent <> 1 or sent is null'''
+        try:
+            res_docs = get_query_result(query_docs, None, True)
+            res_goods = get_query_result(query_goods, None, True)
+        except Exception as e:
+            raise e
+        if not res_goods:
+            return None
+        return self.form_data_for_request(res_docs, res_goods, False)
+
+
+    @staticmethod
+    def update_uploaded_docs_status(doc_in_str):
+        qtext = f'UPDATE RS_docs SET sent = 1  WHERE id_doc in ({doc_in_str}) '
+        get_query_result(qtext)
+
+        qtext = f'UPDATE RS_adr_docs SET sent = 1  WHERE id_doc in ({doc_in_str}) '
+        get_query_result(qtext)
+
+
+class DbCreator:
+    def create_tables(self):
+        import database_init_queryes
+        # Создаем таблицы если их нет
+        schema = database_init_queryes.database_shema()
+        for el in schema:
+            get_query_result(el)
+
+
+class DbService:
+    def __init__(self, _db_session, table_name):
+        import db_models
+        self.db_session = db_models.db_session
+        self.table_name = table_name
+        self.model = ModelsFactory().create(self.table_name)
+
+    def get(self, _filter):
+        with self.db_session:
+            # return self.model.select(**_filter)[:] or None
+            return self.model.get(**_filter)
+
+    def create(self, data):
+        with self.db_session:
+            return self.model(**data)
+
+    def update(self, data, _filter=None):
+        with self.db_session:
+            if _filter:
+                obj = self.get(_filter)
+            else:
+                pk = self.model.get_pk()
+                if not data.get(pk):
+                    raise ValueError(f'data: {data} has not constraint key {pk}')
+                else:
+                    obj = self.get({pk: data[pk]})
+
+            if obj:
+                obj.set(**data)
+            else:
+                obj = self.model(**data)
+
+            return obj
+
+    def delete(self, _filter):
+        with self.db_session:
+            obj = self.get(_filter)
+            if obj:
+                return obj.delete()
+
+
+class DocDbService(DbService):
+    def __init__(self, _db_session):
+        super().__init__(_db_session, 'RS_docs')
+
+    def get(self, _filter, to_dict=False):
+        with self.db_session:
+            if to_dict:
+                import db_models
+                return self.model.get(**_filter).to_dict(with_collections=True, related_objects=True)
+            #only=None, exclude=None, with_collections=False, with_lazy=False, related_objects=False
+            else:
+                return self.model.get(**_filter)
+
+    def update(self, data, goods, _filter=None):
+        with self.db_session:
+            doc = self.get(_filter)
+
+            if doc:
+                doc.set(**data)
+            else:
+                doc = self.model(**data)
+
+            if goods:
+                goods_service = DbService(self.db_session, 'RS_docs_table')
+                goods = []
+                for row in goods:
+                    item = goods_service.create(row)
+                    goods.append(item)
+
+                doc.goods = goods
+
+            return doc
+
+
+class ModelsFactory:
+    def __init__(self):
+        import db_models
+        self.models = {model._table_: model for model in db_models.models}
+
+    def create(self, table_name):
+        return self.models.get(table_name)
+
+
+class ErrorService:
+    @staticmethod
+    def get_all_errors(date_sort):
+        sort = "DESC" if not date_sort or date_sort == "Новые" else "ASC"
+        return get_query_result(f"SELECT * FROM Error_log ORDER BY timestamp {sort}")
+
+    @staticmethod
+    def clear():
+        return get_query_result("DELETE FROM Error_log")
