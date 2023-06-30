@@ -55,29 +55,6 @@
                                         "Variable": ""
                                     }
                                 ]
-                            },
-                            {
-                                "Value": "",
-                                "Variable": "",
-                                "type": "LinearLayout",
-                                "weight": "0",
-                                "height": "wrap_content",
-                                "width": "match_parent",
-                                "orientation": "vertical",
-                                "Elements": [
-                                    {
-                                        "type": "TextView",
-                                        "height": "wrap_content",
-                                        "width": "match_parent",
-                                        "weight": "0",
-                                        "Value": "@no_data_note",
-                                        "Variable": "no_data_note",
-                                        "TextSize": "20"
-                                    }
-                                ],
-                                "BackgroundColor": "",
-                                "StrokeWidth": "",
-                                "Padding": ""
                             }
                         ],
                         "Handlers": [
@@ -1740,6 +1717,53 @@
                         "onlineOnStart": false,
                         "onlineOnAfterStart": false,
                         "onlineOnInput": false
+                    },
+                    {
+                        "Name": "Нет документов",
+                        "type": "Operation",
+                        "Elements": [
+                            {
+                                "Value": "",
+                                "Variable": "",
+                                "type": "LinearLayout",
+                                "weight": "0",
+                                "height": "wrap_content",
+                                "width": "match_parent",
+                                "orientation": "vertical",
+                                "Elements": [
+                                    {
+                                        "type": "TextView",
+                                        "height": "wrap_content",
+                                        "width": "match_parent",
+                                        "weight": "0",
+                                        "Value": "@no_data_text",
+                                        "Variable": "no_data_text",
+                                        "TextSize": "20"
+                                    }
+                                ],
+                                "BackgroundColor": "",
+                                "StrokeWidth": "",
+                                "Padding": ""
+                            }
+                        ],
+                        "Timer": false,
+                        "hideToolBarScreen": false,
+                        "noScroll": false,
+                        "handleKeyUp": false,
+                        "hideBottomBarScreen": false,
+                        "onlineOnStart": false,
+                        "onlineOnAfterStart": false,
+                        "onlineOnInput": false,
+                        "Handlers": [
+                            {
+                                "event": "onStart",
+                                "action": "",
+                                "type": "python",
+                                "method": "no_data_on_start",
+                                "postExecute": "",
+                                "listener": ""
+                            }
+                        ]
                     }
                 ]
             },
@@ -3943,10 +3967,6 @@
             },
             {
                 "PyFileKey": "db_services",
-                "PyFileData": ""
-            },
-            {
-                "PyFileKey": "test_load_docs",
                 "PyFileData": ""
             }
         ],

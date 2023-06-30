@@ -86,6 +86,18 @@ def event_service(hash_map, _files=None, _data=None):
 
 
 @HashMap()
+def check_docs_data_on_start(hash_map: HashMap):
+    hash_map.show_screen("Плитки")
+    # check_screen = ui_models.CheckTiles(hash_map, rs_settings)
+    # check_screen.on_start()
+
+@HashMap()
+def check_docs_data_on_input(hash_map: HashMap):
+    check_screen = ui_models.CheckTiles(hash_map, rs_settings)
+    check_screen.on_input()
+
+
+@HashMap()
 def put_notification(hash_map):
     """ Обработчик для работы МП в режиме сервера. Уведомления о входящих документах """
 
@@ -1243,6 +1255,9 @@ def http_settings_on_click(hashMap,  _files=None, _data=None):
         if r.status_code == 200:
             hashMap.put('btn_test_connection', 'Соединение установлено')
             hashMap.put('toast', 'Соединение установлено')
+        elif r.status_code == 403:
+            hashMap.put('btn_test_connection', 'Тест соединения')
+            hashMap.put("toast", "Запрос на авторизацию принят")
         else:
             hashMap.put('btn_test_connection', 'Тест соединения')
             hashMap.put('toast', 'Не удалось установить соединение')

@@ -101,7 +101,7 @@ class DocService:
             'RS_doc_types', 'RS_goods', 'RS_properties', 'RS_units', 'RS_types_goods', 'RS_series', 'RS_countragents',
             'RS_warehouses', 'RS_price_types', 'RS_cells', 'RS_barcodes', 'RS_prices', 'RS_doc_types', 'RS_docs',
             'RS_docs_table', 'RS_docs_barcodes', 'RS_adr_docs', 'RS_adr_docs_table')  # ,, 'RS_barc_flow'
-        table_for_delete = ('RS_docs_table', 'RS_docs_barcodes, RS_adr_docs_table')  # , 'RS_barc_flow'
+        table_for_delete = ('RS_docs_table', 'RS_docs_barcodes, RS_barc_flow', 'RS_adr_docs_table',)  # , 'RS_barc_flow'
         doc_id_list = []
         for table_name in table_list:
             if not data.get(table_name):
@@ -121,7 +121,7 @@ class DocService:
             else:
                 query_col_names = list(column_names)
 
-            if docs and table_name == 'RS_docs':
+            if table_name in ('RS_docs', 'RS_adr_docs'):  #
                 query_col_names.append('verified')
 
             query = f"REPLACE INTO {table_name} ({', '.join(query_col_names)}) VALUES "
@@ -130,18 +130,23 @@ class DocService:
             for row in data[table_name]:
                 row_values = []
                 list_quoted_fields = ('name', 'full_name', "mark_code")
-                for col in column_names:
+                for col in query_col_names:
                     if col in list_quoted_fields and "\"" in row[col]:
                         row[col] = row[col].replace("\"", "\"\"")
-                    if row[col] is None:
+                    if col == 'verified' and (table_name in ['RS_docs', 'RS_adr_docs']):
+                        row_values.append(0)
+                    elif col == 'verified' and (table_name == 'RS_adr_docs_table'):
+                        continue
+                    if row.get(col) is None:
+
                         row[col] = ''
-                    if col == 'mark_code':  # Заменяем это поле на поля GTIN и Series
+                    elif col == 'mark_code':  # Заменяем это поле на поля GTIN и Series
                         barc_struct = self.parse_barcode(row[col])
                         row_values.append(barc_struct['GTIN'])
                         row_values.append(barc_struct['Series'])
                     else:
                         row_values.append(row[col])  # (f'"{row[col]}"')
-                    if col == 'id_doc' and table_name == 'RS_docs':
+                    if col == 'id_doc' and (table_name in ['RS_docs', 'RS_adr_docs']):
                         doc_id_list.append('"' + row[col] + '"')
 
                 if docs and table_name == 'RS_docs':
@@ -386,8 +391,8 @@ class DocService:
 
     @staticmethod
     def get_existing_docs():
-        query_text = "SELECT doc_n,doc_type FROM RS_docs" # doc_n,
-        res = get_query_result(query_text, return_dict=True)
+        query_text = "SELECT doc_n,doc_type FROM RS_docs"
+        res = get_query_result(query_text)
         return res
 
 

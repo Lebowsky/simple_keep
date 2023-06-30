@@ -167,25 +167,21 @@ class GroupScanTiles(Tiles):
 
     def on_start(self) -> None:
         data = self.db_service.get_docs_stat()
-        if data:
-            layout = json.loads(self._get_tile_view().to_json())
+        layout = json.loads(self._get_tile_view().to_json())
 
-            tiles_list = [self._get_tile_row(layout, item) for item in data]
+        tiles_list = [self._get_tile_row(layout, item) for item in data]
 
-            # split list by two element in row
-            count_row_elements = 2
-            tiles = {
-                'tiles': [
-                    tiles_list[i:i + count_row_elements]
-                    for i in range(0, len(tiles_list), count_row_elements)
-                ],
-                'background_color': '#f5f5f5'
-            }
+        # split list by two element in row
+        count_row_elements = 2
+        tiles = {
+            'tiles': [
+                tiles_list[i:i + count_row_elements]
+                for i in range(0, len(tiles_list), count_row_elements)
+            ],
+            'background_color': '#f5f5f5'
+        }
 
-            self.hash_map.put('tiles', tiles, to_json=True)
-        else:
-            self.hash_map.put("no_data_note", "Нет загруженных документов")
-            self.hash_map.put('tiles', "")
+        self.hash_map.put('tiles', tiles, to_json=True)
 
     def on_input(self) -> None:
         super().on_input()
@@ -202,6 +198,32 @@ class GroupScanTiles(Tiles):
 class DocumentsTiles(GroupScanTiles):
     screen_name = 'Плитки'
     process_name = 'Документы'
+
+
+class CheckTiles(GroupScanTiles):
+
+    def on_start(self):
+        pass
+        # self.hash_map.show_screen("Плитки")
+        # self.on_input()
+        # data = self.db_service.get_docs_stat()
+        # if data:
+        #     self.hash_map.put("no_data_text", "Здесь должен быть переход на плитки")
+        #     # try:
+        #     #     self.hash_map.show_screen("Документы")
+        #     #     # self.hash_map.put("ShowScreen", "Плитки")
+        #     # except Exception as e:
+        #     #     self.toast(e)
+        # else:
+        #     self.hash_map.put("no_data_text", "Нет загруженных документов")
+
+    def on_input(self):
+        super().on_input()
+        self.hash_map.show_screen("Плитки")
+        # if self.listener == 'to_tiles':
+        #     self.hash_map.show_screen("Плитки")
+        #     # self.hash_map.put('FinishProcess', '')
+
 
 
 # ^^^^^^^^^^^^^^^^^^^^^ Tiles ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -1496,25 +1518,30 @@ class Timer:
                 existing_docs = self.db_service.get_existing_docs()
                 self.db_service.update_data_from_json(docs_data['data'])
                 docs_after_load = self.db_service.get_existing_docs()
-                diff = [x for x in docs_after_load if x not in existing_docs]
-                str_diff = ", ".join([f'{el["doc_type"]}: {el["doc_n"]}' for el in diff])
-                if str_diff:
-                    self.put_notification(text=str_diff, title="Загружены документы:")
+                if docs_after_load and existing_docs:
+                    diff = [f'{x[1]}: {x[0]}' for x in docs_after_load if x not in existing_docs]
+                    if diff:
+                        self.put_notification(text=", ".join(diff), title="Загружены документы:")
+
         except Exception as e:
             self.db_service.write_error_on_log(f'Ошибка загрузки документов: {e}')
 
     def upload_docs(self):
         try:
             docs_goods_formatted_list = self.db_service.get_docs_and_goods_for_upload()
-            answer = self.http_service.send_documents(docs_goods_formatted_list)
+            if docs_goods_formatted_list:
+                answer = self.http_service.send_documents(docs_goods_formatted_list)
+                if answer:
+                    if answer.get('Error') is not None:
+                        self.put_notification(text=f'Ошибка при отправке документов {",".join(docs_goods_formatted_list)}, ')
+                        self.db_service.write_error_on_log(f'Ошибка выгрузки документов {str(docs_goods_formatted_list)}: '
+                                                           f'{str(answer.get("Error"))}')
+                    else:
+                        docs_list_string = ', '.join([f"'{d['id_doc']}'" for d in docs_goods_formatted_list])
+                        self.db_service.update_uploaded_docs_status(docs_list_string)
         except Exception as e:
-            self.hash_map.toast(e)
-        if answer.get('Error') is not None:
-            self.put_notification(text=f'Ошибка при отправке документов {",".join(docs_goods_list)}, ')
-            self.db_service.write_error_on_log(f'Ошибка выгрузки документов {str(docs_goods_list)}:  {e}')
-        else:
-            docs_list_string = ', '.join([f"'{d['id_doc']}'" for d in docs_goods_list])
-            self.db_service.update_uploaded_docs_status(docs_list_string)
+            self.db_service.write_error_on_log(f'Ошибка выгрузки документов: {e}')
+
 
 
 # ^^^^^^^^^^^^^^^^^^^^^ Timer ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
