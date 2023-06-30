@@ -541,8 +541,8 @@ class DocDetailsScreen(Screen):
 
         if self.hash_map.get_bool('highlight'):
             self.hash_map.put('highlight', False)
-            self.enable_highlight(table_view.customtable)
-            self.hash_map.run_event_async('highlight_scanned_item')
+            # self.enable_highlight(table_view.customtable)
+            # self.hash_map.run_event_async('highlight_scanned_item')
 
         if doc_details:
             self.hash_map['table_lines_qtty'] = len(doc_details)
@@ -821,7 +821,10 @@ class GroupScanDocDetailsScreen(DocDetailsScreen):
         if listener == "CardsClick":
             pass
 
-        elif listener == 'barcode' or self._is_result_positive('ВвестиШтрихкод'):
+        elif listener == 'barcode':
+            self._run_progress_barcode_scanning()
+
+        elif self._is_result_positive('ВвестиШтрихкод'):
             self._update_document_data()
             self._barcode_scanned()
             self.hash_map.run_event_async('doc_details_barcode_scanned')
@@ -853,6 +856,14 @@ class GroupScanDocDetailsScreen(DocDetailsScreen):
             table_view = self._get_doc_table_view(table_data=table_data)
             self.hash_map.put("doc_goods_table", table_view.to_json())
             self.hash_map.refresh_screen()
+
+    def _run_progress_barcode_scanning(self):
+        self.hash_map.run_py_thread_progress('doc_details_before_process_barcode')
+
+    def before_process_barcode(self):
+        self._update_document_data()
+        self._barcode_scanned()
+        self.hash_map.run_event_async('doc_details_barcode_scanned')
 
     def _update_document_data(self):
         docs_data = self._get_update_current_doc_data()
@@ -1511,14 +1522,29 @@ class MainEvents:
         self.hash_map = hash_map
         self.rs_settings = rs_settings
 
+    def app_before_on_start(self):
+        self.hash_map.put('getJSONConfiguration', '')
+
     def app_on_start(self):
         # TODO Обработчики обновления!
         release = self.rs_settings.get('Release') or ''
-        current_release = '0.1.0.12.1'
+        conf = self.hash_map.get_json('_configuration')
+        current_release = None
+        toast = 'Готов к работе'
 
-        if release != current_release:
+        try:
+            current_release = conf['ClientConfiguration']['ConfigurationVersion']
+        except Exception as e:
+            toast = 'Не удалось определить версию конфигурации'
+            service = db_services.DocService()
+            service.write_error_on_log(e.args[0])
+        finally:
+            self.hash_map.remove('_configuration')
+
+        if current_release and release != current_release:
             self.hash_map.put('UpdateConfigurations', '')
             self.rs_settings.put('Release', current_release, True)
+            toast = f'Выполнено обновление на версию {current_release}'
 
         self._create_tables()
 
@@ -1549,7 +1575,10 @@ class MainEvents:
             if self.rs_settings.get(k) is None:
                 self.rs_settings.put(k, v, True)
 
-        self.hash_map.toast('Готов к работе')
+        self.hash_map.toast(toast)
+
+
+
 
     def put_notification(self):
         self.hash_map['_configuration'] = ''
