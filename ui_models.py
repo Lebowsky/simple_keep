@@ -5,7 +5,7 @@ import os
 import db_services
 import hs_services
 from ui_utils import HashMap, RsDoc
-from db_services import DocService, ErrorService
+from db_services import DocService, ErrorService, DbService
 from hs_services import HsService
 import http_exchange
 from http_exchange import post_changes_to_server
@@ -714,7 +714,8 @@ class DocumentsDocsListScreen(DocsListScreen):
             http_params = self.get_http_settings()
             answer = post_changes_to_server(f"'{id_doc}'", http_params)
             if answer.get('Error') is not None:
-                ui_global.write_error_on_log(str(answer.get('Error')))
+                ui_global.write_error_on_log(f'Ошибка повторной отправки документа {self.get_doc_number()}: '
+                                             f'{str(answer.get("Error"))}')
                 self.put_notification(text=f'Ошибка при отправке документа {self.get_doc_number()}, '
                                            f'подробнее в логе ошибок.')
                 self.toast('Не удалось отправить документ повторно')
@@ -756,6 +757,37 @@ class DocDetailsScreen(Screen):
     def show(self, args=None):
         self.hash_map.show_screen(self.screen_name, args)
         self._validate_screen_values()
+
+    def _on_start(self):
+        self._set_visibility_on_start()
+        self.hash_map.put('SetTitle', self.hash_map["doc_type"])
+
+        have_qtty_plan = False
+        have_zero_plan = False
+        have_mark_plan = False
+
+        doc_details = self._get_doc_details_data()
+        table_data = self._prepare_table_data(doc_details)
+        table_view = self._get_doc_table_view(table_data=table_data)
+
+        if self.hash_map.get_bool('highlight'):
+            self.hash_map.put('highlight', False)
+            # self.enable_highlight(table_view.customtable)
+            # self.hash_map.run_event_async('highlight_scanned_item')
+
+        if doc_details:
+            self.hash_map['table_lines_qtty'] = len(doc_details)
+            have_zero_plan = True
+            have_qtty_plan = sum([item['qtty_plan'] for item in doc_details if item['qtty_plan']]) > 0
+
+        self.hash_map['have_qtty_plan'] = have_qtty_plan
+        self.hash_map['have_zero_plan'] = have_zero_plan
+        self.hash_map['have_mark_plan'] = have_mark_plan
+
+        control = self.service.get_doc_value('control', self.id_doc) not in (0, '0', 'false', 'False', None)
+        self.hash_map['control'] = control
+
+        self.hash_map.put("doc_goods_table", table_view.to_json())
 
     def _barcode_scanned(self):
         id_doc = self.hash_map.get('id_doc')
@@ -801,38 +833,6 @@ class DocDetailsScreen(Screen):
             # self.hash_map.toast('Товар добавлен в документ')
             self.hash_map.put('highlight', True)
             self.hash_map.put('barcode_scanned', True)
-
-    def _on_start(self):
-        self._set_visibility_on_start()
-        self.hash_map.put('SetTitle', self.hash_map["doc_type"])
-
-        have_qtty_plan = False
-        have_zero_plan = False
-        have_mark_plan = False
-
-        doc_details = self._get_doc_details_data()
-        table_data = self._prepare_table_data(doc_details)
-        table_view = self._get_doc_table_view(table_data=table_data)
-
-        if self.hash_map.get_bool('highlight'):
-            self.hash_map.put('highlight', False)
-            self.enable_highlight(table_view.customtable)
-            self.hash_map.run_event_async('highlight_scanned_item')
-
-        if doc_details:
-            self.hash_map['table_lines_qtty'] = len(doc_details)
-            have_zero_plan = True
-            have_qtty_plan = sum([item['qtty_plan'] for item in doc_details if item['qtty_plan']]) > 0
-
-        self.hash_map['have_qtty_plan'] = have_qtty_plan
-        self.hash_map['have_zero_plan'] = have_zero_plan
-        self.hash_map['have_mark_plan'] = have_mark_plan
-
-        control = self.service.get_doc_value('control', self.id_doc) not in (0, '0', 'false', 'False', None)
-        self.hash_map['control'] = control
-
-        self.hash_map.put("doc_goods_table", table_view.to_json())
-
 
     def _set_visibility_on_start(self):
         _vars = ['warehouse', 'countragent']
@@ -1054,7 +1054,10 @@ class GroupScanDocDetailsScreen(DocDetailsScreen):
         if listener == "CardsClick":
             pass
 
-        elif listener == 'barcode' or self._is_result_positive('ВвестиШтрихкод'):
+        elif listener == 'barcode':
+            self._run_progress_barcode_scanning()
+
+        elif self._is_result_positive('ВвестиШтрихкод'):
             self._update_document_data()
             self._barcode_scanned()
             self.hash_map.run_event_async('doc_details_barcode_scanned')
@@ -1086,6 +1089,14 @@ class GroupScanDocDetailsScreen(DocDetailsScreen):
             table_view = self._get_doc_table_view(table_data=table_data)
             self.hash_map.put("doc_goods_table", table_view.to_json())
             self.hash_map.refresh_screen()
+
+    def _run_progress_barcode_scanning(self):
+        self.hash_map.run_py_thread_progress('doc_details_before_process_barcode')
+
+    def before_process_barcode(self):
+        self._update_document_data()
+        self._barcode_scanned()
+        self.hash_map.run_event_async('doc_details_barcode_scanned')
 
     def _update_document_data(self):
         docs_data = self._get_update_current_doc_data()
@@ -1711,24 +1722,24 @@ class Timer:
         try:
             docs_data = self.http_service.get_data()
             if docs_data.get('data'):
-                existing_docs_list = self.db_service.get_existing_docs_names_list()
+                existing_docs = self.db_service.get_existing_docs()
                 self.db_service.update_data_from_json(docs_data['data'])
-                docs_list_after_load = self.db_service.get_existing_docs_names_list()
-                diff = [x[0] for x in docs_list_after_load if x not in existing_docs_list]
+                docs_after_load = self.db_service.get_existing_docs()
+                diff = [f'{x[1]}: {x[0]}' for x in docs_after_load if x not in existing_docs]
                 if diff:
                     self.put_notification(text=" ".join(diff), title="Загружены документы:")
         except Exception as e:
-            self.db_service.write_error_on_log(f'Ошибка загрузки документа:  {e}')
+            self.db_service.write_error_on_log(f'Ошибка загрузки документов {str(diff)}: {e}')
 
     def upload_docs(self):
         try:
-            docs_goods_list = self.db_service.get_docs_and_goods_for_upload()
-            answer = self.http_service.send_documents(docs_goods_list)
+            docs_goods_formatted_list = self.db_service.get_docs_and_goods_for_upload()
+            answer = self.http_service.send_documents(docs_goods_formatted_list)
         except Exception as e:
             self.hash_map.toast(e)
         if answer.get('Error') is not None:
-            self.put_notification(text=f'Ошибка при отправке документов {",".join(doc_list)}, ')
-            self.db_service.write_error_on_log(f'Ошибка выгрузки документа:  {e}')
+            self.put_notification(text=f'Ошибка при отправке документов {",".join(docs_goods_list)}, ')
+            self.db_service.write_error_on_log(f'Ошибка выгрузки документов {str(docs_goods_list)}:  {e}')
         else:
             docs_list_string = ', '.join([f"'{d['id_doc']}'" for d in docs_goods_list])
             self.db_service.update_uploaded_docs_status(docs_list_string)
@@ -1744,14 +1755,29 @@ class MainEvents:
         self.hash_map = hash_map
         self.rs_settings = rs_settings
 
+    def app_before_on_start(self):
+        self.hash_map.put('getJSONConfiguration', '')
+
     def app_on_start(self):
         # TODO Обработчики обновления!
         release = self.rs_settings.get('Release') or ''
-        current_release = '0.1.0.12.1'
+        conf = self.hash_map.get_json('_configuration')
+        current_release = None
+        toast = 'Готов к работе'
 
-        # if release != current_release:
-        #     self.hash_map.put('UpdateConfigurations', '')
-        #     self.rs_settings.put('Release', current_release, True)
+        try:
+            current_release = conf['ClientConfiguration']['ConfigurationVersion']
+        except Exception as e:
+            toast = 'Не удалось определить версию конфигурации'
+            service = db_services.DocService()
+            service.write_error_on_log(e.args[0])
+        finally:
+            self.hash_map.remove('_configuration')
+
+        if current_release and release != current_release:
+            self.hash_map.put('UpdateConfigurations', '')
+            self.rs_settings.put('Release', current_release, True)
+            toast = f'Выполнено обновление на версию {current_release}'
 
         self._create_tables()
 
@@ -1782,7 +1808,10 @@ class MainEvents:
             if self.rs_settings.get(k) is None:
                 self.rs_settings.put(k, v, True)
 
-        self.hash_map.toast('Готов к работе')
+        self.hash_map.toast(toast)
+
+
+
 
     def put_notification(self):
         self.hash_map['_configuration'] = ''
