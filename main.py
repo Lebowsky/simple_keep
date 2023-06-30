@@ -52,6 +52,17 @@ def create_screen(hash_map: HashMap):
 
 
 @HashMap()
+def app_before_on_start(hash_map: HashMap):
+    """
+    Обработчик при старте приложения запускается перед app_on_start
+    нужнен для определения версии конфигурации в последующем
+    """
+
+    model = ui_models.MainEvents(hash_map, rs_settings)
+    model.app_before_on_start()
+
+
+@HashMap()
 def app_on_start(hash_map: HashMap):
     """ Обработчик при старте приложения """
 
@@ -130,6 +141,13 @@ def doc_details_listener(hash_map: HashMap):
 
 
 @HashMap()
+def doc_details_before_process_barcode(hash_map):
+    """ Обработчик для синхронного запроса и обновления данных после сканирования и перед обработкой ШК"""
+
+    screen = ui_models.GroupScanDocDetailsScreen(hash_map, rs_settings)
+    screen.before_process_barcode()
+
+@HashMap()
 def doc_details_barcode_scanned(hash_map: HashMap):
     """ Обработчик для асинхронной отправки и получения данных после сканирования ШК"""
 
@@ -141,7 +159,7 @@ def doc_details_barcode_scanned(hash_map: HashMap):
 def highlight_scanned_item(hash_map: HashMap):
     """ Обработчик для отмены раскраски отсканированного товара """
 
-    time.sleep(2)
+    # time.sleep(2)
     screen = ui_models.DocDetailsScreen(hash_map, rs_settings)
     screen.disable_highlight()
 
