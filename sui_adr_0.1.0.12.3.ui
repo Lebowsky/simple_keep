@@ -91,7 +91,7 @@
                                 "listener": "",
                                 "action": "run",
                                 "type": "python",
-                                "method": "docs_adr_on_start",
+                                "method": "adr_docs_on_start",
                                 "postExecute": ""
                             },
                             {

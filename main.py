@@ -1790,7 +1790,7 @@ def settings_on_click(hashMap, _files=None, _data=None):
                 ui_global.write_error_on_log(str(answer.get('Error')))
 
             qtext = f'UPDATE RS_docs SET sent = 1  WHERE id_doc in ({doc_in_str}) '
-            ui_global.get_query_result(qtext, (doc_in_str,), False)
+            ui_global.get_query_result(qtext, return_dict=False)
     elif listener == 'btn_timer':
         try:
             timer_update(hashMap)

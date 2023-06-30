@@ -142,9 +142,8 @@ class DocService:
                     elif col == 'verified' and (table_name == 'RS_adr_docs_table'):
                         continue
                     if row.get(col) is None:
-
                         row[col] = ''
-                    elif col == 'mark_code':  # Заменяем это поле на поля GTIN и Series
+                    if col == 'mark_code':  # Заменяем это поле на поля GTIN и Series
                         barc_struct = self.parse_barcode(row[col])
                         row_values.append(barc_struct['GTIN'])
                         row_values.append(barc_struct['Series'])
