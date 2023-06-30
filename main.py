@@ -267,10 +267,10 @@ def doc_adr_details_on_start(hashMap, _files=None, _data=None):
 
     falseValueList = (0,'0','false','False',None)
     # Формируем таблицу карточек и запрос к базе
-    res = ui_global.get_constants()
-    use_series = res[1]
-    use_properties = res[2]
-    hashMap.put('use_properties', res[2])
+    #res = ui_global.get_constants()
+    use_series = rs_settings.get('use_series') #res[1]
+    use_properties = rs_settings.get('use_properties') #res[2]
+    hashMap.put('use_properties', use_properties)
     #doc_detail_list = ui_form_data.get_doc_detail_cards(use_series, use_properties,rs_settings, True)
 
     doc_detail_list = widgets.CustomCards(
