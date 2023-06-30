@@ -5,6 +5,9 @@ from datetime import datetime
 
 
 def parse_barcode(barcode):
+    #Отладочное
+    return {'SCHEME': 'EAN13', 'BARCODE': barcode, 'GTIN': barcode, 'SERIAL': ''}
+
     if barcode:
         # Простой EAN13
         if not re.fullmatch(r'\d{13}', barcode) is None and re.fullmatch(r'\d{13}', barcode).string == barcode:

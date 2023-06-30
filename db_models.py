@@ -261,7 +261,7 @@ models = [
     # RS_prices
 ]
 
-db.generate_mapping(create_tables=True)
+db.generate_mapping()
 
 if __name__ == '__main__':
     # db.generate_mapping()

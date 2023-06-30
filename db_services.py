@@ -6,12 +6,15 @@ from ui_global import get_query_result
 class DocService:
     def __init__(self, doc_id=''):
         self.doc_id = doc_id
+        self.docs_table_name = 'RS_docs'
+        self.details_table_name = 'RS_docs_table'
+        self.isAdr  = False
 
     def get_last_edited_goods(self, to_json=False):
-        query_docs = f'SELECT * FROM RS_docs WHERE id_doc = ? and verified = 1'
+        query_docs = f'SELECT * FROM {self.docs_table_name} WHERE id_doc = ? and verified = 1'
 
-        query_goods = '''
-        SELECT * FROM RS_docs_table
+        query_goods = f'''
+        SELECT * FROM {self.docs_table_name}
         WHERE id_doc = ? and sent = 0
         '''
 
@@ -27,13 +30,14 @@ class DocService:
 
         return self.form_data_for_request(res_docs, res_goods, to_json)
 
-    @staticmethod
-    def form_data_for_request(res_docs, res_goods, to_json):
+
+    def form_data_for_request(self, res_docs, res_goods, to_json):
         for item in res_docs:
             filtered_list = [d for d in res_goods if d['id_doc'] == item['id_doc']]
-            item['RS_docs_table'] = filtered_list
-            item['RS_docs_barcodes'] = []
-            item['RS_barc_flow'] = []
+            item[self.docs_table_name] = filtered_list
+            if not self.isAdr:
+                item['RS_docs_barcodes'] = []
+                item['RS_barc_flow'] = []
 
         if to_json:
             return json.dumps(res_docs)
@@ -46,17 +50,17 @@ class DocService:
         except:
             data = json_data
 
-        if data.get('RS_docs'):
+        if data.get(self.docs_table_name):
             self.update_docs(data)
         else:
             self.update_nsi(data)
 
     def update_docs(self, data):
-        doc_ids = ','.join([f'"{item.get("id_doc")}"' for item in data['RS_docs']])
+        doc_ids = ','.join([f'"{item.get("id_doc")}"' for item in data[self.docs_table_name]])
 
         query = f'''
             SELECT id_doc, verified
-            FROM RS_docs
+            FROM {self.docs_table_name}
             WHERE id_doc IN ({doc_ids})
         '''
         docs = {item['id_doc']: item['verified'] for item in self._get_query_result(query_text=query, return_dict=True)}
@@ -87,21 +91,21 @@ class DocService:
                 id_goods = ','.join([f'"{item.get("id_good")}"' for item in doc.get('RS_docs_table', [])])
 
                 query = f'''
-                    UPDATE RS_docs_table
+                    UPDATE {self.details_table_name}
                     SET sent = 1
                     WHERE id_doc = '{id_doc}' AND id_good IN ({id_goods})
                     '''
 
                 self._get_query_result(query)
 
-    def json_to_sqlite_query(self, data, docs=None):
+    def json_to_sqlite_query(self, data, docs = None):
         qlist = []
         # Цикл по именам таблиц
         table_list = (
             'RS_doc_types', 'RS_goods', 'RS_properties', 'RS_units', 'RS_types_goods', 'RS_series', 'RS_countragents',
             'RS_warehouses', 'RS_price_types', 'RS_cells', 'RS_barcodes', 'RS_prices', 'RS_doc_types', 'RS_docs',
             'RS_docs_table', 'RS_docs_barcodes', 'RS_adr_docs', 'RS_adr_docs_table')  # ,, 'RS_barc_flow'
-        table_for_delete = ('RS_docs_table', 'RS_docs_barcodes, RS_barc_flow', 'RS_adr_docs_table',)  # , 'RS_barc_flow'
+        table_for_delete = ('RS_docs_table', 'RS_docs_barcodes, RS_barc_flow', 'RS_adr_docs_table', )  # , 'RS_barc_flow'
         doc_id_list = []
         for table_name in table_list:
             if not data.get(table_name):
@@ -121,7 +125,7 @@ class DocService:
             else:
                 query_col_names = list(column_names)
 
-            if table_name in ('RS_docs', 'RS_adr_docs'):  #
+            if table_name in ('RS_docs','RS_adr_docs'):  #
                 query_col_names.append('verified')
 
             query = f"REPLACE INTO {table_name} ({', '.join(query_col_names)}) VALUES "
@@ -133,20 +137,19 @@ class DocService:
                 for col in query_col_names:
                     if col in list_quoted_fields and "\"" in row[col]:
                         row[col] = row[col].replace("\"", "\"\"")
-                    if col == 'verified' and (table_name in ['RS_docs', 'RS_adr_docs']):
+                    if col == 'verified' and (table_name in ['RS_docs','RS_adr_docs']):
                         row_values.append(0)
                     elif col == 'verified' and (table_name == 'RS_adr_docs_table'):
                         continue
                     if row.get(col) is None:
-
                         row[col] = ''
-                    elif col == 'mark_code':  # Заменяем это поле на поля GTIN и Series
+                    if col == 'mark_code':  # Заменяем это поле на поля GTIN и Series
                         barc_struct = self.parse_barcode(row[col])
                         row_values.append(barc_struct['GTIN'])
                         row_values.append(barc_struct['Series'])
                     else:
                         row_values.append(row[col])  # (f'"{row[col]}"')
-                    if col == 'id_doc' and (table_name in ['RS_docs', 'RS_adr_docs']):
+                    if col == 'id_doc' and (table_name in ['RS_docs','RS_adr_docs']):
                         doc_id_list.append('"' + row[col] + '"')
 
                 if docs and table_name == 'RS_docs':
@@ -165,7 +168,7 @@ class DocService:
 
     def set_doc_value(self, key, value):
         query = f'''
-            UPDATE RS_docs
+            UPDATE {self.docs_table_name}
             SET {key} = {value}
             WHERE id_doc = "{self.doc_id}"
             '''
@@ -173,36 +176,47 @@ class DocService:
         self._get_query_result(query)
 
     def get_doc_value(self, key, id_doc):
-        query = f'SELECT {key} from RS_docs  WHERE id_doc = ?'
+        query = f'SELECT {key} from {self.docs_table_name}  WHERE id_doc = ?'
         res = self._get_query_result(query, (id_doc,), True)
         if res:
             return res[0][key]
 
     def get_doc_types(self) -> list:
-        query = 'SELECT DISTINCT doc_type from RS_docs'
+        query = f'SELECT DISTINCT doc_type from {self.docs_table_name}'
         doc_types = [rec[0] for rec in self._get_query_result(query)]
         return doc_types
 
     def get_doc_view_data(self, doc_type='', doc_status='') -> list:
-        query_text = '''
-            SELECT RS_docs.id_doc,
-                RS_docs.doc_type,
-                RS_docs.doc_n,
-                RS_docs.doc_date,
-                RS_docs.id_countragents,
-                RS_docs.id_warehouse,
-                ifnull(RS_countragents.full_name,'') as RS_countragent,
-                ifnull(RS_warehouses.name,'') as RS_warehouse,
-                ifnull(RS_docs.verified, 0) as verified,
-                ifnull(RS_docs.sent, 0) as sent,
-                RS_docs.add_mark_selection
+        fields = [
+            f'{self.docs_table_name}.id_doc',
+            f'{self.docs_table_name}.doc_type',
+            f'{self.docs_table_name}.doc_n',
+            f'{self.docs_table_name}.doc_date',
+            f'{self.docs_table_name}.id_warehouse',
+            f'ifnull(RS_warehouses.name,"") as RS_warehouse',
+            f'ifnull({self.docs_table_name}.verified, 0) as verified',
+            f'ifnull({self.docs_table_name}.sent, 0) as sent',
+            f'{self.docs_table_name}.add_mark_selection',
+        ]
 
-            FROM RS_docs
-            LEFT JOIN RS_countragents as RS_countragents
-                ON RS_countragents.id = RS_docs.id_countragents
+        if self.docs_table_name == 'RS_docs':
+            fields.append(f'{self.docs_table_name}.id_countragents')
+            fields.append(f'ifnull(RS_countragents.full_name, "") as RS_countragent')
+
+        query_text = 'SELECT ' + ',\n'.join(fields)
+
+        joins = f'''FROM {self.docs_table_name}
             LEFT JOIN RS_warehouses as RS_warehouses
-                ON RS_warehouses.id=RS_docs.id_warehouse
+                ON RS_warehouses.id = {self.docs_table_name}.id_warehouse
         '''
+
+        if self.docs_table_name == 'RS_docs':
+            joins += f'''
+            LEFT JOIN RS_countragents as RS_countragents
+                ON RS_countragents.id = {self.docs_table_name}.id_countragents
+                '''
+
+        where = ''
 
         if doc_status:
             if doc_status == "Выгружен":
@@ -211,14 +225,9 @@ class DocService:
                 where = "WHERE ifnull(verified,0)=1 AND ifnull(sent,0)=0"
             elif doc_status == "К выполнению":
                 where = "WHERE ifnull(verified,0)=0 AND ifnull(sent,0)=0"
-            elif doc_status == "Все":
-                where = ""
 
         if not doc_type or doc_type == "Все":
             args_tuple = None
-            if not doc_status or doc_status == "Все":
-                where = ''
-
         else:
             args_tuple = (doc_type,)
             if not doc_status or doc_status == "Все":
@@ -228,52 +237,53 @@ class DocService:
 
         query_text = f'''
             {query_text}
+            {joins}
             {where}
-            ORDER BY RS_docs.doc_date
+            ORDER BY {self.docs_table_name}.doc_date
         '''
 
         result = self._get_query_result(query_text, args_tuple, return_dict=True)
         return result
 
     def delete_doc(self, id_doc):
-        query_doc = 'DELETE FROM RS_docs WHERE id_doc = ?'
+        query_doc = f'DELETE FROM {self.docs_table_name} WHERE id_doc = ?'
         res = self._get_query_result(query_doc, (id_doc,))
 
         return res
 
     def get_docs_stat(self):
-        query = '''
+        query = f'''
         WITH tmp AS (
             SELECT 
                 doc_type,
-                RS_docs.id_doc,
+                {self.docs_table_name}.id_doc,
                 1 as doc_Count,
-                IFNULL(RS_docs.sent,0) as sent,
-                IFNULL(verified,0) as verified, 
+                IFNULL({self.docs_table_name}.sent,0) as sent,
+                IFNULL({self.docs_table_name}.verified,0) as verified, 
                 CASE WHEN IFNULL(verified,0)=0 THEN 
-                    COUNT(RS_docs_table.id)
+                    COUNT({self.details_table_name}.id)
                 ELSE 
                     0 
                 END as count_verified,
                 CASE WHEN IFNULL(verified,0)=1 THEN 
-                    count(RS_docs_table.id)
+                    count({self.details_table_name}.id)
                 ELSE 
                     0 
                 END as count_unverified,
                 CASE WHEN IFNULL(verified,0)=0 THEN
-                     SUM(RS_docs_table.qtty_plan)
+                     SUM({self.details_table_name}.qtty_plan)
                 ELSE 
                     0 
                 END as qtty_plan_verified,
                 CASE WHEN IFNULL(verified,0)=1 THEN 
-                    SUM(RS_docs_table.qtty_plan)
+                    SUM({self.details_table_name}.qtty_plan)
                 ELSE 
                     0 
                 END as qtty_plan_unverified
-            FROM RS_docs
-            LEFT JOIN RS_docs_table 
-                ON RS_docs_table.id_doc = RS_docs.id_doc
-            GROUP BY RS_docs.id_doc
+            FROM {self.docs_table_name}
+            LEFT JOIN {self.details_table_name} 
+                ON {self.details_table_name}.id_doc = {self.docs_table_name}.id_doc
+            GROUP BY {self.docs_table_name}.id_doc
         )
         SELECT 
             doc_type as docType, 
@@ -293,7 +303,7 @@ class DocService:
         return res
 
     def get_doc_details_data(self, id_doc) -> list:
-        query = """
+        query = f"""
             SELECT
             RS_docs_table.id,
             RS_docs_table.id_doc,
@@ -311,19 +321,21 @@ class DocService:
             RS_docs_table.qtty_plan,
             RS_docs_table.price,
             RS_price_types.name as price_name,
-            RS_docs_table.qtty_plan - RS_docs_table.qtty as IsDone
+            RS_docs_table.qtty_plan -RS_docs_table.qtty as IsDone
+            
             FROM RS_docs_table 
 
             LEFT JOIN RS_goods 
             ON RS_goods.id=RS_docs_table.id_good
             LEFT JOIN RS_properties
-            ON RS_properties.id = RS_docs_table.id_properties
+            ON RS_properties.id =RS_docs_table.id_properties
             LEFT JOIN RS_series
-            ON RS_series.id = RS_docs_table.id_series
+            ON RS_series.id =RS_docs_table.id_series
             LEFT JOIN RS_units
-            ON RS_units.id=RS_docs_table.id_unit
+            ON RS_units.id = RS_docs_table.id_unit
             LEFT JOIN RS_price_types
-            ON RS_price_types.id = RS_docs_table.id_price
+            ON RS_price_types.id =RS_docs_table.id_price
+
             WHERE id_doc = $arg1
             ORDER BY RS_docs_table.last_updated DESC 
             """
@@ -377,7 +389,7 @@ class DocService:
         return res
 
     def get_docs_count(self, doc_type=''):
-        query = 'SELECT COUNT(*) AS docs_count FROM RS_docs'
+        query = f'SELECT COUNT(*) AS docs_count FROM {self.docs_table_name}'
         args = None
 
         if doc_type:
@@ -423,6 +435,63 @@ class DocService:
         qtext = f'UPDATE RS_adr_docs SET sent = 1  WHERE id_doc in ({doc_in_str}) '
         get_query_result(qtext)
 
+class AdrDocService(DocService):
+    def __init__(self):
+        self.docs_table_name = 'RS_Adr_docs'
+        self.details_table_name = 'RS_adr_docs_table'
+        self.isAdr = True
+
+
+    def get_current_cell(self):
+        pass
+
+
+    def get_doc_details_data(self, id_doc) -> list:
+        query_text = '''SELECT
+            RS_adr_docs_table.id,
+            RS_adr_docs_table.id_doc,
+            RS_adr_docs_table.id_good,
+            ifnull(RS_goods.name, :NullValue) as good_name,
+            ifnull(RS_goods.code, :EmptyString) as code,
+            ifnull(RS_goods.art, :EmptyString) as art,
+            ifnull(RS_adr_docs_table.id_properties, :EmptyString) as id_properties,
+            ifnull(RS_properties.name, :EmptyString) as properties_name,
+            ifnull(RS_adr_docs_table.id_series, :EmptyString) as id_series,
+            ifnull(RS_series.name, :EmptyString) as series_name,
+            ifnull(RS_adr_docs_table.id_unit, :EmptyString) as id_unit,
+            ifnull(RS_units.name, :EmptyString) as units_name,
+            RS_adr_docs_table.qtty as qtty,
+            RS_adr_docs_table.qtty_plan as qtty_plan,
+            RS_adr_docs_table.qtty_plan - RS_adr_docs_table.qtty as IsDone,
+            ifnull(RS_adr_docs_table.id_cell, :EmptyString) as id_cell,
+            ifnull(RS_cells.name, :NullValue) as cell_name
+            
+            
+            FROM RS_adr_docs_table 
+
+            LEFT JOIN RS_goods 
+            ON RS_goods.id=RS_adr_docs_table.id_good
+            LEFT JOIN RS_properties
+            ON RS_properties.id = RS_adr_docs_table.id_properties
+            LEFT JOIN RS_series
+            ON RS_series.id = RS_adr_docs_table.id_series
+            LEFT JOIN RS_units
+            ON RS_units.id=RS_adr_docs_table.id_unit
+            LEFT JOIN RS_cells
+            ON RS_cells.id=RS_adr_docs_table.id_cell
+
+            WHERE id_doc = :id_doc and table_type = :table_type
+            
+            '''
+
+        if self.curCell:
+            query_text = query_text + '''
+             and (id_cell=:current_cell OR id_cell="" OR id_cell is Null)
+            '''
+
+        query_text = query_text + ' ORDER BY RS_cells.name, RS_adr_docs_table.last_updated DESC'
+        res = self._get_query_result(query_text, (id_doc,), return_dict=True)
+        return res
 
 class DbCreator:
     def create_tables(self):

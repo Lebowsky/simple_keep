@@ -5,7 +5,7 @@ from requests.auth import HTTPBasicAuth
 import os
 from PIL import Image
 import time
-import importlib
+#import importlib
 
 from java import jclass
 
@@ -16,20 +16,20 @@ import ui_form_data
 import ui_models
 import http_exchange
 from ui_utils import HashMap
-import widgets
+#import widgets
 
 from ru.travelfood.simple_ui import SimpleUtilites as suClass
 
 noClass = jclass("ru.travelfood.simple_ui.NoSQL")
 rs_settings = noClass("rs_settings")
 
-
-importlib.reload(ui_barcodes)
-importlib.reload(ui_csv)
-importlib.reload(ui_global)
-importlib.reload(ui_form_data)
-importlib.reload(ui_models)
-importlib.reload(http_exchange)
+#
+# importlib.reload(ui_barcodes)
+# importlib.reload(ui_csv)
+# importlib.reload(ui_global)
+# importlib.reload(ui_form_data)
+# importlib.reload(ui_models)
+# importlib.reload(http_exchange)
 
 
 def create_screen(hash_map: HashMap):
@@ -118,19 +118,19 @@ def on_close_app(hash_map):
 
 @HashMap()
 def tiles_on_start(hash_map: HashMap):
-    screen = create_screen(hash_map)
+    screen: ui_models.DocumentsTiles = create_screen(hash_map)
     screen.on_start()
 
 
 @HashMap()
 def tiles_on_input(hash_map: HashMap):
-    screen = create_screen(hash_map)
+    screen: ui_models.DocumentsTiles = create_screen(hash_map)
     screen.on_input()
 
 
 @HashMap()
 def docs_on_start(hash_map: HashMap):
-    screen = create_screen(hash_map)
+    screen: ui_models.DocsListScreen = create_screen(hash_map)
     screen.on_start()
 
 
@@ -150,6 +150,723 @@ def doc_details_on_start(hash_map: HashMap):
 def doc_details_listener(hash_map: HashMap):
     screen = create_screen(hash_map)
     screen.on_input()
+
+
+
+# ********************* Старое адресное хранение
+# Todo Переписать это по новой классовой схеме и удалить из кода
+def refill_adr_docs_list(filter=''):
+    doc_list = ui_form_data.get_doc_card(rs_settings, ';Открыть отбор;Открыть размещение')
+    doc_list['customcards']['cardsdata'] = []
+
+    query_text = ui_form_data.get_adr_doc_query(filter)
+
+    if filter == None or filter == '' or filter == 'Все':
+        results = ui_global.get_query_result(query_text)
+    else:
+        results = ui_global.get_query_result(query_text, (filter,))
+
+    for record in results:
+        completed = 'true' if record[6] == 1 else 'false'
+        add_mark_selection = 'true' if record[8] == 1 else 'false'
+
+        product_row = {
+            'completed': completed,
+            'type': str(record[1]),
+            'number': str(record[2]),
+            'data': str(record[3]),
+            'key': record[0],
+            'warehouse': record[5],
+            'add_mark_selection': add_mark_selection
+        }
+        doc_list['customcards']['cardsdata'].append(product_row)
+
+    return json.dumps(doc_list)
+
+# def docs_adr_on_start(hashMap, _files=None, _data=None):
+#     # Заполним поле фильтра по виду документов
+#     doc_type_list = ['Все','Отбор','Размещение','Перемещение']
+#     hashMap.put('doc_adr_type_select', ';'.join(doc_type_list))
+#
+#     #hashMap.put('fld_number','1')
+#
+#     # hashMap.put('doc_type_click', 'Все')
+#     # Если Вызов экрана из меню плиток - обработаем
+#
+#     # Перезаполним список документов
+#     if hashMap.get('doc_adr_type_click') == None:
+#         ls = refill_adr_docs_list()
+#     else:
+#         ls = refill_adr_docs_list(hashMap.get('doc_adr_type_click'))
+#     hashMap.put("docAdrCards", ls)
+#
+#     return hashMap
+
+def open_adr_doc_table(hashMap, filter = ''):
+    # Находим ID документа
+    current_str = hashMap.get("selected_card_position")
+    jlist = json.loads(hashMap.get("docAdrCards"))
+    current_doc = jlist['customcards']['cardsdata'][int(current_str)]
+
+    # id_doc = current_doc['key']
+    hashMap.put('id_doc', current_doc['key'])
+    hashMap.put('doc_type', current_doc['type'])
+    hashMap.put('doc_n', current_doc['number'])
+    hashMap.put('doc_date', current_doc['data'])
+    hashMap.put('warehouse', current_doc['warehouse'])
+    filter = 'in'  if current_doc['type'] == 'Размещение' else 'out'
+    if filter:
+        hashMap.put('table_type_filter', filter)
+
+def docs_adr_on_select(hashMap, _files=None, _data=None):
+        listener = hashMap.get("listener")
+
+        if listener == "CardsClick":
+           open_adr_doc_table(hashMap)
+           hashMap.put("ShowScreen", "Документ товары")
+
+        elif listener == "doc_adr_type_click":
+
+            ls = refill_adr_docs_list(hashMap.get('doc_adr_type_click'))
+            hashMap.put('docCards', ls)
+            hashMap.put('ShowScreen', 'Документы')
+        elif listener == 'LayoutAction':
+            layout_listener = hashMap.get('layout_listener')
+            # Находим ID документа
+            current_doc = json.loads(hashMap.get("card_data"))
+            doc = ui_global.Rs_adr_doc
+            doc.id_doc = current_doc['key']
+
+            if layout_listener == 'CheckBox1':
+                if current_doc['completed'] == 'false':
+                    doc.mark_verified(doc, 1)
+                else:
+                    doc.mark_verified(doc, 0)
+
+            elif layout_listener == 'Подтвердить':
+                doc.mark_verified(doc, 1)
+                hashMap.put('ShowScreen', 'Документы')
+            elif layout_listener == 'Очистить данные пересчета':
+                doc.clear_barcode_data(doc)
+                hashMap.put('toast', 'Данные пересчета и маркировки очищены')
+            elif layout_listener == 'Удалить':
+                doc.delete_doc(doc)
+                hashMap.put('ShowScreen', 'Документы')
+            elif layout_listener == 'Удалить':
+                doc.delete_doc(doc)
+            elif layout_listener == 'Открыть отбор':
+
+                open_adr_doc_table(hashMap, 'out')
+                hashMap.put("ShowScreen", "Документ товары")
+            elif layout_listener == 'Открыть размещение':
+                open_adr_doc_table(hashMap, 'in')
+                hashMap.put("ShowScreen", "Документ товары")
+
+        elif listener == "btn_add_doc":
+            hashMap.put('ShowScreen', 'Новый документ')
+
+        elif listener == 'ON_BACK_PRESSED':
+
+            hashMap.put('FinishProcess', '')
+
+            # hashMap.put('ShowScreen', 'Новый документ')
+        return hashMap
+
+def doc_adr_details_on_start(hashMap, _files=None, _data=None):
+    import widgets
+    id_doc = hashMap.get('id_doc')
+    current_cell = hashMap.get('current_cell_id')
+
+    falseValueList = (0,'0','false','False',None)
+    # Формируем таблицу карточек и запрос к базе
+    #res = ui_global.get_constants()
+    use_series = rs_settings.get('use_series') #res[1]
+    use_properties = rs_settings.get('use_properties') #res[2]
+    hashMap.put('use_properties', use_properties)
+    #doc_detail_list = ui_form_data.get_doc_detail_cards(use_series, use_properties,rs_settings, True)
+
+    doc_detail_list = widgets.CustomCards(
+                      widgets.LinearLayout(widgets.TextView(Value='@good_name', TextSize= rs_settings.get('GoodsCardTitleTextSize'), TextBold = True, weight = 1),
+                             widgets.PopupMenuButton(Value = "Удалить строку"),
+                             widgets.LinearLayout(
+                                 widgets.TextView(TextBold = True, weight = 1, Value='@code_art'),
+                                 widgets.TextView(TextBold = False, weight = 1, Value = '@art'),
+                                 orientation="horizontal"),
+                                 widgets.LinearLayout(
+                                     widgets.TextView(Value = 'План', TextSize = rs_settings.get('goodsTextSize')),
+                                     widgets.TextView(Value='@qtty_plan'),
+                                     widgets.TextView(Value='Факт'),
+                                     widgets.TextView(Value='@qtty'),
+                                     #widgets.TextView(Value = '@'),
+                                     widgets.TextView(Value = 'Цена'),
+                                     widgets.TextView(Value = '@picture'),
+                                 orientation="horizontal"),orientation="vertical"),options = widgets.Options())
+
+    #doc_detail_list['customcards']['cardsdata'] = []
+
+    # Получаем теекущий документ
+    current_str = hashMap.get("selected_card_position")
+    jlist = json.loads(hashMap.get('docAdrCards'))
+
+    elem_n = jlist['customcards']['cardsdata']
+
+    for el in elem_n:
+        if el['key'] == id_doc:
+            hashMap.put('add_mark_selection',
+                        str(el['add_mark_selection'] if el['add_mark_selection'] else '0'))
+    #    current_elem = jlist['customcards']['cardsdata'][int(current_str)-1]
+
+    query_text = ui_form_data.get_doc_details_query(True, True if current_cell else False)
+    table_type_filter = hashMap.get('table_type_filter') if hashMap.get('table_type_filter') else 'out'
+    if current_cell:
+        params = (id_doc, table_type_filter, current_cell)
+    else:
+        params = {'id_doc':id_doc, 'table_type':table_type_filter, 'EmptyString':'', 'NullValue':'<пустое значение>'}
+
+    results = ui_global.get_query_result(query_text, params, True)
+    row_filter = True if hashMap.get('rows_filter') == '1' else False
+
+    if results:
+        hashMap.put('id_doc', str(results[0]['id_doc']))
+        current_cell =''
+        for record in results:
+            if row_filter and record['qtty'] == record['qtty_plan']:
+                continue
+            pic = '#f02a' if record['IsDone'] != 0 else '#f00c'
+            if record['qtty'] == 0 and record['qtty_plan'] == 0:
+                pic = ''
+
+            if current_cell != record['cell_name']:
+                c = {"group": record['cell_name']}
+                #doc_detail_list['customcards']['cardsdata'].append(c)
+                doc_detail_list.customcards['cardsdata'].append(c)
+                current_cell = record['cell_name']
+
+            product_row = {
+                'key': str(record['id']),
+                'good_name': str(record['good_name']),
+                'id_good': str(record['id_good']),
+                'id_properties': str(record['id_properties']),
+                'properties_name': str(record['properties_name']),
+                'id_series': str(record['id_series']),
+                'series_name': str(record['series_name']),
+                'id_unit': str(record['id_unit']),
+                'units_name': str(record['units_name']),
+                'code_art': 'Код: ' + str(record['code']),
+                'cell_name': str(record['cell_name']),
+                'id_cell': str(record['id_cell']),
+
+                'qtty': str(record['qtty'] if record['qtty'] is not None else 0),
+                'qtty_plan': str(record['qtty_plan'] if record['qtty_plan'] is not None else 0),
+                'picture': pic
+            }
+
+#            doc_detail_list['customcards']['cardsdata'].append(product_row)
+            doc_detail_list.customcards['cardsdata'].append(product_row)
+
+        # Признак, have_qtty_plan ЕстьПланПОКОличеству  -  Истина когда сумма колонки Qtty_plan > 0
+        # Признак  have_mark_plan "ЕстьПланКОдовМаркировки – Истина, когда количество строк табл. RS_docs_barcodes с заданным id_doc и is_plan  больше нуля.
+        # Признак have_zero_plan "Есть строки товара в документе" Истина, когда есть заполненные строки товаров в документе
+        # Признак "Контролировать"  - признак для документа, надо ли контролировать
+
+        qtext = ui_form_data.get_qtty_string_count_query()
+        res = ui_global.get_query_result(qtext, {'id_doc': id_doc})
+        if not res:
+            have_qtty_plan = False
+            have_zero_plan = False
+        else:
+            have_zero_plan = res[0][0] > 0  # В документе есть строки
+            if have_zero_plan:
+                have_qtty_plan = res[0][1] > 0  # В документе есть колво план
+            else:
+                have_qtty_plan = False
+        # Есть ли в документе план по кодам маркировки
+        qtext = ui_form_data.get_have_mark_codes_query()
+        res = ui_global.get_query_result(qtext, {'id_doc': id_doc, 'is_plan': '1'})
+        if not res:
+            have_mark_plan = False
+
+        else:
+            have_mark_plan = res[0][0] > 0
+    else:
+        have_qtty_plan = False
+        have_zero_plan = False
+        have_mark_plan = False
+
+    hashMap.put('have_qtty_plan', str(have_qtty_plan))
+    hashMap.put('have_zero_plan', str(have_zero_plan))
+    hashMap.put('have_mark_plan', str(have_mark_plan))
+    res = ui_global.get_query_result('SELECT control from RS_docs  WHERE id_doc = ?', (id_doc,))
+    # Есть ли контроль плана в документе
+    if res:
+        if res[0][0]:
+            if res[0][0] in falseValueList:
+                control = 'False'
+            else:
+                control = 'True'
+
+            # control = res[0][0] #'True'
+        else:
+            control = 'False'
+    else:
+        control = 'False'
+
+    hashMap.put('control', control)
+    #    hashMap.put("doc_goods", json.dumps(doc_detail_list))
+    hashMap.put("doc_goods", doc_detail_list.to_json())
+
+    return hashMap
+
+
+def doc_adr_details_listener(hashMap, _files=None, _data=None):
+    # Находим ID документа
+    # current_str = hashMap.get("selected_card_position")
+    # current_card_list = hashMap.get("doc_goods")
+    # jl = jlist['customcards']['cardsdata']
+    # if not current_card_list == None:
+    #     jlist = json.loads(current_card_list)
+    #     current_elem = jlist['customcards']['cardsdata'][int(current_str)-1]
+    # else:
+    #     current_elem = None
+    listener = hashMap.get('listener')
+    if listener == "CardsClick":
+
+        # Находим ID документа
+        current_str = hashMap.get("selected_card_position")
+        jlist = json.loads(hashMap.get("doc_goods"))
+        current_elem = jlist['customcards']['cardsdata'][int(current_str)]
+        hashMap.put("Doc_data",
+                    hashMap.get('doc_type') + ' №' + hashMap.get('doc_n') +
+                    ' от' + hashMap.get('doc_date'))
+        hashMap.put("current_cell_name", 'Ячейка: ' +  current_elem['cell_name'])
+        hashMap.put('id_cell', current_elem['id_cell'])
+        hashMap.put("Good", current_elem['good_name'])
+        hashMap.put("qtty_plan", str(current_elem['qtty_plan']))
+        if not current_elem['qtty']:  # or float(current_elem['qtty']) == 0:
+            hashMap.put("qtty", '')
+        else:
+            if float(current_elem['qtty']) == 0:
+                hashMap.put("qtty", '')
+            else:
+                hashMap.put("qtty", str(current_elem['qtty']))
+        hashMap.put('key', current_elem['key'])
+
+        hashMap.put("ShowScreen", "Товар выбор")
+
+    elif listener == "BACK_BUTTON":
+        hashMap.put("ShowScreen", "Документы")
+    elif listener == "btn_barcodes":
+
+        hashMap.put("ShowDialog", "ВвестиШтрихкод")
+
+    # elif hashMap.get("event") == "onResultPositive":
+
+    elif listener == 'barcode' or hashMap.get("event") == "onResultPositive":
+        current_cell = hashMap.get('current_cell')
+
+        doc = ui_global.Rs_adr_doc
+        doc.id_doc = hashMap.get('id_doc')
+        if hashMap.get("event") == "onResultPositive":
+            barcode = hashMap.get('fld_barcode')
+        else:
+            barcode = hashMap.get('barcode_camera')
+
+        doc_cell = doc.find_cell(doc, barcode)
+        if not current_cell and not doc_cell:
+            hashMap.put('beep_duration ', rs_settings.get('beep_duration'))
+            hashMap.put("beep", rs_settings.get('signal_num'))
+            hashMap.put('toast', 'Не найдена ячейка')
+            return hashMap
+
+        if doc_cell:
+            hashMap.put('current_cell', doc_cell['name'])
+            hashMap.put('current_cell_id', doc_cell['id'])
+            return hashMap
+
+
+        have_qtty_plan = hashMap.get('have_qtty_plan')
+        have_zero_plan = hashMap.get('have_zero_plan')
+        have_mark_plan = hashMap.get('have_mark_plan')
+        control = hashMap.get('control')
+        res = doc.process_the_barcode(doc, barcode
+                                      , eval(have_qtty_plan), eval(have_zero_plan), eval(control),  hashMap.get('current_cell_id'))
+        if res == None:
+            hashMap.put('scanned_barcode', barcode)
+            # suClass.urovo_set_lock_trigger(True)
+            hashMap.put('ShowScreen', 'Ошибка сканера')
+            # hashMap.put('toast',
+            #             'Штрих код не зарегистрирован в базе данных. Проверьте товар или выполните обмен данными')
+        elif res['Error']:
+            hashMap.put('beep_duration ', rs_settings.get('beep_duration'))
+            hashMap.put("beep", rs_settings.get('signal_num'))
+            if res['Error'] == 'AlreadyScanned':
+
+                hashMap.put('barcode', json.dumps({'barcode': res['Barcode'], 'doc_info': res['doc_info']}))
+                hashMap.put('ShowScreen', 'Удаление штрихкода')
+            elif res['Error'] == 'QuantityPlanReached':
+                hashMap.put('toast', res['Descr'])
+            elif res['Error'] == 'Zero_plan_error':
+                hashMap.put('toast', res['Descr'])
+            else:
+                hashMap.put('toast', res['Descr'] )  #+ ' '+ res['Barcode']
+        else:
+            hashMap.put('toast', 'Товар добавлен в документ')
+            # ---------------------------------------------------------
+    elif listener == 'btn_doc_mark_verified':
+        doc = ui_global.Rs_adr_doc
+        doc.id_doc = hashMap.get('id_doc')
+        doc.mark_verified(doc, 1)
+        hashMap.put("ShowScreen", "Документы")
+
+    elif listener == 'ON_BACK_PRESSED':
+        if hashMap.get('current_cell_id'):
+            hashMap.remove('current_cell')
+            hashMap.remove('current_cell_id')
+        else:
+            hashMap.put("ShowScreen", "Документы")
+
+    elif listener == 'btn_clear_cell':
+        hashMap.remove('current_cell')
+        hashMap.remove('current_cell_id')
+
+    elif listener == 'btn_select_cell': #Кнопка выбрать ячейку
+
+        hashMap.remove('current_cell')
+        hashMap.remove('current_cell_id')
+        hashMap.remove('SearchString')
+        hashMap.put('table_for_select', 'RS_cells') #Таблица для выбора значения
+        hashMap.put('SetResultListener', 'select_cell_value')
+        hashMap.put('filter_fields','name;barcode')
+        hashMap.put('ShowProcessResult','Универсальный справочник|Справочник')
+
+    elif listener == 'select_cell_value':
+        if hashMap.get('current_id'):
+            hashMap.put('current_cell_id',hashMap.get('current_id'))
+            hashMap.put('current_cell', hashMap.get('current_name'))
+
+    elif listener =='LayoutAction':
+        layout_listener = hashMap.get('layout_listener')
+        # Находим ID строки
+        # current_str = int(hashMap.get("selected_card_position"))
+        # jlist = json.loads(hashMap.get("doc_goods"))
+        # current_elem = jlist['customcards']['cardsdata'][current_str]
+        # if current_elem.get('group'):
+        #     current_elem = jlist['customcards']['cardsdata'][current_str+1]
+        #
+        current_key = hashMap.get("key")
+        if layout_listener == 'Удалить строку':
+
+            if current_key: #current_elem['key']:
+                ui_global.get_query_result('DELETE FROM RS_adr_docs_table WHERE id = ?', (current_key, )) #current_elem['key'],))
+                hashMap.put('RefreshScreen','')
+        elif layout_listener == 'Изменить ячейку':
+
+            hashMap.remove('SearchString')
+            hashMap.put('table_for_select', 'RS_cells')  # Таблица для выбора значения
+            hashMap.put('SetResultListener', 'select_cell_value_for_card')
+            hashMap.put('filter_fields', 'name;barcode')
+            hashMap.put('ShowProcessResult', 'Универсальный справочник|Справочник')
+
+    elif listener == 'select_cell_value_for_card':
+        current_key = hashMap.get("key")
+        if current_key:
+            ui_global.get_query_result('Update RS_adr_docs_table SET id_cell = ? Where id = ?', (hashMap.get('current_id'), current_key))
+            hashMap.put('RefreshScreen','')
+
+    elif listener == 'btn_add_string':
+
+        hashMap.put("Doc_data",
+                    hashMap.get('doc_type') + ' №' + hashMap.get('doc_n') +
+                    ' от' + hashMap.get('doc_date'))
+        hashMap.put("Good", '')
+        hashMap.put("properties", '')
+        hashMap.put("qtty_plan", '')
+
+        hashMap.put("ShowScreen", "Товар")
+
+    elif listener == 'btn_rows_filter_on':
+        hashMap.put('rows_filter', '1')
+        hashMap.put('RefreshScreen','')
+    elif listener == 'btn_rows_filter_off':
+        hashMap.remove('rows_filter')
+        hashMap.put('RefreshScreen','')
+
+    return hashMap
+
+
+def adr_elem_on_start(hashMap, _files=None, _data=None):
+    hashMap.put('mm_local', '')
+    return hashMap
+
+
+def adr_elem_on_click(hashMap, _files=None, _data=None):
+    listener = hashMap.get("listener")
+
+
+    if listener == "btn_ok":
+        # # получим текущую строку документа
+        # current_str = hashMap.get("selected_card_position")
+        doc = ui_global.Rs_adr_doc
+        doc.id_doc = hashMap.get('id_doc')
+        # if not current_str == '0':
+        #     jlist = json.loads(hashMap.get("doc_goods"))
+        #     current_elem = jlist['customcards']['cardsdata'][int(current_str)]
+        #     key = int(current_elem['key'])
+        #     doc.id_str = int(current_elem['key'])
+        # ... и запишем ее в базу
+        qtty = hashMap.get('qtty')
+        doc.qtty = float(qtty) if qtty else 0
+        elem_for_add ={'id_good':hashMap.get('Good_id'), 'id_property':hashMap.get('properties_id'), 'id_series':hashMap.get('series_id'), 'id_unit': hashMap.get('unit_id')}
+
+        doc.update_doc_table_data(doc, elem_for_add, qtty, hashMap.get('current_cell_name'),hashMap.get('table_type_filter')) #(doc, )
+
+        hashMap.put("ShowScreen", "Документ товары")
+
+    elif listener == "btn_cancel":
+
+        hashMap.put("ShowScreen", "Документ товары")
+    elif listener == "BACK_BUTTON":
+        hashMap.put("ShowScreen", "Документ товары")
+    elif listener == "":
+        hashMap.put("qtty", str(float(hashMap.get('qtty'))))
+    elif listener == 'ON_BACK_PRESSED':
+        hashMap.put("ShowScreen", "Документ товары")
+
+    elif listener == "btn_good_select":
+        hashMap.remove('SearchString')
+        hashMap.put('table_for_select', 'RS_goods')  # Таблица для выбора значения
+        hashMap.put('SetResultListener', 'select_goods_value')
+        hashMap.put('filter_fields', 'name;art')
+        hashMap.put('ShowProcessResult', 'Универсальный справочник|Справочник')
+    #--
+    elif listener == "select_goods_value":
+        hashMap.put('Good', hashMap.get('current_name'))
+        hashMap.put('Good_id', hashMap.get('current_id'))
+        # При выборе товара заполним единицу измерения по умолчанию
+        qtext = '''Select RS_goods.unit as unit_id, 
+                    RS_units.name 
+                    From RS_goods
+                      Left Join RS_units on RS_units.id_owner = RS_goods.id and RS_units.id = RS_goods.unit 
+                    WHERE RS_goods.id = ?'''
+        res = ui_global.get_query_result(qtext, (hashMap.get('current_id'),))
+        if res:
+            hashMap.put('unit_id', res[0][0])
+            hashMap.put('unit', res[0][1])
+
+    elif listener == "btn_properties":
+        hashMap.put('SearchString', hashMap.get('current_id'))
+        hashMap.put('table_for_select', 'RS_properties')  # Таблица для выбора значения
+        hashMap.put('SetResultListener', 'select_properties_value')
+        hashMap.put('filter_fields', 'name;id_owner')
+        hashMap.put('ShowProcessResult', 'Универсальный справочник|Справочник')
+    # --
+    elif listener == 'select_properties_value':
+        hashMap.put('properties', hashMap.get('current_name'))
+        hashMap.put('properties_id', hashMap.get('current_id'))
+
+    elif listener == "btn_series":
+        hashMap.put('table_for_select', 'RS_series')  # Таблица для выбора значения
+        hashMap.put('SetResultListener', 'select_series_value')
+        hashMap.put('filter_fields', 'name; id_owner')
+        hashMap.put('ShowProcessResult', 'Универсальный справочник|Справочник')
+        #__
+    elif listener == 'select_series_value':
+        hashMap.put('series', hashMap.get('current_name'))
+        hashMap.put('series_id', hashMap.get('current_id'))
+
+    elif listener == "btn_unit":
+        hashMap.put('SearchString', hashMap.get('Good_id'))
+        hashMap.put('table_for_select', 'RS_units')  # Таблица для выбора значения
+        hashMap.put('SetResultListener', 'select_unit_value')
+        hashMap.put('filter_fields', 'name;id_owner')
+        hashMap.put('ShowProcessResult', 'Универсальный справочник|Справочник')
+        #__
+    elif listener == 'select_unit_value':
+        hashMap.put('unit', hashMap.get('current_name'))
+        hashMap.put('unit_id', hashMap.get('current_id'))
+    #btn_select_cell
+    elif listener == "btn_select_cell":
+        hashMap.put('SearchString', '')
+        hashMap.put('table_for_select', 'RS_cells')  # Таблица для выбора значения
+        hashMap.put('SetResultListener', 'select_cell_value')
+        hashMap.put('filter_fields', 'name;barcode')
+        hashMap.put('ShowProcessResult', 'Универсальный справочник|Справочник')
+        #__
+    elif listener == 'select_cell_value':
+        hashMap.put('current_cell_name', hashMap.get('current_name'))
+        hashMap.put('current_cell_id', hashMap.get('current_id'))
+
+    elif listener == "photo":
+
+        # Можно вообще этого не делать-оставлять как есть. Это для примера.
+        image_file = str(
+            hashMap.get("photo_path"))  # "переменная"+"_path" - сюда помещается путь к полученной фотографии
+
+        image = Image.open(image_file)
+
+        # сразу сделаем фотку - квадратной - это простой вариант. Можно сделать например отдельо миниатюры для списка, это немного сложнее
+        im = image.resize((500, 500))
+        im.save(image_file)
+
+        jphotoarr = json.loads(hashMap.get("photoGallery"))
+        hashMap.put("photoGallery", json.dumps(jphotoarr))
+        # hashMap.put("toast",json.dumps(jphotoarr))
+
+    elif listener == "gallery_change":  # пользователь может удалить фото из галереи. Новый массив надо поместить к документу
+
+        if hashMap.containsKey("photoGallery"):  # эти 2 обработчика - аналогичные, просто для разных событий
+            jphotoarr = json.loads(hashMap.get("photoGallery"))
+            hashMap.put("photoGallery", json.dumps(jphotoarr))
+            # hashMap.put("toast","#2"+json.dumps(jphotoarr))
+
+    return hashMap
+
+
+def adr_elem_viev_on_start(hashMap, _files=None, _data=None):
+    hashMap.put('mm_local', '')
+    return hashMap
+
+
+def adr_elem_viev_on_click(hashMap, _files=None, _data=None):
+    listener = hashMap.get("listener")
+
+    if listener == "btn_ok":
+        # получим текущую строку документа
+        current_str = hashMap.get("selected_card_position")
+        doc = ui_global.Rs_adr_doc
+        if not current_str == '0':
+            jlist = json.loads(hashMap.get("doc_goods"))
+            current_elem = jlist['customcards']['cardsdata'][int(current_str)]
+            key = int(current_elem['key'])
+            doc.id_str = int(current_elem['key'])
+        # ... и запишем ее в базу
+        qtty = hashMap.get('qtty')
+        doc.qtty = float(qtty) if qtty else 0
+
+        doc.update_doc_str(doc) #(doc, )
+
+        hashMap.put("ShowScreen", "Документ товары")
+
+    elif listener == "btn_cancel":
+
+        hashMap.put("ShowScreen", "Документ товары")
+    elif listener == "BACK_BUTTON":
+        hashMap.put("ShowScreen", "Документ товары")
+    elif listener == "":
+        hashMap.put("qtty", str(float(hashMap.get('qtty'))))
+    elif listener == 'ON_BACK_PRESSED':
+        hashMap.put("ShowScreen", "Документ товары")
+
+    elif listener == "photo":
+
+        # Можно вообще этого не делать-оставлять как есть. Это для примера.
+        image_file = str(
+            hashMap.get("photo_path"))  # "переменная"+"_path" - сюда помещается путь к полученной фотографии
+
+        image = Image.open(image_file)
+
+        # сразу сделаем фотку - квадратной - это простой вариант. Можно сделать например отдельо миниатюры для списка, это немного сложнее
+        im = image.resize((500, 500))
+        im.save(image_file)
+
+        jphotoarr = json.loads(hashMap.get("photoGallery"))
+        hashMap.put("photoGallery", json.dumps(jphotoarr))
+        # hashMap.put("toast",json.dumps(jphotoarr))
+
+    elif listener == "gallery_change":  # пользователь может удалить фото из галереи. Новый массив надо поместить к документу
+
+        if hashMap.containsKey("photoGallery"):  # эти 2 обработчика - аналогичные, просто для разных событий
+            jphotoarr = json.loads(hashMap.get("photoGallery"))
+            hashMap.put("photoGallery", json.dumps(jphotoarr))
+            # hashMap.put("toast","#2"+json.dumps(jphotoarr))
+
+    return hashMap
+
+
+def new_adr_doc_on_start(hashMap, _files=None, _data=None):
+    if hashMap.get('doc_adr_type_select') == None:
+        # Заполним поле фильтра по виду документов
+        doc_type_list = ['Отбор', 'Размещение', 'Перемещение']
+        hashMap.put('doc_adr_type_select', ';'.join(doc_type_list))
+
+
+    if hashMap.get('warehouse') == None:
+        #fld_countragent = ui_global.get_name_list('RS_warehouses')
+        hashMap.put('warehouse', 'Склад') #doc_warehouse
+
+    if not hashMap.containsKey('doc_date'):
+        hashMap.put('doc_date', '01.01.2022')
+
+    return hashMap
+
+
+def new_adr_doc_on_select(hashMap, _files=None, _data=None):
+    listener = hashMap.get("listener")
+    type = hashMap.get('doc_type_click')
+    if not type or type=='Все':
+        type = 'Отбор'
+    fld_number = hashMap.get('fld_number')
+
+    if listener == "btn_ok":
+        if not fld_number:
+
+            id = ui_global.Rs_adr_doc.get_new_id(1)
+            # id = (f'{id:04}')
+            # id = "{0:0>4}".format(id)
+        else:
+            id = fld_number
+
+        try:
+            ui_global.Rs_adr_doc.add('01', (id,
+                                        type,
+                                        id,  # hashMap.get('fld_number')
+                                        hashMap.get('fld_data'),
+                                        ui_global.get_by_name(hashMap.get('doc_warehouse'), 'RS_warehouses')))
+            hashMap.put('ShowScreen', 'Документы')
+        except:
+            hashMap.put('toast', 'Номер документа неуникален!')
+
+
+    elif listener == 'btn_cancel':
+        hashMap.put('ShowScreen', 'Документы')
+    elif listener == 'fld_data':
+        hashMap.put('doc_date', hashMap.get('fld_data'))
+    elif listener == 'ON_BACK_PRESSED':
+        hashMap.put("ShowScreen", "Документы")
+    elif listener =='btn_select_warehouse':
+        hashMap.put('table_for_select', 'RS_warehouses')  # Таблица для выбора значения
+        hashMap.put('SetResultListener', 'select_cell_value')
+        hashMap.put('filter_fields', 'name')
+        hashMap.put('ShowProcessResult', 'Универсальный справочник|Справочник')
+    elif listener == 'select_cell_value':
+        if hashMap.get('table_for_select') == 'RS_warehouses':
+            hashMap.put('warehouse', hashMap.get('current_name'))  # fld_countragent
+
+    return hashMap
+
+
+@HashMap()
+def adr_docs_on_start(hash_map: HashMap):
+    screen: ui_models.AdrDocsListScreen = create_screen(hash_map)
+    screen.on_start()
+
+
+# @HashMap()
+# def adr_docs_on_select(hash_map: HashMap):
+#     screen: ui_models.AdrDocsListScreen = create_screen(hash_map)
+#     screen.on_input()
+#
+#
+# @HashMap()
+# def adr_doc_details_on_start(hash_map: HashMap):
+#     screen = create_screen(hash_map)
+#     screen.on_start()
+#
+#
+# @HashMap()
+# def adr_doc_details_listener(hash_map: HashMap):
+#     screen = create_screen(hash_map)
+#     screen.on_input()
 
 
 @HashMap()
@@ -479,7 +1196,14 @@ def barcode_error_screen_listener(hashMap, _files=None, _data=None):
         hashMap.put("ShowScreen", "Документ товары")
     return hashMap
 
-
+def plan_excess_error_screen_listener(hashMap, _files=None, _data=None):
+    if hashMap.get('listener') == 'ON_BACK_PRESSED':
+        # suClass.urovo_set_lock_trigger(False)
+        hashMap.put("ShowScreen", "Документ товары")
+    elif hashMap.get('listener') == 'btn_continue_scan':
+        # suClass.urovo_set_lock_trigger(False)
+        hashMap.put("ShowScreen", "Документ товары")
+    return hashMap
 def barcode_flow_on_start(hashMap, _files=None, _data=None):
     id_doc = hashMap.get('id_doc')
     falseValueList = (0, '0', 'false', 'False', None)
@@ -1078,7 +1802,7 @@ def settings_on_click(hashMap, _files=None, _data=None):
                 ui_global.write_error_on_log(str(answer.get('Error')))
 
             qtext = f'UPDATE RS_docs SET sent = 1  WHERE id_doc in ({doc_in_str}) '
-            ui_global.get_query_result(qtext, (doc_in_str,), False)
+            ui_global.get_query_result(qtext, return_dict=False)
     elif listener == 'btn_timer':
         try:
             timer_update(hashMap)
@@ -1316,12 +2040,38 @@ def debug_on_start(hash_map: HashMap):
     screen.on_start()
 
 
-@HashMap()
-def debug_listener(hash_map, _files=None, _data=None):
-    screen: ui_models.DebugSettingsScreen = create_screen(hash_map)
-    screen.on_input()
+# @HashMap()
+# def debug_listener(hash_map, _files=None, _data=None):
+#     screen: ui_models.DebugSettingsScreen = create_screen(hash_map)
+#     screen.on_input()
+def debug_listener(hashMap, _files=None, _data=None):
 
+    listener = hashMap.get('listener')
 
+    if listener == 'btn_copy_base':
+        ip_host = hashMap.get('ip_host')
+        if os.path.isfile('//data/data/ru.travelfood.simple_ui/databases/SimpleKeep'): #Keep'):
+            with open('//data/data/ru.travelfood.simple_ui/databases/SimpleKeep', 'rb') as f:  # rightscan
+                #r = requests.post('http://' + ip_host + ':2444/post', files={'Rightscan': f})  # rightscan
+                r = requests.post('http://192.168.1.77:2444/post', files={'Rightscan': f})  # rightscan
+            if r.status_code == 200:
+                hashMap.put('toast', 'База SQLite успешно выгружена')
+            else:
+                hashMap.put('toast', 'Ошибка соединения')
+        else:
+            hashMap.put('toast', 'Файл не найден')
+    elif listener == 'btn_plan':
+
+        hashMap.put('descr_text', 'Тестовое сообщение')
+#        hashMap.put('StartScreen', 'ЭкранПлан')
+        hashMap.put('StartScreen', 'ЭкранПлан')
+
+    return hashMap
+
+def test_screen_input(hashMap,  _files=None, _data=None):
+    if hashMap.get('listener') == 'btn_ok' or 'ON_BACK_PRESSED':
+        hashMap.put('FinishProcess','')
+    return hashMap
 # ^^^^^^^^^^^^^^^^^ Debug ^^^^^^^^^^^^^^^^^
 
 
