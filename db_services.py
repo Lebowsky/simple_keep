@@ -141,7 +141,7 @@ class DocService:
                         row_values.append(0)
                     elif col == 'verified' and (table_name == 'RS_adr_docs_table'):
                         continue
-                    elif row.get(col) is None:
+                    if row.get(col) is None:
 
                         row[col] = ''
                     elif col == 'mark_code':  # Заменяем это поле на поля GTIN и Series
