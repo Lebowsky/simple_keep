@@ -5,7 +5,7 @@ import os
 import db_services
 import hs_services
 from ui_utils import HashMap, RsDoc
-from db_services import DocService, ErrorService, DbService
+from db_services import DocService, ErrorService
 from hs_services import HsService
 import http_exchange
 from http_exchange import post_changes_to_server
@@ -1527,6 +1527,7 @@ class Timer:
 
 
 # ==================== Main events =============================
+
 
 class MainEvents:
     def __init__(self, hash_map: HashMap, rs_settings):
