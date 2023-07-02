@@ -138,7 +138,8 @@ class DocService:
                     if col in list_quoted_fields and "\"" in row[col]:
                         row[col] = row[col].replace("\"", "\"\"")
                     if col == 'verified' and (table_name in ['RS_docs', 'RS_adr_docs']):
-                        row_values.append(0)
+                        # row_values.append(0)
+                        row[col] = 0
                     elif col == 'verified' and (table_name == 'RS_adr_docs_table'):
                         continue
                     if row.get(col) is None:
