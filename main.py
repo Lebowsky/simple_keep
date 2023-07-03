@@ -2029,6 +2029,7 @@ def debug_on_start(hash_map: HashMap):
 # def debug_listener(hash_map, _files=None, _data=None):
 #     screen: ui_models.DebugSettingsScreen = create_screen(hash_map)
 #     screen.on_input()
+@HashMap()
 def debug_listener(hashMap, _files=None, _data=None):
 
     listener = hashMap.get('listener')
@@ -2050,7 +2051,17 @@ def debug_listener(hashMap, _files=None, _data=None):
         hashMap.put('descr_text', 'Тестовое сообщение')
 #        hashMap.put('StartScreen', 'ЭкранПлан')
         hashMap.put('StartScreen', 'ЭкранПлан')
+    elif listener =='btn_test_modal_screen':
+        hashMap.put('toast', 'Запускаем модалку')
+        # hashMap.put('ShowDialog', 'ОшибкаПревышенияПлана')
+        # hashMap.put('ShowDialogStyle', '{  ""title"": ""Ошибка"",   ""yes"": ""Ок"",   ""no"": ""Отмена"" }')
+        hashMap.put("name", "")
+        unit_id = -1
+        hashMap.put("ShowDialog", "ДиалогЕдиницы")
+        hashMap.put("ShowDialogStyle", json.dumps({"title": "Добавление записи", "yes": "Сохранить", "no": "Отмена"}))
 
+
+        #hashMap.show_dialog(listener='Ошибка превышения плана', title='Количество план в документе превышено')
     return hashMap
 
 def test_screen_input(hashMap,  _files=None, _data=None):
@@ -2147,4 +2158,6 @@ def get_table_cards(table_name: str, filter_fields=list(), filter_value='', excl
 
     return json.dumps(cards)
 
-
+@HashMap
+def debug_barcode_error_screen_listener(hash_map: HashMap):
+    hash_map.show_screen(listener='Ошибка превышения плана', title='Количество план в документе превышено')

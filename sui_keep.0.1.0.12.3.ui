@@ -1717,6 +1717,74 @@
                         "onlineOnStart": false,
                         "onlineOnAfterStart": false,
                         "onlineOnInput": false
+                    },
+                    {
+                        "type": "Operation",
+                        "Name": "Ошибка превышения плана",
+                        "Timer": false,
+                        "noScroll": false,
+                        "hideBottomBarScreen": true,
+                        "hideToolBarScreen": false,
+                        "handleKeyUp": false,
+                        "Elements": [
+                            {
+                                "orientation": "vertical",
+                                "height": "wrap_content",
+                                "width": "match_parent",
+                                "gravity_horizontal": "center",
+                                "gravity_vertical": "center",
+                                "weight": "0",
+                                "type": "LinearLayout",
+                                "Variable": "",
+                                "Elements": [
+                                    {
+                                        "TextSize": "18",
+                                        "height": "wrap_content",
+                                        "width": "wrap_content",
+                                        "gravity_horizontal": "center",
+                                        "gravity_vertical": "center",
+                                        "weight": "0",
+                                        "type": "TextView",
+                                        "Value": "@Error_description",
+                                        "Variable": "Error_description"
+                                    },
+                                    {
+                                        "TextSize": "24",
+                                        "TextColor": "",
+                                        "height": "wrap_content",
+                                        "width": "match_parent",
+                                        "gravity_horizontal": "center",
+                                        "gravity_vertical": "center",
+                                        "weight": "0",
+                                        "type": "TextView",
+                                        "Value": "ОШИБКА",
+                                        "Variable": ""
+                                    },
+                                    {
+                                        "height": "wrap_content",
+                                        "width": "match_parent",
+                                        "gravity_horizontal": "center",
+                                        "gravity_vertical": "center",
+                                        "weight": "0",
+                                        "type": "Button",
+                                        "Value": "Продолжить сканирование",
+                                        "Variable": "btn_continue_scan"
+                                    }
+                                ]
+                            }
+                        ],
+                        "Handlers": [
+                            {
+                                "event": "onInput",
+                                "action": "run",
+                                "type": "python",
+                                "method": "barcode_error_screen_listener",
+                                "postExecute": ""
+                            }
+                        ],
+                        "onlineOnStart": false,
+                        "onlineOnAfterStart": false,
+                        "onlineOnInput": false
                     }
                 ]
             },
@@ -3668,7 +3736,11 @@
             {
                 "type": "Process",
                 "ProcessName": "Отладка",
-                "hidden": true,
+                "hidden": false,
+                "DefineOnBackPressed": false,
+                "login_screen": false,
+                "PlanFactHeader": "",
+                "SC": false,
                 "Operations": [
                     {
                         "type": "Operation",
@@ -3690,6 +3762,8 @@
                                 "gravity_horizontal": "center",
                                 "gravity_vertical": "center",
                                 "weight": "0",
+                                "height_value": "",
+                                "width_value": "",
                                 "type": "LinearLayout",
                                 "Variable": "",
                                 "Elements": [
@@ -3821,6 +3895,27 @@
                                         "type": "ProgressButton",
                                         "Value": "Очистить базу",
                                         "Variable": "bnt_clear_tables"
+                                    },
+                                    {
+                                        "TextSize": "",
+                                        "TextColor": "",
+                                        "TextBold": false,
+                                        "TextItalic": false,
+                                        "BackgroundColor": "",
+                                        "StrokeWidth": "",
+                                        "Padding": "",
+                                        "orientation": "",
+                                        "height": "wrap_content",
+                                        "width": "wrap_content",
+                                        "gravity_horizontal": "center",
+                                        "gravity_vertical": "center",
+                                        "weight": "",
+                                        "height_value": "",
+                                        "width_value": "",
+                                        "type": "ProgressButton",
+                                        "Value": "Тест модального окна",
+                                        "Variable": "btn_test_modal_screen",
+                                        "style_name": ""
                                     }
                                 ]
                             }
@@ -3843,6 +3938,121 @@
                                 "postExecute": ""
                             }
                         ],
+                        "onlineOnStart": false,
+                        "onlineOnAfterStart": false,
+                        "onlineOnInput": false
+                    },
+                    {
+                        "type": "Operation",
+                        "Name": "Ошибка превышения плана",
+                        "Timer": false,
+                        "noScroll": false,
+                        "hideBottomBarScreen": true,
+                        "hideToolBarScreen": false,
+                        "handleKeyUp": false,
+                        "Elements": [
+                            {
+                                "orientation": "vertical",
+                                "height": "wrap_content",
+                                "width": "match_parent",
+                                "gravity_horizontal": "center",
+                                "gravity_vertical": "center",
+                                "weight": "0",
+                                "type": "LinearLayout",
+                                "Variable": "",
+                                "Elements": [
+                                    {
+                                        "TextSize": "18",
+                                        "height": "wrap_content",
+                                        "width": "wrap_content",
+                                        "gravity_horizontal": "center",
+                                        "gravity_vertical": "center",
+                                        "weight": "0",
+                                        "type": "TextView",
+                                        "Value": "@Error_description",
+                                        "Variable": "Error_description"
+                                    },
+                                    {
+                                        "TextSize": "24",
+                                        "TextColor": "",
+                                        "height": "wrap_content",
+                                        "width": "match_parent",
+                                        "gravity_horizontal": "center",
+                                        "gravity_vertical": "center",
+                                        "weight": "0",
+                                        "type": "TextView",
+                                        "Value": "ОШИБКА",
+                                        "Variable": ""
+                                    },
+                                    {
+                                        "height": "wrap_content",
+                                        "width": "match_parent",
+                                        "gravity_horizontal": "center",
+                                        "gravity_vertical": "center",
+                                        "weight": "0",
+                                        "type": "Button",
+                                        "Value": "Продолжить сканирование",
+                                        "Variable": "btn_continue_scan"
+                                    }
+                                ]
+                            }
+                        ],
+                        "Handlers": [
+                            {
+                                "event": "onInput",
+                                "action": "run",
+                                "type": "python",
+                                "method": "barcode_error_screen_listener",
+                                "postExecute": ""
+                            }
+                        ],
+                        "onlineOnStart": false,
+                        "onlineOnAfterStart": false,
+                        "onlineOnInput": false
+                    },
+                    {
+                        "type": "Operation",
+                        "Name": "ДиалогЕдиницы",
+                        "Timer": false,
+                        "noScroll": false,
+                        "hideBottomBarScreen": true,
+                        "hideToolBarScreen": false,
+                        "handleKeyUp": false,
+                        "Elements": [
+                            {
+                                "orientation": "vertical",
+                                "height": "wrap_content",
+                                "width": "match_parent",
+                                "weight": "0",
+                                "type": "LinearLayout",
+                                "Variable": "",
+                                "Elements": [
+                                    {
+                                        "TextSize": "17",
+                                        "TextColor": "#696969",
+                                        "TextBold": true,
+                                        "BackgroundColor": "",
+                                        "height": "wrap_content",
+                                        "width": "match_parent",
+                                        "weight": "0",
+                                        "type": "TextView",
+                                        "Value": "Название",
+                                        "Variable": ""
+                                    },
+                                    {
+                                        "TextSize": "17",
+                                        "height": "wrap_content",
+                                        "width": "match_parent",
+                                        "gravity_horizontal": "left",
+                                        "weight": "0",
+                                        "type": "EditTextText",
+                                        "Value": "@name",
+                                        "Variable": "name"
+                                    }
+                                ]
+                            }
+                        ],
+                        "Handlers": [],
                         "onlineOnStart": false,
                         "onlineOnAfterStart": false,
                         "onlineOnInput": false
