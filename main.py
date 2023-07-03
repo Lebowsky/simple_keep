@@ -2054,7 +2054,7 @@ def debug_listener(hashMap, _files=None, _data=None):
         if os.path.isfile('//data/data/ru.travelfood.simple_ui/databases/SimpleKeep'): #Keep'):
             with open('//data/data/ru.travelfood.simple_ui/databases/SimpleKeep', 'rb') as f:  # rightscan
                 #r = requests.post('http://' + ip_host + ':2444/post', files={'Rightscan': f})  # rightscan
-                r = requests.post('http://192.168.1.77:2444/post', files={'Rightscan': f})  # rightscan
+                r = requests.post('http://192.168.1.136:2444/post', files={'Rightscan': f})  # rightscan
             if r.status_code == 200:
                 hashMap.put('toast', 'База SQLite успешно выгружена')
             else:

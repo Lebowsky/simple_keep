@@ -851,7 +851,11 @@ class GroupScanDocDetailsScreen(DocDetailsScreen):
     def post_barcode_scanned(self, http_settings):
         if self.hash_map.get_bool('barcode_scanned'):
             id_doc = self.hash_map.get('id_doc')
-            answer = http_exchange.post_goods_to_server(id_doc, http_settings)
+            answer = None
+            try:
+                answer = http_exchange.post_goods_to_server(id_doc, http_settings)
+            except Exception as e:
+                self.service.write_error_on_log(e.args[0])
 
             if answer and answer.get('Error') is not None:
                 self.hash_map.debug(answer.get('Error'))
@@ -861,6 +865,7 @@ class GroupScanDocDetailsScreen(DocDetailsScreen):
             table_view = self._get_doc_table_view(table_data=table_data)
             self.hash_map.put("doc_goods_table", table_view.to_json())
             self.hash_map.refresh_screen()
+            self.hash_map.toast('post_barcode_scanned')
 
     def _run_progress_barcode_scanning(self):
         self.hash_map.run_py_thread_progress('doc_details_before_process_barcode')

@@ -14,7 +14,7 @@ class DocService:
         query_docs = f'SELECT * FROM {self.docs_table_name} WHERE id_doc = ? and verified = 1'
 
         query_goods = f'''
-        SELECT * FROM {self.docs_table_name}
+        SELECT * FROM {self.docs_table_name}_table
         WHERE id_doc = ? and sent = 0
         '''
 
@@ -29,7 +29,6 @@ class DocService:
             return None
 
         return self.form_data_for_request(res_docs, res_goods, to_json)
-
 
     def form_data_for_request(self, res_docs, res_goods, to_json):
         for item in res_docs:
@@ -64,7 +63,8 @@ class DocService:
             FROM {self.docs_table_name}
             WHERE id_doc IN ({doc_ids})
         '''
-        docs = {item['id_doc']: item['verified'] or '' for item in self._get_query_result(query_text=query, return_dict=True)}
+        docs = {item['id_doc']: item['verified'] or False for item in
+                self._get_query_result(query_text=query, return_dict=True)}
 
         queries = self.json_to_sqlite_query(data, docs)
 
@@ -138,27 +138,23 @@ class DocService:
                 for col in query_col_names:
                     if col in list_quoted_fields and "\"" in row[col]:
                         row[col] = row[col].replace("\"", "\"\"")
+
+                    # Здесь устанавливаем флаг verified!!!
                     if col == 'verified' and (table_name in ['RS_docs', 'RS_adr_docs']):
-                        row[col] = docs[row['id_doc']]
-                    #     # row_values.append(0)
-                    #     row[col] = 0
-                    # elif col == 'verified' and (table_name == 'RS_adr_docs_table'):
-                    #     continue
-                    # if docs and table_name in ['RS_docs', 'RS_adr_docs']:
+                        row[col] = docs.get(row['id_doc'], False)
+
                     if row.get(col) is None:
                         row[col] = ''
+
                     if col == 'mark_code':  # Заменяем это поле на поля GTIN и Series
                         barc_struct = self.parse_barcode(row[col])
                         row_values.append(barc_struct['GTIN'])
                         row_values.append(barc_struct['Series'])
                     else:
                         row_values.append(row[col])  # (f'"{row[col]}"')
-                    if col == 'id_doc' and (table_name in ['RS_docs','RS_adr_docs']):
-                        doc_id_list.append('"' + row[col] + '"')
 
-                # Здесь устанавливаем флаг verified!!!
-                # if docs and table_name in ['RS_docs', 'RS_adr_docs']:
-                #     row_values.append(docs[row['id_doc']])
+                    if col == 'id_doc' and (table_name in ['RS_docs', 'RS_adr_docs']):
+                        doc_id_list.append('"' + row[col] + '"')
 
                 formatted_val = [f'"{x}"' if isinstance(x, str) else str(x) for x in row_values]
                 values.append(f"({', '.join(formatted_val)})")
