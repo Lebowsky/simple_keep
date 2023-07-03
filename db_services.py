@@ -137,11 +137,13 @@ class DocService:
                 for col in query_col_names:
                     if col in list_quoted_fields and "\"" in row[col]:
                         row[col] = row[col].replace("\"", "\"\"")
-                    # if col == 'verified' and (table_name in ['RS_docs', 'RS_adr_docs']):
+                    if col == 'verified' and (table_name in ['RS_docs', 'RS_adr_docs']):
+                        row[col] = docs[row['id_doc']]
                     #     # row_values.append(0)
                     #     row[col] = 0
                     # elif col == 'verified' and (table_name == 'RS_adr_docs_table'):
                     #     continue
+                    # if docs and table_name in ['RS_docs', 'RS_adr_docs']:
                     if row.get(col) is None:
                         row[col] = ''
                     if col == 'mark_code':  # Заменяем это поле на поля GTIN и Series
@@ -154,8 +156,8 @@ class DocService:
                         doc_id_list.append('"' + row[col] + '"')
 
                 # Здесь устанавливаем флаг verified!!!
-                if docs and table_name in ['RS_docs', 'RS_adr_docs']:
-                    row_values.append(docs[row['id_doc']])
+                # if docs and table_name in ['RS_docs', 'RS_adr_docs']:
+                #     row_values.append(docs[row['id_doc']])
 
                 formatted_val = [f'"{x}"' if isinstance(x, str) else str(x) for x in row_values]
                 values.append(f"({', '.join(formatted_val)})")
