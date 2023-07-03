@@ -1723,11 +1723,11 @@ def settings_on_start(hashMap, _files=None, _data=None):
         # hashMap.put('use_series', str(res[1]))
         # hashMap.put('use_properties', str(res[2]))
     hashMap.put('use_mark', rs_settings.get('use_mark'))  #str(res[3]))
-    hashMap.put('allow_fact_input', rs_settings.get('allow_fact_input'))  #str(res[3]))
-    hashMap.put('add_if_not_in_plan',rs_settings.get('add_if_not_in_plan'))  # str(res[4]))
-    hashMap.put('path',rs_settings.get('path') ) # str(res[5]))
-    hashMap.put('delete_files',rs_settings.get('delete_files'))  # str(res[6]))
-    hashMap.put('allow_overscan',rs_settings.get('allow_overscan'))  # str(res[9]))
+    hashMap.put('allow_fact_input', rs_settings.get('allow_fact_input'))
+    hashMap.put('add_if_not_in_plan', rs_settings.get('add_if_not_in_plan'))  # str(res[4]))
+    hashMap.put('path', rs_settings.get('path')) # str(res[5]))
+    hashMap.put('delete_files', rs_settings.get('delete_files'))  # str(res[6]))
+    hashMap.put('allow_overscan', rs_settings.get('allow_overscan'))  # str(res[9]))
 
     if not hashMap.containsKey('ip_host'):
         hashMap.put('ip_host', '192.168.1.77')
