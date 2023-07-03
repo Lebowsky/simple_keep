@@ -491,6 +491,8 @@ class DocumentsDocsListScreen(DocsListScreen):
                                            f'подробнее в логе ошибок.')
                 self.toast('Не удалось отправить документ повторно')
             else:
+                self.service.doc_id = id_doc
+                self.service.set_doc_value('sent', 1)
                 self.toast('Документ отправлен повторно')
 
     def get_id_doc(self):
@@ -595,8 +597,9 @@ class DocDetailsScreen(Screen):
             elif res['Error'] == 'QuantityPlanReached':
                 self.hash_map.put('Error_description', 'Количество план в документе превышено')
                 self.hash_map.show_screen('Ошибка превышения плана')
-                self.hash_map.show_dialog(listener='Ошибка превышения плана', title= 'Количество план в документе превышено')
-                #self.hash_map.toast('toast', res['Descr'])
+                self.hash_map.show_dialog(listener='Ошибка превышения плана',
+                                          title='Количество план в документе превышено')
+                # self.hash_map.toast('toast', res['Descr'])
             elif res['Error'] == 'Zero_plan_error':
                 self.hash_map.toast(res['Descr'])
             else:
@@ -853,19 +856,18 @@ class GroupScanDocDetailsScreen(DocDetailsScreen):
             id_doc = self.hash_map.get('id_doc')
             answer = None
             try:
-                answer = http_exchange.post_goods_to_server(id_doc, http_settings)
+                answer = self._post_goods_to_server()
             except Exception as e:
                 self.service.write_error_on_log(e.args[0])
 
             if answer and answer.get('Error') is not None:
-                self.hash_map.debug(answer.get('Error'))
+                self.hash_map.error_log(answer.get('Error'))
 
             doc_details = self._get_doc_details_data()
             table_data = self._prepare_table_data(doc_details)
             table_view = self._get_doc_table_view(table_data=table_data)
             self.hash_map.put("doc_goods_table", table_view.to_json())
             self.hash_map.refresh_screen()
-            self.hash_map.toast('post_barcode_scanned')
 
     def _run_progress_barcode_scanning(self):
         self.hash_map.run_py_thread_progress('doc_details_before_process_barcode')
@@ -897,6 +899,32 @@ class GroupScanDocDetailsScreen(DocDetailsScreen):
             self.service.write_error_on_log(f'Ошибка загрузки документа:  {answer.error_text}')
         else:
             return answer.data
+
+    def _post_goods_to_server(self):
+        res = self.service.get_last_edited_goods(to_json=False)
+        hs_service = HsService(self.get_http_settings())
+
+        if isinstance(res, dict) and res.get('Error'):
+            answer = {'empty': True, 'Error': res.get('Error')}
+            return answer
+        elif res:
+            hs_service.send_documents(res)
+            answer = hs_service.http_answer
+            if answer.error:
+                self.service.write_error_on_log(answer.error_text)
+            else:
+                try:
+                    self.service.update_sent_data(res)
+                except Exception as e:
+                    self.service.write_error_on_log(e.args[0])
+
+        docs_data = hs_service.get_data()
+
+        if docs_data.get('data'):
+            try:
+                self.service.update_data_from_json(docs_data['data'])
+            except Exception as e:
+                self.service.write_error_on_log(e.args[0])
 
 
 class DocumentsDocDetailScreen(DocDetailsScreen):
@@ -1528,7 +1556,6 @@ class Timer:
             self.db_service.write_error_on_log(f'Ошибка выгрузки документов: {e}')
 
 
-
 # ^^^^^^^^^^^^^^^^^^^^^ Timer ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 
@@ -1595,8 +1622,11 @@ class MainEvents:
 
         self.hash_map.toast(toast)
 
-
-
+    def on_sql_error(self):
+        sql_error = self.hash_map['SQLError']
+        if sql_error:
+            service = db_services.DocService()
+            service.write_error_on_log(f'SQL_Error: {sql_error}')
 
     def put_notification(self):
         self.hash_map['_configuration'] = ''

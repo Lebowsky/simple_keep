@@ -261,6 +261,7 @@ def post_goods_to_server(doc_id, http_params):
         return answer
     elif res:
         hs_service.send_documents(res)
+
         if not res or (isinstance(res, dict) and res.get('Error')):
             answer = {'empty': True, 'Error': res.get('Error')}
             return answer

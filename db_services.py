@@ -99,6 +99,11 @@ class DocService:
 
                 self._get_query_result(query)
 
+            query = f'UPDATE {self.docs_table_name} SET sent=1 WHERE id_doc = "{self.doc_id}"'
+            self._get_query_result(query)
+
+
+
     def json_to_sqlite_query(self, data: dict, docs=None):
         qlist = []
         # Цикл по именам таблиц
