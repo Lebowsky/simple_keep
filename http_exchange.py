@@ -261,6 +261,7 @@ def post_goods_to_server(doc_id, http_params):
         return answer
     elif res:
         hs_service.send_documents(res)
+
         if not res or (isinstance(res, dict) and res.get('Error')):
             answer = {'empty': True, 'Error': res.get('Error')}
             return answer
@@ -277,15 +278,6 @@ def timer_server_load_data(http_params):
     docs_data = hs_service.get_data()
     if docs_data.get('data'):
         try:
-            existing_docs_list = doc_service.get_existing_docs_names_list()
             doc_service.update_data_from_json(docs_data['data'])
-            docs_list_after_load = doc_service.get_existing_docs_names_list()
-            diff = [x[0] for x in docs_list_after_load if x not in existing_docs_list]
-            if diff:
-                return " ".join(diff)
         except Exception as e:
             raise e
-            # return {'empty': True, 'Error': e.args[0]}
-
-
-

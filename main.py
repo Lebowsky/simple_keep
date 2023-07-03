@@ -79,11 +79,16 @@ def timer_update(hash_map: HashMap):
 
 
 @HashMap()
-def event_service(hash_map, _files=None, _data=None):
+def event_service(hash_map):
     """ Обработчик для работы МП в режиме сервера. В ws_body по умолчанию лежит текст конфигурации """
 
     hash_map['ws_body'] = hash_map['ANDROID_ID']
 
+
+@HashMap()
+def on_sql_error(hash_map):
+    model = ui_models.MainEvents(hash_map, rs_settings)
+    model.on_sql_error()
 
 @HashMap()
 def check_docs_data_on_start(hash_map: HashMap):
@@ -2054,7 +2059,7 @@ def debug_listener(hashMap, _files=None, _data=None):
         if os.path.isfile('//data/data/ru.travelfood.simple_ui/databases/SimpleKeep'): #Keep'):
             with open('//data/data/ru.travelfood.simple_ui/databases/SimpleKeep', 'rb') as f:  # rightscan
                 #r = requests.post('http://' + ip_host + ':2444/post', files={'Rightscan': f})  # rightscan
-                r = requests.post('http://192.168.1.77:2444/post', files={'Rightscan': f})  # rightscan
+                r = requests.post('http://192.168.1.136:2444/post', files={'Rightscan': f})  # rightscan
             if r.status_code == 200:
                 hashMap.put('toast', 'База SQLite успешно выгружена')
             else:
