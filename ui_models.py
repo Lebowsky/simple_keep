@@ -181,7 +181,6 @@ class GroupScanTiles(Tiles):
                 ],
                 'background_color': '#f5f5f5'
             }
-            self.toast("yes")
         else:
             tile_view = widgets.LinearLayout(
                     widgets.TextView(
