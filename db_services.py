@@ -63,7 +63,7 @@ class DocService:
             FROM {self.docs_table_name}
             WHERE id_doc IN ({doc_ids})
         '''
-        docs = {item['id_doc']: item['verified'] for item in self._get_query_result(query_text=query, return_dict=True)}
+        docs = {item['id_doc']: item['verified'] or '' for item in self._get_query_result(query_text=query, return_dict=True)}
 
         queries = self.json_to_sqlite_query(data, docs)
 
@@ -137,11 +137,11 @@ class DocService:
                 for col in query_col_names:
                     if col in list_quoted_fields and "\"" in row[col]:
                         row[col] = row[col].replace("\"", "\"\"")
-                    if col == 'verified' and (table_name in ['RS_docs', 'RS_adr_docs']):
-                        # row_values.append(0)
-                        row[col] = 0
-                    elif col == 'verified' and (table_name == 'RS_adr_docs_table'):
-                        continue
+                    # if col == 'verified' and (table_name in ['RS_docs', 'RS_adr_docs']):
+                    #     # row_values.append(0)
+                    #     row[col] = 0
+                    # elif col == 'verified' and (table_name == 'RS_adr_docs_table'):
+                    #     continue
                     if row.get(col) is None:
                         row[col] = ''
                     if col == 'mark_code':  # Заменяем это поле на поля GTIN и Series
@@ -153,7 +153,8 @@ class DocService:
                     if col == 'id_doc' and (table_name in ['RS_docs','RS_adr_docs']):
                         doc_id_list.append('"' + row[col] + '"')
 
-                if docs and table_name == 'RS_docs':
+                # Здесь устанавливаем флаг verified!!!
+                if docs and table_name in ['RS_docs', 'RS_adr_docs']:
                     row_values.append(docs[row['id_doc']])
 
                 formatted_val = [f'"{x}"' if isinstance(x, str) else str(x) for x in row_values]
