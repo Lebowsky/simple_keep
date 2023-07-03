@@ -1512,9 +1512,10 @@ class Timer:
                 answer = self.http_service.send_documents(docs_goods_formatted_list)
                 if answer:
                     if answer.get('Error') is not None:
-                        self.put_notification(text=f'Ошибка при отправке документов {",".join(docs_goods_formatted_list)}, ')
-                        self.db_service.write_error_on_log(f'Ошибка выгрузки документов {str(docs_goods_formatted_list)}: '
-                                                           f'{str(answer.get("Error"))}')
+                        self.put_notification(text='Ошибка при отправке документов')
+                        err_text = answer.get('text').decode('utf-8')
+                        error = answer.get("Error") or ''
+                        self.db_service.write_error_on_log(f'Ошибка выгрузки документов: {err_text}\n{error}')
                     else:
                         docs_list_string = ', '.join([f"'{d['id_doc']}'" for d in docs_goods_formatted_list])
                         self.db_service.update_uploaded_docs_status(docs_list_string)

@@ -34,7 +34,8 @@ class DocService:
     def form_data_for_request(self, res_docs, res_goods, to_json):
         for item in res_docs:
             filtered_list = [d for d in res_goods if d['id_doc'] == item['id_doc']]
-            item[self.docs_table_name] = filtered_list
+            goods_table = f'{self.docs_table_name}_table'
+            item[goods_table] = filtered_list
             if not self.isAdr:
                 item['RS_docs_barcodes'] = []
                 item['RS_barc_flow'] = []
