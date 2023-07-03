@@ -167,19 +167,68 @@ class GroupScanTiles(Tiles):
 
     def on_start(self) -> None:
         data = self.db_service.get_docs_stat()
-        layout = json.loads(self._get_tile_view().to_json())
+        if data:
+            layout = json.loads(self._get_tile_view().to_json())
 
-        tiles_list = [self._get_tile_row(layout, item) for item in data]
+            tiles_list = [self._get_tile_row(layout, item) for item in data]
 
-        # split list by two element in row
-        count_row_elements = 2
-        tiles = {
-            'tiles': [
-                tiles_list[i:i + count_row_elements]
-                for i in range(0, len(tiles_list), count_row_elements)
-            ],
-            'background_color': '#f5f5f5'
-        }
+            # split list by two element in row
+            count_row_elements = 2
+            tiles = {
+                'tiles': [
+                    tiles_list[i:i + count_row_elements]
+                    for i in range(0, len(tiles_list), count_row_elements)
+                ],
+                'background_color': '#f5f5f5'
+            }
+            self.toast("yes")
+        else:
+            tile_view = widgets.LinearLayout(
+                    widgets.TextView(
+                        Value='@no_data',
+                        TextSize=self.rs_settings.get('titleDocTypeCardTextSize'),
+                        TextColor='#000000',
+                        height='match_parent',
+                        width='match_parent',
+                        weight=0,
+                        gravity_horizontal="center",
+                        gravity_vertical="center",
+                        StrokeWidth=0,
+                        BackgroundColor="#ffffff",
+                        Padding=0
+
+                    ),
+                    width='match_parent',
+                    autoSizeTextType='uniform',
+                    weight=0,
+                    height='match_parent',
+                    gravity_horizontal="center",
+                    gravity_vertical="center",
+                    StrokeWidth=3,
+                    BackgroundColor="#ffffff",
+                    Padding=0
+                )
+
+            layout = json.loads(tile_view.to_json())
+
+            tiles_list = [{
+                "layout": layout,
+                "data": {"no_data": "Нет загруженных документов"},
+                "height": "wrap_content",
+                "color": '#ffffff',
+                "start_screen": "",
+                "start_process": "",
+                'StrokeWidth': '',
+            }]
+
+            count_row_elements = 1
+            tiles = {
+                'tiles': [tiles_list],
+                'background_color': '#ffffff',
+                'StrokeWidth': '',
+                'height': ''
+
+            }
 
         self.hash_map.put('tiles', tiles, to_json=True)
 
@@ -1600,7 +1649,8 @@ class MainEvents:
             'path_to_databases': '//data/data/ru.travelfood.simple_ui/databases',
             'sqlite_name': 'SimpleKeep',
             'log_name': 'log.json',
-            'timer_is_disabled': False
+            'timer_is_disabled': False,
+            'allow_fact_input': 'false'
         }
 
         for k, v in rs_default_settings.items():
