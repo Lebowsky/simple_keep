@@ -166,9 +166,6 @@ class GroupScanTiles(Tiles):
         self.process_name = self.hash_map.get_current_process()
 
     def on_start(self) -> None:
-        if not self._check_connection():
-            self.hash_map.show_dialog(listener='not_connection_dialog', title='Нет соединения с сервером')
-            return
         data = self.db_service.get_docs_stat()
         if data:
             layout = json.loads(self._get_tile_view().to_json())
@@ -236,7 +233,7 @@ class GroupScanTiles(Tiles):
 
     def on_input(self) -> None:
         super().on_input()
-        if self.listener in ['ON_BACK_PRESSED', 'not_connection_dialog']:
+        if self.listener == 'ON_BACK_PRESSED':
             self.hash_map.put('FinishProcess', '')
 
     def on_post_start(self):
@@ -245,27 +242,11 @@ class GroupScanTiles(Tiles):
     def show(self, args=None):
         self.hash_map.show_screen(self.screen_name, args)
 
-    def _check_connection(self):
-        hs_service = hs_services.HsService(self.get_http_settings())
-        try:
-            hs_service.communication_test()
-            answer = hs_service.http_answer
-        except Exception as e:
-            answer = hs_service.HttpAnswer(
-                error=True,
-                error_text=str(e.args[0]),
-                status_code=404,
-                url=hs_service.url)
-
-        return answer.error
-
 
 class DocumentsTiles(GroupScanTiles):
     screen_name = 'Плитки'
     process_name = 'Документы'
 
-    def _check_connection(self):
-        return True
 
 
 # ^^^^^^^^^^^^^^^^^^^^^ Tiles ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
