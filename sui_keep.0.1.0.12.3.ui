@@ -3668,6 +3668,34 @@
                 "postExecute": "",
                 "alias": ""
             }
+        ],
+        "Classes": [
+            {
+                "_id": "operation_order",
+                "sku": "text",
+                "sku_id": "text",
+                "unit": "text",
+                "unit_id": "text",
+                "qty_plan": "number",
+                "qty_fact": "number",
+                "_list_form": "list_form",
+                "_edit_form": "edit_form",
+                "_selection_form": "selection_form"
+            },
+            {
+                "_id": "order",
+                "_title": "Инвентариации",
+                "customer(Получатель)": "*text",
+                "type(Тип операции)": "text",
+                "done(Обработан)": "boolean",
+                "description(Комментарий)": "*text",
+                "operations": [
+                    "operation_order"
+                ],
+                "_list_form": "list_form",
+                "_edit_form": "edit_form",
+                "_selection_form": "selection_form"
+            }
         ]
     }
 }

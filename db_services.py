@@ -102,8 +102,6 @@ class DocService:
             query = f'UPDATE {self.docs_table_name} SET sent=1 WHERE id_doc = "{self.doc_id}"'
             self._get_query_result(query)
 
-
-
     def json_to_sqlite_query(self, data: dict, docs=None):
         qlist = []
         # Цикл по именам таблиц
@@ -421,7 +419,7 @@ class DocService:
 
     def get_docs_and_goods_for_upload(self):
         query_docs = '''SELECT * FROM RS_docs WHERE verified = 1  and (sent <> 1 or sent is null)'''
-        query_goods = '''SELECT * FROM RS_docs_table WHERE sent <> 1 or sent is null'''
+        query_goods = '''SELECT * FROM RS_docs_table WHERE sent = 0'''
         try:
             res_docs = get_query_result(query_docs, None, True)
             res_goods = get_query_result(query_goods, None, True)
@@ -439,6 +437,13 @@ class DocService:
         qtext = f'UPDATE RS_adr_docs SET sent = 1  WHERE id_doc in ({doc_in_str}) '
         get_query_result(qtext)
 
+        qtext = f'UPDATE RS_docs_table SET sent = 1  WHERE id_doc in ({doc_in_str}) '
+        get_query_result(qtext)
+
+    @staticmethod
+    def update_rs_docs_table_sent_status(table_string_id: str):
+        qtext = f'UPDATE RS_docs_table SET sent = 0  WHERE id in ({table_string_id}) '
+        get_query_result(qtext)
 
 class AdrDocService(DocService):
     def __init__(self):
@@ -515,3 +520,5 @@ class ErrorService:
     @staticmethod
     def clear():
         return get_query_result("DELETE FROM Error_log")
+
+
