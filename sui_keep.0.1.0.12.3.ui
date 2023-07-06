@@ -373,6 +373,8 @@
                                 "orientation": "vertical",
                                 "height": "wrap_content",
                                 "width": "match_parent",
+                                "gravity_horizontal": "center",
+                                "gravity_vertical": "center",
                                 "weight": "0",
                                 "type": "LinearLayout",
                                 "Variable": "",
@@ -517,6 +519,8 @@
                                         "orientation": "horizontal",
                                         "height": "wrap_content",
                                         "width": "match_parent",
+                                        "gravity_horizontal": "center",
+                                        "gravity_vertical": "center",
                                         "weight": "0",
                                         "type": "LinearLayout",
                                         "Variable": "",
@@ -697,6 +701,8 @@
                                 "orientation": "vertical",
                                 "height": "wrap_content",
                                 "width": "match_parent",
+                                "gravity_horizontal": "center",
+                                "gravity_vertical": "center",
                                 "weight": "0",
                                 "type": "LinearLayout",
                                 "Variable": "",
@@ -722,6 +728,9 @@
                                         "drawable": "forward"
                                     },
                                     {
+                                        "BackgroundColor": "",
+                                        "StrokeWidth": "",
+                                        "Padding": "",
                                         "orientation": "vertical",
                                         "height": "wrap_content",
                                         "width": "match_parent",
@@ -931,6 +940,8 @@
                                         "orientation": "horizontal",
                                         "height": "wrap_content",
                                         "width": "match_parent",
+                                        "gravity_horizontal": "center",
+                                        "gravity_vertical": "center",
                                         "weight": "0",
                                         "type": "LinearLayout",
                                         "Variable": "",
@@ -1017,6 +1028,8 @@
                                                 "orientation": "vertical",
                                                 "height": "wrap_content",
                                                 "width": "match_parent",
+                                                "gravity_horizontal": "center",
+                                                "gravity_vertical": "center",
                                                 "weight": "1",
                                                 "type": "LinearLayout",
                                                 "Variable": "fact_qtty_note",
@@ -1048,8 +1061,9 @@
                                                         "weight": "0",
                                                         "type": "TextView",
                                                         "Value": "@qtty",
-                                                        "Variable": "",
-                                                        "style_name": ""
+                                                        "Variable": "qtty",
+                                                        "style_name": "",
+                                                        "drawable": "forward"
                                                     }
                                                 ]
                                             }
@@ -3613,10 +3627,6 @@
             },
             {
                 "PyFileKey": "db_services",
-                "PyFileData": ""
-            },
-            {
-                "PyFileKey": "hs_services",
                 "PyFileData": ""
             }
         ],

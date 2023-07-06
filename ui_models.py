@@ -698,8 +698,10 @@ class DocDetailsScreen(Screen):
                 'units_name': str(record['units_name'] or ''),
                 'code_art': 'Код: ' + str(record['code']),
                 'art': str(record['art']),
-                'qtty': str(record['qtty'] if record['qtty'] is not None else 0),
-                'qtty_plan': str(record['qtty_plan'] if record['qtty_plan'] is not None else 0),
+                'qtty': str(int(record['qtty']) if record['qtty'].is_integer() else
+                            record['qtty'] if record['qtty'] is not None else int(0)),
+                'qtty_plan': str(int(record['qtty_plan']) if record['qtty_plan'].is_integer() else
+                                 record['qtty_plan'] if record['qtty_plan'] is not None else int(0)),
                 'price': str(record['price'] if record['price'] is not None else 0),
                 'price_name': str(record['price_name'] or ''),
                 'picture': pic,
@@ -709,7 +711,7 @@ class DocDetailsScreen(Screen):
                 '{} '.format(product_row['art']) if product_row['art'] else '',
                 '({}) '.format(product_row['properties_name']) if product_row['properties_name'] else '',
                 '{}'.format(product_row['series_name']) if product_row['series_name'] else '',
-                ', {}'.format(product_row['units_name']) if product_row['units_name'] else ''
+                ', {}'.format(product_row['units_name']) if product_row['units_name'] else '',
             ]
             product_row['good_info'] = ''.join(props)
 
