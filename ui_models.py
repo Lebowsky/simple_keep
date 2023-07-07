@@ -270,6 +270,8 @@ class DocumentsTiles(GroupScanTiles):
     screen_name = 'Плитки'
     process_name = 'Документы'
 
+    def _check_connection(self):
+        return True
 
 # ^^^^^^^^^^^^^^^^^^^^^ Tiles ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -932,20 +934,21 @@ class GroupScanDocDetailsScreen(DocDetailsScreen):
 
     def post_barcode_scanned(self, http_settings):
         if self.hash_map.get_bool('barcode_scanned'):
-            id_doc = self.hash_map.get('id_doc')
             answer = None
             try:
                 answer = self._post_goods_to_server()
             except Exception as e:
                 self.service.write_error_on_log(e.args[0])
 
-            if answer and answer.get('Error') is not None:
-                self.hash_map.error_log(answer.get('Error'))
+            # пока что отключил дополнительный get-запрос, проверяем производительность
 
-            doc_details = self._get_doc_details_data()
-            table_data = self._prepare_table_data(doc_details)
-            table_view = self._get_doc_table_view(table_data=table_data)
-            self.hash_map.put("doc_goods_table", table_view.to_json())
+            # if answer and answer.get('Error') is not None:
+            #     self.hash_map.error_log(answer.get('Error'))
+            #
+            # doc_details = self._get_doc_details_data()
+            # table_data = self._prepare_table_data(doc_details)
+            # table_view = self._get_doc_table_view(table_data=table_data)
+            # self.hash_map.put("doc_goods_table", table_view.to_json())
             self.hash_map.refresh_screen()
 
     def _run_progress_barcode_scanning(self):
@@ -977,7 +980,7 @@ class GroupScanDocDetailsScreen(DocDetailsScreen):
         elif answer.error:
             self.service.write_error_on_log(f'Ошибка загрузки документа:  {answer.error_text}')
         else:
-            return answer.data
+            return answer
 
     def _post_goods_to_server(self):
         res = self.service.get_last_edited_goods(to_json=False)
@@ -997,13 +1000,15 @@ class GroupScanDocDetailsScreen(DocDetailsScreen):
                 except Exception as e:
                     self.service.write_error_on_log(e.args[0])
 
-        docs_data = hs_service.get_data()
+        # пока что отключил дополнительный get-запрос, проверяем производительность
 
-        if docs_data.get('data'):
-            try:
-                self.service.update_data_from_json(docs_data['data'])
-            except Exception as e:
-                self.service.write_error_on_log(e.args[0])
+        # docs_data = hs_service.get_data()
+        #
+        # if docs_data.get('data'):
+        #     try:
+        #         self.service.update_data_from_json(docs_data['data'])
+        #     except Exception as e:
+        #         self.service.write_error_on_log(e.args[0])
 
 
 class DocumentsDocDetailScreen(DocDetailsScreen):

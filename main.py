@@ -1990,33 +1990,11 @@ def debug_on_start(hash_map: HashMap):
     screen.on_start()
 
 
-# @HashMap()
-# def debug_listener(hash_map, _files=None, _data=None):
-#     screen: ui_models.DebugSettingsScreen = create_screen(hash_map)
-#     screen.on_input()
-def debug_listener(hashMap, _files=None, _data=None):
+@HashMap()
+def debug_listener(hash_map, _files=None, _data=None):
+    screen: ui_models.DebugSettingsScreen = create_screen(hash_map)
+    screen.on_input()
 
-    listener = hashMap.get('listener')
-
-    if listener == 'btn_copy_base':
-        ip_host = hashMap.get('ip_host')
-        if os.path.isfile('//data/data/ru.travelfood.simple_ui/databases/SimpleKeep'): #Keep'):
-            with open('//data/data/ru.travelfood.simple_ui/databases/SimpleKeep', 'rb') as f:  # rightscan
-                #r = requests.post('http://' + ip_host + ':2444/post', files={'Rightscan': f})  # rightscan
-                r = requests.post('http://192.168.1.136:2444/post', files={'Rightscan': f})  # rightscan
-            if r.status_code == 200:
-                hashMap.put('toast', 'База SQLite успешно выгружена')
-            else:
-                hashMap.put('toast', 'Ошибка соединения')
-        else:
-            hashMap.put('toast', 'Файл не найден')
-    elif listener == 'btn_plan':
-
-        hashMap.put('descr_text', 'Тестовое сообщение')
-#        hashMap.put('StartScreen', 'ЭкранПлан')
-        hashMap.put('StartScreen', 'ЭкранПлан')
-
-    return hashMap
 
 def test_screen_input(hashMap,  _files=None, _data=None):
     if hashMap.get('listener') == 'btn_ok' or 'ON_BACK_PRESSED':
