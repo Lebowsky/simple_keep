@@ -7,6 +7,7 @@ import hs_services
 from ui_utils import HashMap, RsDoc
 from db_services import DocService, ErrorService
 from hs_services import HsService
+
 import http_exchange
 from http_exchange import post_changes_to_server
 import widgets

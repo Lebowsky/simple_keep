@@ -228,9 +228,9 @@ def post_changes_to_server(doc_list: str, htpparams):
     android_id = htpparams['android_id']
     res = get_all_changes_from_database(doc_list)
     if type(res) == type(dict) and res.get('Error'):
-        answer = {'empty': True, 'Error':res.get('Error')}
+        answer = {'empty': True, 'Error': res.get('Error')}
         return answer
-    answer = {'empty':True}
+    answer = {'empty': True}
     if res is not None:
         try:
             r = requests.post(url + '/simple_accounting/documents?android_id=' + android_id,
