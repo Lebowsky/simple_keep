@@ -73,7 +73,10 @@
                                 "method": "tiles_on_input",
                                 "postExecute": ""
                             }
-                        ]
+                        ],
+                        "onlineOnStart": false,
+                        "onlineOnAfterStart": false,
+                        "onlineOnInput": false
                     },
                     {
                         "type": "Operation",
@@ -157,7 +160,10 @@
                                 "method": "docs_on_select",
                                 "postExecute": ""
                             }
-                        ]
+                        ],
+                        "onlineOnStart": false,
+                        "onlineOnAfterStart": false,
+                        "onlineOnInput": false
                     },
                     {
                         "type": "Operation",
@@ -266,6 +272,7 @@
                                     },
                                     {
                                         "BackgroundColor": "#FFFFFF",
+                                        "orientation": "",
                                         "height": "wrap_content",
                                         "width": "match_parent",
                                         "gravity_horizontal": "center",
@@ -348,7 +355,10 @@
                                 "method": "doc_details_listener",
                                 "postExecute": ""
                             }
-                        ]
+                        ],
+                        "onlineOnStart": false,
+                        "onlineOnAfterStart": false,
+                        "onlineOnInput": false
                     },
                     {
                         "type": "Operation",
@@ -363,6 +373,8 @@
                                 "orientation": "vertical",
                                 "height": "wrap_content",
                                 "width": "match_parent",
+                                "gravity_horizontal": "center",
+                                "gravity_vertical": "center",
                                 "weight": "0",
                                 "type": "LinearLayout",
                                 "Variable": "",
@@ -507,6 +519,8 @@
                                         "orientation": "horizontal",
                                         "height": "wrap_content",
                                         "width": "match_parent",
+                                        "gravity_horizontal": "center",
+                                        "gravity_vertical": "center",
                                         "weight": "0",
                                         "type": "LinearLayout",
                                         "Variable": "",
@@ -668,7 +682,10 @@
                                 "method": "elem_on_click",
                                 "postExecute": ""
                             }
-                        ]
+                        ],
+                        "onlineOnStart": false,
+                        "onlineOnAfterStart": false,
+                        "onlineOnInput": false
                     },
                     {
                         "type": "Operation",
@@ -684,6 +701,8 @@
                                 "orientation": "vertical",
                                 "height": "wrap_content",
                                 "width": "match_parent",
+                                "gravity_horizontal": "center",
+                                "gravity_vertical": "center",
                                 "weight": "0",
                                 "type": "LinearLayout",
                                 "Variable": "",
@@ -709,6 +728,9 @@
                                         "drawable": "forward"
                                     },
                                     {
+                                        "BackgroundColor": "",
+                                        "StrokeWidth": "",
+                                        "Padding": "",
                                         "orientation": "vertical",
                                         "height": "wrap_content",
                                         "width": "match_parent",
@@ -918,6 +940,8 @@
                                         "orientation": "horizontal",
                                         "height": "wrap_content",
                                         "width": "match_parent",
+                                        "gravity_horizontal": "center",
+                                        "gravity_vertical": "center",
                                         "weight": "0",
                                         "type": "LinearLayout",
                                         "Variable": "",
@@ -1004,6 +1028,8 @@
                                                 "orientation": "vertical",
                                                 "height": "wrap_content",
                                                 "width": "match_parent",
+                                                "gravity_horizontal": "center",
+                                                "gravity_vertical": "center",
                                                 "weight": "1",
                                                 "type": "LinearLayout",
                                                 "Variable": "fact_qtty_note",
@@ -1035,8 +1061,9 @@
                                                         "weight": "0",
                                                         "type": "TextView",
                                                         "Value": "@qtty",
-                                                        "Variable": "",
-                                                        "style_name": ""
+                                                        "Variable": "qtty",
+                                                        "style_name": "",
+                                                        "drawable": "forward"
                                                     }
                                                 ]
                                             }
@@ -1092,7 +1119,10 @@
                                 "method": "elem_viev_on_click",
                                 "postExecute": ""
                             }
-                        ]
+                        ],
+                        "onlineOnStart": false,
+                        "onlineOnAfterStart": false,
+                        "onlineOnInput": false
                     },
                     {
                         "type": "Operation",
@@ -1139,7 +1169,10 @@
                                 "method": "doc_barcodes_listener",
                                 "postExecute": ""
                             }
-                        ]
+                        ],
+                        "onlineOnStart": false,
+                        "onlineOnAfterStart": false,
+                        "onlineOnInput": false
                     },
                     {
                         "type": "Operation",
@@ -1259,7 +1292,10 @@
                                 "method": "delete_barcode_screen_click",
                                 "postExecute": ""
                             }
-                        ]
+                        ],
+                        "onlineOnStart": false,
+                        "onlineOnAfterStart": false,
+                        "onlineOnInput": false
                     },
                     {
                         "type": "Operation",
@@ -1341,7 +1377,10 @@
                                 "method": "barcode_error_screen_listener",
                                 "postExecute": ""
                             }
-                        ]
+                        ],
+                        "onlineOnStart": false,
+                        "onlineOnAfterStart": false,
+                        "onlineOnInput": false
                     },
                     {
                         "type": "Operation",
@@ -1383,7 +1422,10 @@
                                 ]
                             }
                         ],
-                        "Handlers": []
+                        "Handlers": [],
+                        "onlineOnStart": false,
+                        "onlineOnAfterStart": false,
+                        "onlineOnInput": false
                     },
                     {
                         "type": "Operation",
@@ -1521,7 +1563,10 @@
                                 "method": "barcode_flow_listener",
                                 "postExecute": ""
                             }
-                        ]
+                        ],
+                        "onlineOnStart": false,
+                        "onlineOnAfterStart": false,
+                        "onlineOnInput": false
                     }
                 ]
             },
@@ -1595,7 +1640,10 @@
                                 "method": "tiles_on_input",
                                 "postExecute": ""
                             }
-                        ]
+                        ],
+                        "onlineOnStart": false,
+                        "onlineOnAfterStart": false,
+                        "onlineOnInput": false
                     },
                     {
                         "type": "Operation",
@@ -1673,7 +1721,10 @@
                                 "method": "docs_on_select",
                                 "postExecute": ""
                             }
-                        ]
+                        ],
+                        "onlineOnStart": false,
+                        "onlineOnAfterStart": false,
+                        "onlineOnInput": false
                     },
                     {
                         "type": "Operation",
@@ -1850,7 +1901,10 @@
                                 "method": "doc_details_listener",
                                 "postExecute": ""
                             }
-                        ]
+                        ],
+                        "onlineOnStart": false,
+                        "onlineOnAfterStart": false,
+                        "onlineOnInput": false
                     },
                     {
                         "type": "Operation",
@@ -1932,7 +1986,10 @@
                                 "method": "barcode_error_screen_listener",
                                 "postExecute": ""
                             }
-                        ]
+                        ],
+                        "onlineOnStart": false,
+                        "onlineOnAfterStart": false,
+                        "onlineOnInput": false
                     },
                     {
                         "type": "Operation",
@@ -1974,7 +2031,10 @@
                                 ]
                             }
                         ],
-                        "Handlers": []
+                        "Handlers": [],
+                        "onlineOnStart": false,
+                        "onlineOnAfterStart": false,
+                        "onlineOnInput": false
                     },
                     {
                         "type": "Operation",
@@ -2017,7 +2077,10 @@
                                 ]
                             }
                         ],
-                        "Handlers": []
+                        "Handlers": [],
+                        "onlineOnStart": false,
+                        "onlineOnAfterStart": false,
+                        "onlineOnInput": false
                     }
                 ]
             },
@@ -2072,7 +2135,10 @@
                                 "method": "universal_cards_listener",
                                 "postExecute": ""
                             }
-                        ]
+                        ],
+                        "onlineOnStart": false,
+                        "onlineOnAfterStart": false,
+                        "onlineOnInput": false
                     }
                 ]
             },
@@ -2174,7 +2240,10 @@
                                 "method": "goods_on_input",
                                 "postExecute": ""
                             }
-                        ]
+                        ],
+                        "onlineOnStart": false,
+                        "onlineOnAfterStart": false,
+                        "onlineOnInput": false
                     },
                     {
                         "type": "Operation",
@@ -2425,7 +2494,10 @@
                                 "method": "get_good_variants",
                                 "postExecute": ""
                             }
-                        ]
+                        ],
+                        "onlineOnStart": false,
+                        "onlineOnAfterStart": false,
+                        "onlineOnInput": false
                     }
                 ]
             },
@@ -2613,7 +2685,10 @@
                                 "method": "settings_on_click",
                                 "postExecute": ""
                             }
-                        ]
+                        ],
+                        "onlineOnStart": false,
+                        "onlineOnAfterStart": false,
+                        "onlineOnInput": false
                     },
                     {
                         "type": "Operation",
@@ -2654,7 +2729,10 @@
                                 "method": "file_list_on_start",
                                 "postExecute": ""
                             }
-                        ]
+                        ],
+                        "onlineOnStart": false,
+                        "onlineOnAfterStart": false,
+                        "onlineOnInput": false
                     },
                     {
                         "type": "Operation",
@@ -2802,7 +2880,10 @@
                                 "method": "font_size_settings_listener",
                                 "postExecute": ""
                             }
-                        ]
+                        ],
+                        "onlineOnStart": false,
+                        "onlineOnAfterStart": false,
+                        "onlineOnInput": false
                     },
                     {
                         "type": "Operation",
@@ -2932,7 +3013,10 @@
                                 "method": "test_barcode_listener",
                                 "postExecute": ""
                             }
-                        ]
+                        ],
+                        "onlineOnStart": false,
+                        "onlineOnAfterStart": false,
+                        "onlineOnInput": false
                     },
                     {
                         "type": "Operation",
@@ -3020,7 +3104,10 @@
                                 "method": "settings_errors_on_click",
                                 "postExecute": ""
                             }
-                        ]
+                        ],
+                        "onlineOnStart": false,
+                        "onlineOnAfterStart": false,
+                        "onlineOnInput": false
                     },
                     {
                         "type": "Operation",
@@ -3154,7 +3241,10 @@
                                 "method": "http_settings_on_click",
                                 "postExecute": ""
                             }
-                        ]
+                        ],
+                        "onlineOnStart": false,
+                        "onlineOnAfterStart": false,
+                        "onlineOnInput": false
                     },
                     {
                         "type": "Operation",
@@ -3280,7 +3370,10 @@
                                 "method": "sound_settings_listener",
                                 "postExecute": ""
                             }
-                        ]
+                        ],
+                        "onlineOnStart": false,
+                        "onlineOnAfterStart": false,
+                        "onlineOnInput": false
                     }
                 ]
             },
@@ -3456,7 +3549,10 @@
                                 "method": "debug_on_start",
                                 "postExecute": ""
                             }
-                        ]
+                        ],
+                        "onlineOnStart": false,
+                        "onlineOnAfterStart": false,
+                        "onlineOnInput": false
                     }
                 ]
             }
@@ -3532,14 +3628,6 @@
             {
                 "PyFileKey": "db_services",
                 "PyFileData": ""
-            },
-            {
-                "PyFileKey": "hs_services",
-                "PyFileData": ""
-            },
-            {
-                "PyFileKey": "ui_barcodes",
-                "PyFileData": ""
             }
         ],
         "StyleTemplates": [],
@@ -3579,6 +3667,34 @@
                 "method": "put_notification",
                 "postExecute": "",
                 "alias": ""
+            }
+        ],
+        "Classes": [
+            {
+                "_id": "operation_order",
+                "sku": "text",
+                "sku_id": "text",
+                "unit": "text",
+                "unit_id": "text",
+                "qty_plan": "number",
+                "qty_fact": "number",
+                "_list_form": "list_form",
+                "_edit_form": "edit_form",
+                "_selection_form": "selection_form"
+            },
+            {
+                "_id": "order",
+                "_title": "Инвентариации",
+                "customer(Получатель)": "*text",
+                "type(Тип операции)": "text",
+                "done(Обработан)": "boolean",
+                "description(Комментарий)": "*text",
+                "operations": [
+                    "operation_order"
+                ],
+                "_list_form": "list_form",
+                "_edit_form": "edit_form",
+                "_selection_form": "selection_form"
             }
         ]
     }
