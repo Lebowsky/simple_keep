@@ -3628,6 +3628,14 @@
             {
                 "PyFileKey": "db_services",
                 "PyFileData": ""
+            },
+            {
+                "PyFileKey": "ui_barcodes",
+                "PyFileData": ""
+            },
+            {
+                "PyFileKey": "java",
+                "PyFileData": ""
             }
         ],
         "StyleTemplates": [],
