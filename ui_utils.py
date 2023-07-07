@@ -54,11 +54,21 @@ class HashMap:
         self['RunEvent'] = json.dumps(self._get_event(method_name))
 
     def run_event_async(self, method_name):
-        self['RunEvent'] = json.dumps(self._get_event(method_name, True))
+        self['RunEvent'] = json.dumps(self._get_event(method_name, 'runasync'))
 
-    def _get_event(self, method_name, async_action=False):
+    def run_event_progress(self, method_name):
+        self['RunEvent'] = json.dumps(self._get_event(method_name, 'runprogress'))
+
+    def _get_event(self, method_name, action=None):
+        """
+        :param method_name: handlers name
+        :param action: run|runasync|runprogress
+
+        :return: event dict
+        """
+
         evt = [{
-            'action': 'runasync' if async_action else 'run',
+            'action': action if action else 'run',
             'type': 'python',
             'method': method_name,
         }]
