@@ -167,13 +167,6 @@ class GroupScanTiles(Tiles):
         self.process_name = self.hash_map.get_current_process()
 
     def on_start(self) -> None:
-        if self.hash_map.get('current_process_name') == "Групповая обработка":
-
-            if self._check_connection():
-                self.toast("Отсутствует соединение с сервером")
-                self.hash_map.put("FinishProcess", "")
-                return
-
         data = self.db_service.get_docs_stat()
         if data:
             layout = json.loads(self._get_tile_view().to_json())
@@ -190,54 +183,13 @@ class GroupScanTiles(Tiles):
                 'background_color': '#f5f5f5'
             }
         else:
-            tile_view = widgets.LinearLayout(
-                    widgets.TextView(
-                        Value='@no_data',
-                        TextSize=self.rs_settings.get('titleDocTypeCardTextSize'),
-                        TextColor='#000000',
-                        height='match_parent',
-                        width='match_parent',
-                        weight=0,
-                        gravity_horizontal="center",
-                        gravity_vertical="center",
-                        StrokeWidth=0,
-                        BackgroundColor="#ffffff",
-                        Padding=0
-
-                    ),
-                    width='match_parent',
-                    autoSizeTextType='uniform',
-                    weight=0,
-                    height='match_parent',
-                    gravity_horizontal="center",
-                    gravity_vertical="center",
-                    StrokeWidth=3,
-                    BackgroundColor="#ffffff",
-                    Padding=0
-                )
-
-            layout = json.loads(tile_view.to_json())
-
-            tiles_list = [{
-                "layout": layout,
-                "data": {"no_data": "Нет загруженных документов"},
-                "height": "wrap_content",
-                "color": '#ffffff',
-                "start_screen": "",
-                "start_process": "",
-                'StrokeWidth': '',
-            }]
-
-            count_row_elements = 1
-            tiles = {
-                'tiles': [tiles_list],
-                'background_color': '#ffffff',
-                'StrokeWidth': '',
-                'height': ''
-
-            }
+            tiles = self.get_message_tile("Нет загруженных документов")
+        if self.hash_map.get('current_process_name') == "Групповая обработка":
+            if self._check_connection():
+                tiles = self.get_message_tile("Отсутствует соединение с сервером")
 
         self.hash_map.put('tiles', tiles, to_json=True)
+        self.hash_map.refresh_screen()
 
     def on_input(self) -> None:
         super().on_input()
@@ -264,6 +216,55 @@ class GroupScanTiles(Tiles):
 
         return answer.error
 
+    def get_message_tile(self, message):
+        tile_view = widgets.LinearLayout(
+            widgets.TextView(
+                Value='@no_data',
+                TextSize=self.rs_settings.get('titleDocTypeCardTextSize'),
+                TextColor='#000000',
+                height='match_parent',
+                width='match_parent',
+                weight=0,
+                gravity_horizontal="center",
+                gravity_vertical="center",
+                StrokeWidth=0,
+                BackgroundColor="#ffffff",
+                Padding=0
+
+            ),
+            width='match_parent',
+            autoSizeTextType='uniform',
+            weight=0,
+            height='match_parent',
+            gravity_horizontal="center",
+            gravity_vertical="center",
+            StrokeWidth=3,
+            BackgroundColor="#ffffff",
+            Padding=0
+        )
+
+        layout = json.loads(tile_view.to_json())
+
+        tiles_list = [{
+            "layout": layout,
+            "data": {"no_data": message},
+            "height": "wrap_content",
+            "color": '#ffffff',
+            "start_screen": "",
+            "start_process": "",
+            'StrokeWidth': '',
+        }]
+
+        count_row_elements = 1
+        tiles = {
+            'tiles': [tiles_list],
+            'background_color': '#ffffff',
+            'StrokeWidth': '',
+            'height': ''
+
+        }
+
+        return tiles
 
 class DocumentsTiles(GroupScanTiles):
     screen_name = 'Плитки'
