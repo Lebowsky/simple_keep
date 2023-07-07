@@ -1029,65 +1029,6 @@ def elem_viev_on_start(hash_map):
 def elem_viev_on_click(hash_map):
     screen = ui_models.GoodsSelectScreen(hash_map, rs_settings)
     screen.on_input()
-    # listener = hashMap.get("listener")
-    #
-    # if listener == "btn_ok":
-    #     # получим текущую строку документа
-    #     current_str = hashMap.get("selected_card_position")
-    #     #Если строка не существует, создадим ее
-    #     doc = ui_global.Rs_doc
-    #     doc.id_doc = hashMap.get('id_doc')
-    #     # if current_str =='0':
-    #     #     pass
-    #         #jlist['customcards']['cardsdata']
-    #     #else:
-    #     current_elem = get_current_elem_doc_goods(hashMap, current_str)
-    #     doc.id_str = int(current_elem['key'])
-    #     # ... и запишем ее в базу
-    #
-    #     qtty = hashMap.get('qtty')
-    #     doc.qtty = float(qtty) if qtty else 0
-    #
-    #     doc.update_doc_str(doc, hashMap.get('price'))  # (doc, )
-    #
-    #     remove_added_good_highlight(hashMap, str(current_elem['id_good']), str(current_elem['id_properties']))
-    #
-    #     hashMap.put("ShowScreen", "Документ товары")
-    #
-    # elif listener == "btn_cancel":
-    #
-    #     hashMap.put("ShowScreen", "Документ товары")
-    # elif listener == "BACK_BUTTON":
-    #     hashMap.put("ShowScreen", "Документ товары")
-    # elif listener == "":
-    #     hashMap.put("qtty", str(float(hashMap.get('qtty'))))
-    # elif listener == 'ON_BACK_PRESSED':
-    #     hashMap.put("ShowScreen", "Документ товары")
-    #
-    # elif listener == "photo":
-    #
-    #     # Можно вообще этого не делать-оставлять как есть. Это для примера.
-    #     image_file = str(
-    #         hashMap.get("photo_path"))  # "переменная"+"_path" - сюда помещается путь к полученной фотографии
-    #
-    #     image = Image.open(image_file)
-    #
-    #     # сразу сделаем фотку - квадратной - это простой вариант. Можно сделать например отдельо миниатюры для списка, это немного сложнее
-    #     im = image.resize((500, 500))
-    #     im.save(image_file)
-    #
-    #     jphotoarr = json.loads(hashMap.get("photoGallery"))
-    #     hashMap.put("photoGallery", json.dumps(jphotoarr))
-    #     # hashMap.put("toast",json.dumps(jphotoarr))
-    #
-    # elif listener == "gallery_change":  # пользователь может удалить фото из галереи. Новый массив надо поместить к документу
-    #
-    #     if hashMap.containsKey("photoGallery"):  # эти 2 обработчика - аналогичные, просто для разных событий
-    #         jphotoarr = json.loads(hashMap.get("photoGallery"))
-    #         hashMap.put("photoGallery", json.dumps(jphotoarr))
-    #         # hashMap.put("toast","#2"+json.dumps(jphotoarr))
-    #
-    # return hashMap
 
 
 def remove_added_good_highlight(hashMap, good_id=None, property_id=None):

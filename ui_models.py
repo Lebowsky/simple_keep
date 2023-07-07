@@ -167,9 +167,13 @@ class GroupScanTiles(Tiles):
         self.process_name = self.hash_map.get_current_process()
 
     def on_start(self) -> None:
-        if not self._check_connection():
-            self.hash_map.show_dialog(listener='not_connection_dialog', title='Нет соединения с сервером')
-            return
+        if self.hash_map.get('current_process_name') == "Групповая обработка":
+
+            if self._check_connection():
+                self.toast("Отсутствует соединение с сервером")
+                self.hash_map.put("FinishProcess", "")
+                return
+
         data = self.db_service.get_docs_stat()
         if data:
             layout = json.loads(self._get_tile_view().to_json())
@@ -187,30 +191,30 @@ class GroupScanTiles(Tiles):
             }
         else:
             tile_view = widgets.LinearLayout(
-                widgets.TextView(
-                    Value='@no_data',
-                    TextSize=self.rs_settings.get('titleDocTypeCardTextSize'),
-                    TextColor='#000000',
-                    height='match_parent',
+                    widgets.TextView(
+                        Value='@no_data',
+                        TextSize=self.rs_settings.get('titleDocTypeCardTextSize'),
+                        TextColor='#000000',
+                        height='match_parent',
+                        width='match_parent',
+                        weight=0,
+                        gravity_horizontal="center",
+                        gravity_vertical="center",
+                        StrokeWidth=0,
+                        BackgroundColor="#ffffff",
+                        Padding=0
+
+                    ),
                     width='match_parent',
+                    autoSizeTextType='uniform',
                     weight=0,
+                    height='match_parent',
                     gravity_horizontal="center",
                     gravity_vertical="center",
-                    StrokeWidth=0,
+                    StrokeWidth=3,
                     BackgroundColor="#ffffff",
                     Padding=0
-
-                ),
-                width='match_parent',
-                autoSizeTextType='uniform',
-                weight=0,
-                height='match_parent',
-                gravity_horizontal="center",
-                gravity_vertical="center",
-                StrokeWidth=3,
-                BackgroundColor="#ffffff",
-                Padding=0
-            )
+                )
 
             layout = json.loads(tile_view.to_json())
 
@@ -237,7 +241,7 @@ class GroupScanTiles(Tiles):
 
     def on_input(self) -> None:
         super().on_input()
-        if self.listener in ['ON_BACK_PRESSED', 'not_connection_dialog']:
+        if self.listener == 'ON_BACK_PRESSED':
             self.hash_map.put('FinishProcess', '')
 
     def on_post_start(self):
@@ -264,9 +268,6 @@ class GroupScanTiles(Tiles):
 class DocumentsTiles(GroupScanTiles):
     screen_name = 'Плитки'
     process_name = 'Документы'
-
-    def _check_connection(self):
-        return True
 
 
 # ^^^^^^^^^^^^^^^^^^^^^ Tiles ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -928,57 +929,34 @@ class GroupScanDocDetailsScreen(DocDetailsScreen):
             self.hash_map.remove('rows_filter')
             self.hash_map.refresh_screen()
 
-    def _run_progress_barcode_scanning(self):
-        if not self._check_connection():
-            self.hash_map.show_dialog(listener='not_connection_dialog', title='Нет соединения с сервером')
-            return
-
-        self.hash_map.run_py_thread_progress('doc_details_before_process_barcode')
-
-    def _check_connection(self):
-        hs_service = hs_services.HsService(self.get_http_settings())
-        try:
-            hs_service.communication_test()
-            answer = hs_service.http_answer
-        except Exception as e:
-            answer = hs_service.HttpAnswer(
-                error=True,
-                error_text=str(e.args[0]),
-                status_code=404,
-                url=hs_service.url)
-
-        return answer.error
-
-    def before_process_barcode(self):
-        self._update_document_data()
-        self._barcode_scanned()
-        self.hash_map.run_event_async('doc_details_barcode_scanned')
-
     def post_barcode_scanned(self, http_settings):
         if self.hash_map.get_bool('barcode_scanned'):
+            id_doc = self.hash_map.get('id_doc')
             answer = None
             try:
                 answer = self._post_goods_to_server()
             except Exception as e:
                 self.service.write_error_on_log(e.args[0])
 
-            # пока что отключил дополнительный get-запрос, проверяем производительность
+            if answer and answer.get('Error') is not None:
+                self.hash_map.error_log(answer.get('Error'))
 
-            # if answer and answer.get('Error') is not None:
-            #     self.hash_map.error_log(answer.get('Error'))
-            #
-            # doc_details = self._get_doc_details_data()
-            # table_data = self._prepare_table_data(doc_details)
-            # table_view = self._get_doc_table_view(table_data=table_data)
-            # self.hash_map.put("doc_goods_table", table_view.to_json())
+            doc_details = self._get_doc_details_data()
+            table_data = self._prepare_table_data(doc_details)
+            table_view = self._get_doc_table_view(table_data=table_data)
+            self.hash_map.put("doc_goods_table", table_view.to_json())
             self.hash_map.refresh_screen()
 
-    def _update_document_data(self):
-        answer = self._get_update_current_doc_data()
-        if answer.error:
-            raise ConnectionError('Нет соединения с сервером')
+    def _run_progress_barcode_scanning(self):
+        self.hash_map.run_py_thread_progress('doc_details_before_process_barcode')
 
-        docs_data = answer.data
+    def before_process_barcode(self):
+        self._update_document_data()
+        self._barcode_scanned()
+        self.hash_map.run_event_async('doc_details_barcode_scanned')
+
+    def _update_document_data(self):
+        docs_data = self._get_update_current_doc_data()
         if docs_data:
             try:
                 self.service.update_data_from_json(docs_data)
@@ -987,15 +965,8 @@ class GroupScanDocDetailsScreen(DocDetailsScreen):
 
     def _get_update_current_doc_data(self):
         hs_service = HsService(self.get_http_settings())
-        try:
-            hs_service.get_data()
-            answer = hs_service.http_answer
-        except Exception as e:
-            answer = hs_service.HttpAnswer(
-                error=True,
-                error_text=str(e.args[0]),
-                status_code=404,
-                url=hs_service.url)
+        hs_service.get_data()
+        answer = hs_service.http_answer
 
         if answer.unauthorized:
             self.hash_map.toast('Ошибка авторизации сервера 1С')
@@ -1005,7 +976,7 @@ class GroupScanDocDetailsScreen(DocDetailsScreen):
         elif answer.error:
             self.service.write_error_on_log(f'Ошибка загрузки документа:  {answer.error_text}')
         else:
-            return answer
+            return answer.data
 
     def _post_goods_to_server(self):
         res = self.service.get_last_edited_goods(to_json=False)
@@ -1025,15 +996,13 @@ class GroupScanDocDetailsScreen(DocDetailsScreen):
                 except Exception as e:
                     self.service.write_error_on_log(e.args[0])
 
-        # пока что отключил дополнительный get-запрос, проверяем производительность
+        docs_data = hs_service.get_data()
 
-        # docs_data = hs_service.get_data()
-        #
-        # if docs_data.get('data'):
-        #     try:
-        #         self.service.update_data_from_json(docs_data['data'])
-        #     except Exception as e:
-        #         self.service.write_error_on_log(e.args[0])
+        if docs_data.get('data'):
+            try:
+                self.service.update_data_from_json(docs_data['data'])
+            except Exception as e:
+                self.service.write_error_on_log(e.args[0])
 
 
 class DocumentsDocDetailScreen(DocDetailsScreen):

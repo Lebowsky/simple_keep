@@ -1627,7 +1627,7 @@
                             {
                                 "event": "onStart",
                                 "listener": "",
-                                "action": "run",
+                                "action": "runprogress",
                                 "type": "python",
                                 "method": "tiles_on_start",
                                 "postExecute": ""
