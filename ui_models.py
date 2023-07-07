@@ -167,6 +167,11 @@ class GroupScanTiles(Tiles):
         self.process_name = self.hash_map.get_current_process()
 
     def on_start(self) -> None:
+        if not self._check_connection():
+            tiles = self.get_message_tile("Отсутствует соединение с сервером")
+            self.hash_map.put('tiles', tiles, to_json=True)
+            self.hash_map.refresh_screen()
+            return
         data = self.db_service.get_docs_stat()
         if data:
             layout = json.loads(self._get_tile_view().to_json())
@@ -184,9 +189,6 @@ class GroupScanTiles(Tiles):
             }
         else:
             tiles = self.get_message_tile("Нет загруженных документов")
-        if self.hash_map.get('current_process_name') == "Групповая обработка":
-            if self._check_connection():
-                tiles = self.get_message_tile("Отсутствует соединение с сервером")
 
         self.hash_map.put('tiles', tiles, to_json=True)
         self.hash_map.refresh_screen()
@@ -214,7 +216,7 @@ class GroupScanTiles(Tiles):
                 status_code=404,
                 url=hs_service.url)
 
-        return answer.error
+        return not answer.error
 
     def get_message_tile(self, message):
         tile_view = widgets.LinearLayout(
@@ -270,6 +272,8 @@ class DocumentsTiles(GroupScanTiles):
     screen_name = 'Плитки'
     process_name = 'Документы'
 
+    def _check_connection(self):
+        return True
 
 # ^^^^^^^^^^^^^^^^^^^^^ Tiles ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -1094,6 +1098,7 @@ class DocumentsDocDetailScreen(DocDetailsScreen):
             res = self._barcode_scanned()
             if res.get('key'):
                 self.service.update_rs_docs_table_sent_status(res.get('key'))
+                self.service.set_doc_status_to_upload(id_doc)
 
         elif listener == 'btn_barcodes':
             self.hash_map.show_dialog('ВвестиШтрихкод')
@@ -1209,6 +1214,7 @@ class GoodsSelectScreen(Screen):
 
             if qtty != current_elem['qtty']:
                 self.service.update_rs_docs_table_sent_status(self.hash_map.get("selected_card_key"))
+                self.service.set_doc_status_to_upload(doc.id_doc)
 
             doc.qtty = float(qtty) if qtty else 0
             doc.update_doc_str(doc, self.hash_map.get('price'))  # (doc, )

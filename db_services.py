@@ -445,6 +445,10 @@ class DocService:
         qtext = f'UPDATE RS_docs_table SET sent = 0  WHERE id in ({table_string_id}) '
         get_query_result(qtext)
 
+    @staticmethod
+    def set_doc_status_to_upload(doc_id):
+        qtext = f"UPDATE RS_docs SET sent = 0, verified = 0  WHERE id_doc = '{doc_id}'"
+        get_query_result(qtext)
 class AdrDocService(DocService):
     def __init__(self):
         self.docs_table_name = 'RS_Adr_docs'
