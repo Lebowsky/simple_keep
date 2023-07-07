@@ -7,10 +7,10 @@
             {
                 "type": "Process",
                 "ProcessName": "Документы",
-                "hidden": false,
-                "DefineOnBackPressed": true,
-                "login_screen": false,
                 "PlanFactHeader": "...",
+                "DefineOnBackPressed": true,
+                "hidden": false,
+                "login_screen": false,
                 "SC": false,
                 "Operations": [
                     {
@@ -73,10 +73,7 @@
                                 "method": "tiles_on_input",
                                 "postExecute": ""
                             }
-                        ],
-                        "onlineOnStart": false,
-                        "onlineOnAfterStart": false,
-                        "onlineOnInput": false
+                        ]
                     },
                     {
                         "type": "Operation",
@@ -97,6 +94,7 @@
                                 "width_value": "",
                                 "type": "LinearLayout",
                                 "Variable": "",
+                                "Value": "",
                                 "Elements": [
                                     {
                                         "orientation": "horizontal",
@@ -107,6 +105,7 @@
                                         "width_value": "",
                                         "type": "LinearLayout",
                                         "Variable": "",
+                                        "Value": "",
                                         "Elements": [
                                             {
                                                 "type": "SpinnerLayout",
@@ -160,10 +159,7 @@
                                 "method": "docs_on_select",
                                 "postExecute": ""
                             }
-                        ],
-                        "onlineOnStart": false,
-                        "onlineOnAfterStart": false,
-                        "onlineOnInput": false
+                        ]
                     },
                     {
                         "type": "Operation",
@@ -184,6 +180,7 @@
                                 "width_value": "",
                                 "type": "LinearLayout",
                                 "Variable": "",
+                                "Value": "",
                                 "Elements": [
                                     {
                                         "orientation": "horizontal",
@@ -194,6 +191,7 @@
                                         "width_value": "",
                                         "type": "LinearLayout",
                                         "Variable": "",
+                                        "Value": "",
                                         "Elements": [
                                             {
                                                 "orientation": "horizontal",
@@ -202,6 +200,7 @@
                                                 "weight": "1",
                                                 "type": "LinearLayout",
                                                 "Variable": "",
+                                                "Value": "",
                                                 "Elements": [
                                                     {
                                                         "orientation": "vertical",
@@ -210,6 +209,7 @@
                                                         "weight": "0",
                                                         "type": "LinearLayout",
                                                         "Variable": "",
+                                                        "Value": "",
                                                         "Elements": [
                                                             {
                                                                 "TextSize": "24",
@@ -289,6 +289,7 @@
                                         "weight": "0",
                                         "type": "LinearLayout",
                                         "Variable": "",
+                                        "Value": "",
                                         "Elements": [
                                             {
                                                 "height": "wrap_content",
@@ -355,10 +356,7 @@
                                 "method": "doc_details_listener",
                                 "postExecute": ""
                             }
-                        ],
-                        "onlineOnStart": false,
-                        "onlineOnAfterStart": false,
-                        "onlineOnInput": false
+                        ]
                     },
                     {
                         "type": "Operation",
@@ -373,11 +371,10 @@
                                 "orientation": "vertical",
                                 "height": "wrap_content",
                                 "width": "match_parent",
-                                "gravity_horizontal": "center",
-                                "gravity_vertical": "center",
                                 "weight": "0",
                                 "type": "LinearLayout",
                                 "Variable": "",
+                                "Value": "",
                                 "Elements": [
                                     {
                                         "height": "wrap_content",
@@ -396,6 +393,7 @@
                                         "weight": "0",
                                         "type": "LinearLayout",
                                         "Variable": "",
+                                        "Value": "",
                                         "Elements": [
                                             {
                                                 "TextSize": "24",
@@ -429,6 +427,7 @@
                                         "weight": "0",
                                         "type": "LinearLayout",
                                         "Variable": "",
+                                        "Value": "",
                                         "Elements": [
                                             {
                                                 "TextSize": "16",
@@ -460,6 +459,7 @@
                                         "weight": "0",
                                         "type": "LinearLayout",
                                         "Variable": "",
+                                        "Value": "",
                                         "Elements": [
                                             {
                                                 "TextSize": "16",
@@ -491,6 +491,7 @@
                                         "weight": "0",
                                         "type": "LinearLayout",
                                         "Variable": "",
+                                        "Value": "",
                                         "Elements": [
                                             {
                                                 "TextSize": "16",
@@ -519,11 +520,10 @@
                                         "orientation": "horizontal",
                                         "height": "wrap_content",
                                         "width": "match_parent",
-                                        "gravity_horizontal": "center",
-                                        "gravity_vertical": "center",
                                         "weight": "0",
                                         "type": "LinearLayout",
                                         "Variable": "",
+                                        "Value": "",
                                         "Elements": [
                                             {
                                                 "orientation": "vertical",
@@ -532,6 +532,7 @@
                                                 "weight": "1",
                                                 "type": "LinearLayout",
                                                 "Variable": "",
+                                                "Value": "",
                                                 "Elements": [
                                                     {
                                                         "height": "wrap_content",
@@ -563,6 +564,7 @@
                                                 "weight": "1",
                                                 "type": "LinearLayout",
                                                 "Variable": "",
+                                                "Value": "",
                                                 "Elements": [
                                                     {
                                                         "height": "wrap_content",
@@ -596,6 +598,7 @@
                                         "weight": "0",
                                         "type": "LinearLayout",
                                         "Variable": "",
+                                        "Value": "",
                                         "Elements": [
                                             {
                                                 "height": "wrap_content",
@@ -626,6 +629,7 @@
                                         "weight": "0",
                                         "type": "LinearLayout",
                                         "Variable": "",
+                                        "Value": "",
                                         "Elements": [
                                             {
                                                 "height": "wrap_content",
@@ -682,10 +686,7 @@
                                 "method": "elem_on_click",
                                 "postExecute": ""
                             }
-                        ],
-                        "onlineOnStart": false,
-                        "onlineOnAfterStart": false,
-                        "onlineOnInput": false
+                        ]
                     },
                     {
                         "type": "Operation",
@@ -701,11 +702,10 @@
                                 "orientation": "vertical",
                                 "height": "wrap_content",
                                 "width": "match_parent",
-                                "gravity_horizontal": "center",
-                                "gravity_vertical": "center",
                                 "weight": "0",
                                 "type": "LinearLayout",
                                 "Variable": "",
+                                "Value": "",
                                 "Elements": [
                                     {
                                         "TextSize": "16",
@@ -728,15 +728,13 @@
                                         "drawable": "forward"
                                     },
                                     {
-                                        "BackgroundColor": "",
-                                        "StrokeWidth": "",
-                                        "Padding": "",
                                         "orientation": "vertical",
                                         "height": "wrap_content",
                                         "width": "match_parent",
                                         "weight": "0",
                                         "type": "LinearLayout",
                                         "Variable": "",
+                                        "Value": "",
                                         "Elements": [
                                             {
                                                 "orientation": "horizontal",
@@ -745,6 +743,7 @@
                                                 "weight": "0",
                                                 "type": "LinearLayout",
                                                 "Variable": "",
+                                                "Value": "",
                                                 "Elements": [
                                                     {
                                                         "orientation": "horizontal",
@@ -753,6 +752,7 @@
                                                         "weight": "1",
                                                         "type": "LinearLayout",
                                                         "Variable": "",
+                                                        "Value": "",
                                                         "Elements": [
                                                             {
                                                                 "TextColor": "#000000",
@@ -784,6 +784,7 @@
                                                         "weight": "7",
                                                         "type": "LinearLayout",
                                                         "Variable": "",
+                                                        "Value": "",
                                                         "Elements": [
                                                             {
                                                                 "TextColor": "#000000",
@@ -806,6 +807,7 @@
                                                 "weight": "0",
                                                 "type": "LinearLayout",
                                                 "Variable": "",
+                                                "Value": "",
                                                 "Elements": [
                                                     {
                                                         "TextColor": "#000000",
@@ -837,6 +839,7 @@
                                                 "weight": "0",
                                                 "type": "LinearLayout",
                                                 "Variable": "",
+                                                "Value": "",
                                                 "Elements": [
                                                     {
                                                         "TextColor": "#000000",
@@ -867,6 +870,7 @@
                                                 "weight": "0",
                                                 "type": "LinearLayout",
                                                 "Variable": "",
+                                                "Value": "",
                                                 "Elements": [
                                                     {
                                                         "TextColor": "#cc0000",
@@ -897,6 +901,7 @@
                                                 "weight": "0",
                                                 "type": "LinearLayout",
                                                 "Variable": "",
+                                                "Value": "",
                                                 "Elements": [
                                                     {
                                                         "TextColor": "#000000",
@@ -940,11 +945,10 @@
                                         "orientation": "horizontal",
                                         "height": "wrap_content",
                                         "width": "match_parent",
-                                        "gravity_horizontal": "center",
-                                        "gravity_vertical": "center",
                                         "weight": "0",
                                         "type": "LinearLayout",
                                         "Variable": "",
+                                        "Value": "",
                                         "Elements": [
                                             {
                                                 "orientation": "vertical",
@@ -953,6 +957,7 @@
                                                 "weight": "1",
                                                 "type": "LinearLayout",
                                                 "Variable": "",
+                                                "Value": "",
                                                 "Elements": [
                                                     {
                                                         "height": "wrap_content",
@@ -992,6 +997,7 @@
                                                 "weight": "1",
                                                 "type": "LinearLayout",
                                                 "Variable": "fact_qtty_input",
+                                                "Value": "",
                                                 "Elements": [
                                                     {
                                                         "height": "wrap_content",
@@ -1028,11 +1034,10 @@
                                                 "orientation": "vertical",
                                                 "height": "wrap_content",
                                                 "width": "match_parent",
-                                                "gravity_horizontal": "center",
-                                                "gravity_vertical": "center",
                                                 "weight": "1",
                                                 "type": "LinearLayout",
                                                 "Variable": "fact_qtty_note",
+                                                "Value": "",
                                                 "Elements": [
                                                     {
                                                         "TextColor": "",
@@ -1076,6 +1081,7 @@
                                         "weight": "0",
                                         "type": "LinearLayout",
                                         "Variable": "",
+                                        "Value": "",
                                         "Elements": [
                                             {
                                                 "BackgroundColor": "#FFFFFF",
@@ -1119,10 +1125,7 @@
                                 "method": "elem_viev_on_click",
                                 "postExecute": ""
                             }
-                        ],
-                        "onlineOnStart": false,
-                        "onlineOnAfterStart": false,
-                        "onlineOnInput": false
+                        ]
                     },
                     {
                         "type": "Operation",
@@ -1140,6 +1143,7 @@
                                 "weight": "0",
                                 "type": "LinearLayout",
                                 "Variable": "",
+                                "Value": "",
                                 "Elements": [
                                     {
                                         "height": "wrap_content",
@@ -1169,10 +1173,7 @@
                                 "method": "doc_barcodes_listener",
                                 "postExecute": ""
                             }
-                        ],
-                        "onlineOnStart": false,
-                        "onlineOnAfterStart": false,
-                        "onlineOnInput": false
+                        ]
                     },
                     {
                         "type": "Operation",
@@ -1190,6 +1191,7 @@
                                 "weight": "0",
                                 "type": "LinearLayout",
                                 "Variable": "",
+                                "Value": "",
                                 "Elements": [
                                     {
                                         "height": "wrap_content",
@@ -1251,6 +1253,7 @@
                                         "weight": "0",
                                         "type": "LinearLayout",
                                         "Variable": "",
+                                        "Value": "",
                                         "Elements": [
                                             {
                                                 "height": "wrap_content",
@@ -1292,10 +1295,7 @@
                                 "method": "delete_barcode_screen_click",
                                 "postExecute": ""
                             }
-                        ],
-                        "onlineOnStart": false,
-                        "onlineOnAfterStart": false,
-                        "onlineOnInput": false
+                        ]
                     },
                     {
                         "type": "Operation",
@@ -1313,6 +1313,7 @@
                                 "weight": "0",
                                 "type": "LinearLayout",
                                 "Variable": "",
+                                "Value": "",
                                 "Elements": [
                                     {
                                         "height": "wrap_content",
@@ -1377,10 +1378,7 @@
                                 "method": "barcode_error_screen_listener",
                                 "postExecute": ""
                             }
-                        ],
-                        "onlineOnStart": false,
-                        "onlineOnAfterStart": false,
-                        "onlineOnInput": false
+                        ]
                     },
                     {
                         "type": "Operation",
@@ -1398,6 +1396,7 @@
                                 "weight": "0",
                                 "type": "LinearLayout",
                                 "Variable": "",
+                                "Value": "",
                                 "Elements": [
                                     {
                                         "height": "wrap_content",
@@ -1422,10 +1421,7 @@
                                 ]
                             }
                         ],
-                        "Handlers": [],
-                        "onlineOnStart": false,
-                        "onlineOnAfterStart": false,
-                        "onlineOnInput": false
+                        "Handlers": []
                     },
                     {
                         "type": "Operation",
@@ -1443,6 +1439,7 @@
                                 "weight": "0",
                                 "type": "LinearLayout",
                                 "Variable": "",
+                                "Value": "",
                                 "Elements": [
                                     {
                                         "TextSize": "18",
@@ -1463,6 +1460,7 @@
                                         "weight": "0",
                                         "type": "LinearLayout",
                                         "Variable": "",
+                                        "Value": "",
                                         "Elements": [
                                             {
                                                 "TextSize": "24",
@@ -1563,20 +1561,17 @@
                                 "method": "barcode_flow_listener",
                                 "postExecute": ""
                             }
-                        ],
-                        "onlineOnStart": false,
-                        "onlineOnAfterStart": false,
-                        "onlineOnInput": false
+                        ]
                     }
                 ]
             },
             {
                 "type": "Process",
                 "ProcessName": "Групповая обработка",
-                "hidden": false,
-                "DefineOnBackPressed": true,
-                "login_screen": false,
                 "PlanFactHeader": "...",
+                "DefineOnBackPressed": true,
+                "hidden": false,
+                "login_screen": false,
                 "SC": false,
                 "Operations": [
                     {
@@ -1640,10 +1635,7 @@
                                 "method": "tiles_on_input",
                                 "postExecute": ""
                             }
-                        ],
-                        "onlineOnStart": false,
-                        "onlineOnAfterStart": false,
-                        "onlineOnInput": false
+                        ]
                     },
                     {
                         "type": "Operation",
@@ -1664,6 +1656,7 @@
                                 "width_value": "",
                                 "type": "LinearLayout",
                                 "Variable": "",
+                                "Value": "",
                                 "Elements": [
                                     {
                                         "orientation": "horizontal",
@@ -1672,6 +1665,7 @@
                                         "weight": "0",
                                         "type": "LinearLayout",
                                         "Variable": "",
+                                        "Value": "",
                                         "Elements": [
                                             {
                                                 "type": "SpinnerLayout",
@@ -1721,10 +1715,7 @@
                                 "method": "docs_on_select",
                                 "postExecute": ""
                             }
-                        ],
-                        "onlineOnStart": false,
-                        "onlineOnAfterStart": false,
-                        "onlineOnInput": false
+                        ]
                     },
                     {
                         "type": "Operation",
@@ -1745,6 +1736,7 @@
                                 "width_value": "",
                                 "type": "LinearLayout",
                                 "Variable": "",
+                                "Value": "",
                                 "Elements": [
                                     {
                                         "orientation": "horizontal",
@@ -1755,6 +1747,7 @@
                                         "width_value": "",
                                         "type": "LinearLayout",
                                         "Variable": "",
+                                        "Value": "",
                                         "Elements": [
                                             {
                                                 "orientation": "horizontal",
@@ -1763,6 +1756,7 @@
                                                 "weight": "1",
                                                 "type": "LinearLayout",
                                                 "Variable": "",
+                                                "Value": "",
                                                 "Elements": [
                                                     {
                                                         "orientation": "vertical",
@@ -1771,6 +1765,7 @@
                                                         "weight": "0",
                                                         "type": "LinearLayout",
                                                         "Variable": "",
+                                                        "Value": "",
                                                         "Elements": [
                                                             {
                                                                 "TextSize": "24",
@@ -1848,6 +1843,7 @@
                                         "weight": "0",
                                         "type": "LinearLayout",
                                         "Variable": "",
+                                        "Value": "",
                                         "Elements": [
                                             {
                                                 "height": "wrap_content",
@@ -1901,10 +1897,7 @@
                                 "method": "doc_details_listener",
                                 "postExecute": ""
                             }
-                        ],
-                        "onlineOnStart": false,
-                        "onlineOnAfterStart": false,
-                        "onlineOnInput": false
+                        ]
                     },
                     {
                         "type": "Operation",
@@ -1922,6 +1915,7 @@
                                 "weight": "0",
                                 "type": "LinearLayout",
                                 "Variable": "",
+                                "Value": "",
                                 "Elements": [
                                     {
                                         "height": "wrap_content",
@@ -1986,10 +1980,7 @@
                                 "method": "barcode_error_screen_listener",
                                 "postExecute": ""
                             }
-                        ],
-                        "onlineOnStart": false,
-                        "onlineOnAfterStart": false,
-                        "onlineOnInput": false
+                        ]
                     },
                     {
                         "type": "Operation",
@@ -2007,6 +1998,7 @@
                                 "weight": "0",
                                 "type": "LinearLayout",
                                 "Variable": "",
+                                "Value": "",
                                 "Elements": [
                                     {
                                         "height": "wrap_content",
@@ -2031,10 +2023,7 @@
                                 ]
                             }
                         ],
-                        "Handlers": [],
-                        "onlineOnStart": false,
-                        "onlineOnAfterStart": false,
-                        "onlineOnInput": false
+                        "Handlers": []
                     },
                     {
                         "type": "Operation",
@@ -2053,6 +2042,7 @@
                                 "weight": "0",
                                 "type": "LinearLayout",
                                 "Variable": "",
+                                "Value": "",
                                 "Elements": [
                                     {
                                         "TextSize": "",
@@ -2077,10 +2067,7 @@
                                 ]
                             }
                         ],
-                        "Handlers": [],
-                        "onlineOnStart": false,
-                        "onlineOnAfterStart": false,
-                        "onlineOnInput": false
+                        "Handlers": []
                     }
                 ]
             },
@@ -2106,6 +2093,7 @@
                                 "weight": "0",
                                 "type": "LinearLayout",
                                 "Variable": "",
+                                "Value": "",
                                 "Elements": [
                                     {
                                         "height": "wrap_content",
@@ -2135,10 +2123,7 @@
                                 "method": "universal_cards_listener",
                                 "postExecute": ""
                             }
-                        ],
-                        "onlineOnStart": false,
-                        "onlineOnAfterStart": false,
-                        "onlineOnInput": false
+                        ]
                     }
                 ]
             },
@@ -2164,6 +2149,7 @@
                                 "weight": "0",
                                 "type": "LinearLayout",
                                 "Variable": "",
+                                "Value": "",
                                 "Elements": [
                                     {
                                         "orientation": "horizontal",
@@ -2172,6 +2158,7 @@
                                         "weight": "0",
                                         "type": "LinearLayout",
                                         "Variable": "",
+                                        "Value": "",
                                         "Elements": [
                                             {
                                                 "TextItalic": false,
@@ -2240,10 +2227,7 @@
                                 "method": "goods_on_input",
                                 "postExecute": ""
                             }
-                        ],
-                        "onlineOnStart": false,
-                        "onlineOnAfterStart": false,
-                        "onlineOnInput": false
+                        ]
                     },
                     {
                         "type": "Operation",
@@ -2261,6 +2245,7 @@
                                 "weight": "0",
                                 "type": "LinearLayout",
                                 "Variable": "",
+                                "Value": "",
                                 "Elements": [
                                     {
                                         "orientation": "horizontal",
@@ -2269,6 +2254,7 @@
                                         "weight": "0",
                                         "type": "LinearLayout",
                                         "Variable": "buttons",
+                                        "Value": "",
                                         "Elements": [
                                             {
                                                 "height": "wrap_content",
@@ -2309,6 +2295,7 @@
                                         "weight": "0",
                                         "type": "LinearLayout",
                                         "Variable": "name",
+                                        "Value": "",
                                         "Elements": [
                                             {
                                                 "TextSize": "22",
@@ -2341,6 +2328,7 @@
                                         "weight": "0",
                                         "type": "LinearLayout",
                                         "Variable": "good_info",
+                                        "Value": "",
                                         "Elements": [
                                             {
                                                 "TextBold": true,
@@ -2360,6 +2348,7 @@
                                                 "weight": "0",
                                                 "type": "LinearLayout",
                                                 "Variable": "art",
+                                                "Value": "",
                                                 "Elements": [
                                                     {
                                                         "TextBold": true,
@@ -2392,6 +2381,7 @@
                                                 "weight": "0",
                                                 "type": "LinearLayout",
                                                 "Variable": "code",
+                                                "Value": "",
                                                 "Elements": [
                                                     {
                                                         "TextBold": true,
@@ -2423,6 +2413,7 @@
                                                 "weight": "0",
                                                 "type": "LinearLayout",
                                                 "Variable": "descr",
+                                                "Value": "",
                                                 "Elements": [
                                                     {
                                                         "TextBold": true,
@@ -2494,18 +2485,15 @@
                                 "method": "get_good_variants",
                                 "postExecute": ""
                             }
-                        ],
-                        "onlineOnStart": false,
-                        "onlineOnAfterStart": false,
-                        "onlineOnInput": false
+                        ]
                     }
                 ]
             },
             {
                 "type": "Process",
                 "ProcessName": "Параметры",
-                "hidden": false,
                 "DefineOnBackPressed": true,
+                "hidden": false,
                 "Operations": [
                     {
                         "type": "Operation",
@@ -2524,6 +2512,7 @@
                                 "weight": "0",
                                 "type": "LinearLayout",
                                 "Variable": "",
+                                "Value": "",
                                 "Elements": [
                                     {
                                         "TextSize": "25",
@@ -2685,10 +2674,7 @@
                                 "method": "settings_on_click",
                                 "postExecute": ""
                             }
-                        ],
-                        "onlineOnStart": false,
-                        "onlineOnAfterStart": false,
-                        "onlineOnInput": false
+                        ]
                     },
                     {
                         "type": "Operation",
@@ -2707,6 +2693,7 @@
                                 "weight": "0",
                                 "type": "LinearLayout",
                                 "Variable": "",
+                                "Value": "",
                                 "Elements": [
                                     {
                                         "height": "match_parent",
@@ -2729,10 +2716,7 @@
                                 "method": "file_list_on_start",
                                 "postExecute": ""
                             }
-                        ],
-                        "onlineOnStart": false,
-                        "onlineOnAfterStart": false,
-                        "onlineOnInput": false
+                        ]
                     },
                     {
                         "type": "Operation",
@@ -2751,6 +2735,7 @@
                                 "weight": "0",
                                 "type": "LinearLayout",
                                 "Variable": "",
+                                "Value": "",
                                 "Elements": [
                                     {
                                         "height": "wrap_content",
@@ -2880,10 +2865,7 @@
                                 "method": "font_size_settings_listener",
                                 "postExecute": ""
                             }
-                        ],
-                        "onlineOnStart": false,
-                        "onlineOnAfterStart": false,
-                        "onlineOnInput": false
+                        ]
                     },
                     {
                         "type": "Operation",
@@ -2902,6 +2884,7 @@
                                 "weight": "0",
                                 "type": "LinearLayout",
                                 "Variable": "",
+                                "Value": "",
                                 "Elements": [
                                     {
                                         "TextSize": "20",
@@ -3013,10 +2996,7 @@
                                 "method": "test_barcode_listener",
                                 "postExecute": ""
                             }
-                        ],
-                        "onlineOnStart": false,
-                        "onlineOnAfterStart": false,
-                        "onlineOnInput": false
+                        ]
                     },
                     {
                         "type": "Operation",
@@ -3037,6 +3017,7 @@
                                 "width_value": "",
                                 "type": "LinearLayout",
                                 "Variable": "",
+                                "Value": "",
                                 "Elements": [
                                     {
                                         "orientation": "horizontal",
@@ -3045,6 +3026,7 @@
                                         "weight": "0",
                                         "type": "LinearLayout",
                                         "Variable": "",
+                                        "Value": "",
                                         "Elements": [
                                             {
                                                 "height": "wrap_content",
@@ -3104,10 +3086,7 @@
                                 "method": "settings_errors_on_click",
                                 "postExecute": ""
                             }
-                        ],
-                        "onlineOnStart": false,
-                        "onlineOnAfterStart": false,
-                        "onlineOnInput": false
+                        ]
                     },
                     {
                         "type": "Operation",
@@ -3126,6 +3105,7 @@
                                 "weight": "0",
                                 "type": "LinearLayout",
                                 "Variable": "",
+                                "Value": "",
                                 "Elements": [
                                     {
                                         "height": "wrap_content",
@@ -3195,6 +3175,7 @@
                                         "weight": "0",
                                         "type": "LinearLayout",
                                         "Variable": "",
+                                        "Value": "",
                                         "Elements": [
                                             {
                                                 "height": "wrap_content",
@@ -3241,10 +3222,7 @@
                                 "method": "http_settings_on_click",
                                 "postExecute": ""
                             }
-                        ],
-                        "onlineOnStart": false,
-                        "onlineOnAfterStart": false,
-                        "onlineOnInput": false
+                        ]
                     },
                     {
                         "type": "Operation",
@@ -3263,6 +3241,7 @@
                                 "weight": "0",
                                 "type": "LinearLayout",
                                 "Variable": "",
+                                "Value": "",
                                 "Elements": [
                                     {
                                         "height": "wrap_content",
@@ -3370,10 +3349,7 @@
                                 "method": "sound_settings_listener",
                                 "postExecute": ""
                             }
-                        ],
-                        "onlineOnStart": false,
-                        "onlineOnAfterStart": false,
-                        "onlineOnInput": false
+                        ]
                     }
                 ]
             },
@@ -3399,6 +3375,7 @@
                                 "weight": "0",
                                 "type": "LinearLayout",
                                 "Variable": "",
+                                "Value": "",
                                 "Elements": [
                                     {
                                         "height": "wrap_content",
@@ -3549,10 +3526,7 @@
                                 "method": "debug_on_start",
                                 "postExecute": ""
                             }
-                        ],
-                        "onlineOnStart": false,
-                        "onlineOnAfterStart": false,
-                        "onlineOnInput": false
+                        ]
                     }
                 ]
             }
@@ -3570,8 +3544,8 @@
         },
         "ConfigurationTags": "Py,off-line",
         "FaceRecognitionURL": "",
-        "ForegroundService": false,
-        "StopForegroundServiceOnExit": false,
+        "ForegroundService": true,
+        "StopForegroundServiceOnExit": true,
         "RunPython": true,
         "LaunchProcess": "",
         "MainMenu": [
@@ -3579,6 +3553,12 @@
                 "MenuId": "01",
                 "MenuItem": "faq",
                 "MenuTitle": "FAQ",
+                "MenuTop": false
+            },
+            {
+                "MenuId": "02",
+                "MenuItem": "update_conf",
+                "MenuTitle": "Обновить конфигурацию",
                 "MenuTop": false
             }
         ],
@@ -3628,6 +3608,14 @@
             {
                 "PyFileKey": "db_services",
                 "PyFileData": ""
+            },
+            {
+                "PyFileKey": "ui_barcodes",
+                "PyFileData": ""
+            },
+            {
+                "PyFileKey": "hs_services",
+                "PyFileData": ""
             }
         ],
         "StyleTemplates": [],
@@ -3667,34 +3655,15 @@
                 "method": "put_notification",
                 "postExecute": "",
                 "alias": ""
-            }
-        ],
-        "Classes": [
-            {
-                "_id": "operation_order",
-                "sku": "text",
-                "sku_id": "text",
-                "unit": "text",
-                "unit_id": "text",
-                "qty_plan": "number",
-                "qty_fact": "number",
-                "_list_form": "list_form",
-                "_edit_form": "edit_form",
-                "_selection_form": "selection_form"
             },
             {
-                "_id": "order",
-                "_title": "Инвентариации",
-                "customer(Получатель)": "*text",
-                "type(Тип операции)": "text",
-                "done(Обработан)": "boolean",
-                "description(Комментарий)": "*text",
-                "operations": [
-                    "operation_order"
-                ],
-                "_list_form": "list_form",
-                "_edit_form": "edit_form",
-                "_selection_form": "selection_form"
+                "event": "onBackgroundCommand",
+                "listener": "menu_2",
+                "action": "run",
+                "type": "set",
+                "method": "UpdateConfigurations",
+                "postExecute": "",
+                "alias": ""
             }
         ]
     }
