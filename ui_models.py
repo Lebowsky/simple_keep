@@ -185,30 +185,30 @@ class GroupScanTiles(Tiles):
             }
         else:
             tile_view = widgets.LinearLayout(
-                    widgets.TextView(
-                        Value='@no_data',
-                        TextSize=self.rs_settings.get('titleDocTypeCardTextSize'),
-                        TextColor='#000000',
-                        height='match_parent',
-                        width='match_parent',
-                        weight=0,
-                        gravity_horizontal="center",
-                        gravity_vertical="center",
-                        StrokeWidth=0,
-                        BackgroundColor="#ffffff",
-                        Padding=0
-
-                    ),
-                    width='match_parent',
-                    autoSizeTextType='uniform',
-                    weight=0,
+                widgets.TextView(
+                    Value='@no_data',
+                    TextSize=self.rs_settings.get('titleDocTypeCardTextSize'),
+                    TextColor='#000000',
                     height='match_parent',
+                    width='match_parent',
+                    weight=0,
                     gravity_horizontal="center",
                     gravity_vertical="center",
-                    StrokeWidth=3,
+                    StrokeWidth=0,
                     BackgroundColor="#ffffff",
                     Padding=0
-                )
+
+                ),
+                width='match_parent',
+                autoSizeTextType='uniform',
+                weight=0,
+                height='match_parent',
+                gravity_horizontal="center",
+                gravity_vertical="center",
+                StrokeWidth=3,
+                BackgroundColor="#ffffff",
+                Padding=0
+            )
 
             layout = json.loads(tile_view.to_json())
 
@@ -265,6 +265,7 @@ class DocumentsTiles(GroupScanTiles):
 
     def _check_connection(self):
         return True
+
 
 # ^^^^^^^^^^^^^^^^^^^^^ Tiles ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -884,6 +885,7 @@ class GroupScanDocDetailsScreen(DocDetailsScreen):
 
     def __init__(self, hash_map, rs_settings):
         super().__init__(hash_map, rs_settings)
+        self.hs_service = hs_services.HsService(self.get_http_settings())
         self.screen_values = {
             'id_doc': hash_map['id_doc'],
             'doc_type': hash_map['doc_type'],
@@ -925,32 +927,18 @@ class GroupScanDocDetailsScreen(DocDetailsScreen):
             self.hash_map.remove('rows_filter')
             self.hash_map.refresh_screen()
 
-    def post_barcode_scanned(self, http_settings):
-        if self.hash_map.get_bool('barcode_scanned'):
-            answer = None
-            try:
-                answer = self._post_goods_to_server()
-            except Exception as e:
-                self.service.write_error_on_log(e.args[0])
-
-            # пока что отключил дополнительный get-запрос, проверяем производительность
-
-            # if answer and answer.get('Error') is not None:
-            #     self.hash_map.error_log(answer.get('Error'))
-            #
-            # doc_details = self._get_doc_details_data()
-            # table_data = self._prepare_table_data(doc_details)
-            # table_view = self._get_doc_table_view(table_data=table_data)
-            # self.hash_map.put("doc_goods_table", table_view.to_json())
-            self.hash_map.refresh_screen()
-
     def _run_progress_barcode_scanning(self):
-        self.hash_map.run_py_thread_progress('doc_details_before_process_barcode')
+        self.hash_map.run_event_progress('doc_details_before_process_barcode')
 
     def before_process_barcode(self):
-        self._update_document_data()
-        self._barcode_scanned()
-        self.hash_map.run_event_async('doc_details_barcode_scanned')
+        if self._check_connection():
+            pass
+            self._update_document_data()
+            self._barcode_scanned()
+            self.hash_map.run_event_async('doc_details_barcode_scanned')
+        else:
+            self.hash_map.beep('70')
+            self.hash_map.show_dialog('Отсутствует соединение с сервером')
 
     def _update_document_data(self):
         docs_data = self._get_update_current_doc_data()
@@ -974,6 +962,25 @@ class GroupScanDocDetailsScreen(DocDetailsScreen):
             self.service.write_error_on_log(f'Ошибка загрузки документа:  {answer.error_text}')
         else:
             return answer
+
+    def post_barcode_scanned(self, http_settings):
+        if self.hash_map.get_bool('barcode_scanned'):
+            answer = None
+            try:
+                answer = self._post_goods_to_server()
+            except Exception as e:
+                self.service.write_error_on_log(e.args[0])
+
+            # пока что отключил дополнительный get-запрос, проверяем производительность
+
+            # if answer and answer.get('Error') is not None:
+            #     self.hash_map.error_log(answer.get('Error'))
+            #
+            # doc_details = self._get_doc_details_data()
+            # table_data = self._prepare_table_data(doc_details)
+            # table_view = self._get_doc_table_view(table_data=table_data)
+            # self.hash_map.put("doc_goods_table", table_view.to_json())
+            self.hash_map.refresh_screen()
 
     def _post_goods_to_server(self):
         res = self.service.get_last_edited_goods(to_json=False)
@@ -1002,6 +1009,19 @@ class GroupScanDocDetailsScreen(DocDetailsScreen):
         #         self.service.update_data_from_json(docs_data['data'])
         #     except Exception as e:
         #         self.service.write_error_on_log(e.args[0])
+
+    def _check_connection(self):
+        try:
+            self.hs_service.communication_test(timeout=1)
+            answer = self.hs_service.http_answer
+        except Exception as e:
+            answer = self.hs_service.HttpAnswer(
+                error=True,
+                error_text=str(e.args[0]),
+                status_code=404,
+                url=self.hs_service.url)
+
+        return not answer.error
 
 
 class DocumentsDocDetailScreen(DocDetailsScreen):
@@ -1240,9 +1260,9 @@ class GoodsSelectScreen(Screen):
     def show(self, args=None):
         pass
 
-
     def get_doc(self):
         pass
+
 
 # ^^^^^^^^^^^^^^^^^^^^^ Goods select ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 

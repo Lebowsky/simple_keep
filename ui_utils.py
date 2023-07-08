@@ -59,6 +59,9 @@ class HashMap:
     def run_event_progress(self, method_name):
         self['RunEvent'] = json.dumps(self._get_event(method_name, 'runprogress'))
 
+    def beep(self, tone=''):
+        self.hash_map.put('beep', str(tone))
+
     def _get_event(self, method_name, action=None):
         """
         :param method_name: handlers name
