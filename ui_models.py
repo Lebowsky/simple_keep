@@ -194,7 +194,6 @@ class GroupScanTiles(Tiles):
         self.hash_map.refresh_screen()
 
     def on_input(self) -> None:
-        super().on_input()
         if self.listener == 'ON_BACK_PRESSED':
             self.hash_map.put('FinishProcess', '')
 
@@ -207,7 +206,7 @@ class GroupScanTiles(Tiles):
     def _check_connection(self):
         hs_service = hs_services.HsService(self.get_http_settings())
         try:
-            hs_service.communication_test()
+            hs_service.communication_test(timeout=1)
             answer = hs_service.http_answer
         except Exception as e:
             answer = hs_service.HttpAnswer(
@@ -268,12 +267,14 @@ class GroupScanTiles(Tiles):
 
         return tiles
 
+
 class DocumentsTiles(GroupScanTiles):
     screen_name = 'Плитки'
     process_name = 'Документы'
 
     def _check_connection(self):
         return True
+
 
 # ^^^^^^^^^^^^^^^^^^^^^ Tiles ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -940,7 +941,6 @@ class GroupScanDocDetailsScreen(DocDetailsScreen):
 
     def before_process_barcode(self):
         if self._check_connection():
-            pass
             self._update_document_data()
             self._barcode_scanned()
             self.hash_map.run_event_async('doc_details_barcode_scanned')
@@ -1797,7 +1797,7 @@ class ScreensFactory:
     ]
 
     @staticmethod
-    def create_screen(screen_name=None, process=None, **kwargs):
+    def get_screen_class(screen_name=None, process=None, **kwargs):
         if not screen_name:
             screen_name = kwargs['hash_map'].get_current_screen()
         if not process:
@@ -1805,7 +1805,17 @@ class ScreensFactory:
 
         for item in ScreensFactory.screens:
             if getattr(item, 'screen_name') == screen_name and getattr(item, 'process_name') == process:
-                return item(**kwargs)
+                return item
+
+    @staticmethod
+    def create_screen(screen_name=None, process=None, **kwargs):
+        if not screen_name:
+            screen_name = kwargs['hash_map'].get_current_screen()
+        if not process:
+            process = kwargs['hash_map'].get_current_process()
+
+        screen_class = ScreensFactory.get_screen_class(screen_name, process)
+        return screen_class(**kwargs)
 
 
 class MockScreen(Screen):

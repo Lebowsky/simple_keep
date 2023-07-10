@@ -24,29 +24,40 @@ noClass = jclass("ru.travelfood.simple_ui.NoSQL")
 rs_settings = noClass("rs_settings")
 
 
-importlib.reload(ui_barcodes)
-importlib.reload(ui_csv)
-importlib.reload(ui_global)
-importlib.reload(ui_form_data)
-importlib.reload(ui_models)
-importlib.reload(http_exchange)
+# importlib.reload(ui_barcodes)
+# importlib.reload(ui_csv)
+# importlib.reload(ui_global)
+# importlib.reload(ui_form_data)
+# importlib.reload(ui_models)
+# importlib.reload(http_exchange)
+
+current_screen = None
 
 
 def create_screen(hash_map: HashMap):
     """
     Метод для получения модели соответствующей текущему процессу и экрану.
     Если модель не реализована возвращает заглушку
+    Реализован синглтон через глобальную переменную current_screen, для сохренения состояния текущего экрана
     """
+    global current_screen
 
     screen_params = {
         'hash_map': hash_map,
         'rs_settings': rs_settings
     }
-    screen = ui_models.ScreensFactory.create_screen(**screen_params)
-    if not screen:
-        screen = ui_models.MockScreen(hash_map, rs_settings)
+    screen_class = ui_models.ScreensFactory.get_screen_class(**screen_params)
 
-    return screen
+    if not screen_class:
+        current_screen = ui_models.MockScreen(**screen_params)
+    elif not isinstance(current_screen, screen_class):
+        current_screen = screen_class(**screen_params)
+    else:
+        current_screen.hash_map = hash_map
+        current_screen.listener = hash_map['listener']
+        current_screen.event = hash_map['event']
+
+    return current_screen
 
 # =============== Main events =================
 
@@ -89,6 +100,7 @@ def event_service(hash_map):
 def on_sql_error(hash_map):
     model = ui_models.MainEvents(hash_map, rs_settings)
     model.on_sql_error()
+
 
 @HashMap()
 def check_docs_data_on_start(hash_map: HashMap):
