@@ -188,12 +188,13 @@ class GroupScanTiles(Tiles):
                 'background_color': '#f5f5f5'
             }
         else:
-            tiles = self.get_message_tile("Нет загруженных документов")
+            tiles = self._get_message_tile("Нет загруженных документов", text_color='#000000')
 
         self.hash_map.put('tiles', tiles, to_json=True)
         self.hash_map.refresh_screen()
 
     def on_input(self) -> None:
+        super().on_input()
         if self.listener == 'ON_BACK_PRESSED':
             self.hash_map.put('FinishProcess', '')
 
