@@ -136,6 +136,7 @@ def on_close_app(hash_map):
 
 @HashMap()
 def docs_tiles_on_start(hash_map: HashMap):
+    """Отдельные обработчики плиток для определения процесса hash_map'ом"""
     screen = ui_models.DocumentsTiles(hash_map, rs_settings)
     screen.on_start()
 
