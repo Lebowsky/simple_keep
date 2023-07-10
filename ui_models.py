@@ -1691,11 +1691,9 @@ class MainEvents:
     def app_on_start(self):
         # TODO Обработчики обновления!
         release = self.rs_settings.get('Release') or ''
-        conf = self.hash_map.get_json('_configuration')
-        current_release = None
         toast = 'Готов к работе'
-
         current_release = self.hash_map['_configurationVersion']
+
         if current_release is None:
             toast = 'Не удалось определить версию конфигурации'
 
