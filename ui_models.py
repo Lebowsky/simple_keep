@@ -1690,14 +1690,9 @@ class MainEvents:
         current_release = None
         toast = 'Готов к работе'
 
-        try:
-            current_release = conf['ClientConfiguration']['ConfigurationVersion']
-        except Exception as e:
+        current_release = self.hash_map['_configurationVersion']
+        if current_release is None:
             toast = 'Не удалось определить версию конфигурации'
-            service = db_services.DocService()
-            service.write_error_on_log(e.args[0])
-        finally:
-            self.hash_map.remove('_configuration')
 
         if current_release and release != current_release:
             self.hash_map.put('UpdateConfigurations', '')
@@ -1735,6 +1730,7 @@ class MainEvents:
                 self.rs_settings.put(k, v, True)
 
         self.hash_map.toast(toast)
+
 
     def on_sql_error(self):
         sql_error = self.hash_map['SQLError']
