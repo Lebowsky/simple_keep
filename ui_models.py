@@ -168,7 +168,7 @@ class GroupScanTiles(Tiles):
 
     def on_start(self) -> None:
         if not self._check_connection():
-            tiles = self.get_message_tile("Отсутствует соединение с сервером")
+            tiles = self._get_message_tile("Отсутствует соединение с сервером", text_color="#ff0000")
             self.hash_map.put('tiles', tiles, to_json=True)
             self.hash_map.refresh_screen()
             return
@@ -186,9 +186,10 @@ class GroupScanTiles(Tiles):
                     for i in range(0, len(tiles_list), count_row_elements)
                 ],
                 'background_color': '#f5f5f5'
+
             }
         else:
-            tiles = self._get_message_tile("Нет загруженных документов", text_color='#000000')
+            tiles = self._get_message_tile("Нет загруженных документов")
 
         self.hash_map.put('tiles', tiles, to_json=True)
         self.hash_map.refresh_screen()
@@ -218,12 +219,12 @@ class GroupScanTiles(Tiles):
 
         return not answer.error
 
-    def get_message_tile(self, message):
+    def _get_message_tile(self, message, text_color='#000000'):
         tile_view = widgets.LinearLayout(
             widgets.TextView(
                 Value='@no_data',
                 TextSize=self.rs_settings.get('titleDocTypeCardTextSize'),
-                TextColor='#000000',
+                TextColor=text_color,
                 height='match_parent',
                 width='match_parent',
                 weight=0,
@@ -1638,36 +1639,39 @@ class Timer:
         return http_settings
 
     def load_docs(self):
-        try:
-            docs_data = self.http_service.get_data()
-            if docs_data.get('data'):
-                existing_docs = self.db_service.get_existing_docs()
-                self.db_service.update_data_from_json(docs_data['data'])
-                docs_after_load = self.db_service.get_existing_docs()
-                diff = [f'{x[1]}: {x[0]}' for x in docs_after_load if x not in existing_docs]
-                if diff:
-                    self.hash_map.toast(str(diff))
-                    self.put_notification(text=", ".join(diff), title="Загружены документы:")
+        if all([self.http_settings.get('url'), self.http_settings.get('user'), self.http_settings.get('pass')]):
+            try:
+                docs_data = self.http_service.get_data()
+                if docs_data.get('data'):
+                    existing_docs = self.db_service.get_existing_docs()
+                    self.db_service.update_data_from_json(docs_data['data'])
+                    docs_after_load = self.db_service.get_existing_docs()
+                    diff = [f'{x[1]}: {x[0]}' for x in docs_after_load if x not in existing_docs]
+                    if diff:
+                        self.hash_map.toast(str(diff))
+                        self.put_notification(text=", ".join(diff), title="Загружены документы:")
 
-        except Exception as e:
-            self.db_service.write_error_on_log(f'Ошибка загрузки документов: {e}')
+            except Exception as e:
+                self.db_service.write_error_on_log(f'Ошибка загрузки документов: {e}')
 
     def upload_docs(self):
-        try:
-            docs_goods_formatted_list = self.db_service.get_docs_and_goods_for_upload()
-            if docs_goods_formatted_list:
-                answer = self.http_service.send_documents(docs_goods_formatted_list)
-                if answer:
-                    if answer.get('Error') is not None:
-                        self.put_notification(text='Ошибка при отправке документов')
-                        err_text = answer.get('text').decode('utf-8')
-                        error = answer.get("Error") or ''
-                        self.db_service.write_error_on_log(f'Ошибка выгрузки документов: {err_text}\n{error}')
-                    else:
-                        docs_list_string = ', '.join([f"'{d['id_doc']}'" for d in docs_goods_formatted_list])
-                        self.db_service.update_uploaded_docs_status(docs_list_string)
-        except Exception as e:
-            self.db_service.write_error_on_log(f'Ошибка выгрузки документов: {e}')
+        if all([self.http_settings.get('url'), self.http_settings.get('user'), self.http_settings.get('pass')]):
+
+            try:
+                docs_goods_formatted_list = self.db_service.get_docs_and_goods_for_upload()
+                if docs_goods_formatted_list:
+                    answer = self.http_service.send_documents(docs_goods_formatted_list)
+                    if answer:
+                        if answer.get('Error') is not None:
+                            self.put_notification(text='Ошибка при отправке документов')
+                            err_text = answer.get('text').decode('utf-8')
+                            error = answer.get("Error") or ''
+                            self.db_service.write_error_on_log(f'Ошибка выгрузки документов: {err_text}\n{error}')
+                        else:
+                            docs_list_string = ', '.join([f"'{d['id_doc']}'" for d in docs_goods_formatted_list])
+                            self.db_service.update_uploaded_docs_status(docs_list_string)
+            except Exception as e:
+                self.db_service.write_error_on_log(f'Ошибка выгрузки документов: {e}')
 
 
 # ^^^^^^^^^^^^^^^^^^^^^ Timer ^^^^^^^^^^^^^^^^^^^^^^^^^^^^

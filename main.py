@@ -1748,7 +1748,7 @@ def settings_on_click(hashMap, _files=None, _data=None):
             ui_global.get_query_result(del_text)
     elif listener == 'btn_upload_docs':
         http = get_http_settings(hashMap)
-        if not http.get('url') or http.get('user') or http.get('pass'):
+        if not all([http.get('url'), http.get('user'), http.get('pass')]):
             hashMap.put("toast", "Не указаны настройки HTTP подключения к серверу")
             return hashMap
         else:
@@ -1772,7 +1772,7 @@ def settings_on_click(hashMap, _files=None, _data=None):
             ui_global.get_query_result(qtext, return_dict=False)
     elif listener == 'btn_timer':
         http = get_http_settings(hashMap)
-        if not http.get('url') or http.get('user') or http.get('pass'):
+        if not all([http.get('url'), http.get('user'), http.get('pass')]):
             hashMap.put("toast", "Не указаны настройки HTTP подключения к серверу")
             return hashMap
         else:
@@ -1917,7 +1917,7 @@ def http_settings_on_start(hash_map):
 def http_settings_on_click(hashMap,  _files=None, _data=None):
     listener = hashMap.get('listener')
     if listener == 'btn_save':
-        if not hashMap.get('url') or hashMap.get('user') or hashMap.get('pass'):
+        if not all([hashMap.get('url'), hashMap.get('user'), hashMap.get('pass')]):
             hashMap.put("toast", "Не указаны настройки HTTP подключения к серверу")
         rs_settings.put('URL', hashMap.get('url'), True)
         rs_settings.put('USER', hashMap.get('user'), True)
@@ -1947,7 +1947,7 @@ def http_settings_on_click(hashMap,  _files=None, _data=None):
     elif listener == 'btn_test_connection':
         #/communication_test
         http = get_http_settings(hashMap)
-        if not http.get('url') or http.get('user') or http.get('pass'):
+        if not all([http.get('url'), http.get('user'), http.get('pass')]):
             hashMap.put("toast", "Не указаны настройки HTTP подключения к серверу")
             return hashMap
         else:
