@@ -168,7 +168,7 @@ class GroupScanTiles(Tiles):
 
     def on_start(self) -> None:
         if not self._check_connection():
-            tiles = self._get_message_tile("Отсутствует соединение с сервером", text_color='#FF0000')
+            tiles = self.get_message_tile("Отсутствует соединение с сервером")
             self.hash_map.put('tiles', tiles, to_json=True)
             self.hash_map.refresh_screen()
             return
@@ -219,12 +219,12 @@ class GroupScanTiles(Tiles):
 
         return not answer.error
 
-    def _get_message_tile(self, message, text_color):
+    def get_message_tile(self, message):
         tile_view = widgets.LinearLayout(
             widgets.TextView(
                 Value='@no_data',
                 TextSize=self.rs_settings.get('titleDocTypeCardTextSize'),
-                TextColor=text_color,
+                TextColor='#000000',
                 height='match_parent',
                 width='match_parent',
                 weight=0,
@@ -269,12 +269,14 @@ class GroupScanTiles(Tiles):
 
         return tiles
 
+
 class DocumentsTiles(GroupScanTiles):
     screen_name = 'Плитки'
     process_name = 'Документы'
 
     def _check_connection(self):
         return True
+
 
 # ^^^^^^^^^^^^^^^^^^^^^ Tiles ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -894,6 +896,7 @@ class GroupScanDocDetailsScreen(DocDetailsScreen):
 
     def __init__(self, hash_map, rs_settings):
         super().__init__(hash_map, rs_settings)
+        self.hs_service = hs_services.HsService(self.get_http_settings())
         self.screen_values = {
             'id_doc': hash_map['id_doc'],
             'doc_type': hash_map['doc_type'],
@@ -935,33 +938,15 @@ class GroupScanDocDetailsScreen(DocDetailsScreen):
             self.hash_map.remove('rows_filter')
             self.hash_map.refresh_screen()
 
-    def post_barcode_scanned(self, http_settings):
-        if self.hash_map.get_bool('barcode_scanned'):
-            id_doc = self.hash_map.get('id_doc')
-            answer = None
-            try:
-                answer = self._post_goods_to_server()
-            except Exception as e:
-                self.service.write_error_on_log(e.args[0])
-
-            if answer and answer.get('Error') is not None:
-                self.hash_map.error_log(answer.get('Error'))
-
-            doc_details = self._get_doc_details_data()
-            table_data = self._prepare_table_data(doc_details)
-            table_view = self._get_doc_table_view(table_data=table_data)
-            self.hash_map.put("doc_goods_table", table_view.to_json())
-            self.hash_map.refresh_screen()
-
     def _run_progress_barcode_scanning(self):
         self.hash_map.run_event_progress('doc_details_before_process_barcode')
 
     def before_process_barcode(self):
         if self._check_connection():
-            pass
             self._update_document_data()
             self._barcode_scanned()
-            self.hash_map.run_event_async('doc_details_barcode_scanned')
+            self.post_barcode_scanned(self.get_http_settings())
+            # self.hash_map.run_event_async('doc_details_barcode_scanned')
         else:
             self.hash_map.beep('70')
             self.hash_map.show_dialog('Отсутствует соединение с сервером')
@@ -987,7 +972,24 @@ class GroupScanDocDetailsScreen(DocDetailsScreen):
         elif answer.error:
             self.service.write_error_on_log(f'Ошибка загрузки документа:  {answer.error_text}')
         else:
-            return answer.data
+            return answer
+
+    def post_barcode_scanned(self, http_settings):
+        if self.hash_map.get_bool('barcode_scanned'):
+            answer = None
+            try:
+                answer = self._post_goods_to_server()
+            except Exception as e:
+                self.service.write_error_on_log(e.args[0])
+
+            if answer and answer.get('Error') is not None:
+                self.hash_map.error_log(answer.get('Error'))
+
+            doc_details = self._get_doc_details_data()
+            table_data = self._prepare_table_data(doc_details)
+            table_view = self._get_doc_table_view(table_data=table_data)
+            self.hash_map.put("doc_goods_table", table_view.to_json())
+            self.hash_map.refresh_screen()
 
     def _post_goods_to_server(self):
         res = self.service.get_last_edited_goods(to_json=False)
@@ -1007,13 +1009,28 @@ class GroupScanDocDetailsScreen(DocDetailsScreen):
                 except Exception as e:
                     self.service.write_error_on_log(e.args[0])
 
-        docs_data = hs_service.get_data()
+        # пока что отключил дополнительный get-запрос, проверяем производительность
 
-        if docs_data.get('data'):
-            try:
-                self.service.update_data_from_json(docs_data['data'])
-            except Exception as e:
-                self.service.write_error_on_log(e.args[0])
+        # docs_data = hs_service.get_data()
+        #
+        # if docs_data.get('data'):
+        #     try:
+        #         self.service.update_data_from_json(docs_data['data'])
+        #     except Exception as e:
+        #         self.service.write_error_on_log(e.args[0])
+
+    def _check_connection(self):
+        try:
+            self.hs_service.communication_test(timeout=1)
+            answer = self.hs_service.http_answer
+        except Exception as e:
+            answer = self.hs_service.HttpAnswer(
+                error=True,
+                error_text=str(e.args[0]),
+                status_code=404,
+                url=self.hs_service.url)
+
+        return not answer.error
 
 
 class DocumentsDocDetailScreen(DocDetailsScreen):
@@ -1254,9 +1271,9 @@ class GoodsSelectScreen(Screen):
     def show(self, args=None):
         pass
 
-
     def get_doc(self):
         pass
+
 
 # ^^^^^^^^^^^^^^^^^^^^^ Goods select ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -1781,7 +1798,7 @@ class ScreensFactory:
     ]
 
     @staticmethod
-    def create_screen(screen_name=None, process=None, **kwargs):
+    def get_screen_class(screen_name=None, process=None, **kwargs):
         if not screen_name:
             screen_name = kwargs['hash_map'].get_current_screen()
         if not process:
@@ -1789,7 +1806,17 @@ class ScreensFactory:
 
         for item in ScreensFactory.screens:
             if getattr(item, 'screen_name') == screen_name and getattr(item, 'process_name') == process:
-                return item(**kwargs)
+                return item
+
+    @staticmethod
+    def create_screen(screen_name=None, process=None, **kwargs):
+        if not screen_name:
+            screen_name = kwargs['hash_map'].get_current_screen()
+        if not process:
+            process = kwargs['hash_map'].get_current_process()
+
+        screen_class = ScreensFactory.get_screen_class(screen_name, process)
+        return screen_class(**kwargs)
 
 
 class MockScreen(Screen):
