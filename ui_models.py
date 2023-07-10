@@ -186,6 +186,7 @@ class GroupScanTiles(Tiles):
                     for i in range(0, len(tiles_list), count_row_elements)
                 ],
                 'background_color': '#f5f5f5'
+
             }
         else:
             tiles = self._get_message_tile("Нет загруженных документов", text_color='#000000')
