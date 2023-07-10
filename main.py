@@ -1735,11 +1735,16 @@ def settings_on_click(hashMap, _files=None, _data=None):
             del_text = 'DELETE FROM ' + el[0]
             ui_global.get_query_result(del_text)
     elif listener == 'btn_upload_docs':
-        url = get_http_settings(hashMap)
-        qtext = '''SELECT id_doc FROM RS_docs WHERE verified = '1'
-                    UNION
-                    SELECT id_doc FROM RS_adr_docs WHERE verified = '1' '''
-        res = ui_global.get_query_result(qtext, None, True)
+        http = get_http_settings(hashMap)
+        if not http.get('url') or http.get('user') or http.get('pass'):
+            hashMap.put("toast", "Не указаны настройки HTTP подключения к серверу")
+            return hashMap
+        else:
+            url = get_http_settings(hashMap)
+            qtext = '''SELECT id_doc FROM RS_docs WHERE verified = '1'
+                        UNION
+                        SELECT id_doc FROM RS_adr_docs WHERE verified = '1' '''
+            res = ui_global.get_query_result(qtext, None, True)
 
         if res:
             doc_list = []
@@ -1754,10 +1759,15 @@ def settings_on_click(hashMap, _files=None, _data=None):
             qtext = f'UPDATE RS_docs SET sent = 1  WHERE id_doc in ({doc_in_str}) '
             ui_global.get_query_result(qtext, return_dict=False)
     elif listener == 'btn_timer':
-        try:
-            timer_update(hashMap)
-        except Exception as e:
-            hashMap.put('toast',str(e))
+        http = get_http_settings(hashMap)
+        if not http.get('url') or http.get('user') or http.get('pass'):
+            hashMap.put("toast", "Не указаны настройки HTTP подключения к серверу")
+            return hashMap
+        else:
+            try:
+                timer_update(hashMap)
+            except Exception as e:
+                hashMap.put('toast',str(e))
     elif listener == 'btn_sound_settings':
         hashMap.put('ShowScreen','Настройка звука')
     return hashMap
@@ -1895,7 +1905,9 @@ def http_settings_on_start(hash_map):
 def http_settings_on_click(hashMap,  _files=None, _data=None):
     listener = hashMap.get('listener')
     if listener == 'btn_save':
-        rs_settings.put('URL', hashMap.get('url'),True)
+        if not hashMap.get('url') or hashMap.get('user') or hashMap.get('pass'):
+            hashMap.put("toast", "Не указаны настройки HTTP подключения к серверу")
+        rs_settings.put('URL', hashMap.get('url'), True)
         rs_settings.put('USER', hashMap.get('user'), True)
         rs_settings.put('PASS', hashMap.get('pass'), True)
         rs_settings.put('user_name', hashMap.get('user_name'), True)
@@ -1923,18 +1935,22 @@ def http_settings_on_click(hashMap,  _files=None, _data=None):
     elif listener == 'btn_test_connection':
         #/communication_test
         http = get_http_settings(hashMap)
-        r = requests.get(http['url'] + '/simple_accounting/communication_test?android_id=' + http['android_id'], auth=HTTPBasicAuth(http['user'], http['pass']),
-             headers={'Content-Type': 'application/x-www-form-urlencoded; charset=utf-8'},
-             params={'user_name': http['user_name'], 'device_model': http['device_model']})
-        if r.status_code == 200:
-            hashMap.put('btn_test_connection', 'Соединение установлено')
-            hashMap.put('toast', 'Соединение установлено')
-        elif r.status_code == 403:
-            hashMap.put('btn_test_connection', 'Тест соединения')
-            hashMap.put("toast", "Запрос на авторизацию принят")
+        if not http.get('url') or http.get('user') or http.get('pass'):
+            hashMap.put("toast", "Не указаны настройки HTTP подключения к серверу")
+            return hashMap
         else:
-            hashMap.put('btn_test_connection', 'Тест соединения')
-            hashMap.put('toast', 'Не удалось установить соединение')
+            r = requests.get(http['url'] + '/simple_accounting/communication_test?android_id=' + http['android_id'], auth=HTTPBasicAuth(http['user'], http['pass']),
+                 headers={'Content-Type': 'application/x-www-form-urlencoded; charset=utf-8'},
+                 params={'user_name': http['user_name'], 'device_model': http['device_model']})
+            if r.status_code == 200:
+                hashMap.put('btn_test_connection', 'Соединение установлено')
+                hashMap.put('toast', 'Соединение установлено')
+            elif r.status_code == 403:
+                hashMap.put('btn_test_connection', 'Тест соединения')
+                hashMap.put("toast", "Запрос на авторизацию принят")
+            else:
+                hashMap.put('btn_test_connection', 'Тест соединения')
+                hashMap.put('toast', 'Не удалось установить соединение')
 
     return hashMap
 
