@@ -1,7 +1,8 @@
+import json
 import unittest
 from unittest.mock import MagicMock
 
-from ui_models import SettingsScreen
+from ui_models import SettingsScreen, FontSizeSettingsScreen
 from ui_utils import HashMap
 from main import noClass
 
@@ -33,3 +34,21 @@ class TestSettingsScreen(unittest.TestCase):
         self.assertEqual(
             self.hash_map['ShowScreen'], 'Настройки http соединения')
 
+
+class TestFontSizeSettingsScreen(unittest.TestCase):
+    def setUp(self) -> None:
+        self.hash_map = HashMap(hash_map=hashMap())
+        self.rs_settings = noClass('rs_settings_local')
+        self.sut = FontSizeSettingsScreen(self.hash_map, self.rs_settings)
+
+    def test_on_start_must_add_field_to_hash_map(self):
+        self.sut.on_start()
+
+        self.assertTrue(self.hash_map.containsKey('TitleTextSize'))
+        self.assertEqual(
+            self.hash_map.get_json('TitleTextSize'),
+            {
+                "hint": "Размер заголовка",
+                "default_text": "18",
+            }
+        )

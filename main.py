@@ -1525,56 +1525,6 @@ def file_list_on_start(hashMap, _files=None, _data=None):
     return hashMap
 
 
-def font_sizes_on_start(hashMap, _files=None, _data=None):
-
-    # Словарик названий и имен размеров шрифтов
-    ss = {
-        'TitleTextSize': 'Размер заголовка',
-        'CardTitleTextSize': 'Размер заголовка карточки',
-        "CardDateTextSize": 'Данные карточки',
-        'CardTextSize':'Размер текста элементов',
-        'GoodsCardTitleTextSize': 'Заголовок товара',
-        'goodsTextSize': 'Товар',
-        'SeriesPropertiesTextSize': 'Серии свойства',
-        'DocTypeCardTextSize': 'Тип документа',
-        'titleDocTypeCardTextSize':'Название документа в карточке'}  #,       'signal_num': "Номер сигнала"
-
-    hashMap.put('TitleTextSize',  ui_form_data.ModernField(hint='Размер заголовка', default_text=rs_settings.get('TitleTextSize'), password=False).to_json()) #  )
-    hashMap.put('CardTitleTextSize',
-                ui_form_data.ModernField(hint='Размер заголовка карточки', default_text=rs_settings.get('CardTitleTextSize'),
-                                         password=False).to_json())  # )
-    #"CardDateTextSize": 'Данные карточки',
-    hashMap.put('CardDateTextSize',
-                ui_form_data.ModernField(hint='Данные карточки', default_text=rs_settings.get('CardDateTextSize'),
-                                         password=False).to_json())  # )
-    #'CardTextSize':'Размер текста элементов',
-    hashMap.put('CardTextSize',
-                ui_form_data.ModernField(hint='Размер текста элементов', default_text=rs_settings.get('CardTextSize'),
-                                         password=False).to_json())  # )
-    #'GoodsCardTitleTextSize': 'Заголовок товара',
-    hashMap.put('GoodsCardTitleTextSize',
-                ui_form_data.ModernField(hint='Заголовок товара', default_text=rs_settings.get('GoodsCardTitleTextSize'),
-                                         password=False).to_json())  # )
-    #'goodsTextSize': 'Товар',
-    hashMap.put('goodsTextSize',
-                ui_form_data.ModernField(hint='Товар', default_text=rs_settings.get('goodsTextSize'),
-                                         password=False).to_json())  # )
-    #'SeriesPropertiesTextSize': 'Серии свойства',
-    hashMap.put('SeriesPropertiesTextSize',
-                ui_form_data.ModernField(hint='Серии свойства', default_text=rs_settings.get('SeriesPropertiesTextSize'),
-                                         password=False).to_json())  # )
-    #'DocTypeCardTextSize': 'Тип документа',
-    hashMap.put('DocTypeCardTextSize',
-                ui_form_data.ModernField(hint='Тип документа', default_text=rs_settings.get('DocTypeCardTextSize'),
-                                         password=False).to_json())  # )
-    #'titleDocTypeCardTextSize':'Название документа в карточке'
-    hashMap.put('titleDocTypeCardTextSize',
-                ui_form_data.ModernField(hint='Название документа в карточке', default_text=rs_settings.get('titleDocTypeCardTextSize'),
-                                         password=False).to_json())  # )
-
-    return hashMap
-
-
 def font_size_settings_listener(hashMap, _files=None, _data=None):
     listener = hashMap.get('listener')
     if listener == 'btn_on_save':  # or hashMap.get('event')=='Input'

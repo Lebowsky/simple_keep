@@ -1379,6 +1379,61 @@ class SettingsScreen(Screen):
         return all([http.get('url'), http.get('user'), http.get('pass')])
 
 
+class FontSizeSettingsScreen(Screen):
+    screen_name = 'Настройки Шрифтов'
+    process_name = 'Параметры'
+
+    def __init__(self, hash_map: HashMap, rs_settings):
+        super().__init__(hash_map, rs_settings)
+
+    def on_start(self):
+        put_data = {}
+        fields_data = {
+            'TitleTextSize': 'Размер заголовка',
+            'CardTitleTextSize': 'Размер заголовка карточки',
+            "CardDateTextSize": 'Данные карточки',
+            'CardTextSize': 'Размер текста элементов',
+            'GoodsCardTitleTextSize': 'Заголовок товара',
+            'goodsTextSize': 'Товар',
+            'SeriesPropertiesTextSize': 'Серии свойства',
+            'DocTypeCardTextSize': 'Тип документа',
+            'titleDocTypeCardTextSize': 'Название документа в карточке'
+        }
+
+        for field, hint in fields_data.items():
+            put_data[field] = widgets.ModernField(
+                hint=hint,
+                default_text=self.rs_settings.get(field) or ''
+            ).to_json()
+
+        self.hash_map.put_data(put_data)
+
+    def on_input(self):
+        pass
+        # listener = hashMap.get('listener')
+        # if listener == 'btn_on_save':  # or hashMap.get('event')=='Input'
+        #
+        #     rs_settings.put("TitleTextSize", hashMap.get("TitleTextSize"), True)
+        #     rs_settings.put("CardTitleTextSize", hashMap.get("CardTitleTextSize"), True)
+        #     rs_settings.put("CardTextSize", hashMap.get("CardTextSize"), True)
+        #     rs_settings.put("CardDateTextSize", hashMap.get("CardDateTextSize"), True)
+        #     rs_settings.put("GoodsCardTitleTextSize", hashMap.get("GoodsCardTitleTextSize"), True)
+        #     rs_settings.put("goodsTextSize", hashMap.get("goodsTextSize"), True)
+        #     rs_settings.put("SeriesPropertiesTextSize", hashMap.get("SeriesPropertiesTextSize"), True)
+        #     rs_settings.put("DocTypeCardTextSize", hashMap.get("DocTypeCardTextSize"), True)
+        #     rs_settings.put("titleDocTypeCardTextSize", hashMap.get("titleDocTypeCardTextSize"), True)
+        #     hashMap.put('ShowScreen', 'Настройки и обмен')
+        #     # params.put("signal_num", hashMap.get("signal_num"), True)
+        # elif listener == 'btn_on_cancel' or listener == 'ON_BACK_PRESSED':
+        #     hashMap.put('ShowScreen', 'Настройки и обмен')
+
+    def on_post_start(self):
+        pass
+
+    def show(self, args=None):
+        pass
+
+
 class HttpSettingsScreen(Screen):
     screen_name = 'Настройки http соединения'
     process_name = 'Параметры'
@@ -1889,7 +1944,8 @@ class ScreensFactory:
         ErrorLogScreen,
         DebugSettingsScreen,
         HttpSettingsScreen,
-        SettingsScreen
+        SettingsScreen,
+        FontSizeSettingsScreen
     ]
 
     @staticmethod
