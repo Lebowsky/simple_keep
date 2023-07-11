@@ -135,14 +135,21 @@ def on_close_app(hash_map):
 
 
 @HashMap()
-def tiles_on_start(hash_map: HashMap):
-    screen: ui_models.DocumentsTiles = create_screen(hash_map)
+def docs_tiles_on_start(hash_map: HashMap):
+    """Отдельные обработчики плиток для определения процесса hash_map'ом"""
+    screen = ui_models.DocumentsTiles(hash_map, rs_settings)
+    screen.on_start()
+
+
+@HashMap()
+def gs_tiles_on_start(hash_map: HashMap):
+    screen = ui_models.GroupScanTiles(hash_map, rs_settings)
     screen.on_start()
 
 
 @HashMap()
 def tiles_on_input(hash_map: HashMap):
-    screen: ui_models.DocumentsTiles = create_screen(hash_map)
+    screen = create_screen(hash_map)
     screen.on_input()
 
 
@@ -1528,6 +1535,7 @@ def identify_barcode_goods(hashMap, _files=None, _data=None):
             hashMap.put('error_txt', 'Товар не распознан по штрихкоду')
 
     return hashMap
+
 
 def good_card_on_start(hashMap, _files=None, _data=None):
 
