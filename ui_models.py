@@ -216,7 +216,6 @@ class GroupScanTiles(Tiles):
                 error_text=str(e.args[0]),
                 status_code=404,
                 url=hs_service.url)
-
         return not answer.error
 
     def _get_message_tile(self, message, text_color='#000000'):
@@ -273,6 +272,7 @@ class GroupScanTiles(Tiles):
 class DocumentsTiles(GroupScanTiles):
     screen_name = 'Плитки'
     process_name = 'Документы'
+
 
     def _check_connection(self):
         return True
