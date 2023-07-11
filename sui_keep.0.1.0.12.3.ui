@@ -3616,6 +3616,10 @@
             {
                 "PyFileKey": "hs_services",
                 "PyFileData": ""
+            },
+            {
+                "PyFileKey": "new_handlers",
+                "PyFileData": ""
             }
         ],
         "StyleTemplates": [],
