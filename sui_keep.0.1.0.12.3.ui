@@ -3616,20 +3616,15 @@
             {
                 "PyFileKey": "hs_services",
                 "PyFileData": ""
+            },
+            {
+                "PyFileKey": "new_handlers",
+                "PyFileData": ""
             }
         ],
         "StyleTemplates": [],
         "arch2": true,
         "CommonHandlers": [
-            {
-                "event": "onLaunch",
-                "listener": "",
-                "action": "run",
-                "type": "python",
-                "method": "app_before_on_start",
-                "postExecute": "",
-                "alias": "on_start"
-            },
             {
                 "event": "onLaunch",
                 "listener": "",
