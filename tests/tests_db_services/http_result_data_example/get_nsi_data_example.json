@@ -1,0 +1,58 @@
+{
+  "RS_goods": [
+    {
+      "id": "bd72d927-55bc-11d9-848a-00112f43529a",
+      "code": "000000057  ",
+      "name": "Комбайн кухонный BINATONE FP 67",
+      "art": "КВ- 900",
+      "unit": "bd72d926-55bc-11d9-848a-00112f43529a",
+      "type_good": "9c556d52-720f-11df-b436-0015e92f2802"
+    }
+  ],
+  "RS_classifier_units": [
+    {
+      "id": "bd72d926-55bc-11d9-848a-00112f43529a",
+      "code": "796 ",
+      "name": "шт"
+    }
+  ],
+  "RS_types_goods": [
+    {
+      "id": "9c556d52-720f-11df-b436-0015e92f2802",
+      "name": "Электротовары",
+      "use_mark": false
+    }
+  ],
+  "RS_units": [
+    {
+      "id": "f0658892-7924-11df-b33a-0011955cba6b",
+      "code": "    ",
+      "name": "шт (1 шт)",
+      "int_reduction": "",
+      "nominator": 1,
+      "denominator": 1,
+      "id_owner": "bd72d927-55bc-11d9-848a-00112f43529a"
+    }
+  ],
+  "RS_price_types": [
+    {
+      "id": "73867e75-73c8-11df-b338-0011955cba6b",
+      "name": "Дилерская"
+    }
+  ],
+  "RS_countragents": [
+    {
+      "id": "f01a78f6-55bc-11d9-848a-00112f43529a",
+      "name": "Сириус",
+      "full_name": "\"Сириус\"",
+      "inn": "0777121211",
+      "kpp": ""
+    }
+  ],
+  "RS_warehouses": [
+    {
+      "id": "03ce4b6e-3ff7-11e0-af05-0015e9b8c48d",
+      "name": "Бытовая техника"
+    }
+  ]
+}

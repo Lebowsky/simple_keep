@@ -1,0 +1,924 @@
+{
+	"empty": false,
+	"status_code": 200,
+	"text": "",
+	"reason": "OK",
+	"format": "is_data",
+	"data": {
+		"RS_goods": [
+			{
+				"id": "5e5a7257-6896-11e8-8780-b06ebf2faaf6",
+				"code": "00-00000279",
+				"name": "Колбаски для гриля \"По-крестьянски\" (охлажденные)",
+				"art": "",
+				"unit": "bd72d8fb-55bc-11d9-848a-00112f43529a",
+				"type_good": "5e5a7256-6896-11e8-8780-b06ebf2faaf6",
+				"description": ""
+			},
+			{
+				"id": "c3314ae7-6899-11e8-8780-b06ebf2faaf6",
+				"code": "00-00000280",
+				"name": "БЕДРО с кожей цыпленка-бройлера охлажд. (подложка)",
+				"art": "",
+				"unit": "bd72d8fb-55bc-11d9-848a-00112f43529a",
+				"type_good": "c3314ae6-6899-11e8-8780-b06ebf2faaf6",
+				"description": ""
+			},
+			{
+				"id": "c3314ae9-6899-11e8-8780-b06ebf2faaf6",
+				"code": "00-00000281",
+				"name": "Глютен кукурузный (кормовая добавка)",
+				"art": "",
+				"unit": "bd72d8fb-55bc-11d9-848a-00112f43529a",
+				"type_good": "c3314ae6-6899-11e8-8780-b06ebf2faaf6",
+				"description": ""
+			},
+			{
+				"id": "c3314aea-6899-11e8-8780-b06ebf2faaf6",
+				"code": "00-00000282",
+				"name": "Говядина 1 категории",
+				"art": "",
+				"unit": "bd72d8fb-55bc-11d9-848a-00112f43529a",
+				"type_good": "c3314ae6-6899-11e8-8780-b06ebf2faaf6",
+				"description": ""
+			},
+			{
+				"id": "c3314aeb-6899-11e8-8780-b06ebf2faaf6",
+				"code": "00-00000283",
+				"name": "Колбаса полукопченая \"Сервелат Швейцарский\"",
+				"art": "",
+				"unit": "bd72d8fb-55bc-11d9-848a-00112f43529a",
+				"type_good": "c3314ae6-6899-11e8-8780-b06ebf2faaf6",
+				"description": ""
+			}
+		],
+		"RS_cells": [
+			{
+				"id": "0daa4358-f49d-11e4-92f1-0050568b35ac",
+				"name": "1-1-1-1-1",
+				"barcode": "1-1-1-1-1"
+			},
+			{
+				"id": "e6321817-72ff-11df-b338-0011955cba6b",
+				"name": "ОСТ3-2-10",
+				"barcode": "ОСТ3-2-10"
+			},
+			{
+				"id": "e6321818-72ff-11df-b338-0011955cba6b",
+				"name": "ОСТ3-2-11",
+				"barcode": "ОСТ3-2-11"
+			},
+			{
+				"id": "e6321819-72ff-11df-b338-0011955cba6b",
+				"name": "ОСТ3-2-12",
+				"barcode": "ОСТ3-2-12"
+			}
+		],
+		"RS_classifier_units": [
+			{
+				"id": "bd72d8fb-55bc-11d9-848a-00112f43529a",
+				"code": "166 ",
+				"name": "кг"
+			}
+		],
+		"RS_barcodes": [
+			{
+				"barcode": "1000000008173",
+				"id_good": "7b7230d4-9257-11e3-8058-0015e9b8c48d",
+				"id_property": null,
+				"id_series": null,
+				"id_unit": null
+			},
+			{
+				"barcode": "123",
+				"id_good": "7b7230d4-9257-11e3-8058-0015e9b8c48d",
+				"id_property": null,
+				"id_series": null,
+				"id_unit": null
+			},
+			{
+				"barcode": "2000000000015",
+				"id_good": "cbcf492a-55bc-11d9-848a-00112f43529a",
+				"id_property": null,
+				"id_series": null,
+				"id_unit": null
+			},
+			{
+				"barcode": "2000000000022",
+				"id_good": "cbcf492a-55bc-11d9-848a-00112f43529a",
+				"id_property": null,
+				"id_series": null,
+				"id_unit": "f06588a7-7924-11df-b33a-0011955cba6b"
+			},
+			{
+				"barcode": "2000000000039",
+				"id_good": "391e9547-702e-11e6-accf-0050568b35ac",
+				"id_property": "5cff86b4-702e-11e6-accf-0050568b35ac",
+				"id_series": null,
+				"id_unit": null
+			},
+			{
+				"barcode": "2000000000046",
+				"id_good": "391e9547-702e-11e6-accf-0050568b35ac",
+				"id_property": "c4cd76df-702e-11e6-accf-0050568b35ac",
+				"id_series": null,
+				"id_unit": null
+			},
+			{
+				"barcode": "2000000000060",
+				"id_good": "cbcf4968-55bc-11d9-848a-00112f43529a",
+				"id_property": null,
+				"id_series": null,
+				"id_unit": null
+			},
+			{
+				"barcode": "2000000000077",
+				"id_good": "cbcf4980-55bc-11d9-848a-00112f43529a",
+				"id_property": null,
+				"id_series": null,
+				"id_unit": null
+			},
+			{
+				"barcode": "2000000000121",
+				"id_good": "bd72d913-55bc-11d9-848a-00112f43529a",
+				"id_property": "3df1947d-7886-11df-b33a-0011955cba6b",
+				"id_series": null,
+				"id_unit": "dff7f708-7a0b-11df-b33a-0011955cba6b"
+			},
+			{
+				"barcode": "2000000000138",
+				"id_good": "bd72d913-55bc-11d9-848a-00112f43529a",
+				"id_property": "3df1947d-7886-11df-b33a-0011955cba6b",
+				"id_series": null,
+				"id_unit": "f0e40f7b-7390-11df-b338-0011955cba6b"
+			},
+			{
+				"barcode": "2000000000145",
+				"id_good": "bd72d913-55bc-11d9-848a-00112f43529a",
+				"id_property": "3df1947d-7886-11df-b33a-0011955cba6b",
+				"id_series": null,
+				"id_unit": "f0e40f7d-7390-11df-b338-0011955cba6b"
+			},
+			{
+				"barcode": "2000000000152",
+				"id_good": "bd72d913-55bc-11d9-848a-00112f43529a",
+				"id_property": "3df1947d-7886-11df-b33a-0011955cba6b",
+				"id_series": null,
+				"id_unit": "dff7f708-7a0b-11df-b33a-0011955cba6b"
+			},
+			{
+				"barcode": "2000000000169",
+				"id_good": "bd72d913-55bc-11d9-848a-00112f43529a",
+				"id_property": "3df1947e-7886-11df-b33a-0011955cba6b",
+				"id_series": null,
+				"id_unit": "dff7f708-7a0b-11df-b33a-0011955cba6b"
+			},
+			{
+				"barcode": "2000000000176",
+				"id_good": "bd72d913-55bc-11d9-848a-00112f43529a",
+				"id_property": "3df1947e-7886-11df-b33a-0011955cba6b",
+				"id_series": null,
+				"id_unit": "f0e40f7b-7390-11df-b338-0011955cba6b"
+			},
+			{
+				"barcode": "2000000000183",
+				"id_good": "bd72d913-55bc-11d9-848a-00112f43529a",
+				"id_property": "3df1947e-7886-11df-b33a-0011955cba6b",
+				"id_series": null,
+				"id_unit": "f0e40f7d-7390-11df-b338-0011955cba6b"
+			},
+			{
+				"barcode": "2000000055251",
+				"id_good": "e8a71faf-55bc-11d9-848a-00112f43529a",
+				"id_property": "b02e284f-720f-11df-b436-0015e92f2802",
+				"id_series": null,
+				"id_unit": "f0e40f7b-7390-11df-b338-0011955cba6b"
+			}
+		],
+		"RS_units": [
+			{
+				"id": "f93e1132-c83a-11e2-8026-0015e9b8c48d",
+				"id_owner": "f93e1131-c83a-11e2-8026-0015e9b8c48d",
+				"code": "    ",
+				"name": "шт (1 шт)",
+				"nominator": 1,
+				"denominator": 1,
+				"int_reduction": ""
+			},
+			{
+				"id": "f93e1134-c83a-11e2-8026-0015e9b8c48d",
+				"id_owner": "f93e1131-c83a-11e2-8026-0015e9b8c48d",
+				"code": "    ",
+				"name": "ящ (20 шт)",
+				"nominator": 20,
+				"denominator": 1,
+				"int_reduction": ""
+			},
+			{
+				"id": "f93e1137-c83a-11e2-8026-0015e9b8c48d",
+				"id_owner": "f93e1131-c83a-11e2-8026-0015e9b8c48d",
+				"code": "    ",
+				"name": "пал (1 000 шт)",
+				"nominator": 1000,
+				"denominator": 1,
+				"int_reduction": ""
+			},
+			{
+				"id": "b2c7cfc8-6ca9-11e0-af30-0015e9b8c48d",
+				"id_owner": "b2c7cfc7-6ca9-11e0-af30-0015e9b8c48d",
+				"code": "    ",
+				"name": "шт (1 шт)",
+				"nominator": 1,
+				"denominator": 1,
+				"int_reduction": ""
+			},
+			{
+				"id": "f0e40f7b-7390-11df-b338-0011955cba6b",
+				"id_owner": "f0e40f79-7390-11df-b338-0011955cba6b",
+				"code": "    ",
+				"name": "упак (10 пар)",
+				"nominator": 10,
+				"denominator": 1,
+				"int_reduction": ""
+			},
+			{
+				"id": "f0e40f7d-7390-11df-b338-0011955cba6b",
+				"id_owner": "f0e40f79-7390-11df-b338-0011955cba6b",
+				"code": "    ",
+				"name": "пал (40 пар)",
+				"nominator": 40,
+				"denominator": 1,
+				"int_reduction": ""
+			},
+			{
+				"id": "dff7f708-7a0b-11df-b33a-0011955cba6b",
+				"id_owner": "f0e40f79-7390-11df-b338-0011955cba6b",
+				"code": "    ",
+				"name": "пара (1 пара)",
+				"nominator": 1,
+				"denominator": 1,
+				"int_reduction": ""
+			},
+			{
+				"id": "f0e40f81-7390-11df-b338-0011955cba6b",
+				"id_owner": "f0e40f80-7390-11df-b338-0011955cba6b",
+				"code": "    ",
+				"name": "пак (1 пак)",
+				"nominator": 1,
+				"denominator": 1,
+				"int_reduction": ""
+			},
+			{
+				"id": "f0e40f82-7390-11df-b338-0011955cba6b",
+				"id_owner": "f0e40f80-7390-11df-b338-0011955cba6b",
+				"code": "    ",
+				"name": "упак (10 пак)",
+				"nominator": 10,
+				"denominator": 1,
+				"int_reduction": ""
+			},
+			{
+				"id": "f0e40f84-7390-11df-b338-0011955cba6b",
+				"id_owner": "f0e40f83-7390-11df-b338-0011955cba6b",
+				"code": "    ",
+				"name": "пач (1 пач)",
+				"nominator": 1,
+				"denominator": 1,
+				"int_reduction": ""
+			},
+			{
+				"id": "f0e40f85-7390-11df-b338-0011955cba6b",
+				"id_owner": "f0e40f83-7390-11df-b338-0011955cba6b",
+				"code": "    ",
+				"name": "упак (20 пач)",
+				"nominator": 20,
+				"denominator": 1,
+				"int_reduction": ""
+			}
+		],
+		"RS_warehouses": [
+			{
+				"id": "abf58710-f5c8-11e2-802f-0015e9b8c48d",
+				"name": "Внуковская таможня"
+			},
+			{
+				"id": "abf5870d-f5c8-11e2-802f-0015e9b8c48d",
+				"name": "Домодедовская таможня"
+			},
+			{
+				"id": "163cab5e-35ae-11e0-aefc-0015e9b8c48d",
+				"name": "Ларек \"Розница\""
+			},
+			{
+				"id": "50d41482-e4f3-11e0-af8f-0015e9b8c48d",
+				"name": "Магазин \"Бытовая техника\" "
+			},
+			{
+				"id": "2e46ec48-7025-11e6-accf-0050568b35ac",
+				"name": "Магазин \"Меха\""
+			},
+			{
+				"id": "a4212b46-730a-11df-b338-0011955cba6b",
+				"name": "Магазин \"Продукты\""
+			},
+			{
+				"id": "fdf29b62-e4fb-11e4-92f1-0050568b35ac",
+				"name": "Мой магазин"
+			},
+			{
+				"id": "4609c9f9-32c2-11e0-aef8-0015e9b8c48d",
+				"name": "Магазин \"Электротовары\""
+			},
+			{
+				"id": "08305acc-7303-11df-b338-0011955cba6b",
+				"name": "Торговый зал"
+			},
+			{
+				"id": "03ce4b6e-3ff7-11e0-af05-0015e9b8c48d",
+				"name": "Бытовая техника"
+			},
+			{
+				"id": "1418c670-7307-11df-b338-0011955cba6b",
+				"name": "Мебельный склад"
+			},
+			{
+				"id": "37615a36-5893-11e6-8caa-0050568b35ac",
+				"name": "Западный склад"
+			},
+			{
+				"id": "03ce4b6f-3ff7-11e0-af05-0015e9b8c48d",
+				"name": "Продуктовая база"
+			},
+			{
+				"id": "3f86a8a6-4a24-11e0-af0f-0015e9b8c48d",
+				"name": "Склад бытовой техники"
+			},
+			{
+				"id": "132b70d4-7ce5-11e7-8e50-0050568b35ac",
+				"name": "Склад хранения"
+			},
+			{
+				"id": "6f87e83f-722c-11df-b336-0011955cba6b",
+				"name": "Центральный склад"
+			}
+		],
+		"RS_prices": [
+			{
+				"id_price_types": "b203c35a-239e-11e0-aeeb-0015e9b8c48d",
+				"id_goods": "f93e112a-c83a-11e2-8026-0015e9b8c48d",
+				"id_properties": null,
+				"id_unit": null,
+				"price": 2.38
+			},
+			{
+				"id_price_types": "08305aca-7303-11df-b338-0011955cba6b",
+				"id_goods": "f93e112a-c83a-11e2-8026-0015e9b8c48d",
+				"id_properties": null,
+				"id_unit": null,
+				"price": 3
+			},
+			{
+				"id_price_types": "73867e74-73c8-11df-b338-0011955cba6b",
+				"id_goods": "f93e112a-c83a-11e2-8026-0015e9b8c48d",
+				"id_properties": null,
+				"id_unit": null,
+				"price": 2.5
+			},
+			{
+				"id_price_types": "73867e75-73c8-11df-b338-0011955cba6b",
+				"id_goods": "f93e112a-c83a-11e2-8026-0015e9b8c48d",
+				"id_properties": null,
+				"id_unit": null,
+				"price": 2.3
+			},
+			{
+				"id_price_types": "73867e76-73c8-11df-b338-0011955cba6b",
+				"id_goods": "f93e112a-c83a-11e2-8026-0015e9b8c48d",
+				"id_properties": null,
+				"id_unit": null,
+				"price": 2.2
+			},
+			{
+				"id_price_types": "73867e77-73c8-11df-b338-0011955cba6b",
+				"id_goods": "f93e112a-c83a-11e2-8026-0015e9b8c48d",
+				"id_properties": null,
+				"id_unit": null,
+				"price": 3.15
+			},
+			{
+				"id_price_types": "2bee1998-8d8f-4fbb-be96-640454416e63",
+				"id_goods": "f93e112a-c83a-11e2-8026-0015e9b8c48d",
+				"id_properties": null,
+				"id_unit": null,
+				"price": 2
+			},
+			{
+				"id_price_types": "b203c35a-239e-11e0-aeeb-0015e9b8c48d",
+				"id_goods": "f93e112c-c83a-11e2-8026-0015e9b8c48d",
+				"id_properties": null,
+				"id_unit": null,
+				"price": 5.99
+			},
+			{
+				"id_price_types": "08305aca-7303-11df-b338-0011955cba6b",
+				"id_goods": "f93e112c-c83a-11e2-8026-0015e9b8c48d",
+				"id_properties": null,
+				"id_unit": null,
+				"price": 7.56
+			},
+			{
+				"id_price_types": "73867e74-73c8-11df-b338-0011955cba6b",
+				"id_goods": "f93e112c-c83a-11e2-8026-0015e9b8c48d",
+				"id_properties": null,
+				"id_unit": null,
+				"price": 6.3
+			},
+			{
+				"id_price_types": "73867e75-73c8-11df-b338-0011955cba6b",
+				"id_goods": "f93e112c-c83a-11e2-8026-0015e9b8c48d",
+				"id_properties": null,
+				"id_unit": null,
+				"price": 5.7
+			},
+			{
+				"id_price_types": "73867e76-73c8-11df-b338-0011955cba6b",
+				"id_goods": "f93e112c-c83a-11e2-8026-0015e9b8c48d",
+				"id_properties": null,
+				"id_unit": null,
+				"price": 5.4
+			},
+			{
+				"id_price_types": "73867e77-73c8-11df-b338-0011955cba6b",
+				"id_goods": "f93e112c-c83a-11e2-8026-0015e9b8c48d",
+				"id_properties": null,
+				"id_unit": null,
+				"price": 7.94
+			},
+			{
+				"id_price_types": "2bee1998-8d8f-4fbb-be96-640454416e63",
+				"id_goods": "f93e112c-c83a-11e2-8026-0015e9b8c48d",
+				"id_properties": null,
+				"id_unit": null,
+				"price": 5
+			},
+			{
+				"id_price_types": "b203c35a-239e-11e0-aeeb-0015e9b8c48d",
+				"id_goods": "f93e112f-c83a-11e2-8026-0015e9b8c48d",
+				"id_properties": null,
+				"id_unit": null,
+				"price": 9.5
+			},
+			{
+				"id_price_types": "08305aca-7303-11df-b338-0011955cba6b",
+				"id_goods": "f93e112f-c83a-11e2-8026-0015e9b8c48d",
+				"id_properties": null,
+				"id_unit": null,
+				"price": 12
+			},
+			{
+				"id_price_types": "73867e74-73c8-11df-b338-0011955cba6b",
+				"id_goods": "f93e112f-c83a-11e2-8026-0015e9b8c48d",
+				"id_properties": null,
+				"id_unit": null,
+				"price": 10
+			},
+			{
+				"id_price_types": "73867e75-73c8-11df-b338-0011955cba6b",
+				"id_goods": "f93e112f-c83a-11e2-8026-0015e9b8c48d",
+				"id_properties": null,
+				"id_unit": null,
+				"price": 9
+			},
+			{
+				"id_price_types": "73867e76-73c8-11df-b338-0011955cba6b",
+				"id_goods": "f93e112f-c83a-11e2-8026-0015e9b8c48d",
+				"id_properties": null,
+				"id_unit": null,
+				"price": 8.6
+			}
+		],
+		"RS_countragents": [
+			{
+				"id": "f01a78f6-55bc-11d9-848a-00112f43529a",
+				"name": "Электроприбор (Белоруссия)",
+				"full_name": "Электроприбор (Белоруссия)",
+				"inn": "",
+				"kpp": ""
+			},
+			{
+				"id": "0832f4ca-748d-11df-b338-0011955cba6b",
+				"name": "Энигма",
+				"full_name": "ЗАО \"Энигма\"",
+				"inn": "",
+				"kpp": ""
+			},
+			{
+				"id": "487a85e2-d6e4-11e4-869d-0050568b35ac",
+				"name": "Южный БЦ",
+				"full_name": "ЗАО \"Южный БЦ\"",
+				"inn": "",
+				"kpp": ""
+			},
+			{
+				"id": "2871a7e1-d6f1-11e4-869d-0050568b35ac",
+				"name": "Юникредит банк",
+				"full_name": "ОАО \"Юникредит банк\"",
+				"inn": "",
+				"kpp": ""
+			}
+		],
+		"RS_series": [
+			{
+				"id": "8f486165-6b29-11e8-91e9-14dae9b19a48",
+				"name": "от 08.06.18 до 08.08.18 1С-Софт (Тест) 10814381 589896",
+				"type_goods": "c3314ae6-6899-11e8-8780-b06ebf2faaf6",
+				"number": "",
+				"production_date": "2018-06-08T00:00:00"
+			},
+			{
+				"id": "1b603c2b-6a59-11e8-91e9-14dae9b19a48",
+				"name": "от 31.05.18 до 31.07.18 1С-Софт (Тест) 10814381 58989",
+				"type_goods": "c3314ae6-6899-11e8-8780-b06ebf2faaf6",
+				"number": "",
+				"production_date": "2018-05-31T00:00:00"
+			},
+			{
+				"id": "1b603c29-6a59-11e8-91e9-14dae9b19a48",
+				"name": "от 31.05.18 до 31.07.18 1С-Софт (Тест) 12340301 12545",
+				"type_goods": "c3314ae6-6899-11e8-8780-b06ebf2faaf6",
+				"number": "",
+				"production_date": "2018-05-31T00:00:00"
+			},
+			{
+				"id": "1b603c3a-6a59-11e8-91e9-14dae9b19a48",
+				"name": "от 31.05.18 до 31.07.18 1С-Софт (Тест) 12881732 21245",
+				"type_goods": "c3314ae6-6899-11e8-8780-b06ebf2faaf6",
+				"number": "",
+				"production_date": "2018-05-31T00:00:00"
+			}
+		],
+		"RS_price_types": [
+			{
+				"id": "73867e75-73c8-11df-b338-0011955cba6b",
+				"name": "Дилерская"
+			},
+			{
+				"id": "73867e76-73c8-11df-b338-0011955cba6b",
+				"name": "Дистрибьюторская"
+			},
+			{
+				"id": "73867e77-73c8-11df-b338-0011955cba6b",
+				"name": "Макс. цена продажи"
+			},
+			{
+				"id": "73867e78-73c8-11df-b338-0011955cba6b",
+				"name": "Мин цена продажи"
+			},
+			{
+				"id": "73867e74-73c8-11df-b338-0011955cba6b",
+				"name": "Оптовая"
+			},
+			{
+				"id": "b203c35a-239e-11e0-aeeb-0015e9b8c48d",
+				"name": "Оптовая (для магазинов)"
+			},
+			{
+				"id": "0edab2ca-2222-11e0-aee9-0015e9b8c48d",
+				"name": "Оптовая (импорт)"
+			},
+			{
+				"id": "b96f0e25-f967-11e4-92f1-0050568b35ac",
+				"name": "Оптовая для продукции"
+			},
+			{
+				"id": "c58c98aa-c3e6-11e4-946e-bcaec56cc144",
+				"name": "Плановая"
+			},
+			{
+				"id": "08305aca-7303-11df-b338-0011955cba6b",
+				"name": "Розничная"
+			},
+			{
+				"id": "3df19477-7886-11df-b33a-0011955cba6b",
+				"name": "Себестоимость"
+			},
+			{
+				"id": "b49127d3-752b-11df-b338-0011955cba6b",
+				"name": "Специальная"
+			},
+			{
+				"id": "2bee1998-8d8f-4fbb-be96-640454416e63",
+				"name": "Цена поступления"
+			}
+		],
+		"RS_marking_codes": [
+			{
+				"id": "bd743d7b-41ea-11ed-98d4-f1e732a49ae7",
+				"mark_code": "RU-112349-1C17050948",
+				"id_good": "2364b772-702f-11e6-accf-0050568b35ac",
+				"id_property": null,
+				"id_series": "4983bc6d-7041-11e6-accf-0050568b35ac",
+				"id_unit": null
+			},
+			{
+				"id": "bd743d82-41ea-11ed-98d4-f1e732a49ae7",
+				"mark_code": "RU-112349-1C17051692",
+				"id_good": "baf54db7-7029-11e6-accf-0050568b35ac",
+				"id_property": "c3d2a493-7026-11e6-accf-0050568b35ac",
+				"id_series": "c893219b-7045-11e6-accf-0050568b35ac",
+				"id_unit": null
+			},
+			{
+				"id": "bd743d81-41ea-11ed-98d4-f1e732a49ae7",
+				"mark_code": "RU-112349-1C17053037",
+				"id_good": "2c79a6a9-702a-11e6-accf-0050568b35ac",
+				"id_property": "c3d2a493-7026-11e6-accf-0050568b35ac",
+				"id_series": "f6a370ad-7041-11e6-accf-0050568b35ac",
+				"id_unit": null
+			},
+			{
+				"id": "bd743d7c-41ea-11ed-98d4-f1e732a49ae7",
+				"mark_code": "RU-112349-1C17053458",
+				"id_good": "2364b772-702f-11e6-accf-0050568b35ac",
+				"id_property": null,
+				"id_series": "4983bc6e-7041-11e6-accf-0050568b35ac",
+				"id_unit": null
+			},
+			{
+				"id": "bd743d7d-41ea-11ed-98d4-f1e732a49ae7",
+				"mark_code": "RU-112349-1C17054230",
+				"id_good": "2364b772-702f-11e6-accf-0050568b35ac",
+				"id_property": null,
+				"id_series": "4983bc6f-7041-11e6-accf-0050568b35ac",
+				"id_unit": null
+			},
+			{
+				"id": "bd743d7f-41ea-11ed-98d4-f1e732a49ae7",
+				"mark_code": "RU-112349-1C17055555",
+				"id_good": "baf54db7-7029-11e6-accf-0050568b35ac",
+				"id_property": "c3d2a493-7026-11e6-accf-0050568b35ac",
+				"id_series": "9c59a15d-7041-11e6-accf-0050568b35ac",
+				"id_unit": null
+			},
+			{
+				"id": "bd743d7a-41ea-11ed-98d4-f1e732a49ae7",
+				"mark_code": "RU-112349-1C17056413",
+				"id_good": "2364b772-702f-11e6-accf-0050568b35ac",
+				"id_property": null,
+				"id_series": "4983bc6c-7041-11e6-accf-0050568b35ac",
+				"id_unit": null
+			},
+			{
+				"id": "bd743d80-41ea-11ed-98d4-f1e732a49ae7",
+				"mark_code": "RU-112349-1C17056857",
+				"id_good": "baf54db7-7029-11e6-accf-0050568b35ac",
+				"id_property": "efd6608f-7026-11e6-accf-0050568b35ac",
+				"id_series": "c11b8035-7041-11e6-accf-0050568b35ac",
+				"id_unit": null
+			},
+			{
+				"id": "bd743d79-41ea-11ed-98d4-f1e732a49ae7",
+				"mark_code": "RU-112349-1C17058563",
+				"id_good": "2364b772-702f-11e6-accf-0050568b35ac",
+				"id_property": null,
+				"id_series": "4983bc6b-7041-11e6-accf-0050568b35ac",
+				"id_unit": null
+			},
+			{
+				"id": "bd743d83-41ea-11ed-98d4-f1e732a49ae7",
+				"mark_code": "RU-112349-1C17058655",
+				"id_good": "baf54db7-7029-11e6-accf-0050568b35ac",
+				"id_property": "efd6608f-7026-11e6-accf-0050568b35ac",
+				"id_series": "e51ead9b-7045-11e6-accf-0050568b35ac",
+				"id_unit": null
+			},
+			{
+				"id": "bd743d7e-41ea-11ed-98d4-f1e732a49ae7",
+				"mark_code": "RU-112349-1C17058769",
+				"id_good": "2364b772-702f-11e6-accf-0050568b35ac",
+				"id_property": null,
+				"id_series": "4983bc70-7041-11e6-accf-0050568b35ac",
+				"id_unit": null
+			}
+		],
+		"RS_properties": [
+			{
+				"id": "1b603c2a-6a59-11e8-91e9-14dae9b19a48",
+				"id_owner": "5e5a7256-6896-11e8-8780-b06ebf2faaf6",
+				"name": "Пикантные"
+			},
+			{
+				"id": "1b603c1c-6a59-11e8-91e9-14dae9b19a48",
+				"id_owner": "c3314af3-6899-11e8-8780-b06ebf2faaf6",
+				"name": "Классические"
+			},
+			{
+				"id": "1b603c1b-6a59-11e8-91e9-14dae9b19a48",
+				"id_owner": "c3314af3-6899-11e8-8780-b06ebf2faaf6",
+				"name": "Пикантные"
+			},
+			{
+				"id": "c3d2a493-7026-11e6-accf-0050568b35ac",
+				"id_owner": "0385e7d2-7026-11e6-accf-0050568b35ac",
+				"name": "42 Белый"
+			},
+			{
+				"id": "cee2c9d4-328c-11e0-aef8-0015e9b8c48d",
+				"id_owner": "dee6e1a4-55bc-11d9-848a-00112f43529a",
+				"name": "С ручным управлением"
+			},
+			{
+				"id": "5720e9cc-e80b-11e0-af90-0015e9b8c48d",
+				"id_owner": "dee6e1a6-55bc-11d9-848a-00112f43529a",
+				"name": "Без управления"
+			},
+			{
+				"id": "cee2c9d5-328c-11e0-aef8-0015e9b8c48d",
+				"id_owner": "dee6e1a6-55bc-11d9-848a-00112f43529a",
+				"name": "С дистанционным управлением"
+			},
+			{
+				"id": "e1679cc0-5b65-11e0-af1f-0015e9b8c48d",
+				"id_owner": "dee6e1a6-55bc-11d9-848a-00112f43529a",
+				"name": "С ручным управлением"
+			},
+			{
+				"id": "cee2c9d7-328c-11e0-aef8-0015e9b8c48d",
+				"id_owner": "dee6e1a8-55bc-11d9-848a-00112f43529a",
+				"name": "Без управления"
+			},
+			{
+				"id": "08170e7e-73a3-11df-b338-0011955cba6b",
+				"id_owner": "dee6e1a8-55bc-11d9-848a-00112f43529a",
+				"name": "С дистанционным управлением"
+			},
+			{
+				"id": "5720e9cd-e80b-11e0-af90-0015e9b8c48d",
+				"id_owner": "dee6e1a8-55bc-11d9-848a-00112f43529a",
+				"name": "С общим управлением"
+			},
+			{
+				"id": "08170e7f-73a3-11df-b338-0011955cba6b",
+				"id_owner": "dee6e1a8-55bc-11d9-848a-00112f43529a",
+				"name": "С ручным управлением"
+			},
+			{
+				"id": "5720e9ce-e80b-11e0-af90-0015e9b8c48d",
+				"id_owner": "1643ef2b-5091-11e0-af15-0015e9b8c48d",
+				"name": "Расширенный комплект"
+			},
+			{
+				"id": "1643ef2c-5091-11e0-af15-0015e9b8c48d",
+				"id_owner": "1643ef2b-5091-11e0-af15-0015e9b8c48d",
+				"name": "Стандартный комплект"
+			},
+			{
+				"id": "1643ef33-5091-11e0-af15-0015e9b8c48d",
+				"id_owner": "1643ef32-5091-11e0-af15-0015e9b8c48d",
+				"name": "Стандартный размер"
+			}
+		],
+		"RS_types_goods": [
+			{
+				"id": "d1f2feab-47db-11e4-bd91-000d884fd00d",
+				"name": "Агентская услуга по доставке ",
+				"use_mark": 0
+			},
+			{
+				"id": "c3314ae6-6899-11e8-8780-b06ebf2faaf6",
+				"name": "ВЕТИС с сериями",
+				"use_mark": 0
+			},
+			{
+				"id": "c3314af3-6899-11e8-8780-b06ebf2faaf6",
+				"name": "ВЕТИС с сериями и характеристиками",
+				"use_mark": 0
+			},
+			{
+				"id": "5e5a7256-6896-11e8-8780-b06ebf2faaf6",
+				"name": "ВЕТИС с характеристиками",
+				"use_mark": 0
+			},
+			{
+				"id": "0c6013c6-ea5e-11e0-a7cd-e0cb4ed5f6e4",
+				"name": "Кабели силовые NYM",
+				"use_mark": 0
+			},
+			{
+				"id": "1643ef2a-5091-11e0-af15-0015e9b8c48d",
+				"name": "Комплект для кухни",
+				"use_mark": 0
+			},
+			{
+				"id": "08170e7d-73a3-11df-b338-0011955cba6b",
+				"name": "Кондиционеры",
+				"use_mark": 0
+			},
+			{
+				"id": "9c556d65-720f-11df-b436-0015e92f2802",
+				"name": "Мебель (предварительная сборка)",
+				"use_mark": 0
+			},
+			{
+				"id": "b0d58351-3fe9-11e4-ab12-000d884fd00d",
+				"name": "Мебельный гарнитур (набор мебели)",
+				"use_mark": 0
+			},
+			{
+				"id": "9c556d50-720f-11df-b436-0015e92f2802",
+				"name": "Обувь",
+				"use_mark": 0
+			},
+			{
+				"id": "9c556d57-720f-11df-b436-0015e92f2802",
+				"name": "Продукты",
+				"use_mark": 0
+			},
+			{
+				"id": "ec4beaf7-ea84-11e0-a4ac-e0cb4ed5f5df",
+				"name": "Работа",
+				"use_mark": 0
+			},
+			{
+				"id": "b2836143-e500-11e4-92f1-0050568b35ac",
+				"name": "Соки",
+				"use_mark": 0
+			},
+			{
+				"id": "ce295829-0ada-11e1-afb4-0015e9b8c48d",
+				"name": "Спецодежда",
+				"use_mark": 0
+			},
+			{
+				"id": "f93e1126-c83a-11e2-8026-0015e9b8c48d",
+				"name": "Тара",
+				"use_mark": 0
+			},
+			{
+				"id": "08170e76-73a3-11df-b338-0011955cba6b",
+				"name": "Телевизоры",
+				"use_mark": 0
+			},
+			{
+				"id": "7df9e593-e503-11e4-92f1-0050568b35ac",
+				"name": "Хлебобулочные изделия",
+				"use_mark": 0
+			},
+			{
+				"id": "9c556d55-720f-11df-b436-0015e92f2802",
+				"name": "Холодильники",
+				"use_mark": 0
+			},
+			{
+				"id": "9c556d52-720f-11df-b436-0015e92f2802",
+				"name": "Электротовары",
+				"use_mark": 0
+			},
+			{
+				"id": "947e7246-7027-11e6-accf-0050568b35ac",
+				"name": "КИЗ (неперсонифицированный)",
+				"use_mark": 0
+			},
+			{
+				"id": "b3ebcc44-7027-11e6-accf-0050568b35ac",
+				"name": "КИЗ (персонифицированный)",
+				"use_mark": 0
+			},
+			{
+				"id": "0385e7d2-7026-11e6-accf-0050568b35ac",
+				"name": "Шубы из мутона",
+				"use_mark": 1
+			},
+			{
+				"id": "121d5173-7026-11e6-accf-0050568b35ac",
+				"name": "Шубы из норки",
+				"use_mark": 1
+			},
+			{
+				"id": "c599a819-c76f-11e2-8026-0015e9b8c48d",
+				"name": "Работа",
+				"use_mark": 0
+			},
+			{
+				"id": "f524ba14-f57a-11db-b754-00112f43529a",
+				"name": "Товар",
+				"use_mark": 0
+			},
+			{
+				"id": "f524ba15-f57a-11db-b754-00112f43529a",
+				"name": "Услуга",
+				"use_mark": 0
+			}
+		],
+		"RS_doc_types": [
+			{
+				"doc_type": "Приемка",
+				"is_adr_storage": 0
+			},
+			{
+				"doc_type": "Заказ клиента",
+				"is_adr_storage": 0
+			}
+		]
+	}
+}

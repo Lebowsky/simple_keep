@@ -52,6 +52,7 @@ class HsService:
         self._hs = 'reset_exchange'
         self._method = requests.post
         answer = self._send_request(kwargs)
+        self.http_answer = self._create_http_answer(answer)
         return answer
 
     def create_messages(self):

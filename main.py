@@ -5,7 +5,7 @@ from requests.auth import HTTPBasicAuth
 import os
 from PIL import Image
 import time
-#import importlib
+import importlib
 
 from java import jclass
 
@@ -23,7 +23,7 @@ from ru.travelfood.simple_ui import SimpleUtilites as suClass
 noClass = jclass("ru.travelfood.simple_ui.NoSQL")
 rs_settings = noClass("rs_settings")
 
-#
+
 # importlib.reload(ui_barcodes)
 # importlib.reload(ui_csv)
 # importlib.reload(ui_global)
@@ -31,22 +31,33 @@ rs_settings = noClass("rs_settings")
 # importlib.reload(ui_models)
 # importlib.reload(http_exchange)
 
+current_screen = None
+
 
 def create_screen(hash_map: HashMap):
     """
     Метод для получения модели соответствующей текущему процессу и экрану.
     Если модель не реализована возвращает заглушку
+    Реализован синглтон через глобальную переменную current_screen, для сохренения состояния текущего экрана
     """
+    global current_screen
 
     screen_params = {
         'hash_map': hash_map,
         'rs_settings': rs_settings
     }
-    screen = ui_models.ScreensFactory.create_screen(**screen_params)
-    if not screen:
-        screen = ui_models.MockScreen(hash_map, rs_settings)
+    screen_class = ui_models.ScreensFactory.get_screen_class(**screen_params)
 
-    return screen
+    if not screen_class:
+        current_screen = ui_models.MockScreen(**screen_params)
+    elif not isinstance(current_screen, screen_class):
+        current_screen = screen_class(**screen_params)
+    else:
+        current_screen.hash_map = hash_map
+        current_screen.listener = hash_map['listener']
+        current_screen.event = hash_map['event']
+
+    return current_screen
 
 # =============== Main events =================
 
@@ -79,10 +90,29 @@ def timer_update(hash_map: HashMap):
 
 
 @HashMap()
-def event_service(hash_map, _files=None, _data=None):
+def event_service(hash_map):
     """ Обработчик для работы МП в режиме сервера. В ws_body по умолчанию лежит текст конфигурации """
 
     hash_map['ws_body'] = hash_map['ANDROID_ID']
+
+
+@HashMap()
+def on_sql_error(hash_map):
+    model = ui_models.MainEvents(hash_map, rs_settings)
+    model.on_sql_error()
+
+
+@HashMap()
+def check_docs_data_on_start(hash_map: HashMap):
+    hash_map.show_screen("Плитки")
+    # check_screen = ui_models.CheckTiles(hash_map, rs_settings)
+    # check_screen.on_start()
+
+
+@HashMap()
+def check_docs_data_on_input(hash_map: HashMap):
+    check_screen = ui_models.CheckTiles(hash_map, rs_settings)
+    check_screen.on_input()
 
 
 @HashMap()
@@ -1007,66 +1037,10 @@ def elem_viev_on_start(hash_map):
     hash_map['mm_local'] = ''
 
 
-def elem_viev_on_click(hashMap, _files=None, _data=None):
-    listener = hashMap.get("listener")
-
-    if listener == "btn_ok":
-        # получим текущую строку документа
-        current_str = hashMap.get("selected_card_position")
-        #Если строка не существует, создадим ее
-        doc = ui_global.Rs_doc
-        doc.id_doc = hashMap.get('id_doc')
-        # if current_str =='0':
-        #     pass
-            #jlist['customcards']['cardsdata']
-        #else:
-        current_elem = get_current_elem_doc_goods(hashMap, current_str)
-        doc.id_str = int(current_elem['key'])
-        # ... и запишем ее в базу
-
-        qtty = hashMap.get('qtty')
-        doc.qtty = float(qtty) if qtty else 0
-
-        doc.update_doc_str(doc, hashMap.get('price'))  # (doc, )
-
-        remove_added_good_highlight(hashMap, str(current_elem['id_good']), str(current_elem['id_properties']))
-
-        hashMap.put("ShowScreen", "Документ товары")
-
-    elif listener == "btn_cancel":
-
-        hashMap.put("ShowScreen", "Документ товары")
-    elif listener == "BACK_BUTTON":
-        hashMap.put("ShowScreen", "Документ товары")
-    elif listener == "":
-        hashMap.put("qtty", str(float(hashMap.get('qtty'))))
-    elif listener == 'ON_BACK_PRESSED':
-        hashMap.put("ShowScreen", "Документ товары")
-
-    elif listener == "photo":
-
-        # Можно вообще этого не делать-оставлять как есть. Это для примера.
-        image_file = str(
-            hashMap.get("photo_path"))  # "переменная"+"_path" - сюда помещается путь к полученной фотографии
-
-        image = Image.open(image_file)
-
-        # сразу сделаем фотку - квадратной - это простой вариант. Можно сделать например отдельо миниатюры для списка, это немного сложнее
-        im = image.resize((500, 500))
-        im.save(image_file)
-
-        jphotoarr = json.loads(hashMap.get("photoGallery"))
-        hashMap.put("photoGallery", json.dumps(jphotoarr))
-        # hashMap.put("toast",json.dumps(jphotoarr))
-
-    elif listener == "gallery_change":  # пользователь может удалить фото из галереи. Новый массив надо поместить к документу
-
-        if hashMap.containsKey("photoGallery"):  # эти 2 обработчика - аналогичные, просто для разных событий
-            jphotoarr = json.loads(hashMap.get("photoGallery"))
-            hashMap.put("photoGallery", json.dumps(jphotoarr))
-            # hashMap.put("toast","#2"+json.dumps(jphotoarr))
-
-    return hashMap
+@HashMap()
+def elem_viev_on_click(hash_map):
+    screen = ui_models.GoodsSelectScreen(hash_map, rs_settings)
+    screen.on_input()
 
 
 def remove_added_good_highlight(hashMap, good_id=None, property_id=None):
@@ -1710,11 +1684,11 @@ def settings_on_start(hashMap, _files=None, _data=None):
         # hashMap.put('use_series', str(res[1]))
         # hashMap.put('use_properties', str(res[2]))
     hashMap.put('use_mark', rs_settings.get('use_mark'))  #str(res[3]))
-    hashMap.put('allow_fact_input', rs_settings.get('allow_fact_input'))  #str(res[3]))
-    hashMap.put('add_if_not_in_plan',rs_settings.get('add_if_not_in_plan'))  # str(res[4]))
-    hashMap.put('path',rs_settings.get('path') ) # str(res[5]))
-    hashMap.put('delete_files',rs_settings.get('delete_files'))  # str(res[6]))
-    hashMap.put('allow_overscan',rs_settings.get('allow_overscan'))  # str(res[9]))
+    hashMap.put('allow_fact_input', rs_settings.get('allow_fact_input'))
+    hashMap.put('add_if_not_in_plan', rs_settings.get('add_if_not_in_plan'))  # str(res[4]))
+    hashMap.put('path', rs_settings.get('path')) # str(res[5]))
+    hashMap.put('delete_files', rs_settings.get('delete_files'))  # str(res[6]))
+    hashMap.put('allow_overscan', rs_settings.get('allow_overscan'))  # str(res[9]))
 
     if not hashMap.containsKey('ip_host'):
         hashMap.put('ip_host', '192.168.1.77')
@@ -1773,11 +1747,16 @@ def settings_on_click(hashMap, _files=None, _data=None):
             del_text = 'DELETE FROM ' + el[0]
             ui_global.get_query_result(del_text)
     elif listener == 'btn_upload_docs':
-        url = get_http_settings(hashMap)
-        qtext = '''SELECT id_doc FROM RS_docs WHERE verified = '1'
-                    UNION
-                    SELECT id_doc FROM RS_adr_docs WHERE verified = '1' '''
-        res = ui_global.get_query_result(qtext, None, True)
+        http = get_http_settings(hashMap)
+        if not all([http.get('url'), http.get('user'), http.get('pass')]):
+            hashMap.put("toast", "Не указаны настройки HTTP подключения к серверу")
+            return hashMap
+        else:
+            url = get_http_settings(hashMap)
+            qtext = '''SELECT id_doc FROM RS_docs WHERE verified = '1'
+                        UNION
+                        SELECT id_doc FROM RS_adr_docs WHERE verified = '1' '''
+            res = ui_global.get_query_result(qtext, None, True)
 
         if res:
             doc_list = []
@@ -1792,10 +1771,15 @@ def settings_on_click(hashMap, _files=None, _data=None):
             qtext = f'UPDATE RS_docs SET sent = 1  WHERE id_doc in ({doc_in_str}) '
             ui_global.get_query_result(qtext, return_dict=False)
     elif listener == 'btn_timer':
-        try:
-            timer_update(hashMap)
-        except Exception as e:
-            hashMap.put('toast',str(e))
+        http = get_http_settings(hashMap)
+        if not all([http.get('url'), http.get('user'), http.get('pass')]):
+            hashMap.put("toast", "Не указаны настройки HTTP подключения к серверу")
+            return hashMap
+        else:
+            try:
+                timer_update(hashMap)
+            except Exception as e:
+                hashMap.put('toast',str(e))
     elif listener == 'btn_sound_settings':
         hashMap.put('ShowScreen','Настройка звука')
     return hashMap
@@ -1933,7 +1917,9 @@ def http_settings_on_start(hash_map):
 def http_settings_on_click(hashMap,  _files=None, _data=None):
     listener = hashMap.get('listener')
     if listener == 'btn_save':
-        rs_settings.put('URL', hashMap.get('url'),True)
+        if not all([hashMap.get('url'), hashMap.get('user'), hashMap.get('pass')]):
+            hashMap.put("toast", "Не указаны настройки HTTP подключения к серверу")
+        rs_settings.put('URL', hashMap.get('url'), True)
         rs_settings.put('USER', hashMap.get('user'), True)
         rs_settings.put('PASS', hashMap.get('pass'), True)
         rs_settings.put('user_name', hashMap.get('user_name'), True)
@@ -1961,15 +1947,22 @@ def http_settings_on_click(hashMap,  _files=None, _data=None):
     elif listener == 'btn_test_connection':
         #/communication_test
         http = get_http_settings(hashMap)
-        r = requests.get(http['url'] + '/simple_accounting/communication_test?android_id=' + http['android_id'], auth=HTTPBasicAuth(http['user'], http['pass']),
-             headers={'Content-Type': 'application/x-www-form-urlencoded; charset=utf-8'},
-             params={'user_name': http['user_name'], 'device_model': http['device_model']})
-        if r.status_code == 200:
-            hashMap.put('btn_test_connection', 'Соединение установлено')
-            hashMap.put('toast', 'Соединение установлено')
+        if not all([http.get('url'), http.get('user'), http.get('pass')]):
+            hashMap.put("toast", "Не указаны настройки HTTP подключения к серверу")
+            return hashMap
         else:
-            hashMap.put('btn_test_connection', 'Тест соединения')
-            hashMap.put('toast', 'Не удалось установить соединение')
+            r = requests.get(http['url'] + '/simple_accounting/communication_test?android_id=' + http['android_id'], auth=HTTPBasicAuth(http['user'], http['pass']),
+                 headers={'Content-Type': 'application/x-www-form-urlencoded; charset=utf-8'},
+                 params={'user_name': http['user_name'], 'device_model': http['device_model']})
+            if r.status_code == 200:
+                hashMap.put('btn_test_connection', 'Соединение установлено')
+                hashMap.put('toast', 'Соединение установлено')
+            elif r.status_code == 403:
+                hashMap.put('btn_test_connection', 'Тест соединения')
+                hashMap.put("toast", "Запрос на авторизацию принят")
+            else:
+                hashMap.put('btn_test_connection', 'Тест соединения')
+                hashMap.put('toast', 'Не удалось установить соединение')
 
     return hashMap
 
@@ -2025,44 +2018,11 @@ def debug_on_start(hash_map: HashMap):
     screen.on_start()
 
 
-# @HashMap()
-# def debug_listener(hash_map, _files=None, _data=None):
-#     screen: ui_models.DebugSettingsScreen = create_screen(hash_map)
-#     screen.on_input()
 @HashMap()
-def debug_listener(hashMap, _files=None, _data=None):
+def debug_listener(hash_map, _files=None, _data=None):
+    screen: ui_models.DebugSettingsScreen = create_screen(hash_map)
+    screen.on_input()
 
-    listener = hashMap.get('listener')
-
-    if listener == 'btn_copy_base':
-        ip_host = hashMap.get('ip_host')
-        if os.path.isfile('//data/data/ru.travelfood.simple_ui/databases/SimpleKeep'): #Keep'):
-            with open('//data/data/ru.travelfood.simple_ui/databases/SimpleKeep', 'rb') as f:  # rightscan
-                #r = requests.post('http://' + ip_host + ':2444/post', files={'Rightscan': f})  # rightscan
-                r = requests.post('http://192.168.1.77:2444/post', files={'Rightscan': f})  # rightscan
-            if r.status_code == 200:
-                hashMap.put('toast', 'База SQLite успешно выгружена')
-            else:
-                hashMap.put('toast', 'Ошибка соединения')
-        else:
-            hashMap.put('toast', 'Файл не найден')
-    elif listener == 'btn_plan':
-
-        hashMap.put('descr_text', 'Тестовое сообщение')
-#        hashMap.put('StartScreen', 'ЭкранПлан')
-        hashMap.put('StartScreen', 'ЭкранПлан')
-    elif listener =='btn_test_modal_screen':
-        hashMap.put('toast', 'Запускаем модалку')
-        # hashMap.put('ShowDialog', 'ОшибкаПревышенияПлана')
-        # hashMap.put('ShowDialogStyle', '{  ""title"": ""Ошибка"",   ""yes"": ""Ок"",   ""no"": ""Отмена"" }')
-        hashMap.put("name", "")
-        unit_id = -1
-        hashMap.put("ShowDialog", "ДиалогЕдиницы")
-        hashMap.put("ShowDialogStyle", json.dumps({"title": "Добавление записи", "yes": "Сохранить", "no": "Отмена"}))
-
-
-        #hashMap.show_dialog(listener='Ошибка превышения плана', title='Количество план в документе превышено')
-    return hashMap
 
 def test_screen_input(hashMap,  _files=None, _data=None):
     if hashMap.get('listener') == 'btn_ok' or 'ON_BACK_PRESSED':

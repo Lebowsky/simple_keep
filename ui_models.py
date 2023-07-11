@@ -5,10 +5,11 @@ import os
 import db_services
 import hs_services
 from ui_utils import HashMap, RsDoc
-from db_services import DocService, ErrorService, DbService
+from db_services import DocService, ErrorService
 from hs_services import HsService
 import http_exchange
 from http_exchange import post_changes_to_server
+from PIL import Image
 import widgets
 import ui_global
 
@@ -166,22 +167,32 @@ class GroupScanTiles(Tiles):
         self.process_name = self.hash_map.get_current_process()
 
     def on_start(self) -> None:
+        if not self._check_connection():
+            tiles = self._get_message_tile("Отсутствует соединение с сервером", text_color="#ff0000")
+            self.hash_map.put('tiles', tiles, to_json=True)
+            self.hash_map.refresh_screen()
+            return
         data = self.db_service.get_docs_stat()
-        layout = json.loads(self._get_tile_view().to_json())
+        if data:
+            layout = json.loads(self._get_tile_view().to_json())
 
-        tiles_list = [self._get_tile_row(layout, item) for item in data]
+            tiles_list = [self._get_tile_row(layout, item) for item in data]
 
-        # split list by two element in row
-        count_row_elements = 2
-        tiles = {
-            'tiles': [
-                tiles_list[i:i + count_row_elements]
-                for i in range(0, len(tiles_list), count_row_elements)
-            ],
-            'background_color': '#f5f5f5'
-        }
+            # split list by two element in row
+            count_row_elements = 2
+            tiles = {
+                'tiles': [
+                    tiles_list[i:i + count_row_elements]
+                    for i in range(0, len(tiles_list), count_row_elements)
+                ],
+                'background_color': '#f5f5f5'
+
+            }
+        else:
+            tiles = self._get_message_tile("Нет загруженных документов")
 
         self.hash_map.put('tiles', tiles, to_json=True)
+        self.hash_map.refresh_screen()
 
     def on_input(self) -> None:
         super().on_input()
@@ -194,10 +205,77 @@ class GroupScanTiles(Tiles):
     def show(self, args=None):
         self.hash_map.show_screen(self.screen_name, args)
 
+    def _check_connection(self):
+        hs_service = hs_services.HsService(self.get_http_settings())
+        try:
+            hs_service.communication_test(timeout=1)
+            answer = hs_service.http_answer
+        except Exception as e:
+            answer = hs_service.HttpAnswer(
+                error=True,
+                error_text=str(e.args[0]),
+                status_code=404,
+                url=hs_service.url)
+
+        return not answer.error
+
+    def _get_message_tile(self, message, text_color='#000000'):
+        tile_view = widgets.LinearLayout(
+            widgets.TextView(
+                Value='@no_data',
+                TextSize=self.rs_settings.get('titleDocTypeCardTextSize'),
+                TextColor=text_color,
+                height='match_parent',
+                width='match_parent',
+                weight=0,
+                gravity_horizontal="center",
+                gravity_vertical="center",
+                StrokeWidth=0,
+                BackgroundColor="#ffffff",
+                Padding=0
+
+            ),
+            width='match_parent',
+            autoSizeTextType='uniform',
+            weight=0,
+            height='match_parent',
+            gravity_horizontal="center",
+            gravity_vertical="center",
+            StrokeWidth=3,
+            BackgroundColor="#ffffff",
+            Padding=0
+        )
+
+        layout = json.loads(tile_view.to_json())
+
+        tiles_list = [{
+            "layout": layout,
+            "data": {"no_data": message},
+            "height": "wrap_content",
+            "color": '#ffffff',
+            "start_screen": "",
+            "start_process": "",
+            'StrokeWidth': '',
+        }]
+
+        count_row_elements = 1
+        tiles = {
+            'tiles': [tiles_list],
+            'background_color': '#ffffff',
+            'StrokeWidth': '',
+            'height': ''
+
+        }
+
+        return tiles
+
 
 class DocumentsTiles(GroupScanTiles):
     screen_name = 'Плитки'
     process_name = 'Документы'
+
+    def _check_connection(self):
+        return True
 
 
 # ^^^^^^^^^^^^^^^^^^^^^ Tiles ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -412,235 +490,6 @@ class DocsListScreen(Screen):
             self.hash_map.toast('Ошибка удаления документа')
 
 
-class AdrDocsListScreen(DocsListScreen):
-    screen_name = 'Документы'
-    process_name = 'Адресное хранение'
-
-    def __init__(self, hash_map: HashMap, rs_settings):
-        super().__init__(hash_map, rs_settings)
-        self.listener = self.hash_map['listener']
-        self.event = self.hash_map['event']
-        self.service = DocService()
-        self.service.docs_table_name = 'RS_adr_docs'
-        self.service.details_table_name = 'RS_adr_docs_table'
-        self.screen_values = {}
-
-    def on_start(self) -> None:
-        # Заполним поле фильтра по виду документов
-        self.hash_map['doc_adr_type_select'] = ';'.join(['Все', 'Отбор', 'Размещение', 'Перемещение'])
-        # Перезаполним список документов
-        # if self.hash_map['doc_adr_type_click'] is None:
-        #     ls = refill_adr_docs_list()
-        # else:
-        #     ls = refill_adr_docs_list(self.hash_map['doc_adr_type_click'])
-
-        self.hash_map['doc_status_select'] = 'Все;К выполнению;Выгружен;К выгрузке'
-
-        doc_type = self.hash_map['doc_type_click']
-        doc_status = self.hash_map['selected_doc_status']
-        self.hash_map['doc_adr_type_click'] = doc_type
-
-        list_data = self._get_doc_list_data(doc_type, doc_status)
-        doc_cards = self._get_doc_cards_view(list_data,
-                                             popup_menu_data='Удалить;Очистить данные пересчета;Отправить повторно')
-        self.hash_map['docAdrCards'] = doc_cards.to_json()
-
-    def on_input(self) -> None:
-        super().on_input()
-        if self.listener == "doc_status_click":
-            self.hash_map['selected_doc_status'] = self.hash_map["doc_status_click"]
-
-        elif self.listener == 'LayoutAction':
-            self._layout_action()
-
-        elif self._is_result_positive('confirm_delete'):
-            self.confirm_delete_doc_listener()
-
-        elif self.listener == 'ON_BACK_PRESSED':
-            self.hash_map.show_screen('Плитки')
-
-        if self.listener == "CardsClick":
-            pass
-            # open_adr_doc_table(hashMap)
-            # hashMap.put("ShowScreen", "Документ товары")
-
-
-        elif self.listener == "doc_adr_type_click":
-            pass
-            # ls = refill_adr_docs_list(hashMap.get('doc_adr_type_click'))
-            # hashMap.put('docCards', ls)
-            # hashMap.put('ShowScreen', 'Документы')
-
-
-        elif self.listener == "btn_add_doc":
-            pass
-            # hashMap.put('ShowScreen', 'Новый документ')
-
-        elif self.listener == 'ON_BACK_PRESSED':
-            pass
-            # hashMap.put('FinishProcess', '')
-
-            # hashMap.put('ShowScreen', 'Новый документ')
-
-    def on_post_start(self):
-        pass
-
-    def show(self, args=None):
-        self._validate_screen_values()
-        self.hash_map.show_screen(self.screen_name, args)
-
-    def _layout_action(self) -> None:
-        layout_listener = self.hash_map['layout_listener']
-
-        if layout_listener == 'Удалить':
-            self.hash_map.show_dialog(
-                listener='confirm_delete',
-                title='Удалить документ с устройства?'
-            )
-        elif layout_listener == 'Очистить данные пересчета':
-            self.hash_map.show_dialog(
-                listener='confirm_clear_barcode_data',
-                title='Очистить данные пересчета?'
-            )
-        elif layout_listener == 'Отправить повторно':
-            self.hash_map.show_dialog(
-                listener='confirm_resend_doc',
-                title='Отправить документ повторно?'
-            )
-
-    def _get_doc_list_data(self, doc_type='', doc_status='') -> list:
-        results = self.service.get_doc_view_data(doc_type, doc_status)
-        table_data = []
-
-        for record in results:
-            doc_status = ''
-
-            if record['verified'] and record['sent']:
-                doc_status = 'Выгружен'
-            elif record['verified']:
-                doc_status = 'К выгрузке'
-            elif not (record['verified'] and record['sent']):
-                doc_status = 'К выполнению'
-
-            table_data.append({
-                'key': record['id_doc'],
-                'type': record['doc_type'],
-                'number': record['doc_n'],
-                'data': record['doc_date'],
-                'warehouse': record['RS_warehouse'],
-                'add_mark_selection': record['add_mark_selection'],
-                'status': doc_status
-            })
-
-        return table_data
-
-    def _get_doc_cards_view(self, table_data, popup_menu_data):
-        title_text_size = self.rs_settings.get("TitleTextSize")
-        card_title_text_size = self.rs_settings.get('CardTitleTextSize')
-        card_date_text_size = self.rs_settings.get('CardDateTextSize')
-
-        doc_cards = widgets.CustomCards(
-            widgets.LinearLayout(
-                widgets.LinearLayout(
-                    widgets.TextView(
-                        Value='@status',
-                        width='match_parent',
-                        gravity_horizontal='left',
-                        weight=2
-                    ),
-                    widgets.TextView(
-                        Value='@type',
-                        TextSize=title_text_size,
-                    ),
-                    widgets.PopupMenuButton(
-                        Value=popup_menu_data,
-                        Variable="menu_delete",
-                    ),
-
-                    orientation='horizontal',
-                    width='match_parent',
-
-                ),
-                widgets.LinearLayout(
-                    widgets.TextView(
-                        Value='@number',
-                        TextBold=True,
-                        TextSize=card_title_text_size
-                    )
-
-                ),
-                width="match_parent"
-            ),
-            options=widgets.Options().options,
-            cardsdata=table_data
-        )
-
-        return doc_cards
-
-    def _get_selected_card(self):
-        current_str = self.hash_map.get("selected_card_position")
-        jlist = self.hash_map.get_json("docCards")
-        selected_card = jlist['customcards']['cardsdata'][int(current_str)]
-
-        return selected_card
-
-    def _get_selected_card_put_data(self, put_data=None):
-        card_data = self._get_selected_card()
-
-        put_data = put_data or {}
-        put_data['id_doc'] = card_data['key']
-        put_data['doc_type'] = card_data['type']
-        put_data['doc_n'] = card_data['number']
-        put_data['doc_date'] = card_data['data']
-        put_data['warehouse'] = card_data['warehouse']
-        put_data['countragent'] = card_data['countragent']
-
-        return put_data
-
-    def _set_doc_verified(self, id_doc, value=True):
-        service = DocService(id_doc)
-        value = str(int(value))
-
-        try:
-            service.set_doc_value('verified', value)
-        except Exception as e:
-            self.hash_map.error_log(e.args[0])
-
-    def _doc_delete(self, id_doc):
-        service = DocService(id_doc)
-        result = True
-
-        try:
-            service.delete_doc(id_doc)
-        except Exception as e:
-            self.hash_map.error_log(e.args[0])
-            result = False
-
-        return result
-
-    def _get_docs_count(self, doc_type=''):
-        doc_type = '' if not doc_type or doc_type == 'Все' else doc_type
-        return self.service.get_docs_count(doc_type)
-
-    def _clear_barcode_data(self, id_doc):
-        return self.service.clear_barcode_data(id_doc)
-
-    def confirm_delete_doc_listener(self):
-        card_data = self.hash_map.get_json("card_data")
-        id_doc = card_data['key']
-        doc_type = self.hash_map['doc_type_click']
-
-        if self._doc_delete(id_doc):
-            docs_count = self._get_docs_count(doc_type=doc_type)
-            self.hash_map.toast('Документ успешно удалён')
-            if docs_count:
-                self.on_start()
-            else:
-                self.hash_map.show_screen('Плитки')
-        else:
-            self.hash_map.toast('Ошибка удаления документа')
-
-
 class GroupScanDocsListScreen(DocsListScreen):
     screen_name = 'Документы'
     process_name = 'Групповая обработка'
@@ -720,6 +569,8 @@ class DocumentsDocsListScreen(DocsListScreen):
                                            f'подробнее в логе ошибок.')
                 self.toast('Не удалось отправить документ повторно')
             else:
+                self.service.doc_id = id_doc
+                self.service.set_doc_value('sent', 1)
                 self.toast('Документ отправлен повторно')
 
     def get_id_doc(self):
@@ -824,8 +675,9 @@ class DocDetailsScreen(Screen):
             elif res['Error'] == 'QuantityPlanReached':
                 self.hash_map.put('Error_description', 'Количество план в документе превышено')
                 self.hash_map.show_screen('Ошибка превышения плана')
-                self.hash_map.show_dialog(listener='Ошибка превышения плана', title= 'Количество план в документе превышено')
-                #self.hash_map.toast('toast', res['Descr'])
+                self.hash_map.show_dialog(listener='Ошибка превышения плана',
+                                          title='Количество план в документе превышено')
+                # self.hash_map.toast('toast', res['Descr'])
             elif res['Error'] == 'Zero_plan_error':
                 self.hash_map.toast(res['Descr'])
             else:
@@ -834,6 +686,7 @@ class DocDetailsScreen(Screen):
             # self.hash_map.toast('Товар добавлен в документ')
             self.hash_map.put('highlight', True)
             self.hash_map.put('barcode_scanned', True)
+        return res
 
     def _set_visibility_on_start(self):
         _vars = ['warehouse', 'countragent']
@@ -876,8 +729,6 @@ class DocDetailsScreen(Screen):
                 'units_name': str(record['units_name'] or ''),
                 'code_art': 'Код: ' + str(record['code']),
                 'art': str(record['art']),
-                'qtty': str(record['qtty'] if record['qtty'] is not None else 0),
-                'qtty_plan': str(record['qtty_plan'] if record['qtty_plan'] is not None else 0),
                 'price': str(record['price'] if record['price'] is not None else 0),
                 'price_name': str(record['price_name'] or ''),
                 'picture': pic,
@@ -887,9 +738,18 @@ class DocDetailsScreen(Screen):
                 '{} '.format(product_row['art']) if product_row['art'] else '',
                 '({}) '.format(product_row['properties_name']) if product_row['properties_name'] else '',
                 '{}'.format(product_row['series_name']) if product_row['series_name'] else '',
-                ', {}'.format(product_row['units_name']) if product_row['units_name'] else ''
+                ', {}'.format(product_row['units_name']) if product_row['units_name'] else '',
             ]
             product_row['good_info'] = ''.join(props)
+            if record['qtty'] is not None:
+                product_row['qtty'] = str(int(record['qtty']) if record['qtty'].is_integer() else record['qtty'])
+            else:
+                product_row['qtty'] = "0"
+            if record['qtty_plan'] is not None:
+                product_row['qtty_plan'] = str(int(record['qtty_plan']) if record['qtty_plan'].is_integer()
+                                               else record['qtty_plan'])
+            else:
+                product_row['qtty_plan'] = "0"
 
             product_row['_layout'] = self._get_doc_table_row_view()
             self._set_background_row_color(product_row)
@@ -1036,6 +896,7 @@ class GroupScanDocDetailsScreen(DocDetailsScreen):
 
     def __init__(self, hash_map, rs_settings):
         super().__init__(hash_map, rs_settings)
+        self.hs_service = hs_services.HsService(self.get_http_settings())
         self.screen_values = {
             'id_doc': hash_map['id_doc'],
             'doc_type': hash_map['doc_type'],
@@ -1077,27 +938,18 @@ class GroupScanDocDetailsScreen(DocDetailsScreen):
             self.hash_map.remove('rows_filter')
             self.hash_map.refresh_screen()
 
-    def post_barcode_scanned(self, http_settings):
-        if self.hash_map.get_bool('barcode_scanned'):
-            id_doc = self.hash_map.get('id_doc')
-            answer = http_exchange.post_goods_to_server(id_doc, http_settings)
-
-            if answer and answer.get('Error') is not None:
-                self.hash_map.debug(answer.get('Error'))
-
-            doc_details = self._get_doc_details_data()
-            table_data = self._prepare_table_data(doc_details)
-            table_view = self._get_doc_table_view(table_data=table_data)
-            self.hash_map.put("doc_goods_table", table_view.to_json())
-            self.hash_map.refresh_screen()
-
     def _run_progress_barcode_scanning(self):
-        self.hash_map.run_py_thread_progress('doc_details_before_process_barcode')
+        self.hash_map.run_event_progress('doc_details_before_process_barcode')
 
     def before_process_barcode(self):
-        self._update_document_data()
-        self._barcode_scanned()
-        self.hash_map.run_event_async('doc_details_barcode_scanned')
+        if self._check_connection():
+            self._update_document_data()
+            self._barcode_scanned()
+            self.post_barcode_scanned(self.get_http_settings())
+            # self.hash_map.run_event_async('doc_details_barcode_scanned')
+        else:
+            self.hash_map.beep('70')
+            self.hash_map.show_dialog('Отсутствует соединение с сервером')
 
     def _update_document_data(self):
         docs_data = self._get_update_current_doc_data()
@@ -1120,7 +972,65 @@ class GroupScanDocDetailsScreen(DocDetailsScreen):
         elif answer.error:
             self.service.write_error_on_log(f'Ошибка загрузки документа:  {answer.error_text}')
         else:
-            return answer.data
+            return answer
+
+    def post_barcode_scanned(self, http_settings):
+        if self.hash_map.get_bool('barcode_scanned'):
+            answer = None
+            try:
+                answer = self._post_goods_to_server()
+            except Exception as e:
+                self.service.write_error_on_log(e.args[0])
+
+            if answer and answer.get('Error') is not None:
+                self.hash_map.error_log(answer.get('Error'))
+
+            doc_details = self._get_doc_details_data()
+            table_data = self._prepare_table_data(doc_details)
+            table_view = self._get_doc_table_view(table_data=table_data)
+            self.hash_map.put("doc_goods_table", table_view.to_json())
+            self.hash_map.refresh_screen()
+
+    def _post_goods_to_server(self):
+        res = self.service.get_last_edited_goods(to_json=False)
+        hs_service = HsService(self.get_http_settings())
+
+        if isinstance(res, dict) and res.get('Error'):
+            answer = {'empty': True, 'Error': res.get('Error')}
+            return answer
+        elif res:
+            hs_service.send_documents(res)
+            answer = hs_service.http_answer
+            if answer.error:
+                self.service.write_error_on_log(answer.error_text)
+            else:
+                try:
+                    self.service.update_sent_data(res)
+                except Exception as e:
+                    self.service.write_error_on_log(e.args[0])
+
+        # пока что отключил дополнительный get-запрос, проверяем производительность
+
+        # docs_data = hs_service.get_data()
+        #
+        # if docs_data.get('data'):
+        #     try:
+        #         self.service.update_data_from_json(docs_data['data'])
+        #     except Exception as e:
+        #         self.service.write_error_on_log(e.args[0])
+
+    def _check_connection(self):
+        try:
+            self.hs_service.communication_test(timeout=1)
+            answer = self.hs_service.http_answer
+        except Exception as e:
+            answer = self.hs_service.HttpAnswer(
+                error=True,
+                error_text=str(e.args[0]),
+                status_code=404,
+                url=self.hs_service.url)
+
+        return not answer.error
 
 
 class DocumentsDocDetailScreen(DocDetailsScreen):
@@ -1208,7 +1118,10 @@ class DocumentsDocDetailScreen(DocDetailsScreen):
             self.hash_map.show_screen("Товар выбор")
 
         elif listener == 'barcode' or self._is_result_positive('ВвестиШтрихкод'):
-            self._barcode_scanned()
+            res = self._barcode_scanned()
+            if res.get('key'):
+                self.service.update_rs_docs_table_sent_status(res.get('key'))
+                self.service.set_doc_status_to_upload(id_doc)
 
         elif listener == 'btn_barcodes':
             self.hash_map.show_dialog('ВвестиШтрихкод')
@@ -1294,65 +1207,71 @@ class DocumentsDocDetailScreen(DocDetailsScreen):
 class GoodsSelectScreen(Screen):
     def __init__(self, hash_map: HashMap, rs_settings):
         super().__init__(hash_map, rs_settings)
+        self.service = DocService()
 
     def on_start(self):
         pass
 
     def on_input(self):
         listener = self.listener
+        # self.toast(listener)
+        if listener == "btn_ok":
+            # получим текущую строку документа
+            current_str = self.hash_map.get("selected_card_position")
+            # Если строка не существует, создадим ее
+            doc = ui_global.Rs_doc
+            doc.id_doc = self.hash_map.get('id_doc')
 
-        # if listener == "btn_ok":
-        #     # получим текущую строку документа
-        #     current_str = hashMap.get("selected_card_position")
-        #
-        #     # Если строка не существует, создадим ее
-        #     doc = ui_global.Rs_doc
-        #     doc.id_doc = hashMap.get('id_doc')
-        #     # if current_str =='0':
-        #     #     pass
-        #     # jlist['customcards']['cardsdata']
-        #     # else:
-        #     current_elem = get_current_elem_doc_goods(hashMap, current_str)
-        #     doc.id_str = int(current_elem['key'])
-        #     # ... и запишем ее в базу
-        #
-        #     qtty = hashMap.get('qtty')
-        #     doc.qtty = float(qtty) if qtty else 0
-        #
-        #     doc.update_doc_str(doc, hashMap.get('price'))  # (doc, )
-        #
-        #     remove_added_good_highlight(hashMap, str(current_elem['id_good']), str(current_elem['id_properties']))
-        #
-        #     hashMap.put("ShowScreen", "Документ товары")
-        #
-        # elif listener in ["btn_cancel", 'BACK_BUTTON', 'ON_BACK_PRESSED']:
-        #     self.hash_map.show_screen("Документ товары")
-        # elif listener == "":
-        #     hashMap.put("qtty", str(float(hashMap.get('qtty'))))
-        #
-        # elif listener == "photo":
-        #     # Можно вообще этого не делать-оставлять как есть. Это для примера.
-        #     image_file = str(
-        #         hashMap.get("photo_path"))  # "переменная"+"_path" - сюда помещается путь к полученной фотографии
-        #
-        #     image = Image.open(image_file)
-        #
-        #     # сразу сделаем фотку - квадратной - это простой вариант. Можно сделать например отдельо миниатюры для списка, это немного сложнее
-        #     im = image.resize((500, 500))
-        #     im.save(image_file)
-        #
-        #     jphotoarr = json.loads(hashMap.get("photoGallery"))
-        #     hashMap.put("photoGallery", json.dumps(jphotoarr))
-        #
-        # elif listener == "gallery_change":  # пользователь может удалить фото из галереи. Новый массив надо поместить к документу
-        #     if hashMap.containsKey("photoGallery"):  # эти 2 обработчика - аналогичные, просто для разных событий
-        #         jphotoarr = json.loads(hashMap.get("photoGallery"))
-        #         hashMap.put("photoGallery", json.dumps(jphotoarr))
+            selected_card_key = self.hash_map['selected_card_key']
+            doc_goods_table = self.hash_map.get_json('doc_goods_table')
+            table_data = doc_goods_table['customtable']['tabledata']
+
+            current_elem = None
+            current_elem_filter = [item for item in table_data if item.get('key') == selected_card_key]
+
+            if current_elem_filter:
+                current_elem = current_elem_filter[0]
+
+            doc.id_str = int(current_elem['key'])
+            qtty = self.hash_map.get('qtty')
+
+            if qtty != current_elem['qtty']:
+                self.service.update_rs_docs_table_sent_status(self.hash_map.get("selected_card_key"))
+                self.service.set_doc_status_to_upload(doc.id_doc)
+
+            doc.qtty = float(qtty) if qtty else 0
+            doc.update_doc_str(doc, self.hash_map.get('price'))  # (doc, )
+            self.hash_map.put("ShowScreen", "Документ товары")
+
+        elif listener in ["btn_cancel", 'BACK_BUTTON', 'ON_BACK_PRESSED']:
+            self.hash_map.show_screen("Документ товары")
+
+        elif listener == "photo":
+            # Можно вообще этого не делать-оставлять как есть. Это для примера.
+            image_file = str(
+                self.hash_map.get("photo_path"))  # "переменная"+"_path" - сюда помещается путь к полученной фотографии
+
+            image = Image.open(image_file)
+
+            # сразу сделаем фотку - квадратной - это простой вариант. Можно сделать например отдельо миниатюры для списка, это немного сложнее
+            im = image.resize((500, 500))
+            im.save(image_file)
+
+            jphotoarr = json.loads(hashMap.get("photoGallery"))
+            self.hash_map.put("photoGallery", jphotoarr, to_json=True)
+
+        elif listener == "gallery_change":  # пользователь может удалить фото из галереи. Новый массив надо поместить к документу
+            if self.hash_map.containsKey("photoGallery"):  # эти 2 обработчика - аналогичные, просто для разных событий
+                jphotoarr = json.loads(hashMap.get("photoGallery"))
+                self.hash_map.put("photoGallery", jphotoarr, to_json=True)
 
     def on_post_start(self):
         pass
 
     def show(self, args=None):
+        pass
+
+    def get_doc(self):
         pass
 
 
@@ -1720,36 +1639,46 @@ class Timer:
         return http_settings
 
     def load_docs(self):
-        try:
-            docs_data = self.http_service.get_data()
-            if docs_data.get('data'):
-                existing_docs = self.db_service.get_existing_docs()
-                self.db_service.update_data_from_json(docs_data['data'])
-                docs_after_load = self.db_service.get_existing_docs()
-                diff = [f'{x[1]}: {x[0]}' for x in docs_after_load if x not in existing_docs]
-                if diff:
-                    self.put_notification(text=", ".join(diff), title="Загружены документы:")
+        if all([self.http_settings.get('url'), self.http_settings.get('user'), self.http_settings.get('pass')]):
+            try:
+                docs_data = self.http_service.get_data()
+                if docs_data.get('data'):
+                    existing_docs = self.db_service.get_existing_docs()
+                    self.db_service.update_data_from_json(docs_data['data'])
+                    docs_after_load = self.db_service.get_existing_docs()
+                    diff = [f'{x[1]}: {x[0]}' for x in docs_after_load if x not in existing_docs]
+                    if diff:
+                        self.hash_map.toast(str(diff))
+                        self.put_notification(text=", ".join(diff), title="Загружены документы:")
 
-        except Exception as e:
-            self.db_service.write_error_on_log(f'Ошибка загрузки документов: {e}')
+            except Exception as e:
+                self.db_service.write_error_on_log(f'Ошибка загрузки документов: {e}')
 
     def upload_docs(self):
-        try:
-            docs_goods_formatted_list = self.db_service.get_docs_and_goods_for_upload()
-            answer = self.http_service.send_documents(docs_goods_formatted_list)
-            if answer.get('Error') is not None:
-                self.put_notification(text=f'Ошибка при отправке документов {",".join(docs_goods_formatted_list)}, ')
-                self.db_service.write_error_on_log(f'Ошибка выгрузки документов {str(docs_goods_formatted_list)}: {answer.get("Error")}')
-            else:
-                docs_list_string = ', '.join([f"'{d['id_doc']}'" for d in docs_goods_formatted_list])
-                self.db_service.update_uploaded_docs_status(docs_list_string)
-        except Exception as e:
-            self.db_service.write_error_on_log(f'Ошибка выгрузки документов: {e}')
+        if all([self.http_settings.get('url'), self.http_settings.get('user'), self.http_settings.get('pass')]):
+
+            try:
+                docs_goods_formatted_list = self.db_service.get_docs_and_goods_for_upload()
+                if docs_goods_formatted_list:
+                    answer = self.http_service.send_documents(docs_goods_formatted_list)
+                    if answer:
+                        if answer.get('Error') is not None:
+                            self.put_notification(text='Ошибка при отправке документов')
+                            err_text = answer.get('text').decode('utf-8')
+                            error = answer.get("Error") or ''
+                            self.db_service.write_error_on_log(f'Ошибка выгрузки документов: {err_text}\n{error}')
+                        else:
+                            docs_list_string = ', '.join([f"'{d['id_doc']}'" for d in docs_goods_formatted_list])
+                            self.db_service.update_uploaded_docs_status(docs_list_string)
+            except Exception as e:
+                self.db_service.write_error_on_log(f'Ошибка выгрузки документов: {e}')
+
 
 # ^^^^^^^^^^^^^^^^^^^^^ Timer ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 
 # ==================== Main events =============================
+
 
 class MainEvents:
     def __init__(self, hash_map: HashMap, rs_settings):
@@ -1802,7 +1731,8 @@ class MainEvents:
             'path_to_databases': '//data/data/ru.travelfood.simple_ui/databases',
             'sqlite_name': 'SimpleKeep',
             'log_name': 'log.json',
-            'timer_is_disabled': False
+            'timer_is_disabled': False,
+            'allow_fact_input': 'false'
         }
 
         for k, v in rs_default_settings.items():
@@ -1811,8 +1741,11 @@ class MainEvents:
 
         self.hash_map.toast(toast)
 
-
-
+    def on_sql_error(self):
+        sql_error = self.hash_map['SQLError']
+        if sql_error:
+            service = db_services.DocService()
+            service.write_error_on_log(f'SQL_Error: {sql_error}')
 
     def put_notification(self):
         self.hash_map['_configuration'] = ''
@@ -1856,7 +1789,6 @@ class MainEvents:
 
 class ScreensFactory:
     screens = [
-        AdrDocsListScreen,
         GroupScanTiles,
         DocumentsTiles,
         GroupScanDocsListScreen,
@@ -1869,7 +1801,7 @@ class ScreensFactory:
     ]
 
     @staticmethod
-    def create_screen(screen_name=None, process=None, **kwargs):
+    def get_screen_class(screen_name=None, process=None, **kwargs):
         if not screen_name:
             screen_name = kwargs['hash_map'].get_current_screen()
         if not process:
@@ -1877,7 +1809,17 @@ class ScreensFactory:
 
         for item in ScreensFactory.screens:
             if getattr(item, 'screen_name') == screen_name and getattr(item, 'process_name') == process:
-                return item(**kwargs)
+                return item
+
+    @staticmethod
+    def create_screen(screen_name=None, process=None, **kwargs):
+        if not screen_name:
+            screen_name = kwargs['hash_map'].get_current_screen()
+        if not process:
+            process = kwargs['hash_map'].get_current_process()
+
+        screen_class = ScreensFactory.get_screen_class(screen_name, process)
+        return screen_class(**kwargs)
 
 
 class MockScreen(Screen):

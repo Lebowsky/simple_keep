@@ -1,6 +1,6 @@
 /java.py
 /OldModules
-tests
+_tests
 venv
 .idea
 *.vscode
@@ -11,7 +11,7 @@ local_utils
 local_data
 *.db
 sui_main.ui
-rs_settings.*
+rs_settings*.*
 ru.travelfood.simple_ui.py
 android
 pre_commit

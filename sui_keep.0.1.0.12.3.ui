@@ -7,10 +7,10 @@
             {
                 "type": "Process",
                 "ProcessName": "Документы",
-                "hidden": false,
-                "DefineOnBackPressed": true,
-                "login_screen": false,
                 "PlanFactHeader": "...",
+                "DefineOnBackPressed": true,
+                "hidden": false,
+                "login_screen": false,
                 "SC": false,
                 "Operations": [
                     {
@@ -89,34 +89,26 @@
                         "handleKeyUp": false,
                         "Elements": [
                             {
-                                "BackgroundColor": "",
-                                "StrokeWidth": "",
-                                "Padding": "",
                                 "orientation": "vertical",
                                 "height": "match_parent",
                                 "width": "match_parent",
-                                "gravity_horizontal": "center",
-                                "gravity_vertical": "center",
                                 "weight": "0",
                                 "height_value": "",
                                 "width_value": "",
                                 "type": "LinearLayout",
                                 "Variable": "",
+                                "Value": "",
                                 "Elements": [
                                     {
-                                        "BackgroundColor": "",
-                                        "StrokeWidth": "",
-                                        "Padding": "",
                                         "orientation": "horizontal",
                                         "height": "wrap_content",
                                         "width": "match_parent",
-                                        "gravity_horizontal": "center",
-                                        "gravity_vertical": "center",
                                         "weight": "0",
                                         "height_value": "",
                                         "width_value": "",
                                         "type": "LinearLayout",
                                         "Variable": "",
+                                        "Value": "",
                                         "Elements": [
                                             {
                                                 "type": "SpinnerLayout",
@@ -186,60 +178,44 @@
                         "handleKeyUp": false,
                         "Elements": [
                             {
-                                "BackgroundColor": "",
-                                "StrokeWidth": "",
-                                "Padding": "",
                                 "orientation": "vertical",
                                 "height": "wrap_content",
                                 "width": "match_parent",
-                                "gravity_horizontal": "center",
-                                "gravity_vertical": "center",
                                 "weight": "0",
                                 "height_value": "",
                                 "width_value": "",
                                 "type": "LinearLayout",
                                 "Variable": "",
+                                "Value": "",
                                 "Elements": [
                                     {
-                                        "BackgroundColor": "",
-                                        "StrokeWidth": "",
-                                        "Padding": "",
                                         "orientation": "horizontal",
                                         "height": "wrap_content",
                                         "width": "match_parent",
-                                        "gravity_horizontal": "center",
-                                        "gravity_vertical": "center",
                                         "weight": "0",
                                         "height_value": "",
                                         "width_value": "",
                                         "type": "LinearLayout",
                                         "Variable": "",
+                                        "Value": "",
                                         "Elements": [
                                             {
-                                                "BackgroundColor": "",
-                                                "StrokeWidth": "",
-                                                "Padding": "",
                                                 "orientation": "horizontal",
                                                 "height": "wrap_content",
                                                 "width": "match_parent",
-                                                "gravity_horizontal": "center",
-                                                "gravity_vertical": "center",
                                                 "weight": "1",
                                                 "type": "LinearLayout",
                                                 "Variable": "",
+                                                "Value": "",
                                                 "Elements": [
                                                     {
-                                                        "BackgroundColor": "",
-                                                        "StrokeWidth": "",
-                                                        "Padding": "",
                                                         "orientation": "vertical",
                                                         "height": "wrap_content",
                                                         "width": "match_parent",
-                                                        "gravity_horizontal": "center",
-                                                        "gravity_vertical": "center",
                                                         "weight": "0",
                                                         "type": "LinearLayout",
                                                         "Variable": "",
+                                                        "Value": "",
                                                         "Elements": [
                                                             {
                                                                 "TextSize": "24",
@@ -302,6 +278,7 @@
                                     },
                                     {
                                         "BackgroundColor": "#FFFFFF",
+                                        "orientation": "",
                                         "height": "wrap_content",
                                         "width": "match_parent",
                                         "gravity_horizontal": "center",
@@ -312,17 +289,13 @@
                                         "Variable": "btn_doc_mark_verified"
                                     },
                                     {
-                                        "BackgroundColor": "",
-                                        "StrokeWidth": "",
-                                        "Padding": "",
                                         "orientation": "horizontal",
                                         "height": "wrap_content",
                                         "width": "match_parent",
-                                        "gravity_horizontal": "center",
-                                        "gravity_vertical": "center",
                                         "weight": "0",
                                         "type": "LinearLayout",
                                         "Variable": "",
+                                        "Value": "",
                                         "Elements": [
                                             {
                                                 "height": "wrap_content",
@@ -404,17 +377,13 @@
                         "handleKeyUp": false,
                         "Elements": [
                             {
-                                "BackgroundColor": "",
-                                "StrokeWidth": "",
-                                "Padding": "",
                                 "orientation": "vertical",
                                 "height": "wrap_content",
                                 "width": "match_parent",
-                                "gravity_horizontal": "center",
-                                "gravity_vertical": "center",
                                 "weight": "0",
                                 "type": "LinearLayout",
                                 "Variable": "",
+                                "Value": "",
                                 "Elements": [
                                     {
                                         "height": "wrap_content",
@@ -427,17 +396,13 @@
                                         "Variable": ""
                                     },
                                     {
-                                        "BackgroundColor": "",
-                                        "StrokeWidth": "",
-                                        "Padding": "",
                                         "orientation": "horizontal",
                                         "height": "wrap_content",
                                         "width": "match_parent",
-                                        "gravity_horizontal": "center",
-                                        "gravity_vertical": "center",
                                         "weight": "0",
                                         "type": "LinearLayout",
                                         "Variable": "",
+                                        "Value": "",
                                         "Elements": [
                                             {
                                                 "TextSize": "24",
@@ -465,17 +430,13 @@
                                         ]
                                     },
                                     {
-                                        "BackgroundColor": "",
-                                        "StrokeWidth": "",
-                                        "Padding": "",
                                         "orientation": "horizontal",
                                         "height": "wrap_content",
                                         "width": "match_parent",
-                                        "gravity_horizontal": "center",
-                                        "gravity_vertical": "center",
                                         "weight": "0",
                                         "type": "LinearLayout",
                                         "Variable": "",
+                                        "Value": "",
                                         "Elements": [
                                             {
                                                 "TextSize": "16",
@@ -501,17 +462,13 @@
                                         ]
                                     },
                                     {
-                                        "BackgroundColor": "",
-                                        "StrokeWidth": "",
-                                        "Padding": "",
                                         "orientation": "horizontal",
                                         "height": "0",
                                         "width": "0",
-                                        "gravity_horizontal": "center",
-                                        "gravity_vertical": "center",
                                         "weight": "0",
                                         "type": "LinearLayout",
                                         "Variable": "",
+                                        "Value": "",
                                         "Elements": [
                                             {
                                                 "TextSize": "16",
@@ -537,17 +494,13 @@
                                         ]
                                     },
                                     {
-                                        "BackgroundColor": "",
-                                        "StrokeWidth": "",
-                                        "Padding": "",
                                         "orientation": "horizontal",
                                         "height": "wrap_content",
                                         "width": "match_parent",
-                                        "gravity_horizontal": "center",
-                                        "gravity_vertical": "center",
                                         "weight": "0",
                                         "type": "LinearLayout",
                                         "Variable": "",
+                                        "Value": "",
                                         "Elements": [
                                             {
                                                 "TextSize": "16",
@@ -573,30 +526,22 @@
                                         ]
                                     },
                                     {
-                                        "BackgroundColor": "",
-                                        "StrokeWidth": "",
-                                        "Padding": "",
                                         "orientation": "horizontal",
                                         "height": "wrap_content",
                                         "width": "match_parent",
-                                        "gravity_horizontal": "center",
-                                        "gravity_vertical": "center",
                                         "weight": "0",
                                         "type": "LinearLayout",
                                         "Variable": "",
+                                        "Value": "",
                                         "Elements": [
                                             {
-                                                "BackgroundColor": "",
-                                                "StrokeWidth": "",
-                                                "Padding": "",
                                                 "orientation": "vertical",
                                                 "height": "wrap_content",
                                                 "width": "match_parent",
-                                                "gravity_horizontal": "center",
-                                                "gravity_vertical": "center",
                                                 "weight": "1",
                                                 "type": "LinearLayout",
                                                 "Variable": "",
+                                                "Value": "",
                                                 "Elements": [
                                                     {
                                                         "height": "wrap_content",
@@ -622,17 +567,13 @@
                                                 ]
                                             },
                                             {
-                                                "BackgroundColor": "",
-                                                "StrokeWidth": "",
-                                                "Padding": "",
                                                 "orientation": "vertical",
                                                 "height": "wrap_content",
                                                 "width": "match_parent",
-                                                "gravity_horizontal": "center",
-                                                "gravity_vertical": "center",
                                                 "weight": "1",
                                                 "type": "LinearLayout",
                                                 "Variable": "",
+                                                "Value": "",
                                                 "Elements": [
                                                     {
                                                         "height": "wrap_content",
@@ -660,17 +601,13 @@
                                         ]
                                     },
                                     {
-                                        "BackgroundColor": "",
-                                        "StrokeWidth": "",
-                                        "Padding": "",
                                         "orientation": "horizontal",
                                         "height": "wrap_content",
                                         "width": "match_parent",
-                                        "gravity_horizontal": "center",
-                                        "gravity_vertical": "center",
                                         "weight": "0",
                                         "type": "LinearLayout",
                                         "Variable": "",
+                                        "Value": "",
                                         "Elements": [
                                             {
                                                 "height": "wrap_content",
@@ -695,17 +632,13 @@
                                         ]
                                     },
                                     {
-                                        "BackgroundColor": "",
-                                        "StrokeWidth": "",
-                                        "Padding": "",
                                         "orientation": "horizontal",
                                         "height": "wrap_content",
                                         "width": "match_parent",
-                                        "gravity_horizontal": "center",
-                                        "gravity_vertical": "center",
                                         "weight": "0",
                                         "type": "LinearLayout",
                                         "Variable": "",
+                                        "Value": "",
                                         "Elements": [
                                             {
                                                 "height": "wrap_content",
@@ -778,17 +711,13 @@
                         "handleKeyUp": false,
                         "Elements": [
                             {
-                                "BackgroundColor": "",
-                                "StrokeWidth": "",
-                                "Padding": "",
                                 "orientation": "vertical",
                                 "height": "wrap_content",
                                 "width": "match_parent",
-                                "gravity_horizontal": "center",
-                                "gravity_vertical": "center",
                                 "weight": "0",
                                 "type": "LinearLayout",
                                 "Variable": "",
+                                "Value": "",
                                 "Elements": [
                                     {
                                         "TextSize": "16",
@@ -811,39 +740,31 @@
                                         "drawable": "forward"
                                     },
                                     {
-                                        "BackgroundColor": "",
-                                        "StrokeWidth": "",
-                                        "Padding": "",
                                         "orientation": "vertical",
                                         "height": "wrap_content",
                                         "width": "match_parent",
-                                        "gravity_horizontal": "left",
-                                        "gravity_vertical": "center",
                                         "weight": "0",
                                         "type": "LinearLayout",
                                         "Variable": "",
+                                        "Value": "",
                                         "Elements": [
                                             {
-                                                "BackgroundColor": "",
-                                                "StrokeWidth": "",
-                                                "Padding": "",
                                                 "orientation": "horizontal",
                                                 "height": "match_parent",
                                                 "width": "match_parent",
                                                 "weight": "0",
                                                 "type": "LinearLayout",
                                                 "Variable": "",
+                                                "Value": "",
                                                 "Elements": [
                                                     {
-                                                        "BackgroundColor": "",
-                                                        "StrokeWidth": "",
-                                                        "Padding": "",
                                                         "orientation": "horizontal",
                                                         "height": "wrap_content",
                                                         "width": "match_parent",
                                                         "weight": "1",
                                                         "type": "LinearLayout",
                                                         "Variable": "",
+                                                        "Value": "",
                                                         "Elements": [
                                                             {
                                                                 "TextColor": "#000000",
@@ -869,16 +790,13 @@
                                                         ]
                                                     },
                                                     {
-                                                        "BackgroundColor": "",
-                                                        "StrokeWidth": "",
-                                                        "Padding": "",
                                                         "orientation": "horizontal",
                                                         "height": "wrap_content",
                                                         "width": "match_parent",
-                                                        "gravity_horizontal": "right",
                                                         "weight": "7",
                                                         "type": "LinearLayout",
                                                         "Variable": "",
+                                                        "Value": "",
                                                         "Elements": [
                                                             {
                                                                 "TextColor": "#000000",
@@ -895,15 +813,13 @@
                                                 ]
                                             },
                                             {
-                                                "BackgroundColor": "",
-                                                "StrokeWidth": "",
-                                                "Padding": "",
                                                 "orientation": "horizontal",
                                                 "height": "wrap_content",
                                                 "width": "wrap_content",
                                                 "weight": "0",
                                                 "type": "LinearLayout",
                                                 "Variable": "",
+                                                "Value": "",
                                                 "Elements": [
                                                     {
                                                         "TextColor": "#000000",
@@ -929,15 +845,13 @@
                                                 ]
                                             },
                                             {
-                                                "BackgroundColor": "",
-                                                "StrokeWidth": "",
-                                                "Padding": "",
                                                 "orientation": "horizontal",
                                                 "height": "wrap_content",
                                                 "width": "wrap_content",
                                                 "weight": "0",
                                                 "type": "LinearLayout",
                                                 "Variable": "",
+                                                "Value": "",
                                                 "Elements": [
                                                     {
                                                         "TextColor": "#000000",
@@ -962,15 +876,13 @@
                                                 ]
                                             },
                                             {
-                                                "BackgroundColor": "",
-                                                "StrokeWidth": "",
-                                                "Padding": "",
                                                 "orientation": "horizontal",
                                                 "height": "wrap_content",
                                                 "width": "wrap_content",
                                                 "weight": "0",
                                                 "type": "LinearLayout",
                                                 "Variable": "",
+                                                "Value": "",
                                                 "Elements": [
                                                     {
                                                         "TextColor": "#cc0000",
@@ -995,15 +907,13 @@
                                                 ]
                                             },
                                             {
-                                                "BackgroundColor": "",
-                                                "StrokeWidth": "",
-                                                "Padding": "",
                                                 "orientation": "horizontal",
                                                 "height": "wrap_content",
                                                 "width": "wrap_content",
                                                 "weight": "0",
                                                 "type": "LinearLayout",
                                                 "Variable": "",
+                                                "Value": "",
                                                 "Elements": [
                                                     {
                                                         "TextColor": "#000000",
@@ -1044,30 +954,22 @@
                                         "Variable": ""
                                     },
                                     {
-                                        "BackgroundColor": "",
-                                        "StrokeWidth": "",
-                                        "Padding": "",
                                         "orientation": "horizontal",
                                         "height": "wrap_content",
                                         "width": "match_parent",
-                                        "gravity_horizontal": "center",
-                                        "gravity_vertical": "center",
                                         "weight": "0",
                                         "type": "LinearLayout",
                                         "Variable": "",
+                                        "Value": "",
                                         "Elements": [
                                             {
-                                                "BackgroundColor": "",
-                                                "StrokeWidth": "",
-                                                "Padding": "",
                                                 "orientation": "vertical",
                                                 "height": "wrap_content",
                                                 "width": "match_parent",
-                                                "gravity_horizontal": "center",
-                                                "gravity_vertical": "center",
                                                 "weight": "1",
                                                 "type": "LinearLayout",
                                                 "Variable": "",
+                                                "Value": "",
                                                 "Elements": [
                                                     {
                                                         "height": "wrap_content",
@@ -1101,17 +1003,13 @@
                                                 ]
                                             },
                                             {
-                                                "BackgroundColor": "",
-                                                "StrokeWidth": "",
-                                                "Padding": "",
                                                 "orientation": "vertical",
                                                 "height": "wrap_content",
                                                 "width": "match_parent",
-                                                "gravity_horizontal": "center",
-                                                "gravity_vertical": "center",
                                                 "weight": "1",
                                                 "type": "LinearLayout",
                                                 "Variable": "fact_qtty_input",
+                                                "Value": "",
                                                 "Elements": [
                                                     {
                                                         "height": "wrap_content",
@@ -1145,17 +1043,13 @@
                                                 ]
                                             },
                                             {
-                                                "BackgroundColor": "",
-                                                "StrokeWidth": "",
-                                                "Padding": "",
                                                 "orientation": "vertical",
                                                 "height": "wrap_content",
                                                 "width": "match_parent",
-                                                "gravity_horizontal": "center",
-                                                "gravity_vertical": "center",
                                                 "weight": "1",
                                                 "type": "LinearLayout",
                                                 "Variable": "fact_qtty_note",
+                                                "Value": "",
                                                 "Elements": [
                                                     {
                                                         "TextColor": "",
@@ -1184,25 +1078,22 @@
                                                         "weight": "0",
                                                         "type": "TextView",
                                                         "Value": "@qtty",
-                                                        "Variable": "",
-                                                        "style_name": ""
+                                                        "Variable": "qtty",
+                                                        "style_name": "",
+                                                        "drawable": "forward"
                                                     }
                                                 ]
                                             }
                                         ]
                                     },
                                     {
-                                        "BackgroundColor": "",
-                                        "StrokeWidth": "",
-                                        "Padding": "",
                                         "orientation": "horizontal",
                                         "height": "wrap_content",
                                         "width": "match_parent",
-                                        "gravity_horizontal": "center",
-                                        "gravity_vertical": "center",
                                         "weight": "0",
                                         "type": "LinearLayout",
                                         "Variable": "",
+                                        "Value": "",
                                         "Elements": [
                                             {
                                                 "BackgroundColor": "#FFFFFF",
@@ -1264,11 +1155,10 @@
                                 "orientation": "vertical",
                                 "height": "wrap_content",
                                 "width": "match_parent",
-                                "gravity_horizontal": "center",
-                                "gravity_vertical": "center",
                                 "weight": "0",
                                 "type": "LinearLayout",
                                 "Variable": "",
+                                "Value": "",
                                 "Elements": [
                                     {
                                         "height": "wrap_content",
@@ -1316,11 +1206,10 @@
                                 "orientation": "vertical",
                                 "height": "wrap_content",
                                 "width": "wrap_content",
-                                "gravity_horizontal": "center",
-                                "gravity_vertical": "center",
                                 "weight": "0",
                                 "type": "LinearLayout",
                                 "Variable": "",
+                                "Value": "",
                                 "Elements": [
                                     {
                                         "height": "wrap_content",
@@ -1379,11 +1268,10 @@
                                         "orientation": "horizontal",
                                         "height": "wrap_content",
                                         "width": "match_parent",
-                                        "gravity_horizontal": "center",
-                                        "gravity_vertical": "center",
                                         "weight": "0",
                                         "type": "LinearLayout",
                                         "Variable": "",
+                                        "Value": "",
                                         "Elements": [
                                             {
                                                 "height": "wrap_content",
@@ -1443,11 +1331,10 @@
                                 "orientation": "vertical",
                                 "height": "wrap_content",
                                 "width": "match_parent",
-                                "gravity_horizontal": "center",
-                                "gravity_vertical": "center",
                                 "weight": "0",
                                 "type": "LinearLayout",
                                 "Variable": "",
+                                "Value": "",
                                 "Elements": [
                                     {
                                         "height": "wrap_content",
@@ -1527,17 +1414,13 @@
                         "handleKeyUp": false,
                         "Elements": [
                             {
-                                "BackgroundColor": "",
-                                "StrokeWidth": "",
-                                "Padding": "",
                                 "orientation": "vertical",
                                 "height": "wrap_content",
                                 "width": "wrap_content",
-                                "gravity_horizontal": "center",
-                                "gravity_vertical": "center",
                                 "weight": "0",
                                 "type": "LinearLayout",
                                 "Variable": "",
+                                "Value": "",
                                 "Elements": [
                                     {
                                         "height": "wrap_content",
@@ -1577,17 +1460,13 @@
                         "handleKeyUp": false,
                         "Elements": [
                             {
-                                "BackgroundColor": "",
-                                "StrokeWidth": "",
-                                "Padding": "",
                                 "orientation": "vertical",
                                 "height": "wrap_content",
                                 "width": "match_parent",
-                                "gravity_horizontal": "center",
-                                "gravity_vertical": "center",
                                 "weight": "0",
                                 "type": "LinearLayout",
                                 "Variable": "",
+                                "Value": "",
                                 "Elements": [
                                     {
                                         "TextSize": "18",
@@ -1602,17 +1481,13 @@
                                         "Variable": ""
                                     },
                                     {
-                                        "BackgroundColor": "",
-                                        "StrokeWidth": "",
-                                        "Padding": "",
                                         "orientation": "horizontal",
                                         "height": "wrap_content",
                                         "width": "wrap_content",
-                                        "gravity_horizontal": "center",
-                                        "gravity_vertical": "center",
                                         "weight": "0",
                                         "type": "LinearLayout",
                                         "Variable": "",
+                                        "Value": "",
                                         "Elements": [
                                             {
                                                 "TextSize": "24",
@@ -1791,10 +1666,10 @@
             {
                 "type": "Process",
                 "ProcessName": "Групповая обработка",
-                "hidden": false,
-                "DefineOnBackPressed": true,
-                "login_screen": false,
                 "PlanFactHeader": "...",
+                "DefineOnBackPressed": true,
+                "hidden": false,
+                "login_screen": false,
                 "SC": false,
                 "Operations": [
                     {
@@ -1845,7 +1720,7 @@
                             {
                                 "event": "onStart",
                                 "listener": "",
-                                "action": "run",
+                                "action": "runprogress",
                                 "type": "python",
                                 "method": "tiles_on_start",
                                 "postExecute": ""
@@ -1874,30 +1749,24 @@
                         "handleKeyUp": false,
                         "Elements": [
                             {
-                                "BackgroundColor": "",
-                                "StrokeWidth": "",
-                                "Padding": "",
                                 "orientation": "vertical",
                                 "height": "match_parent",
                                 "width": "match_parent",
-                                "gravity_horizontal": "center",
-                                "gravity_vertical": "center",
                                 "weight": "0",
                                 "height_value": "",
                                 "width_value": "",
                                 "type": "LinearLayout",
                                 "Variable": "",
+                                "Value": "",
                                 "Elements": [
                                     {
-                                        "BackgroundColor": "",
-                                        "StrokeWidth": "",
-                                        "Padding": "",
                                         "orientation": "horizontal",
                                         "height": "wrap_content",
                                         "width": "match_parent",
                                         "weight": "0",
                                         "type": "LinearLayout",
                                         "Variable": "",
+                                        "Value": "",
                                         "Elements": [
                                             {
                                                 "type": "SpinnerLayout",
@@ -1963,60 +1832,44 @@
                         "handleKeyUp": false,
                         "Elements": [
                             {
-                                "BackgroundColor": "",
-                                "StrokeWidth": "",
-                                "Padding": "",
                                 "orientation": "vertical",
                                 "height": "wrap_content",
                                 "width": "match_parent",
-                                "gravity_horizontal": "center",
-                                "gravity_vertical": "center",
                                 "weight": "0",
                                 "height_value": "",
                                 "width_value": "",
                                 "type": "LinearLayout",
                                 "Variable": "",
+                                "Value": "",
                                 "Elements": [
                                     {
-                                        "BackgroundColor": "",
-                                        "StrokeWidth": "",
-                                        "Padding": "",
                                         "orientation": "horizontal",
                                         "height": "wrap_content",
                                         "width": "match_parent",
-                                        "gravity_horizontal": "center",
-                                        "gravity_vertical": "center",
                                         "weight": "0",
                                         "height_value": "",
                                         "width_value": "",
                                         "type": "LinearLayout",
                                         "Variable": "",
+                                        "Value": "",
                                         "Elements": [
                                             {
-                                                "BackgroundColor": "",
-                                                "StrokeWidth": "",
-                                                "Padding": "",
                                                 "orientation": "horizontal",
                                                 "height": "wrap_content",
                                                 "width": "match_parent",
-                                                "gravity_horizontal": "center",
-                                                "gravity_vertical": "center",
                                                 "weight": "1",
                                                 "type": "LinearLayout",
                                                 "Variable": "",
+                                                "Value": "",
                                                 "Elements": [
                                                     {
-                                                        "BackgroundColor": "",
-                                                        "StrokeWidth": "",
-                                                        "Padding": "",
                                                         "orientation": "vertical",
                                                         "height": "wrap_content",
                                                         "width": "match_parent",
-                                                        "gravity_horizontal": "center",
-                                                        "gravity_vertical": "center",
                                                         "weight": "0",
                                                         "type": "LinearLayout",
                                                         "Variable": "",
+                                                        "Value": "",
                                                         "Elements": [
                                                             {
                                                                 "TextSize": "24",
@@ -2088,17 +1941,13 @@
                                         "Variable": "doc_goods_cards"
                                     },
                                     {
-                                        "BackgroundColor": "",
-                                        "StrokeWidth": "",
-                                        "Padding": "",
                                         "orientation": "horizontal",
                                         "height": "wrap_content",
                                         "width": "match_parent",
-                                        "gravity_horizontal": "center",
-                                        "gravity_vertical": "center",
                                         "weight": "0",
                                         "type": "LinearLayout",
                                         "Variable": "",
+                                        "Value": "",
                                         "Elements": [
                                             {
                                                 "height": "wrap_content",
@@ -2170,11 +2019,10 @@
                                 "orientation": "vertical",
                                 "height": "wrap_content",
                                 "width": "match_parent",
-                                "gravity_horizontal": "center",
-                                "gravity_vertical": "center",
                                 "weight": "0",
                                 "type": "LinearLayout",
                                 "Variable": "",
+                                "Value": "",
                                 "Elements": [
                                     {
                                         "height": "wrap_content",
@@ -2254,17 +2102,13 @@
                         "handleKeyUp": false,
                         "Elements": [
                             {
-                                "BackgroundColor": "",
-                                "StrokeWidth": "",
-                                "Padding": "",
                                 "orientation": "vertical",
                                 "height": "wrap_content",
                                 "width": "wrap_content",
-                                "gravity_horizontal": "center",
-                                "gravity_vertical": "center",
                                 "weight": "0",
                                 "type": "LinearLayout",
                                 "Variable": "",
+                                "Value": "",
                                 "Elements": [
                                     {
                                         "height": "wrap_content",
@@ -2305,17 +2149,13 @@
                         "handleKeyUp": false,
                         "Elements": [
                             {
-                                "BackgroundColor": "",
-                                "StrokeWidth": "",
-                                "Padding": "",
                                 "orientation": "vertical",
                                 "height": "wrap_content",
                                 "width": "wrap_content",
-                                "gravity_horizontal": "center",
-                                "gravity_vertical": "center",
                                 "weight": "0",
                                 "type": "LinearLayout",
                                 "Variable": "",
+                                "Value": "",
                                 "Elements": [
                                     {
                                         "TextSize": "",
@@ -2363,17 +2203,13 @@
                         "handleKeyUp": false,
                         "Elements": [
                             {
-                                "BackgroundColor": "",
-                                "StrokeWidth": "",
-                                "Padding": "",
                                 "orientation": "vertical",
                                 "height": "match_parent",
                                 "width": "match_parent",
-                                "gravity_horizontal": "center",
-                                "gravity_vertical": "center",
                                 "weight": "0",
                                 "type": "LinearLayout",
                                 "Variable": "",
+                                "Value": "",
                                 "Elements": [
                                     {
                                         "height": "wrap_content",
@@ -2426,30 +2262,22 @@
                         "handleKeyUp": false,
                         "Elements": [
                             {
-                                "BackgroundColor": "",
-                                "StrokeWidth": "",
-                                "Padding": "",
                                 "orientation": "vertical",
                                 "height": "wrap_content",
                                 "width": "match_parent",
-                                "gravity_horizontal": "center",
-                                "gravity_vertical": "center",
                                 "weight": "0",
                                 "type": "LinearLayout",
                                 "Variable": "",
+                                "Value": "",
                                 "Elements": [
                                     {
-                                        "BackgroundColor": "",
-                                        "StrokeWidth": "",
-                                        "Padding": "",
                                         "orientation": "horizontal",
                                         "height": "wrap_content",
                                         "width": "match_parent",
-                                        "gravity_horizontal": "center",
-                                        "gravity_vertical": "center",
                                         "weight": "0",
                                         "type": "LinearLayout",
                                         "Variable": "",
+                                        "Value": "",
                                         "Elements": [
                                             {
                                                 "TextItalic": false,
@@ -2533,30 +2361,22 @@
                         "handleKeyUp": false,
                         "Elements": [
                             {
-                                "BackgroundColor": "",
-                                "StrokeWidth": "",
-                                "Padding": "",
                                 "orientation": "vertical",
                                 "height": "wrap_content",
                                 "width": "match_parent",
-                                "gravity_horizontal": "center",
-                                "gravity_vertical": "center",
                                 "weight": "0",
                                 "type": "LinearLayout",
                                 "Variable": "",
+                                "Value": "",
                                 "Elements": [
                                     {
-                                        "BackgroundColor": "",
-                                        "StrokeWidth": "",
-                                        "Padding": "",
                                         "orientation": "horizontal",
                                         "height": "wrap_content",
                                         "width": "match_parent",
-                                        "gravity_horizontal": "center",
-                                        "gravity_vertical": "center",
                                         "weight": "0",
                                         "type": "LinearLayout",
                                         "Variable": "buttons",
+                                        "Value": "",
                                         "Elements": [
                                             {
                                                 "height": "wrap_content",
@@ -2591,17 +2411,13 @@
                                         ]
                                     },
                                     {
-                                        "BackgroundColor": "",
-                                        "StrokeWidth": "",
-                                        "Padding": "",
                                         "orientation": "vertical",
                                         "height": "wrap_content",
                                         "width": "match_parent",
-                                        "gravity_horizontal": "center",
-                                        "gravity_vertical": "center",
                                         "weight": "0",
                                         "type": "LinearLayout",
                                         "Variable": "name",
+                                        "Value": "",
                                         "Elements": [
                                             {
                                                 "TextSize": "22",
@@ -2628,17 +2444,13 @@
                                         ]
                                     },
                                     {
-                                        "BackgroundColor": "",
-                                        "StrokeWidth": "",
-                                        "Padding": "",
                                         "orientation": "vertical",
                                         "height": "wrap_content",
                                         "width": "match_parent",
-                                        "gravity_horizontal": "center",
-                                        "gravity_vertical": "center",
                                         "weight": "0",
                                         "type": "LinearLayout",
                                         "Variable": "good_info",
+                                        "Value": "",
                                         "Elements": [
                                             {
                                                 "TextBold": true,
@@ -2652,17 +2464,13 @@
                                                 "Variable": "good_type"
                                             },
                                             {
-                                                "BackgroundColor": "",
-                                                "StrokeWidth": "",
-                                                "Padding": "",
                                                 "orientation": "horizontal",
                                                 "height": "wrap_content",
                                                 "width": "match_parent",
-                                                "gravity_horizontal": "center",
-                                                "gravity_vertical": "center",
                                                 "weight": "0",
                                                 "type": "LinearLayout",
                                                 "Variable": "art",
+                                                "Value": "",
                                                 "Elements": [
                                                     {
                                                         "TextBold": true,
@@ -2689,17 +2497,13 @@
                                                 ]
                                             },
                                             {
-                                                "BackgroundColor": "",
-                                                "StrokeWidth": "",
-                                                "Padding": "",
                                                 "orientation": "horizontal",
                                                 "height": "wrap_content",
                                                 "width": "match_parent",
-                                                "gravity_horizontal": "center",
-                                                "gravity_vertical": "center",
                                                 "weight": "0",
                                                 "type": "LinearLayout",
                                                 "Variable": "code",
+                                                "Value": "",
                                                 "Elements": [
                                                     {
                                                         "TextBold": true,
@@ -2725,17 +2529,13 @@
                                                 ]
                                             },
                                             {
-                                                "BackgroundColor": "",
-                                                "StrokeWidth": "",
-                                                "Padding": "",
                                                 "orientation": "horizontal",
                                                 "height": "wrap_content",
                                                 "width": "match_parent",
-                                                "gravity_horizontal": "center",
-                                                "gravity_vertical": "center",
                                                 "weight": "0",
                                                 "type": "LinearLayout",
                                                 "Variable": "descr",
+                                                "Value": "",
                                                 "Elements": [
                                                     {
                                                         "TextBold": true,
@@ -2817,8 +2617,8 @@
             {
                 "type": "Process",
                 "ProcessName": "Параметры",
-                "hidden": false,
                 "DefineOnBackPressed": true,
+                "hidden": false,
                 "Operations": [
                     {
                         "type": "Operation",
@@ -2831,17 +2631,13 @@
                         "handleKeyUp": false,
                         "Elements": [
                             {
-                                "BackgroundColor": "",
-                                "StrokeWidth": "",
-                                "Padding": "",
                                 "orientation": "vertical",
                                 "height": "wrap_content",
                                 "width": "match_parent",
-                                "gravity_horizontal": "center",
-                                "gravity_vertical": "center",
                                 "weight": "0",
                                 "type": "LinearLayout",
                                 "Variable": "",
+                                "Value": "",
                                 "Elements": [
                                     {
                                         "TextSize": "25",
@@ -3019,17 +2815,13 @@
                         "handleKeyUp": false,
                         "Elements": [
                             {
-                                "BackgroundColor": "",
-                                "StrokeWidth": "",
-                                "Padding": "",
                                 "orientation": "vertical",
                                 "height": "wrap_content",
                                 "width": "wrap_content",
-                                "gravity_horizontal": "center",
-                                "gravity_vertical": "center",
                                 "weight": "0",
                                 "type": "LinearLayout",
                                 "Variable": "",
+                                "Value": "",
                                 "Elements": [
                                     {
                                         "height": "match_parent",
@@ -3068,17 +2860,13 @@
                         "handleKeyUp": false,
                         "Elements": [
                             {
-                                "BackgroundColor": "",
-                                "StrokeWidth": "",
-                                "Padding": "",
                                 "orientation": "vertical",
                                 "height": "wrap_content",
                                 "width": "match_parent",
-                                "gravity_horizontal": "center",
-                                "gravity_vertical": "center",
                                 "weight": "0",
                                 "type": "LinearLayout",
                                 "Variable": "",
+                                "Value": "",
                                 "Elements": [
                                     {
                                         "height": "wrap_content",
@@ -3224,17 +3012,13 @@
                         "handleKeyUp": false,
                         "Elements": [
                             {
-                                "BackgroundColor": "",
-                                "StrokeWidth": "",
-                                "Padding": "",
                                 "orientation": "vertical",
                                 "height": "wrap_content",
                                 "width": "wrap_content",
-                                "gravity_horizontal": "center",
-                                "gravity_vertical": "center",
                                 "weight": "0",
                                 "type": "LinearLayout",
                                 "Variable": "",
+                                "Value": "",
                                 "Elements": [
                                     {
                                         "TextSize": "20",
@@ -3362,30 +3146,24 @@
                         "handleKeyUp": false,
                         "Elements": [
                             {
-                                "BackgroundColor": "",
-                                "StrokeWidth": "",
-                                "Padding": "",
                                 "orientation": "vertical",
                                 "height": "match_parent",
                                 "width": "match_parent",
-                                "gravity_horizontal": "center",
-                                "gravity_vertical": "center",
                                 "weight": "0",
                                 "height_value": "",
                                 "width_value": "",
                                 "type": "LinearLayout",
                                 "Variable": "",
+                                "Value": "",
                                 "Elements": [
                                     {
-                                        "BackgroundColor": "",
-                                        "StrokeWidth": "",
-                                        "Padding": "",
                                         "orientation": "horizontal",
                                         "height": "wrap_content",
                                         "width": "match_parent",
                                         "weight": "0",
                                         "type": "LinearLayout",
                                         "Variable": "",
+                                        "Value": "",
                                         "Elements": [
                                             {
                                                 "height": "wrap_content",
@@ -3461,17 +3239,13 @@
                         "handleKeyUp": false,
                         "Elements": [
                             {
-                                "BackgroundColor": "",
-                                "StrokeWidth": "",
-                                "Padding": "",
                                 "orientation": "vertical",
                                 "height": "match_parent",
                                 "width": "match_parent",
-                                "gravity_horizontal": "center",
-                                "gravity_vertical": "center",
                                 "weight": "0",
                                 "type": "LinearLayout",
                                 "Variable": "",
+                                "Value": "",
                                 "Elements": [
                                     {
                                         "height": "wrap_content",
@@ -3535,17 +3309,13 @@
                                         "Variable": ""
                                     },
                                     {
-                                        "BackgroundColor": "",
-                                        "StrokeWidth": "",
-                                        "Padding": "",
                                         "orientation": "horizontal",
                                         "height": "wrap_content",
                                         "width": "match_parent",
-                                        "gravity_horizontal": "center",
-                                        "gravity_vertical": "center",
                                         "weight": "0",
                                         "type": "LinearLayout",
                                         "Variable": "",
+                                        "Value": "",
                                         "Elements": [
                                             {
                                                 "height": "wrap_content",
@@ -3569,7 +3339,10 @@
                                             }
                                         ]
                                     }
-                                ]
+                                ],
+                                "BackgroundColor": "",
+                                "StrokeWidth": "",
+                                "Padding": ""
                             },
                             {
                                 "type": "barcode",
@@ -3608,17 +3381,13 @@
                         "handleKeyUp": false,
                         "Elements": [
                             {
-                                "BackgroundColor": "",
-                                "StrokeWidth": "",
-                                "Padding": "",
                                 "orientation": "vertical",
                                 "height": "wrap_content",
                                 "width": "match_parent",
-                                "gravity_horizontal": "center",
-                                "gravity_vertical": "center",
                                 "weight": "0",
                                 "type": "LinearLayout",
                                 "Variable": "",
+                                "Value": "",
                                 "Elements": [
                                     {
                                         "height": "wrap_content",
@@ -3753,19 +3522,15 @@
                         "handleKeyUp": false,
                         "Elements": [
                             {
-                                "BackgroundColor": "",
-                                "StrokeWidth": "",
-                                "Padding": "",
                                 "orientation": "vertical",
                                 "height": "wrap_content",
                                 "width": "match_parent",
-                                "gravity_horizontal": "center",
-                                "gravity_vertical": "center",
                                 "weight": "0",
                                 "height_value": "",
                                 "width_value": "",
                                 "type": "LinearLayout",
                                 "Variable": "",
+                                "Value": "",
                                 "Elements": [
                                     {
                                         "height": "wrap_content",
@@ -4073,8 +3838,8 @@
         },
         "ConfigurationTags": "Py,off-line",
         "FaceRecognitionURL": "",
-        "ForegroundService": false,
-        "StopForegroundServiceOnExit": false,
+        "ForegroundService": true,
+        "StopForegroundServiceOnExit": true,
         "RunPython": true,
         "LaunchProcess": "",
         "MainMenu": [
@@ -4082,6 +3847,12 @@
                 "MenuId": "01",
                 "MenuItem": "faq",
                 "MenuTitle": "FAQ",
+                "MenuTop": false
+            },
+            {
+                "MenuId": "02",
+                "MenuItem": "update_conf",
+                "MenuTitle": "Обновить конфигурацию",
                 "MenuTop": false
             }
         ],
@@ -4133,11 +3904,11 @@
                 "PyFileData": ""
             },
             {
-                "PyFileKey": "hs_services",
+                "PyFileKey": "ui_barcodes",
                 "PyFileData": ""
             },
             {
-                "PyFileKey": "ui_barcodes",
+                "PyFileKey": "hs_services",
                 "PyFileData": ""
             }
         ],
@@ -4178,6 +3949,43 @@
                 "method": "put_notification",
                 "postExecute": "",
                 "alias": ""
+            },
+            {
+                "event": "onBackgroundCommand",
+                "listener": "menu_2",
+                "action": "run",
+                "type": "set",
+                "method": "UpdateConfigurations",
+                "postExecute": "",
+                "alias": ""
+            }
+        ],
+        "Classes": [
+            {
+                "_id": "operation_order",
+                "sku": "text",
+                "sku_id": "text",
+                "unit": "text",
+                "unit_id": "text",
+                "qty_plan": "number",
+                "qty_fact": "number",
+                "_list_form": "list_form",
+                "_edit_form": "edit_form",
+                "_selection_form": "selection_form"
+            },
+            {
+                "_id": "order",
+                "_title": "Инвентариации",
+                "customer(Получатель)": "*text",
+                "type(Тип операции)": "text",
+                "done(Обработан)": "boolean",
+                "description(Комментарий)": "*text",
+                "operations": [
+                    "operation_order"
+                ],
+                "_list_form": "list_form",
+                "_edit_form": "edit_form",
+                "_selection_form": "selection_form"
             }
         ]
     }

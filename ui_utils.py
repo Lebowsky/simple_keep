@@ -54,11 +54,24 @@ class HashMap:
         self['RunEvent'] = json.dumps(self._get_event(method_name))
 
     def run_event_async(self, method_name):
-        self['RunEvent'] = json.dumps(self._get_event(method_name, True))
+        self['RunEvent'] = json.dumps(self._get_event(method_name, 'runasync'))
 
-    def _get_event(self, method_name, async_action=False):
+    def run_event_progress(self, method_name):
+        self['RunEvent'] = json.dumps(self._get_event(method_name, 'runprogress'))
+
+    def beep(self, tone=''):
+        self.hash_map.put('beep', str(tone))
+
+    def _get_event(self, method_name, action=None):
+        """
+        :param method_name: handlers name
+        :param action: run|runasync|runprogress
+
+        :return: event dict
+        """
+
         evt = [{
-            'action': 'runasync' if async_action else 'run',
+            'action': action if action else 'run',
             'type': 'python',
             'method': method_name,
         }]
@@ -227,7 +240,3 @@ class RsDoc(Rs_doc):
         return find_barcode_in_barcode_table(barcode)
 
 
-def format_doc_date(date_string):
-    new_date_string = date_string[8:10] + "." + date_string[5:7] + "." + date_string[0:4] + " " + \
-                      date_string[11:13] + ":" + date_string[14:16] + ":" + date_string[17:19]
-    return new_date_string
