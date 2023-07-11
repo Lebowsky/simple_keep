@@ -1525,27 +1525,6 @@ def file_list_on_start(hashMap, _files=None, _data=None):
     return hashMap
 
 
-def font_size_settings_listener(hashMap, _files=None, _data=None):
-    listener = hashMap.get('listener')
-    if listener == 'btn_on_save':  # or hashMap.get('event')=='Input'
-
-        rs_settings.put("TitleTextSize", hashMap.get("TitleTextSize"), True)
-        rs_settings.put("CardTitleTextSize", hashMap.get("CardTitleTextSize"), True)
-        rs_settings.put("CardTextSize", hashMap.get("CardTextSize"), True)
-        rs_settings.put("CardDateTextSize", hashMap.get("CardDateTextSize"), True)
-        rs_settings.put("GoodsCardTitleTextSize", hashMap.get("GoodsCardTitleTextSize"), True)
-        rs_settings.put("goodsTextSize", hashMap.get("goodsTextSize"), True)
-        rs_settings.put("SeriesPropertiesTextSize", hashMap.get("SeriesPropertiesTextSize"), True)
-        rs_settings.put("DocTypeCardTextSize", hashMap.get("DocTypeCardTextSize"), True)
-        rs_settings.put("titleDocTypeCardTextSize", hashMap.get("titleDocTypeCardTextSize"), True)
-        hashMap.put('ShowScreen', 'Настройки и обмен')
-        #params.put("signal_num", hashMap.get("signal_num"), True)
-    elif listener == 'btn_on_cancel' or listener == 'ON_BACK_PRESSED':
-        hashMap.put('ShowScreen', 'Настройки и обмен')
-
-    return hashMap
-
-
 def test_barcode_listener(hashMap, _files=None, _data=None):
     if hashMap.get('listener')=='barcode' or hashMap.get("event") == "onResultPositive":
         if hashMap.get("event") == "onResultPositive":

@@ -1292,6 +1292,7 @@ class SettingsScreen(Screen):
         self.db_service = db_services.DocService()
 
     def on_start(self):
+        self.hash_map.remove('toast')
         settings_keys = [
             'use_mark',
             'allow_fact_input',
@@ -1334,7 +1335,6 @@ class SettingsScreen(Screen):
             timer.upload_docs()
         else:
             self.toast('Не заданы настройки соединения')
-            self.hash_map['noRefresh'] = ''
 
     def _load_docs(self):
         if self._check_http_settings():
@@ -1342,7 +1342,6 @@ class SettingsScreen(Screen):
             timer.timer_on_start()
         else:
             self.toast('Не заданы настройки соединения')
-            self.hash_map['noRefresh'] = ''
 
     def _update_rs_settings(self) -> None:
         use_mark = self.hash_map.get('use_mark') or 'false'
@@ -1409,23 +1408,28 @@ class FontSizeSettingsScreen(Screen):
         self.hash_map.put_data(put_data)
 
     def on_input(self):
-        pass
-        # listener = hashMap.get('listener')
-        # if listener == 'btn_on_save':  # or hashMap.get('event')=='Input'
-        #
-        #     rs_settings.put("TitleTextSize", hashMap.get("TitleTextSize"), True)
-        #     rs_settings.put("CardTitleTextSize", hashMap.get("CardTitleTextSize"), True)
-        #     rs_settings.put("CardTextSize", hashMap.get("CardTextSize"), True)
-        #     rs_settings.put("CardDateTextSize", hashMap.get("CardDateTextSize"), True)
-        #     rs_settings.put("GoodsCardTitleTextSize", hashMap.get("GoodsCardTitleTextSize"), True)
-        #     rs_settings.put("goodsTextSize", hashMap.get("goodsTextSize"), True)
-        #     rs_settings.put("SeriesPropertiesTextSize", hashMap.get("SeriesPropertiesTextSize"), True)
-        #     rs_settings.put("DocTypeCardTextSize", hashMap.get("DocTypeCardTextSize"), True)
-        #     rs_settings.put("titleDocTypeCardTextSize", hashMap.get("titleDocTypeCardTextSize"), True)
-        #     hashMap.put('ShowScreen', 'Настройки и обмен')
-        #     # params.put("signal_num", hashMap.get("signal_num"), True)
-        # elif listener == 'btn_on_cancel' or listener == 'ON_BACK_PRESSED':
-        #     hashMap.put('ShowScreen', 'Настройки и обмен')
+        if self.listener == 'btn_on_save':
+            save_data = {
+                'TitleTextSize': self.hash_map['TitleTextSize'],
+                'CardTitleTextSize': self.hash_map['CardTitleTextSize'],
+                'CardTextSize': self.hash_map['CardTextSize'],
+                'CardDateTextSize': self.hash_map['CardDateTextSize'],
+                'GoodsCardTitleTextSize': self.hash_map['GoodsCardTitleTextSize'],
+                'goodsTextSize': self.hash_map['goodsTextSize'],
+                'SeriesPropertiesTextSize': self.hash_map['SeriesPropertiesTextSize'],
+                'DocTypeCardTextSize': self.hash_map['DocTypeCardTextSize'],
+                'titleDocTypeCardTextSize': self.hash_map['titleDocTypeCardTextSize'],
+            }
+
+            for k, v in save_data.items():
+                self.rs_settings.put(k, v, True)
+
+            self.hash_map.show_screen('Настройки и обмен')
+
+        elif self.listener == 'btn_on_cancel' or self.listener == 'ON_BACK_PRESSED':
+            self.hash_map.put('BackScreen', '')
+
+        self.hash_map['noRefresh'] = ''
 
     def on_post_start(self):
         pass

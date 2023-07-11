@@ -151,5 +151,11 @@ def font_sizes_on_start(hash_map: HashMap):
     screen: ui_models.FontSizeSettingsScreen = create_screen(hash_map)
     screen.on_start()
 
+
+@HashMap()
+def font_size_settings_listener(hash_map: HashMap):
+    screen: ui_models.FontSizeSettingsScreen = create_screen(hash_map)
+    screen.on_input()
+
 # ^^^^^^^^^^^^^^^^^ Settings ^^^^^^^^^^^^^^^^^
 
