@@ -1689,9 +1689,6 @@ class MainEvents:
         self.hash_map = hash_map
         self.rs_settings = rs_settings
 
-    def app_before_on_start(self):
-        self.hash_map.put('getJSONConfiguration', '')
-
     def app_on_start(self):
         # TODO Обработчики обновления!
         release = self.rs_settings.get('Release') or ''
@@ -1737,7 +1734,6 @@ class MainEvents:
                 self.rs_settings.put(k, v, True)
 
         self.hash_map.toast(toast)
-
 
     def on_sql_error(self):
         sql_error = self.hash_map['SQLError']

@@ -63,17 +63,6 @@ def create_screen(hash_map: HashMap):
 
 
 @HashMap()
-def app_before_on_start(hash_map: HashMap):
-    """
-    Обработчик при старте приложения запускается перед app_on_start
-    нужнен для определения версии конфигурации в последующем
-    """
-
-    model = ui_models.MainEvents(hash_map, rs_settings)
-    model.app_before_on_start()
-
-
-@HashMap()
 def app_on_start(hash_map: HashMap):
     """ Обработчик при старте приложения """
 

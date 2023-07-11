@@ -3625,15 +3625,6 @@
                 "event": "onLaunch",
                 "listener": "",
                 "action": "run",
-                "type": "python",
-                "method": "app_before_on_start",
-                "postExecute": "",
-                "alias": "on_start"
-            },
-            {
-                "event": "onLaunch",
-                "listener": "",
-                "action": "run",
                 "type": "pythonreload",
                 "method": "app_on_start",
                 "postExecute": "",
