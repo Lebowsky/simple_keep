@@ -4,7 +4,7 @@ import os
 
 import db_services
 import hs_services
-from ui_utils import HashMap, RsDoc
+from ui_utils import HashMap, RsDoc, get_ip_address
 from db_services import DocService, ErrorService
 from hs_services import HsService
 import http_exchange
@@ -276,7 +276,6 @@ class GroupScanTiles(Tiles):
 class DocumentsTiles(GroupScanTiles):
     screen_name = 'Плитки'
     process_name = 'Документы'
-
 
     def _check_connection(self):
         return True
@@ -1284,6 +1283,99 @@ class GoodsSelectScreen(Screen):
 
 # ==================== Settings =============================
 
+class SettingsScreen(Screen):
+    screen_name = 'Настройки и обмен'
+    process_name = 'Параметры'
+
+    def __init__(self, hash_map: HashMap, rs_settings):
+        super().__init__(hash_map, rs_settings)
+        self.db_service = db_services.DocService()
+
+    def on_start(self):
+        settings_keys = [
+            'use_mark',
+            'allow_fact_input',
+            'add_if_not_in_plan',
+            'path',
+            'delete_files',
+            'allow_overscan',
+        ]
+
+        put_data = {key: self.rs_settings.get(key) for key in settings_keys}
+        put_data['ip_adr'] = self._get_ip_address()
+
+        self.hash_map.put_data(put_data)
+
+    def on_input(self):
+        self._update_rs_settings()
+
+        listeners = {
+            'btn_http_settings': lambda: self._show_screen('Настройки http соединения'),
+            'btn_size': lambda: self._show_screen('Настройки Шрифтов'),
+            'btn_sound_settings': lambda: self._show_screen('Настройка звука'),
+            'btn_test_barcode': lambda: self._show_screen('Тест сканера'),
+            'btn_err_log': lambda: self._show_screen('Ошибки'),
+            'btn_upload_docs': self._upload_docs,
+            'btn_timer': self._load_docs,
+            'ON_BACK_PRESSED': lambda: self.hash_map.put('FinishProcess', ''),
+        }
+        if self.listener in listeners:
+            listeners[self.listener]()
+
+    def on_post_start(self):
+        pass
+
+    def show(self, args=None):
+        pass
+
+    def _upload_docs(self):
+        if self._check_http_settings():
+            timer = Timer(self.hash_map, self.rs_settings)
+            timer.upload_docs()
+        else:
+            self.toast('Не заданы настройки соединения')
+
+    def _load_docs(self):
+        if self._check_http_settings():
+            timer = Timer(self.hash_map, self.rs_settings)
+            timer.load_docs()
+        else:
+            self.toast('Не заданы настройки соединения')
+
+    def _update_rs_settings(self) -> None:
+        use_mark = self.hash_map.get('use_mark') or 'false'
+        path = self.hash_map.get('path') or '//storage/emulated/0/Android/data/ru.travelfood.simple_ui/'
+        allow_fact_input = self.hash_map.get('allow_fact_input') or 'false'
+
+        self.rs_settings.put('use_mark', use_mark, True)
+        self.rs_settings.put('path', path, True)
+        self.rs_settings.put('allow_fact_input', allow_fact_input, True)
+
+    def _show_screen(self, screen_name) -> None:
+        self.hash_map.show_screen(screen_name)
+
+    def _get_http_settings(self) -> dict:
+        http_settings = {
+            'url': self.rs_settings.get("URL"),
+            'user': self.rs_settings.get('USER'),
+            'pass': self.rs_settings.get('PASS'),
+            'device_model': self.hash_map['DEVICE_MODEL'],
+            'android_id': self.hash_map['ANDROID_ID'],
+            'user_name': self.rs_settings.get('user_name')}
+        return http_settings
+
+    @staticmethod
+    def _get_ip_address() -> str:
+        res = get_ip_address()
+        if res:
+            return res
+        else:
+            return 'нет сети'
+
+    def _check_http_settings(self) -> bool:
+        http = self._get_http_settings()
+        return all([http.get('url'), http.get('user'), http.get('pass')])
+
 
 class HttpSettingsScreen(Screen):
     screen_name = 'Настройки http соединения'
@@ -1643,7 +1735,7 @@ class Timer:
         return http_settings
 
     def load_docs(self):
-        if all([self.http_settings.get('url'), self.http_settings.get('user'), self.http_settings.get('pass')]):
+        if self._check_http_settings():
             try:
                 docs_data = self.http_service.get_data()
                 if docs_data.get('data'):
@@ -1659,8 +1751,7 @@ class Timer:
                 self.db_service.write_error_on_log(f'Ошибка загрузки документов: {e}')
 
     def upload_docs(self):
-        if all([self.http_settings.get('url'), self.http_settings.get('user'), self.http_settings.get('pass')]):
-
+        if self._check_http_settings():
             try:
                 docs_goods_formatted_list = self.db_service.get_docs_and_goods_for_upload()
                 if docs_goods_formatted_list:
@@ -1676,6 +1767,10 @@ class Timer:
                             self.db_service.update_uploaded_docs_status(docs_list_string)
             except Exception as e:
                 self.db_service.write_error_on_log(f'Ошибка выгрузки документов: {e}')
+
+    def _check_http_settings(self) -> bool:
+        http = self._get_http_settings()
+        return all([http.get('url'), http.get('user'), http.get('pass')])
 
 
 # ^^^^^^^^^^^^^^^^^^^^^ Timer ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -1791,7 +1886,8 @@ class ScreensFactory:
         DocumentsDocDetailScreen,
         ErrorLogScreen,
         DebugSettingsScreen,
-        HttpSettingsScreen
+        HttpSettingsScreen,
+        SettingsScreen
     ]
 
     @staticmethod
