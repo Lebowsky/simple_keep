@@ -167,11 +167,15 @@ class GroupScanTiles(Tiles):
         self.process_name = self.hash_map.get_current_process()
 
     def on_start(self) -> None:
-        if not self._check_connection():
+        if not self.hash_map.containsKey('check_connection') and not self._check_connection():
             tiles = self._get_message_tile("Отсутствует соединение с сервером", text_color="#ff0000")
             self.hash_map.put('tiles', tiles, to_json=True)
             self.hash_map.refresh_screen()
+            self.hash_map['check_connection'] = False
             return
+
+        self.hash_map['check_connection'] = True
+
         data = self.db_service.get_docs_stat()
         if data:
             layout = json.loads(self._get_tile_view().to_json())
