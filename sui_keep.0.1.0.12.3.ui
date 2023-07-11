@@ -62,7 +62,7 @@
                                 "event": "onStart",
                                 "action": "run",
                                 "type": "python",
-                                "method": "tiles_on_start",
+                                "method": "docs_tiles_on_start",
                                 "postExecute": ""
                             },
                             {
@@ -1654,7 +1654,7 @@
                                 "listener": "",
                                 "action": "runprogress",
                                 "type": "python",
-                                "method": "tiles_on_start",
+                                "method": "gs_tiles_on_start",
                                 "postExecute": ""
                             },
                             {
