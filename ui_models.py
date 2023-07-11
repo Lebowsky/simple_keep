@@ -1334,13 +1334,15 @@ class SettingsScreen(Screen):
             timer.upload_docs()
         else:
             self.toast('Не заданы настройки соединения')
+            self.hash_map['noRefresh'] = ''
 
     def _load_docs(self):
         if self._check_http_settings():
             timer = Timer(self.hash_map, self.rs_settings)
-            timer.load_docs()
+            timer.timer_on_start()
         else:
             self.toast('Не заданы настройки соединения')
+            self.hash_map['noRefresh'] = ''
 
     def _update_rs_settings(self) -> None:
         use_mark = self.hash_map.get('use_mark') or 'false'
