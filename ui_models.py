@@ -963,9 +963,8 @@ class GroupScanDocDetailsScreen(DocDetailsScreen):
                 self.service.write_error_on_log(f'Ошибка записи документа:  {e}')
 
     def _get_update_current_doc_data(self):
-        hs_service = HsService(self.get_http_settings())
-        hs_service.get_data()
-        answer = hs_service.http_answer
+        self.hs_service.get_data()
+        answer = self.hs_service.http_answer
 
         if answer.unauthorized:
             self.hash_map.toast('Ошибка авторизации сервера 1С')
