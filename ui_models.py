@@ -975,7 +975,7 @@ class GroupScanDocDetailsScreen(DocDetailsScreen):
         elif answer.error:
             self.service.write_error_on_log(f'Ошибка загрузки документа:  {answer.error_text}')
         else:
-            return answer
+            return answer.data
 
     def post_barcode_scanned(self, http_settings):
         if self.hash_map.get_bool('barcode_scanned'):
