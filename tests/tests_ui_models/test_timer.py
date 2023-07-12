@@ -15,7 +15,7 @@ from data_for_tests.utils_for_tests import hashMap
 class TestMainEvents(unittest.TestCase):
     def setUp(self) -> None:
         self.hash_map = HashMap(hash_map=hashMap())
-        self.rs_settings = noClass('rs_settings_local')
+        self.rs_settings = noClass('rs_settings')
         self.hash_map['DEVICE_MODEL'] = self.rs_settings.get('DEVICE_MODEL')
         self.hash_map['ANDROID_ID'] = self.rs_settings.get('ANDROID_ID')
         self.data_path = './data_for_tests/http_requests'
@@ -29,6 +29,10 @@ class TestMainEvents(unittest.TestCase):
         self.sut.timer_on_start()
 
     def test_load_docs(self):
+        self.rs_settings.put('URL', 'url', True)
+        self.rs_settings.put('USER', 'user', True)
+        self.rs_settings.put('PASS', '1234', True)
+        self.rs_settings.put('notification_id', None, True)
         sut = Timer(self.hash_map, self.rs_settings)
 
         load_data = self.get_load_data()
