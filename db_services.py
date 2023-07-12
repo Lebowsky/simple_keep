@@ -103,6 +103,9 @@ class DocService:
             self._get_query_result(query)
 
     def json_to_sqlite_query(self, data: dict, docs=None):
+        if docs is None:
+            docs = {}
+
         qlist = []
         # Цикл по именам таблиц
         table_list = (
@@ -144,7 +147,7 @@ class DocService:
 
                     # Здесь устанавливаем флаг verified!!!
                     if col == 'verified' and (table_name in ['RS_docs', 'RS_adr_docs']):
-                        row[col] = docs.get(row['id_doc'], False)
+                        row[col] = docs.get(row['id_doc'], 0)
 
                     if row.get(col) is None:
                         row[col] = ''

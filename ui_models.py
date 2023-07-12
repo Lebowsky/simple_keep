@@ -975,7 +975,7 @@ class GroupScanDocDetailsScreen(DocDetailsScreen):
         elif answer.error:
             self.service.write_error_on_log(f'Ошибка загрузки документа:  {answer.error_text}')
         else:
-            return answer
+            return answer.data
 
     def post_barcode_scanned(self, http_settings):
         if self.hash_map.get_bool('barcode_scanned'):
@@ -1292,6 +1292,7 @@ class SettingsScreen(Screen):
         self.db_service = db_services.DocService()
 
     def on_start(self):
+        self.hash_map.remove('toast')
         settings_keys = [
             'use_mark',
             'allow_fact_input',
@@ -1338,7 +1339,7 @@ class SettingsScreen(Screen):
     def _load_docs(self):
         if self._check_http_settings():
             timer = Timer(self.hash_map, self.rs_settings)
-            timer.load_docs()
+            timer.timer_on_start()
         else:
             self.toast('Не заданы настройки соединения')
 
@@ -1375,6 +1376,66 @@ class SettingsScreen(Screen):
     def _check_http_settings(self) -> bool:
         http = self._get_http_settings()
         return all([http.get('url'), http.get('user'), http.get('pass')])
+
+
+class FontSizeSettingsScreen(Screen):
+    screen_name = 'Настройки Шрифтов'
+    process_name = 'Параметры'
+
+    def __init__(self, hash_map: HashMap, rs_settings):
+        super().__init__(hash_map, rs_settings)
+
+    def on_start(self):
+        put_data = {}
+        fields_data = {
+            'TitleTextSize': 'Размер заголовка',
+            'CardTitleTextSize': 'Размер заголовка карточки',
+            "CardDateTextSize": 'Данные карточки',
+            'CardTextSize': 'Размер текста элементов',
+            'GoodsCardTitleTextSize': 'Заголовок товара',
+            'goodsTextSize': 'Товар',
+            'SeriesPropertiesTextSize': 'Серии свойства',
+            'DocTypeCardTextSize': 'Тип документа',
+            'titleDocTypeCardTextSize': 'Название документа в карточке'
+        }
+
+        for field, hint in fields_data.items():
+            put_data[field] = widgets.ModernField(
+                hint=hint,
+                default_text=self.rs_settings.get(field) or ''
+            ).to_json()
+
+        self.hash_map.put_data(put_data)
+
+    def on_input(self):
+        if self.listener == 'btn_on_save':
+            save_data = {
+                'TitleTextSize': self.hash_map['TitleTextSize'],
+                'CardTitleTextSize': self.hash_map['CardTitleTextSize'],
+                'CardTextSize': self.hash_map['CardTextSize'],
+                'CardDateTextSize': self.hash_map['CardDateTextSize'],
+                'GoodsCardTitleTextSize': self.hash_map['GoodsCardTitleTextSize'],
+                'goodsTextSize': self.hash_map['goodsTextSize'],
+                'SeriesPropertiesTextSize': self.hash_map['SeriesPropertiesTextSize'],
+                'DocTypeCardTextSize': self.hash_map['DocTypeCardTextSize'],
+                'titleDocTypeCardTextSize': self.hash_map['titleDocTypeCardTextSize'],
+            }
+
+            for k, v in save_data.items():
+                self.rs_settings.put(k, v, True)
+
+            self.hash_map.show_screen('Настройки и обмен')
+
+        elif self.listener == 'btn_on_cancel' or self.listener == 'ON_BACK_PRESSED':
+            self.hash_map.put('BackScreen', '')
+
+        self.hash_map['noRefresh'] = ''
+
+    def on_post_start(self):
+        pass
+
+    def show(self, args=None):
+        pass
 
 
 class HttpSettingsScreen(Screen):
@@ -1887,7 +1948,8 @@ class ScreensFactory:
         ErrorLogScreen,
         DebugSettingsScreen,
         HttpSettingsScreen,
-        SettingsScreen
+        SettingsScreen,
+        FontSizeSettingsScreen
     ]
 
     @staticmethod
