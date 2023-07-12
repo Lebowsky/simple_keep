@@ -1525,31 +1525,6 @@ def file_list_on_start(hashMap, _files=None, _data=None):
     return hashMap
 
 
-def test_barcode_listener(hashMap, _files=None, _data=None):
-    if hashMap.get('listener')=='barcode' or hashMap.get("event") == "onResultPositive":
-        if hashMap.get("event") == "onResultPositive":
-            barcode = hashMap.get('fld_barcode')
-        else:
-            barcode = hashMap.get('barcode_camera')
-        barc = ui_barcodes.parse_barcode(barcode)
-        keys_list = ['ERROR','GTIN','SERIAL','FullCode', 'BARCODE', 'SCHEME', 'EXPIRY', 'BATCH', 'NHRN', 'CHECK', 'WEIGHT', 'PPN']
-        x=1
-        for i in keys_list:
-            res_value =  barc.get(i,None)
-            if res_value:
-                hashMap.put('fld_'+str(x),str(i)+': '+ res_value)
-                x+=1
-        #Если заполнено менее 5 полей, сотрем остальные прошлые значения
-        while x<=7:
-            hashMap.put('fld_' + str(x), '')
-            x+=1
-
-    elif hashMap.get('listener') == "BACK_BUTTON" or 'ON_BACK_PRESSED':
-        hashMap.put("ShowScreen", "Настройки и обмен")
-
-    return hashMap
-
-
 @HashMap()
 def settings_errors_on_start(hash_map: HashMap):
     screen: ui_models.ErrorLogScreen = create_screen(hash_map)
