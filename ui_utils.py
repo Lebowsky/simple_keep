@@ -245,6 +245,11 @@ class RsDoc(Rs_doc):
         return find_barcode_in_barcode_table(barcode)
 
 
+class BarcodeParser:
+    def parse(self, barcode: str) -> dict:
+        return {'SCHEME': 'EAN13', 'BARCODE': barcode, 'GTIN': barcode, 'SERIAL': ''}
+
+
 def get_ip_address():
     s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
     try:

@@ -4,7 +4,7 @@ import os
 
 import db_services
 import hs_services
-from ui_utils import HashMap, RsDoc, get_ip_address
+from ui_utils import HashMap, RsDoc, BarcodeParser, get_ip_address
 from db_services import DocService, ErrorService
 from hs_services import HsService
 import http_exchange
@@ -963,9 +963,8 @@ class GroupScanDocDetailsScreen(DocDetailsScreen):
                 self.service.write_error_on_log(f'Ошибка записи документа:  {e}')
 
     def _get_update_current_doc_data(self):
-        hs_service = HsService(self.get_http_settings())
-        hs_service.get_data()
-        answer = hs_service.http_answer
+        self.hs_service.get_data()
+        answer = self.hs_service.http_answer
 
         if answer.unauthorized:
             self.hash_map.toast('Ошибка авторизации сервера 1С')
@@ -1436,6 +1435,57 @@ class FontSizeSettingsScreen(Screen):
 
     def show(self, args=None):
         pass
+
+
+class BarcodeTestScreen(Screen):
+    screen_name = 'Тест сканера'
+    process_name = 'Параметры'
+
+    def __init__(self, hash_map: HashMap, rs_settings):
+        super().__init__(hash_map, rs_settings)
+
+    def on_start(self):
+        pass
+
+    def on_input(self):
+        listeners = {
+            'barcode': self._barcode_scanned,
+            'ON_BACK_PRESSED': self._back_screen,
+            'BACK_BUTTON': self._back_screen,
+        }
+
+        if self.listener in listeners:
+            listeners[self.listener]()
+
+    def on_post_start(self):
+        pass
+
+    def show(self, args=None):
+        pass
+
+    def _back_screen(self):
+        self.hash_map.put('BackScreen', '')
+
+    def _barcode_scanned(self):
+        barcode = self.hash_map.get('barcode_camera')
+        if not barcode:
+            return
+
+        barcode_parser = BarcodeParser()
+        result = barcode_parser.parse(barcode)
+        fields_count = 7
+
+        keys_list = ['ERROR', 'GTIN', 'SERIAL', 'FullCode', 'BARCODE', 'SCHEME', 'EXPIRY', 'BATCH', 'NHRN', 'CHECK',
+                     'WEIGHT', 'PPN']
+
+        values = [f'{key}: {result[key]}' for key in keys_list if result.get(key) is not None]
+
+        put_data = {
+            f'fld_{i+1}': values[i] if len(values) > i else ''
+            for i in range(0, fields_count)
+        }
+
+        self.hash_map.put_data(put_data)
 
 
 class HttpSettingsScreen(Screen):
@@ -1949,7 +1999,8 @@ class ScreensFactory:
         DebugSettingsScreen,
         HttpSettingsScreen,
         SettingsScreen,
-        FontSizeSettingsScreen
+        FontSizeSettingsScreen,
+        BarcodeTestScreen
     ]
 
     @staticmethod
