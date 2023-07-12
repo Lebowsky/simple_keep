@@ -42,6 +42,8 @@ class TestFontSizeSettingsScreen(unittest.TestCase):
         self.sut = FontSizeSettingsScreen(self.hash_map, self.rs_settings)
 
     def test_on_start_must_add_field_to_hash_map(self):
+        self.rs_settings.put('TitleTextSize', '18', True)
+
         self.sut.on_start()
 
         self.assertTrue(self.hash_map.containsKey('TitleTextSize'))
@@ -52,3 +54,23 @@ class TestFontSizeSettingsScreen(unittest.TestCase):
                 "default_text": "18",
             }
         )
+
+    def test_on_input_must_update_rs_settings_and_add_no_refresh_to_hash_map(self):
+        self.hash_map['TitleTextSize'] = 18
+
+        self.sut.on_input()
+
+        self.assertEqual(self.rs_settings.get('TitleTextSize'), '18')
+        self.assertTrue(self.hash_map.containsKey('noRefresh'))
+
+    def test_on_input_must_call_BackScreen_where_press_cancel_button(self):
+        self.sut.listener = 'btn_on_cancel'
+        self.sut.on_input()
+        self.assertTrue(self.hash_map.containsKey('BackScreen'))
+
+    def test_on_input_must_call_BackScreen_where_press_back_button(self):
+        self.sut.listener = 'ON_BACK_PRESSED'
+        self.sut.on_input()
+        self.assertTrue(self.hash_map.containsKey('BackScreen'))
+
+

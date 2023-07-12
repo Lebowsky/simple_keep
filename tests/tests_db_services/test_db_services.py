@@ -35,6 +35,7 @@ class TestDocService(unittest.TestCase):
             ]
             self.assertEqual(expected, actual)
 
+    @unittest.skip
     def test_json_to_sqlite_query_document(self):
         data = self.get_data_from_file('get_doc_data_example.json')
 

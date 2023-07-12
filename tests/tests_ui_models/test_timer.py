@@ -22,7 +22,8 @@ class TestMainEvents(unittest.TestCase):
         self.sut = Timer(self.hash_map, self.rs_settings)
 
     def test_setUp(self):
-        print(self.sut.http_settings)
+        pass
+        # print(self.sut.http_settings)
 
     def test_timer_on_start(self):
         self.sut.timer_on_start()

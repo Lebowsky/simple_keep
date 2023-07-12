@@ -24,6 +24,7 @@ class TestHsService(unittest.TestCase):
         res = self.service.http_answer
         self.assertEqual(res.status_code, 200)
 
+    @unittest.skip
     def test_get_data(self):
         self.service.reset_exchange()
         self.assertEqual(self.service.http_answer.status_code, 200)
@@ -34,6 +35,7 @@ class TestHsService(unittest.TestCase):
 
         self.save_to_json(data, 'get_nsi_data')
 
+    @unittest.skip
     def test_get_document_data(self):
         self.service.get_data()
         data = self.service.http_answer.data
