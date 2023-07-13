@@ -1,5 +1,5 @@
 import json
-
+# from ru.travelfood.simple_ui import SimpleSQLProvider as sqlClass
 from ui_global import get_query_result
 
 
@@ -452,6 +452,16 @@ class DocService:
     def set_doc_status_to_upload(doc_id):
         qtext = f"UPDATE RS_docs SET sent = 0, verified = 0  WHERE id_doc = '{doc_id}'"
         get_query_result(qtext)
+
+    def update_doc_str(self, qtty, id_str, price=0):
+        query = f"""
+        UPDATE {self.docs_table_name}
+        SET qtty=?, price=?
+        Where id=? """
+        res = get_query_result(query, (qtty, price, id_str))
+        return res
+
+
 class AdrDocService(DocService):
     def __init__(self):
         self.docs_table_name = 'RS_Adr_docs'
@@ -528,4 +538,170 @@ class ErrorService:
     def clear():
         return get_query_result("DELETE FROM Error_log")
 
+
+class SqlQueryProvider:
+    def __init__(self, table_name, sql_class=None):
+        self.table_name = table_name
+        self.sql = sql_class
+        self.sql_text = ''
+        self.sql_params = None
+        self.debug = False
+
+    def create(self, data):
+        if not data:
+            return
+
+        query_data = self._convert_query_data(data)
+
+        return self._exec_create(
+            columns=query_data['columns'],
+            params=query_data['params']
+        )
+
+    def replace(self, data):
+        if not data:
+            return
+
+        query_data = self._convert_query_data(data)
+
+        return self._exec_replace(
+            columns=query_data['columns'],
+            params=query_data['params']
+        )
+
+    def update(self, data, _filter=None):
+        if not data:
+            return
+
+        where = None
+        filter_data = []
+        if _filter:
+            where = list(_filter)
+            filter_data = list(_filter.values())
+
+        query_data = self._convert_query_data(data, filter_data=filter_data)
+
+        return self._exec_update(
+            columns=query_data['columns'],
+            params=query_data['params'],
+            where=where
+        )
+
+    def delete(self, _filter=None):
+        where = None
+        filter_data = []
+        if _filter:
+            where = list(_filter)
+            filter_data = list(_filter.values())
+
+        query_data = self._convert_query_data({}, filter_data=filter_data)
+
+        return self._exec_delete(
+            params=query_data['params'],
+            where=where
+        )
+
+    def select(self, _filter=None):
+        where = None
+        params = ''
+        if _filter:
+            where = list(_filter)
+            params = [str(v) for v in _filter.values()]
+
+        return self._exec_select(
+            params=params,
+            where=where,
+        )
+
+    def _exec_create(self, columns, params):
+        str_values = ','.join('?' * len(columns))
+
+        q = f'INSERT INTO {self.table_name} VALUES ({str_values})'
+
+        params = json.dumps(params, ensure_ascii=False)
+        return self._exec_many(q, params)
+
+    def _exec_replace(self, columns, params):
+        str_columns = ', '.join(columns)
+        str_values = ','.join('?' * len(columns))
+
+        q = f'REPLACE INTO {self.table_name} ({str_columns}) VALUES ({str_values})'
+
+        params = json.dumps(params, ensure_ascii=False)
+        return self._exec_many(q, params)
+
+    def _exec_update(self, columns, params, where=None):
+        if where:
+            str_where = ' and '.join([f'{key}=?' for key in where])
+        else:
+            str_where = 'true'
+
+        str_values = ', '.join([f'{name}=?' for name in columns])
+
+        q = f'UPDATE RS_docs_table SET {str_values} WHERE {str_where}'
+
+        params = json.dumps(params, ensure_ascii=False)
+        return self._exec_many(q, params)
+
+    def _exec_delete(self, params, where=None):
+        if where:
+            str_where = ' and '.join([f'{key}=?' for key in where])
+        else:
+            str_where = 'true'
+
+        q = f'DELETE FROM {self.table_name} WHERE {str_where}'
+
+        params = json.dumps(params, ensure_ascii=False)
+        return self._exec_many(q, params)
+
+    def _exec_select(self, params, where=None):
+        if where:
+            str_where = ' and '.join([f'{key}=?' for key in where])
+        else:
+            str_where = 'true'
+
+        q = f'SELECT * FROM {self.table_name} WHERE {str_where}'
+
+        params = ', '.join(params)
+        return self._query(q, params)
+
+    def _exec_many(self, q, params):
+        self.sql_text = q
+        self.sql_params = params
+
+        if not self.debug:
+            return self.sql.SQLExecMany(q, params)
+
+    def _exec(self, q, params):
+        self.sql_text = q
+        self.sql_params = params
+
+        if not self.debug:
+            return self.sql.SQLExec(q, params=params)
+
+    def _query(self, q, params: str):
+        self.sql_text = q
+        self.sql_params = params
+
+        if not self.debug:
+            return self.sql.SQLQuery(q, params)
+
+    @staticmethod
+    def _convert_query_data(data, filter_data=None):
+        columns = []
+        params = []
+        if not filter_data:
+            filter_data = []
+
+        if isinstance(data, list):
+            columns = list(data[0])
+            for row in data:
+                params.append([v for v in row.values()] + filter_data)
+        elif isinstance(data, dict):
+            columns = list(data)
+            params = [[v for v in data.values()] + filter_data]
+        else:
+            ValueError(f'data must be list or dict, not {type(data)}')
+
+        return {'columns': columns, 'params': params}
 
