@@ -131,6 +131,54 @@ def doc_details_listener(hash_map: HashMap):
 
 # ^^^^^^^^^^^^^^^^^ Documents ^^^^^^^^^^^^^^^^^
 
+# =============== Goods =================
+
+@HashMap()
+def goods_on_start(hash_map):
+    screen: ui_models.GoodsListScreen = create_screen(hash_map)
+    screen.on_start()
+
+@HashMap()
+def goods_on_input(hash_map: HashMap):
+    screen = ui_models.GoodsListScreen(hash_map, rs_settings)
+    # screen: ui_models.GoodsListScreen = create_screen(hash_map)
+    screen.on_input()
+    # hash_map.toast(f'{hash_map.get_current_screen()} {hash_map.get_current_process()}')
+
+
+
+@HashMap()
+def select_type_goods_on_start(hash_map):
+    screen = ui_models.SelectGoodsType(hash_map, rs_settings)
+    screen.on_start()
+
+
+@HashMap()
+def select_type_goods_on_input(hash_map):
+    screen = ui_models.SelectGoodsType(hash_map, rs_settings)
+    screen.on_input()
+
+
+@HashMap()
+def good_card_on_start(hash_map):
+    screen: ui_models.ItemCard = create_screen(hash_map)
+    screen.on_start()
+
+
+@HashMap()
+def good_card_post_start(hash_map):
+    screen: ui_models.ItemCard = create_screen(hash_map)
+    screen.on_post_start()
+
+
+@HashMap()
+def good_card_on_input(hash_map):
+    screen: ui_models.ItemCard = create_screen(hash_map)
+    screen.on_input()
+
+
+# ^^^^^^^^^^^^^^^^^ Goods ^^^^^^^^^^^^^^^^^
+
 
 # =============== Settings =================
 

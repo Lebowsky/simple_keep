@@ -5,7 +5,7 @@ import os
 import db_services
 import hs_services
 from ui_utils import HashMap, RsDoc, get_ip_address
-from db_services import DocService, ErrorService
+from db_services import DocService, ErrorService, GoodsService
 from hs_services import HsService
 import http_exchange
 from http_exchange import post_changes_to_server
@@ -1281,6 +1281,293 @@ class GoodsSelectScreen(Screen):
 # ^^^^^^^^^^^^^^^^^^^^^ Goods select ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 
+# ==================== Goods(Process) =============================
+class GoodsListScreen(Screen):
+    screen_name = 'Товары список'
+    process_name = 'Товары'
+
+    def __init__(self, hash_map: HashMap,  rs_settings):
+        super().__init__(hash_map, rs_settings)
+        self.service = GoodsService()
+
+    def on_start(self) -> None:
+        cards_data = self._get_goods_list_data(self.hash_map.get('selected_goods_type'))
+        goods_cards = self._get_goods_cards_view(cards_data)
+        self.hash_map['goods_cards'] = goods_cards.to_json()
+        self.hash_map['return_selected_data'] = ""
+
+    def on_input(self):
+        listener = self.listener
+        if listener == "CardsClick":
+            self.hash_map.put('selected_good_id', self.hash_map.get("selected_card_key"))
+            self.hash_map.put('barcode', '')
+            self.hash_map.show_screen("Карточка товара")
+        elif listener == "select_goods_type":
+            self.hash_map.show_screen("Выбор категории товаров")
+        elif listener == "ON_BACK_PRESSED":
+            self.hash_map.put("FinishProcess", "")
+        elif listener == 'barcode':
+            self._identify_barcode_goods()
+
+    def on_post_start(self):
+        pass
+
+    def show(self, args=None):
+        self._validate_screen_values()
+        self.hash_map.show_screen(self.screen_name, args)
+
+    def _get_goods_list_data(self, selected_good_type=None) -> list:
+
+        results = self.service.get_goods_list_data(selected_good_type)
+        cards_data = []
+        for record in results:
+            single_card_data = {
+                'key': record['id'],
+                'code': record['code'],
+                'name': record['name'],
+                'art': record['art'],
+                'unit': record['unit'],
+                'type_good': record['type_good'],
+                'description': record['description']
+            }
+            cards_data.append(single_card_data)
+
+        return cards_data
+
+    def _get_goods_cards_view(self, cards_data):
+        card_title_text_size = self.rs_settings.get('CardTitleTextSize')
+        card_text_size = self.rs_settings.get('CardTextSize')
+
+        goods_cards = widgets.CustomCards(
+            widgets.LinearLayout(
+                widgets.TextView(
+                    Value='@name',
+                    width='match_parent',
+                    gravity_horizontal='left',
+                    TextSize=card_title_text_size,
+                    TextColor='#7A005C'
+                ),
+                widgets.TextView(
+                    Value='@code',
+                    TextSize=card_text_size,
+                ),
+                widgets.TextView(
+                    Value='@art',
+                    TextSize=card_text_size,
+                ),
+                widgets.TextView(
+                    Value='@unit',
+                    TextSize=card_text_size,
+                ),
+                widgets.TextView(
+                    Value='@type_good',
+                    TextSize=card_text_size,
+                ),
+
+                orientation='vertical',
+                width='match_parent',
+            ),
+            options=widgets.Options().options,
+            cardsdata=cards_data
+        )
+
+        return goods_cards
+
+    def _identify_barcode_goods(self):
+        if self.hash_map.get('barcode'):
+            barcode = self.hash_map.get('barcode')
+            item_values = self.service.get_values_from_barcode("id_good,id_property", "barcode", barcode)
+            if item_values[0][1]:
+                self.hash_map.put("property_id", item_values[0][1])
+            if item_values[0][0]:
+                self.hash_map.put("selected_good_id", item_values[0][0])
+                self.hash_map.show_screen('Карточка товара')
+            if not any(item_values):
+                self.toast('Товар не распознан по штрихкоду')
+
+
+class SelectGoodsType(Screen):
+    screen_name = 'Выбор категории товаров'
+    process_name = 'Товары'
+
+    def __init__(self, hash_map, rs_settings):
+        super().__init__(hash_map, rs_settings)
+        self.service = GoodsService()
+
+    def on_start(self):
+        goods_types_data = self._get_goods_types_data()
+        goods_types_cards = self._get_goods_types_cards_view(goods_types_data)
+        self.hash_map['goods_types_cards'] = goods_types_cards.to_json()
+        self.hash_map['return_selected_data'] = ""
+
+    def on_input(self):
+        listener = self.listener
+        if listener == "CardsClick":
+            card_data = self.hash_map.get("selected_card_data", from_json=True)
+            type_id = card_data['key']
+            type_name = card_data['name']
+            self.hash_map.put('select_goods_type', type_name)
+            self.hash_map.put('selected_goods_type', type_id)
+            self.hash_map.put("ShowScreen", "Товары список")
+        elif listener == "ON_BACK_PRESSED":
+            self.hash_map.put('select_goods_type', "")
+            self.hash_map.put('selected_goods_type', "")
+            self.hash_map.put("BackScreen", "")
+
+    def on_post_start(self):
+        pass
+
+    def show(self, args=None):
+        pass
+
+    def _get_goods_types_data(self):
+        goods_types_data_result = self.service.get_all_goods_types_data()
+        goods_types_data = []
+        for record in goods_types_data_result:
+            single_card_data = {
+                'key': record['id'],
+                'name': record['name'],
+            }
+            goods_types_data.append(single_card_data)
+        return goods_types_data
+
+    def _get_goods_types_cards_view(self, goods_types_data):
+        card_title_text_size = self.rs_settings.get('CardTitleTextSize')
+
+        type_cards = widgets.CustomCards(
+            widgets.LinearLayout(
+                widgets.TextView(
+                    Value='@name',
+                    width='match_parent',
+                    gravity_horizontal='left',
+                    TextSize=card_title_text_size,
+                    TextColor='#000000'
+                ),
+
+                orientation='vertical',
+                width='match_parent',
+            ),
+            options=widgets.Options().options,
+            cardsdata=goods_types_data
+        )
+
+        return type_cards
+
+
+class ItemCard(Screen):
+    screen_name = 'Карточка товара'
+    process_name = 'Товары'
+
+    def __init__(self, hash_map, rs_settings):
+        super().__init__(hash_map, rs_settings)
+        self.service = GoodsService()
+
+    def on_start(self):
+        self.hash_map.put("Show_buttons", "-1")  # Пока спрятали переход к процессам "остатки" и "цены"
+        card_data = self.hash_map.get("selected_card_data", from_json=True)
+        if card_data:
+            self.hash_map.put("selected_good_id", card_data['key'])
+            self.hash_map.put("good_name", card_data['name'])
+            self.hash_map.put("good_art", card_data['art'])
+            self.hash_map.put("good_code", card_data['code'])
+            self.hash_map.put("good_descr", card_data['description'] if card_data['description'] else "—")
+            self.hash_map.put("good_type", card_data['type_good'])
+        # self.hash_map.run_event_async(self.on_post_start())
+
+    def on_input(self):
+        listener = self.listener
+        if listener == "ON_BACK_PRESSED":
+            self.hash_map.put("BackScreen", "")
+
+    def on_post_start(self):
+        selected_good_id = self.hash_map.get("selected_good_id")
+        barcode = self.hash_map.get('barcode')
+        if barcode:
+            goods_barcode = self.service.get_values_from_barcode("barcode", barcode)
+        elif selected_good_id:  # Выбор товара через карточку
+            goods_barcode = self.service.get_values_from_barcode("id_good", selected_good_id)
+
+        if goods_barcode:
+            variants_cards_data = self._get_variants_cards_data(goods_barcode)
+            variants_cards = self._get_variants_cards_view(variants_cards_data)
+            self.hash_map['barcode_cards'] = variants_cards.to_json()
+            self.hash_map.put("load_info", "")
+        else:
+            self.hash_map.put("load_info", "Данные о характеристиках отсутствуют")
+
+    def show(self, args=None):
+        pass
+
+    @staticmethod
+    def _get_variants_cards_data(goods_barcode):
+        variants_cards_data = []
+        i = 0
+        for element in goods_barcode:
+            c = {"key": str(i), "barcode": element['barcode'], "properties": element['property'],
+                 "unit": element['unit'], "series": element['series']}
+            variants_cards_data.append(c)
+            i += 1
+        return variants_cards_data
+
+    def _get_variants_cards_view(self, cards_data):
+        card_title_text_size = self.rs_settings.get('CardTitleTextSize')
+        card_text_size = self.rs_settings.get('CardTextSize')
+
+        variants_cards = widgets.CustomCards(
+            widgets.LinearLayout(
+                widgets.LinearLayout(
+                    widgets.TextView(
+                        Value='@properties',
+                        width='match_parent',
+                        gravity_horizontal='center',
+                        TextSize=card_title_text_size,
+                        TextColor='#000000'
+                    ),
+                    orientation='horizontal',
+                    width='match_parent',
+                ),
+                widgets.LinearLayout(
+                    widgets.TextView(
+                        Value='@unit',
+                        width='match_parent',
+                        gravity_horizontal='left',
+                        TextSize=card_text_size,
+                        TextColor='#000000',
+                        weight=1
+                    ),
+                    widgets.TextView(
+                        Value='@barcode',
+                        width='match_parent',
+                        gravity_horizontal='left',
+                        TextSize=card_text_size,
+                        TextColor='#000000',
+                        weight=1
+                    ),
+                    orientation='horizontal',
+                    width='match_parent',
+                ),
+                widgets.LinearLayout(
+                    widgets.TextView(
+                        Value='@series',
+                        width='match_parent',
+                        gravity_horizontal='center',
+                        TextSize=card_text_size,
+                        TextColor='#000000'
+                    ),
+                    orientation='horizontal',
+                    width='match_parent',
+                ),
+                orientation='vertical',
+                width='match_parent',
+            ),
+            options=widgets.Options().options,
+            cardsdata=cards_data
+        )
+        return variants_cards
+
+# ^^^^^^^^^^^^^^^^^^^^^ Goods(Process) ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+
 # ==================== Settings =============================
 
 class SettingsScreen(Screen):
@@ -1949,6 +2236,9 @@ class ScreensFactory:
         DebugSettingsScreen,
         HttpSettingsScreen,
         SettingsScreen,
+        GoodsListScreen,
+        SelectGoodsType,
+        ItemCard,
         FontSizeSettingsScreen
     ]
 

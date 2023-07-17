@@ -452,6 +452,8 @@ class DocService:
     def set_doc_status_to_upload(doc_id):
         qtext = f"UPDATE RS_docs SET sent = 0, verified = 0  WHERE id_doc = '{doc_id}'"
         get_query_result(qtext)
+
+
 class AdrDocService(DocService):
     def __init__(self):
         self.docs_table_name = 'RS_Adr_docs'
@@ -507,6 +509,80 @@ class AdrDocService(DocService):
         query_text = query_text + ' ORDER BY RS_cells.name, RS_adr_docs_table.last_updated DESC'
         res = self._get_query_result(query_text, (id_doc,), return_dict=True)
         return res
+
+
+class GoodsService:
+    def __init__(self, item_id=''):
+        self.item_id = item_id
+
+    def get_type_name_by_id(self, id):
+        query_text = f"SELECT name FROM RS_types_goods WHERE id ='{id}'"
+        return self._get_query_result(query_text, return_dict=True)
+
+    def get_goods_list_data(self, goods_type='') -> list:
+        query_text = f"""
+            SELECT
+            RS_goods.id,
+            ifnull(RS_goods.code, '—') as code,
+            RS_goods.name,
+            RS_goods.art,
+            ifnull(RS_units.name,'-') as unit,
+            ifnull(RS_types_goods.name, '—') as type_good,
+            ifnull(RS_goods.description,'-') as description
+            
+            FROM RS_goods
+            LEFT JOIN RS_types_goods
+            ON RS_types_goods.id = RS_goods.type_good
+            LEFT JOIN RS_units
+            ON RS_units.id = RS_goods.unit
+            """
+        where = '' if not goods_type else 'WHERE RS_goods.type_good=?'
+
+        query_text = f'''
+                    {query_text}
+                    {where}
+                    ORDER BY RS_goods.id
+                '''
+
+        args = (goods_type,) if goods_type else None
+
+        result = self._get_query_result(query_text, args, return_dict=True)
+        return result
+
+    def get_all_goods_types_data(self):
+        query_text_all_types = 'SELECT id,name FROM RS_types_goods'
+        return self._get_query_result(query_text_all_types, return_dict=True)
+
+    def get_values_from_barcode(self, identify_field: str, identify_value: str) -> list:
+        query_text = f"""
+                    SELECT
+                    RS_barcodes.barcode,
+                    RS_barcodes.id_good,
+                    RS_properties.name as property,
+                    ifnull(RS_series.name, '') as series,
+                    ifnull(RS_units.name, '') as unit
+                    
+
+                    FROM RS_barcodes
+                    LEFT JOIN RS_properties
+                    ON RS_properties.id = RS_barcodes.id_property
+                    LEFT JOIN RS_units
+                    ON RS_units.id = RS_barcodes.id_unit
+                    LEFT JOIN RS_series
+                    ON RS_series.id = RS_barcodes.id_series
+                    
+                    WHERE {identify_field} = '{identify_value}'
+                    """
+
+        return self._get_query_result(query_text, return_dict=True)
+
+    def get_name_by_field(self, table_name, field, field_value):
+        query_text = f"SELECT name FROM {table_name} WHERE {field} = '{field_value}'"
+        return self._get_query_result(query_text, return_dict=True)[0]['name']
+
+    @staticmethod
+    def _get_query_result(query_text, args=None, return_dict=False):
+        return get_query_result(query_text, args=args, return_dict=return_dict)
 
 
 class DbCreator:
