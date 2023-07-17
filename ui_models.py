@@ -2094,7 +2094,6 @@ class ItemCard(Screen):
             self.hash_map.put("good_code", card_data['code'])
             self.hash_map.put("good_descr", card_data['description'] if card_data['description'] else "—")
             self.hash_map.put("good_type", card_data['type_good'])
-        # self.hash_map.run_event_async(self.on_post_start())
 
     def on_input(self):
         listener = self.listener
@@ -2125,7 +2124,8 @@ class ItemCard(Screen):
         variants_cards_data = []
         i = 0
         for element in goods_barcode:
-            c = {"key": str(i), "barcode": element['barcode'], "properties": element['property'],
+            c = {"key": str(i), "barcode": element['barcode'],
+                 "properties": element['property'] if element['property'] else "",
                  "unit": element['unit'], "series": element['series']}
             variants_cards_data.append(c)
             i += 1
