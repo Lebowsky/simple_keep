@@ -1,5 +1,5 @@
 import json
-# from ru.travelfood.simple_ui import SimpleSQLProvider as sqlClass
+from ru.travelfood.simple_ui import SimpleSQLProvider as sqlClass
 from ui_global import get_query_result
 
 
@@ -9,6 +9,10 @@ class DocService:
         self.docs_table_name = 'RS_docs'
         self.details_table_name = 'RS_docs_table'
         self.isAdr = False
+        self.sql_text = ''
+        self.sql_params = None
+        self.debug = False
+        self.provider = SqlQueryProvider(self.docs_table_name, sql_class=sqlClass())
 
     def get_last_edited_goods(self, to_json=False):
         query_docs = f'SELECT * FROM {self.docs_table_name} WHERE id_doc = ? and verified = 1'
@@ -453,13 +457,22 @@ class DocService:
         qtext = f"UPDATE RS_docs SET sent = 0, verified = 0  WHERE id_doc = '{doc_id}'"
         get_query_result(qtext)
 
-    def update_doc_str(self, qtty, id_str, price=0):
-        query = f"""
-        UPDATE {self.docs_table_name}
-        SET qtty=?, price=?
-        Where id=? """
-        res = get_query_result(query, (qtty, price, id_str))
-        return res
+    def update_doc_table_row(self, row_id, data):
+        self.provider.table_name = self.details_table_name
+        self.provider.update(data=data, _filter={'id': row_id})
+
+    def _sql_exec(self, q, params, table_name=''):
+        if table_name:
+            self.provider.table_name = table_name
+        if isinstance(params, str):
+            self.provider.sql_exec(q, params)
+        else:
+            self.provider.sql_exec_many(q, params)
+
+    def _sql_query(self, q, params, table_name=''):
+        if table_name:
+            self.provider.table_name = table_name
+        return self.provider.sql_query(q, params)
 
 
 class AdrDocService(DocService):
@@ -693,7 +706,7 @@ class SqlQueryProvider:
         q = f'INSERT INTO {self.table_name} VALUES ({str_values})'
 
         params = json.dumps(params, ensure_ascii=False)
-        return self._exec_many(q, params)
+        return self.sql_exec_many(q, params)
 
     def _exec_replace(self, columns, params):
         str_columns = ', '.join(columns)
@@ -702,7 +715,7 @@ class SqlQueryProvider:
         q = f'REPLACE INTO {self.table_name} ({str_columns}) VALUES ({str_values})'
 
         params = json.dumps(params, ensure_ascii=False)
-        return self._exec_many(q, params)
+        return self.sql_exec_many(q, params)
 
     def _exec_update(self, columns, params, where=None):
         if where:
@@ -715,7 +728,7 @@ class SqlQueryProvider:
         q = f'UPDATE RS_docs_table SET {str_values} WHERE {str_where}'
 
         params = json.dumps(params, ensure_ascii=False)
-        return self._exec_many(q, params)
+        return self.sql_exec_many(q, params)
 
     def _exec_delete(self, params, where=None):
         if where:
@@ -726,7 +739,7 @@ class SqlQueryProvider:
         q = f'DELETE FROM {self.table_name} WHERE {str_where}'
 
         params = json.dumps(params, ensure_ascii=False)
-        return self._exec_many(q, params)
+        return self.sql_exec_many(q, params)
 
     def _exec_select(self, params, where=None):
         if where:
@@ -737,23 +750,23 @@ class SqlQueryProvider:
         q = f'SELECT * FROM {self.table_name} WHERE {str_where}'
 
         params = ', '.join(params)
-        return self._query(q, params)
+        return self.sql_query(q, params)
 
-    def _exec_many(self, q, params):
+    def sql_exec_many(self, q, params):
         self.sql_text = q
         self.sql_params = params
 
         if not self.debug:
             return self.sql.SQLExecMany(q, params)
 
-    def _exec(self, q, params):
+    def sql_exec(self, q, params):
         self.sql_text = q
         self.sql_params = params
 
         if not self.debug:
             return self.sql.SQLExec(q, params=params)
 
-    def _query(self, q, params: str):
+    def sql_query(self, q, params: str):
         self.sql_text = q
         self.sql_params = params
 
