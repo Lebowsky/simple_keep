@@ -510,6 +510,8 @@ class AdrDocService(DocService):
         query_text = query_text + ' ORDER BY RS_cells.name, RS_adr_docs_table.last_updated DESC'
         self.table_type = 'out'  #****** ОТЛАДОЧНОЕ
         params_dict = {'id_doc':id_doc, 'NullValue':None, 'EmptyString':'', 'table_type':self.table_type}
+        if curCell:
+            params_dict['current_cell'] = curCell
         res = self._get_query_result(query_text, params_dict, return_dict=True)
         return res
 

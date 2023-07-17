@@ -630,7 +630,11 @@ class AdrDocsListScreen(DocsListScreen):
             self.confirm_delete_doc_listener()
 
         elif self.listener == "CardsClick":
-            AdrDocDetailsScreen(self.hash_map, self.rs_settings).show({'id_doc': self.hash_map['selected_card_key']})
+            screen = AdrDocDetailsScreen(self.hash_map, self.rs_settings)
+            screen.show(args=self._get_selected_card_put_data())
+
+            # adr_list_screen.screen_values = self._get_selected_card_put_data(self) # {'doc_n': '', 'doc_date': '', 'warehouse': ''}
+            # adr_list_screen.show({'id_doc': self.hash_map['selected_card_key']})
 
         elif self.listener == "doc_adr_type_click":
             self.hash_map['doc_type_click'] = self.hash_map['doc_adr_type_click']
@@ -770,6 +774,13 @@ class AdrDocsListScreen(DocsListScreen):
         else:
             self.hash_map.toast('Ошибка удаления документа')
 
+
+    def _get_selected_card(self):
+        current_str = self.hash_map.get("selected_card_position")
+        jlist = self.hash_map.get_json("docAdrCards")
+        selected_card = jlist['customcards']['cardsdata'][int(current_str)]
+
+        return selected_card
 # ^^^^^^^^^^^^^^^^^^^^^ DocsList ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 # ==================== DocDetails =============================
@@ -1392,6 +1403,7 @@ class AdrDocDetailsScreen(DocDetailsScreen):
         super().__init__(rs_settings=rs_settings, hash_map=hash_map)
         self.service = AdrDocService(self.id_doc, table_type = self._get_table_type_from_screen())
         self.current_cell = self.hash_map.get('current_cell_id')
+        self.screen_values ={'doc_n': '', 'doc_date': '', 'warehouse': ''}
         self.table_type = table_type
 
     def _get_table_type_from_screen(self):
@@ -1467,6 +1479,7 @@ class AdrDocDetailsScreen(DocDetailsScreen):
                 self.hash_map.put('beep_duration ', self.rs_settings.get('beep_duration'))
                 self.hash_map.put("beep", self.rs_settings.get('signal_num'))
                 self.hash_map.put('toast', 'Не найдена ячейка')
+                return
             if doc_cell:
                 self.hash_map.put('current_cell', doc_cell['name'])
                 self.hash_map.put('current_cell_id', doc_cell['id'])
@@ -1517,6 +1530,8 @@ class AdrDocDetailsScreen(DocDetailsScreen):
         elif listener == 'btn_clear_cell':
             self.hash_map.remove('current_cell')
             self.hash_map.remove('current_cell_id')
+            self.current_cell = None
+            self.hash_map.refresh_screen()
 
         elif listener == 'btn_select_cell':  # Кнопка выбрать ячейку
 
@@ -1532,6 +1547,9 @@ class AdrDocDetailsScreen(DocDetailsScreen):
             if self.hash_map.get('current_id'):
                 self.hash_map.put('current_cell_id', self.hash_map.get('current_id'))
                 self.hash_map.put('current_cell', self.hash_map.get('current_name'))
+                self.current_cell = self.hash_map.get('current_id')
+                # self._on_start()
+                # self.hash_map.refresh_screen()
         elif listener == 'LayoutAction':
             self._layout_action()
 
@@ -1583,12 +1601,12 @@ class AdrDocDetailsScreen(DocDetailsScreen):
         hashMap = self.hash_map
         # Находим ID документа
         current_str = hashMap.get("selected_card_position")
-        jlist = json.loads(hashMap.get("doc_goods"))
-        current_elem = jlist['customcards']['cardsdata'][int(current_str)]
+        jlist = json.loads(hashMap.get("doc_goods_table"))
+        current_elem = jlist['customtable']['tabledata'][int(current_str)]
         hashMap.put("Doc_data",
                     hashMap.get('doc_type') + ' №' + hashMap.get('doc_n') +
                     ' от' + hashMap.get('doc_date'))
-        hashMap.put("current_cell_name", 'Ячейка: ' + current_elem['cell_name'])
+        hashMap.put("current_cell_name", 'Ячейка: ' + current_elem['cell'])
         hashMap.put('id_cell', current_elem['id_cell'])
         hashMap.put("Good", current_elem['good_name'])
         hashMap.put("qtty_plan", str(current_elem['qtty_plan']))
@@ -1606,7 +1624,7 @@ class AdrDocDetailsScreen(DocDetailsScreen):
 
     def _prepare_table_data(self, doc_details):
         # TODO добавить группировку по ячейкам
-        table_data = [] # было [{}]
+        table_data = [{}] # было [{}]
         row_filter = self.hash_map.get_bool('rows_filter')
 
         for record in doc_details:
@@ -1654,10 +1672,10 @@ class AdrDocDetailsScreen(DocDetailsScreen):
             product_row['_layout'] = self._get_doc_table_row_view()
             self._set_background_row_color(product_row)
 
-            # if self._added_goods_has_key(product_row['key']):
-            #     table_data.insert(1, product_row)
-            # else:
-            table_data.append(product_row)
+            if self._added_goods_has_key(product_row['key']):
+                table_data.insert(1, product_row)
+            else:
+                table_data.append(product_row)
 
         return table_data
 
@@ -1666,11 +1684,11 @@ class AdrDocDetailsScreen(DocDetailsScreen):
             widgets.LinearLayout(
                 self.LinearLayout(
                     self.TextView('Ячейка'),
-                    weight=3
+                    weight = 1
                 ),
                 self.LinearLayout(
                     self.TextView('Название'),
-                    weight=3
+                    weight=2
                 ),
                 self.LinearLayout(
                     self.TextView('План'),
@@ -1685,11 +1703,77 @@ class AdrDocDetailsScreen(DocDetailsScreen):
                 width="match_parent",
                 BackgroundColor='#FFFFFF'
             ),
+
             options=widgets.Options().options,
             tabledata=table_data
         )
 
         return table_view
+
+
+
+    def _get_doc_table_row_view(self):
+
+        row_view = widgets.LinearLayout(
+            widgets.LinearLayout(
+                widgets.TextView(
+                    Value='@cell',
+                    TextSize=15,
+                    width='match_parent',
+                ),
+                width='match_parent',
+                height='match_parent',
+                weight=1,
+                StrokeWidth=1
+            ),
+            widgets.LinearLayout(
+                widgets.LinearLayout(
+                    widgets.LinearLayout(
+                        self.TextView('@good_name'),
+                        widgets.TextView(
+                            Value='@good_info',
+                            TextSize=15,
+                            width='match_parent'
+                        ),
+                        width='match_parent',
+                    ),
+                    width='match_parent',
+                    orientation='horizontal',
+                    StrokeWidth=1
+                ),
+                width='match_parent',
+                weight=2,
+                StrokeWidth=1
+            ),
+            widgets.LinearLayout(
+                widgets.TextView(
+                    Value='@qtty_plan',
+                    TextSize=15,
+                    width='match_parent',
+                ),
+                width='match_parent',
+                height='match_parent',
+                weight=1,
+                StrokeWidth=1
+            ),
+            widgets.LinearLayout(
+                widgets.TextView(
+                    Value='@qtty',
+                    TextSize=15,
+                    width='match_parent'
+                ),
+                width='match_parent',
+                height='match_parent',
+                weight=1,
+                StrokeWidth=1
+            ),
+            orientation='horizontal',
+            width='match_parent',
+            BackgroundColor='#FFFFFF'
+        )
+
+        return row_view
+
 
     def _set_visibility_on_start(self):
         _vars = ['warehouse']

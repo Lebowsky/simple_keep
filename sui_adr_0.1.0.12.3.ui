@@ -226,7 +226,10 @@
                                                 "Value": "|| ||| ||",
                                                 "Variable": "btn_barcodes"
                                             }
-                                        ]
+                                        ],
+                                        "BackgroundColor": "",
+                                        "StrokeWidth": "",
+                                        "Padding": ""
                                     },
                                     {
                                         "height": "wrap_content",
@@ -239,25 +242,14 @@
                                         "Variable": ""
                                     },
                                     {
-                                        "orientation": "vertical",
-                                        "height": "wrap_content",
-                                        "width": "wrap_content",
-                                        "gravity_horizontal": "center",
-                                        "gravity_vertical": "center",
-                                        "weight": "0",
-                                        "type": "TextView",
-                                        "Value": "@countragent",
-                                        "Variable": ""
-                                    },
-                                    {
                                         "height": "wrap_content",
                                         "width": "match_parent",
                                         "gravity_horizontal": "center",
                                         "gravity_vertical": "center",
                                         "weight": "0",
-                                        "type": "CardsLayout",
-                                        "Value": "@doc_goods",
-                                        "Variable": "doc_goods"
+                                        "type": "TableLayout",
+                                        "Value": "@doc_goods_table",
+                                        "Variable": "doc_goods_table"
                                     },
                                     {
                                         "height": "wrap_content",
@@ -269,7 +261,10 @@
                                         "Value": "Отметить к отправке",
                                         "Variable": "btn_doc_mark_verified"
                                     }
-                                ]
+                                ],
+                                "BackgroundColor": "",
+                                "StrokeWidth": "",
+                                "Padding": ""
                             },
                             {
                                 "type": "barcode",
@@ -306,7 +301,7 @@
                             {
                                 "event": "onStart",
                                 "action": "run",
-                                "type": "online",
+                                "type": "python",
                                 "method": "adr_doc_details_on_start",
                                 "postExecute": ""
                             },
