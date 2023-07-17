@@ -876,8 +876,9 @@ def elem_on_click(hashMap, _files=None, _data=None):
 
 @HashMap()
 def elem_viev_on_start(hash_map):
-    # Режим работы с мультимедиа и файлами по ссылкам (флаг mm_local)
-    hash_map['mm_local'] = ''
+
+    screen = ui_models.GoodsSelectScreen(hash_map, rs_settings)
+    screen.on_start()
 
 
 @HashMap()
