@@ -412,9 +412,9 @@ class DocService:
             return res[0].get('docs_count', 0)
         return 0
 
-    @staticmethod
-    def get_existing_docs():
-        query_text = "SELECT doc_n,doc_type FROM RS_docs"
+
+    def get_existing_docs(self):
+        query_text = f"SELECT doc_n,doc_type FROM {self.docs_table_name}"
         res = get_query_result(query_text)
         return res
 
@@ -476,15 +476,18 @@ class DocService:
 
 
 class AdrDocService(DocService):
-    def __init__(self):
+    def __init__(self, doc_id='', cur_cell='', table_type = 'in'):
+        self.doc_id = doc_id
         self.docs_table_name = 'RS_Adr_docs'
         self.details_table_name = 'RS_adr_docs_table'
         self.isAdr = True
+        self.current_cell  = cur_cell
+        self.table_type = table_type
 
     def get_current_cell(self):
         pass
 
-    def get_doc_details_data(self, id_doc) -> list:
+    def get_doc_details_data(self, id_doc='', curCell='') -> list:
         query_text = '''SELECT
             RS_adr_docs_table.id,
             RS_adr_docs_table.id_doc,
@@ -522,13 +525,17 @@ class AdrDocService(DocService):
             
             '''
 
-        if self.curCell:
+        if curCell:
             query_text = query_text + '''
              and (id_cell=:current_cell OR id_cell="" OR id_cell is Null)
             '''
 
         query_text = query_text + ' ORDER BY RS_cells.name, RS_adr_docs_table.last_updated DESC'
-        res = self._get_query_result(query_text, (id_doc,), return_dict=True)
+        self.table_type = 'out'  #****** ОТЛАДОЧНОЕ
+        params_dict = {'id_doc':id_doc, 'NullValue':None, 'EmptyString':'', 'table_type':self.table_type}
+        if curCell:
+            params_dict['current_cell'] = curCell
+        res = self._get_query_result(query_text, params_dict, return_dict=True)
         return res
 
 
