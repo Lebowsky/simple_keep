@@ -6,7 +6,7 @@ import os
 import db_services
 import hs_services
 from ui_utils import HashMap, RsDoc, BarcodeParser, get_ip_address
-from db_services import DocService, ErrorService
+from db_services import DocService, ErrorService, GoodsService
 from hs_services import HsService
 import http_exchange
 from http_exchange import post_changes_to_server
@@ -1300,10 +1300,10 @@ class GoodsListScreen(Screen):
                 'key': record['id'],
                 'code': record['code'],
                 'name': record['name'],
-                'art': record['art'],
-                'unit': record['unit'],
+                'art': record['art'] if record['art'] else "—",
+                'unit': record['unit'] if record['unit'] else "—",
                 'type_good': record['type_good'],
-                'description': record['description']
+                'description': record['description'] if record['description'] else "—"
             }
             cards_data.append(single_card_data)
 
@@ -1351,13 +1351,17 @@ class GoodsListScreen(Screen):
     def _identify_barcode_goods(self):
         if self.hash_map.get('barcode'):
             barcode = self.hash_map.get('barcode')
-            item_values = self.service.get_values_from_barcode("id_good,id_property", "barcode", barcode)
-            if item_values[0][1]:
-                self.hash_map.put("property_id", item_values[0][1])
-            if item_values[0][0]:
-                self.hash_map.put("selected_good_id", item_values[0][0])
+            item_id = self.service.get_values_from_barcode("barcode", barcode)[0]['id_good']
+            if item_id:
+                item_values = self.service.get_goods_list_data(item_id=item_id)[0]
+                self.hash_map.put("selected_good_id", item_id)
+                self.hash_map.put("good_name", item_values['name'])
+                self.hash_map.put("good_art", item_values['art'] if item_values['art'] else "—")
+                self.hash_map.put("good_code", item_values['code'])
+                self.hash_map.put("good_descr", item_values['description'] if item_values['description'] else "—")
+                self.hash_map.put("good_type", item_values['type_good'])
                 self.hash_map.show_screen('Карточка товара')
-            if not any(item_values):
+            else:
                 self.toast('Товар не распознан по штрихкоду')
 
 
@@ -1440,14 +1444,13 @@ class ItemCard(Screen):
     def on_start(self):
         self.hash_map.put("Show_buttons", "-1")  # Пока спрятали переход к процессам "остатки" и "цены"
         card_data = self.hash_map.get("selected_card_data", from_json=True)
-        if card_data:
+        if not self.hash_map.get('barcode'):
             self.hash_map.put("selected_good_id", card_data['key'])
             self.hash_map.put("good_name", card_data['name'])
             self.hash_map.put("good_art", card_data['art'])
             self.hash_map.put("good_code", card_data['code'])
             self.hash_map.put("good_descr", card_data['description'] if card_data['description'] else "—")
             self.hash_map.put("good_type", card_data['type_good'])
-        # self.hash_map.run_event_async(self.on_post_start())
 
     def on_input(self):
         listener = self.listener
@@ -1478,7 +1481,8 @@ class ItemCard(Screen):
         variants_cards_data = []
         i = 0
         for element in goods_barcode:
-            c = {"key": str(i), "barcode": element['barcode'], "properties": element['property'],
+            c = {"key": str(i), "barcode": element['barcode'],
+                 "properties": element['property'] if element['property'] else "",
                  "unit": element['unit'], "series": element['series']}
             variants_cards_data.append(c)
             i += 1
