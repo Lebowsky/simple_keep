@@ -103,6 +103,9 @@ class DocService:
             self._get_query_result(query)
 
     def json_to_sqlite_query(self, data: dict, docs=None):
+        if docs is None:
+            docs = {}
+
         qlist = []
         # Цикл по именам таблиц
         table_list = (
@@ -144,7 +147,7 @@ class DocService:
 
                     # Здесь устанавливаем флаг verified!!!
                     if col == 'verified' and (table_name in ['RS_docs', 'RS_adr_docs']):
-                        row[col] = docs.get(row['id_doc'], False)
+                        row[col] = docs.get(row['id_doc'], 0)
 
                     if row.get(col) is None:
                         row[col] = ''
@@ -405,9 +408,9 @@ class DocService:
             return res[0].get('docs_count', 0)
         return 0
 
-    @staticmethod
-    def get_existing_docs():
-        query_text = "SELECT doc_n,doc_type FROM RS_docs"
+
+    def get_existing_docs(self):
+        query_text = f"SELECT doc_n,doc_type FROM {self.docs_table_name}"
         res = get_query_result(query_text)
         return res
 
@@ -450,15 +453,18 @@ class DocService:
         qtext = f"UPDATE RS_docs SET sent = 0, verified = 0  WHERE id_doc = '{doc_id}'"
         get_query_result(qtext)
 class AdrDocService(DocService):
-    def __init__(self):
+    def __init__(self, doc_id='', cur_cell='', table_type = 'in'):
+        self.doc_id = doc_id
         self.docs_table_name = 'RS_Adr_docs'
         self.details_table_name = 'RS_adr_docs_table'
         self.isAdr = True
+        self.current_cell  = cur_cell
+        self.table_type = table_type
 
     def get_current_cell(self):
         pass
 
-    def get_doc_details_data(self, id_doc) -> list:
+    def get_doc_details_data(self, id_doc='', curCell='') -> list:
         query_text = '''SELECT
             RS_adr_docs_table.id,
             RS_adr_docs_table.id_doc,
@@ -496,13 +502,15 @@ class AdrDocService(DocService):
             
             '''
 
-        if self.curCell:
+        if curCell:
             query_text = query_text + '''
              and (id_cell=:current_cell OR id_cell="" OR id_cell is Null)
             '''
 
         query_text = query_text + ' ORDER BY RS_cells.name, RS_adr_docs_table.last_updated DESC'
-        res = self._get_query_result(query_text, (id_doc,), return_dict=True)
+        self.table_type = 'out'  #****** ОТЛАДОЧНОЕ
+        params_dict = {'id_doc':id_doc, 'NullValue':None, 'EmptyString':'', 'table_type':self.table_type}
+        res = self._get_query_result(query_text, params_dict, return_dict=True)
         return res
 
 

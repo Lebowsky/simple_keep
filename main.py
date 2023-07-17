@@ -4,291 +4,34 @@ import requests
 from requests.auth import HTTPBasicAuth
 import os
 from PIL import Image
-import time
-import importlib
-
-from java import jclass
 
 import ui_barcodes
 import ui_csv
 import ui_global
 import ui_form_data
-import ui_models
 import http_exchange
-from ui_utils import HashMap
-#import widgets
-
-from ru.travelfood.simple_ui import SimpleUtilites as suClass
-
-noClass = jclass("ru.travelfood.simple_ui.NoSQL")
-rs_settings = noClass("rs_settings")
-
-
-# importlib.reload(ui_barcodes)
-# importlib.reload(ui_csv)
-# importlib.reload(ui_global)
-# importlib.reload(ui_form_data)
-# importlib.reload(ui_models)
-# importlib.reload(http_exchange)
-
-current_screen = None
-
-
-def create_screen(hash_map: HashMap):
-    """
-    Метод для получения модели соответствующей текущему процессу и экрану.
-    Если модель не реализована возвращает заглушку
-    Реализован синглтон через глобальную переменную current_screen, для сохренения состояния текущего экрана
-    """
-    global current_screen
-
-    screen_params = {
-        'hash_map': hash_map,
-        'rs_settings': rs_settings
-    }
-    screen_class = ui_models.ScreensFactory.get_screen_class(**screen_params)
-
-    if not screen_class:
-        current_screen = ui_models.MockScreen(**screen_params)
-    elif not isinstance(current_screen, screen_class):
-        current_screen = screen_class(**screen_params)
-    else:
-        current_screen.hash_map = hash_map
-        current_screen.listener = hash_map['listener']
-        current_screen.event = hash_map['event']
-
-    return current_screen
-
-# =============== Main events =================
-
-
-@HashMap()
-def app_before_on_start(hash_map: HashMap):
-    """
-    Обработчик при старте приложения запускается перед app_on_start
-    нужнен для определения версии конфигурации в последующем
-    """
-
-    model = ui_models.MainEvents(hash_map, rs_settings)
-    model.app_before_on_start()
-
-
-@HashMap()
-def app_on_start(hash_map: HashMap):
-    """ Обработчик при старте приложения """
-
-    model = ui_models.MainEvents(hash_map, rs_settings)
-    model.app_on_start()
-
-
-@HashMap()
-def timer_update(hash_map: HashMap):
-    """ Обработчик для фонового обмена """
-
-    timer = ui_models.Timer(hash_map, rs_settings)
-    timer.timer_on_start()
-
-
-@HashMap()
-def event_service(hash_map):
-    """ Обработчик для работы МП в режиме сервера. В ws_body по умолчанию лежит текст конфигурации """
-
-    hash_map['ws_body'] = hash_map['ANDROID_ID']
-
-
-@HashMap()
-def on_sql_error(hash_map):
-    model = ui_models.MainEvents(hash_map, rs_settings)
-    model.on_sql_error()
-
-
-@HashMap()
-def check_docs_data_on_start(hash_map: HashMap):
-    hash_map.show_screen("Плитки")
-    # check_screen = ui_models.CheckTiles(hash_map, rs_settings)
-    # check_screen.on_start()
-
-
-@HashMap()
-def check_docs_data_on_input(hash_map: HashMap):
-    check_screen = ui_models.CheckTiles(hash_map, rs_settings)
-    check_screen.on_input()
-
-
-@HashMap()
-def put_notification(hash_map):
-    """ Обработчик для работы МП в режиме сервера. Уведомления о входящих документах """
-
-    model = ui_models.MainEvents(hash_map, rs_settings)
-    model.put_notification()
-
-
-@HashMap()
-def on_close_app(hash_map):
-    # Попытка очистки кэша при выходе с приложения
-    suClass.deleteCache()
-
-# ^^^^^^^^^^^^^^^^^ Main events ^^^^^^^^^^^^^^^^^
-
-
-# =============== Documents =================
-
-
-@HashMap()
-def tiles_on_start(hash_map: HashMap):
-    screen: ui_models.DocumentsTiles = create_screen(hash_map)
-    screen.on_start()
-
-
-@HashMap()
-def tiles_on_input(hash_map: HashMap):
-    screen: ui_models.DocumentsTiles = create_screen(hash_map)
-    screen.on_input()
-
-
-@HashMap()
-def docs_on_start(hash_map: HashMap):
-    screen: ui_models.DocsListScreen = create_screen(hash_map)
-    screen.on_start()
-
-
-@HashMap()
-def docs_on_select(hash_map: HashMap):
-    screen = create_screen(hash_map)
-    screen.on_input()
-
-
-@HashMap()
-def doc_details_on_start(hash_map: HashMap):
-    screen: ui_models.GroupScanDocDetailsScreen = create_screen(hash_map)
-    screen.on_start()
-
-
-@HashMap()
-def doc_details_listener(hash_map: HashMap):
-    screen = create_screen(hash_map)
-    screen.on_input()
+from new_handlers import *
 
 
 
 # ********************* Старое адресное хранение
 # Todo Переписать это по новой классовой схеме и удалить из кода
-def refill_adr_docs_list(filter=''):
-    doc_list = ui_form_data.get_doc_card(rs_settings, ';Открыть отбор;Открыть размещение')
-    doc_list['customcards']['cardsdata'] = []
 
-    query_text = ui_form_data.get_adr_doc_query(filter)
+@HashMap()
+def adr_doc_on_select(hash_map: HashMap):
+    screen: ui_models.AdrDocsListScreen = create_screen(hash_map)
+    screen.on_input()
 
-    if filter == None or filter == '' or filter == 'Все':
-        results = ui_global.get_query_result(query_text)
-    else:
-        results = ui_global.get_query_result(query_text, (filter,))
+@HashMap()
+def adr_doc_details_on_start(hash_map: HashMap):
+    screen: ui_models.AdrDocDetailsScreen = create_screen(hash_map)
+    screen._on_start()
 
-    for record in results:
-        completed = 'true' if record[6] == 1 else 'false'
-        add_mark_selection = 'true' if record[8] == 1 else 'false'
+@HashMap()
+def adr_doc_details_on_input(hash_map: HashMap):
+    screen: ui_models.AdrDocDetailsScreen = create_screen(hash_map)
+    screen.on_input()
 
-        product_row = {
-            'completed': completed,
-            'type': str(record[1]),
-            'number': str(record[2]),
-            'data': str(record[3]),
-            'key': record[0],
-            'warehouse': record[5],
-            'add_mark_selection': add_mark_selection
-        }
-        doc_list['customcards']['cardsdata'].append(product_row)
-
-    return json.dumps(doc_list)
-
-# def docs_adr_on_start(hashMap, _files=None, _data=None):
-#     # Заполним поле фильтра по виду документов
-#     doc_type_list = ['Все','Отбор','Размещение','Перемещение']
-#     hashMap.put('doc_adr_type_select', ';'.join(doc_type_list))
-#
-#     #hashMap.put('fld_number','1')
-#
-#     # hashMap.put('doc_type_click', 'Все')
-#     # Если Вызов экрана из меню плиток - обработаем
-#
-#     # Перезаполним список документов
-#     if hashMap.get('doc_adr_type_click') == None:
-#         ls = refill_adr_docs_list()
-#     else:
-#         ls = refill_adr_docs_list(hashMap.get('doc_adr_type_click'))
-#     hashMap.put("docAdrCards", ls)
-#
-#     return hashMap
-
-def open_adr_doc_table(hashMap, filter = ''):
-    # Находим ID документа
-    current_str = hashMap.get("selected_card_position")
-    jlist = json.loads(hashMap.get("docAdrCards"))
-    current_doc = jlist['customcards']['cardsdata'][int(current_str)]
-
-    # id_doc = current_doc['key']
-    hashMap.put('id_doc', current_doc['key'])
-    hashMap.put('doc_type', current_doc['type'])
-    hashMap.put('doc_n', current_doc['number'])
-    hashMap.put('doc_date', current_doc['data'])
-    hashMap.put('warehouse', current_doc['warehouse'])
-    filter = 'in'  if current_doc['type'] == 'Размещение' else 'out'
-    if filter:
-        hashMap.put('table_type_filter', filter)
-
-def docs_adr_on_select(hashMap, _files=None, _data=None):
-        listener = hashMap.get("listener")
-
-        if listener == "CardsClick":
-           open_adr_doc_table(hashMap)
-           hashMap.put("ShowScreen", "Документ товары")
-
-        elif listener == "doc_adr_type_click":
-
-            ls = refill_adr_docs_list(hashMap.get('doc_adr_type_click'))
-            hashMap.put('docCards', ls)
-            hashMap.put('ShowScreen', 'Документы')
-        elif listener == 'LayoutAction':
-            layout_listener = hashMap.get('layout_listener')
-            # Находим ID документа
-            current_doc = json.loads(hashMap.get("card_data"))
-            doc = ui_global.Rs_adr_doc
-            doc.id_doc = current_doc['key']
-
-            if layout_listener == 'CheckBox1':
-                if current_doc['completed'] == 'false':
-                    doc.mark_verified(doc, 1)
-                else:
-                    doc.mark_verified(doc, 0)
-
-            elif layout_listener == 'Подтвердить':
-                doc.mark_verified(doc, 1)
-                hashMap.put('ShowScreen', 'Документы')
-            elif layout_listener == 'Очистить данные пересчета':
-                doc.clear_barcode_data(doc)
-                hashMap.put('toast', 'Данные пересчета и маркировки очищены')
-            elif layout_listener == 'Удалить':
-                doc.delete_doc(doc)
-                hashMap.put('ShowScreen', 'Документы')
-            elif layout_listener == 'Удалить':
-                doc.delete_doc(doc)
-            elif layout_listener == 'Открыть отбор':
-
-                open_adr_doc_table(hashMap, 'out')
-                hashMap.put("ShowScreen", "Документ товары")
-            elif layout_listener == 'Открыть размещение':
-                open_adr_doc_table(hashMap, 'in')
-                hashMap.put("ShowScreen", "Документ товары")
-
-        elif listener == "btn_add_doc":
-            hashMap.put('ShowScreen', 'Новый документ')
-
-        elif listener == 'ON_BACK_PRESSED':
-
-            hashMap.put('FinishProcess', '')
-
-            # hashMap.put('ShowScreen', 'Новый документ')
-        return hashMap
 
 def doc_adr_details_on_start(hashMap, _files=None, _data=None):
     import widgets
@@ -869,24 +612,6 @@ def adr_docs_on_start(hash_map: HashMap):
     screen.on_start()
 
 
-# @HashMap()
-# def adr_docs_on_select(hash_map: HashMap):
-#     screen: ui_models.AdrDocsListScreen = create_screen(hash_map)
-#     screen.on_input()
-#
-#
-# @HashMap()
-# def adr_doc_details_on_start(hash_map: HashMap):
-#     screen = create_screen(hash_map)
-#     screen.on_start()
-#
-#
-# @HashMap()
-# def adr_doc_details_listener(hash_map: HashMap):
-#     screen = create_screen(hash_map)
-#     screen.on_input()
-
-
 @HashMap()
 def doc_details_before_process_barcode(hash_map):
     """ Обработчик для синхронного запроса и обновления данных после сканирования и перед обработкой ШК"""
@@ -1293,7 +1018,7 @@ def barcode_flow_listener(hashMap,  _files=None, _data=None):
 
     return hashMap
 
-# ^^^^^^^^^^^^^^^^^ Documents ^^^^^^^^^^^^^^^^^
+
 
 # =============== Universal cards =================
 
@@ -1529,6 +1254,7 @@ def identify_barcode_goods(hashMap, _files=None, _data=None):
 
     return hashMap
 
+
 def good_card_on_start(hashMap, _files=None, _data=None):
 
     hashMap.put("Show_buttons", "-1")  # Пока спрятали переход к процессам "остатки" и "цены"
@@ -1665,124 +1391,6 @@ def get_name_by_field(table_name, field, field_value):
 
 # =============== Settings =================
 
-def settings_on_start(hashMap, _files=None, _data=None):
-    # hashMap.put('toast','обновились')
-    #app_on_start(hashMap)
-    s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-    try:
-        s.connect(("8.8.8.8", 80))
-        aa = (s.getsockname()[0])
-        # aa = hashMap.get('ip_adr')
-        hashMap.put('ip_adr', aa)
-        # hashMap.put('toast', aa)
-    except:
-        hashMap.put('ip_adr', 'нет сети')
-    # app_on_start(hashMap)
-    # Значения констант и настроек
-    #res = ui_global.get_constants()
-    #if res:
-        # hashMap.put('use_series', str(res[1]))
-        # hashMap.put('use_properties', str(res[2]))
-    hashMap.put('use_mark', rs_settings.get('use_mark'))  #str(res[3]))
-    hashMap.put('allow_fact_input', rs_settings.get('allow_fact_input'))
-    hashMap.put('add_if_not_in_plan', rs_settings.get('add_if_not_in_plan'))  # str(res[4]))
-    hashMap.put('path', rs_settings.get('path')) # str(res[5]))
-    hashMap.put('delete_files', rs_settings.get('delete_files'))  # str(res[6]))
-    hashMap.put('allow_overscan', rs_settings.get('allow_overscan'))  # str(res[9]))
-
-    if not hashMap.containsKey('ip_host'):
-        hashMap.put('ip_host', '192.168.1.77')
-
-    return hashMap
-
-
-@HashMap()
-def settings_on_click(hashMap, _files=None, _data=None):
-    #Использовать маркировку
-    use_mark = hashMap.get('use_mark')
-    if use_mark is None: use_mark = 'false'
-
-    path = hashMap.get('path')
-    if path is None: path = '//storage/emulated/0/Android/data/ru.travelfood.simple_ui/'  # '//storage/emulated/0/download/'
-
-    allow_fact_input = hashMap.get('allow_fact_input')
-    if allow_fact_input is None: allow_fact_input = 'false'
-
-    # ui_global.get_query_result('Update RS_docs SET control = ?',(allow_overscan,))  #В таблицы документов записываем новое значение контроля
-    #ui_global.put_constants(
-    rs_settings.put('use_mark',use_mark, True) #, path))
-    rs_settings.put('path', path, True)
-    rs_settings.put('allow_fact_input', allow_fact_input, True)  # , path))
-
-    listener = hashMap.get('listener')
-
-    if listener == 'btn_export':
-
-        ui_csv.export_csv(path, hashMap.get('ip_adr'), hashMap.get('ANDROID_ID'))
-        hashMap.put('toast', 'Данные выгружены')
-
-    elif listener == 'ON_BACK_PRESSED':
-
-        hashMap.put('FinishProcess', '')
-
-    # elif listener == 'btn_files_list':
-    #     hashMap.put('ShowScreen', 'СписокФайлов')
-    elif listener == 'btn_conf_version':
-        conf = json.loads(hashMap.get('_configuration '))
-
-    elif listener == 'btn_size':
-        hashMap.put('ShowScreen', 'Настройки Шрифтов')
-    elif listener == 'btn_test_barcode':
-        hashMap.put('ShowScreen', 'Тест сканера')
-    elif listener == 'btn_err_log':
-        hashMap.put('ShowScreen', 'Ошибки')
-    elif listener == 'btn_http_settings':
-        hashMap.put('ShowScreen', 'Настройки http соединения')
-    elif listener == 'bnt_clear_tables':
-        qtext = '''
-        SELECT name FROM sqlite_master WHERE type='table'
-        '''
-        res = ui_global.get_query_result(qtext)
-        for el in res:
-            del_text = 'DELETE FROM ' + el[0]
-            ui_global.get_query_result(del_text)
-    elif listener == 'btn_upload_docs':
-        http = get_http_settings(hashMap)
-        if not all([http.get('url'), http.get('user'), http.get('pass')]):
-            hashMap.put("toast", "Не указаны настройки HTTP подключения к серверу")
-            return hashMap
-        else:
-            url = get_http_settings(hashMap)
-            qtext = '''SELECT id_doc FROM RS_docs WHERE verified = '1'
-                        UNION
-                        SELECT id_doc FROM RS_adr_docs WHERE verified = '1' '''
-            res = ui_global.get_query_result(qtext, None, True)
-
-        if res:
-            doc_list = []
-            for el in res:
-                doc_list.append('"' + el['id_doc'] + '"')
-            doc_in_str = ','.join(doc_list)
-            # htpparams = {'username':hashMap.get('onlineUser'), 'password':hashMap.get('onlinePass'), 'url':url}
-            answer = http_exchange.post_changes_to_server(doc_in_str, url)
-            if answer.get('Error') is not None:
-                ui_global.write_error_on_log(str(answer.get('Error')))
-
-            qtext = f'UPDATE RS_docs SET sent = 1  WHERE id_doc in ({doc_in_str}) '
-            ui_global.get_query_result(qtext, return_dict=False)
-    elif listener == 'btn_timer':
-        http = get_http_settings(hashMap)
-        if not all([http.get('url'), http.get('user'), http.get('pass')]):
-            hashMap.put("toast", "Не указаны настройки HTTP подключения к серверу")
-            return hashMap
-        else:
-            try:
-                timer_update(hashMap)
-            except Exception as e:
-                hashMap.put('toast',str(e))
-    elif listener == 'btn_sound_settings':
-        hashMap.put('ShowScreen','Настройка звука')
-    return hashMap
 
 
 def file_list_on_start(hashMap, _files=None, _data=None):
@@ -1796,77 +1404,6 @@ def file_list_on_start(hashMap, _files=None, _data=None):
             print(len(path) * '---', file)
 
     hashMap.put('files_list', tx)
-    return hashMap
-
-
-def font_sizes_on_start(hashMap, _files=None, _data=None):
-
-    # Словарик названий и имен размеров шрифтов
-    ss = {
-        'TitleTextSize': 'Размер заголовка',
-        'CardTitleTextSize': 'Размер заголовка карточки',
-        "CardDateTextSize": 'Данные карточки',
-        'CardTextSize':'Размер текста элементов',
-        'GoodsCardTitleTextSize': 'Заголовок товара',
-        'goodsTextSize': 'Товар',
-        'SeriesPropertiesTextSize': 'Серии свойства',
-        'DocTypeCardTextSize': 'Тип документа',
-        'titleDocTypeCardTextSize':'Название документа в карточке'}  #,       'signal_num': "Номер сигнала"
-
-    hashMap.put('TitleTextSize',  ui_form_data.ModernField(hint='Размер заголовка', default_text=rs_settings.get('TitleTextSize'), password=False).to_json()) #  )
-    hashMap.put('CardTitleTextSize',
-                ui_form_data.ModernField(hint='Размер заголовка карточки', default_text=rs_settings.get('CardTitleTextSize'),
-                                         password=False).to_json())  # )
-    #"CardDateTextSize": 'Данные карточки',
-    hashMap.put('CardDateTextSize',
-                ui_form_data.ModernField(hint='Данные карточки', default_text=rs_settings.get('CardDateTextSize'),
-                                         password=False).to_json())  # )
-    #'CardTextSize':'Размер текста элементов',
-    hashMap.put('CardTextSize',
-                ui_form_data.ModernField(hint='Размер текста элементов', default_text=rs_settings.get('CardTextSize'),
-                                         password=False).to_json())  # )
-    #'GoodsCardTitleTextSize': 'Заголовок товара',
-    hashMap.put('GoodsCardTitleTextSize',
-                ui_form_data.ModernField(hint='Заголовок товара', default_text=rs_settings.get('GoodsCardTitleTextSize'),
-                                         password=False).to_json())  # )
-    #'goodsTextSize': 'Товар',
-    hashMap.put('goodsTextSize',
-                ui_form_data.ModernField(hint='Товар', default_text=rs_settings.get('goodsTextSize'),
-                                         password=False).to_json())  # )
-    #'SeriesPropertiesTextSize': 'Серии свойства',
-    hashMap.put('SeriesPropertiesTextSize',
-                ui_form_data.ModernField(hint='Серии свойства', default_text=rs_settings.get('SeriesPropertiesTextSize'),
-                                         password=False).to_json())  # )
-    #'DocTypeCardTextSize': 'Тип документа',
-    hashMap.put('DocTypeCardTextSize',
-                ui_form_data.ModernField(hint='Тип документа', default_text=rs_settings.get('DocTypeCardTextSize'),
-                                         password=False).to_json())  # )
-    #'titleDocTypeCardTextSize':'Название документа в карточке'
-    hashMap.put('titleDocTypeCardTextSize',
-                ui_form_data.ModernField(hint='Название документа в карточке', default_text=rs_settings.get('titleDocTypeCardTextSize'),
-                                         password=False).to_json())  # )
-
-    return hashMap
-
-
-def font_size_settings_listener(hashMap, _files=None, _data=None):
-    listener = hashMap.get('listener')
-    if listener == 'btn_on_save':  # or hashMap.get('event')=='Input'
-
-        rs_settings.put("TitleTextSize", hashMap.get("TitleTextSize"), True)
-        rs_settings.put("CardTitleTextSize", hashMap.get("CardTitleTextSize"), True)
-        rs_settings.put("CardTextSize", hashMap.get("CardTextSize"), True)
-        rs_settings.put("CardDateTextSize", hashMap.get("CardDateTextSize"), True)
-        rs_settings.put("GoodsCardTitleTextSize", hashMap.get("GoodsCardTitleTextSize"), True)
-        rs_settings.put("goodsTextSize", hashMap.get("goodsTextSize"), True)
-        rs_settings.put("SeriesPropertiesTextSize", hashMap.get("SeriesPropertiesTextSize"), True)
-        rs_settings.put("DocTypeCardTextSize", hashMap.get("DocTypeCardTextSize"), True)
-        rs_settings.put("titleDocTypeCardTextSize", hashMap.get("titleDocTypeCardTextSize"), True)
-        hashMap.put('ShowScreen', 'Настройки и обмен')
-        #params.put("signal_num", hashMap.get("signal_num"), True)
-    elif listener == 'btn_on_cancel' or listener == 'ON_BACK_PRESSED':
-        hashMap.put('ShowScreen', 'Настройки и обмен')
-
     return hashMap
 
 

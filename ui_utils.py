@@ -1,6 +1,7 @@
 import json
 from typing import Callable
 from functools import wraps
+import socket
 
 from java import jclass
 from ui_global import Rs_doc, find_barcode_in_barcode_table
@@ -28,6 +29,9 @@ class HashMap:
     def init(self, hashMap):
         self.hash_map = hashMap
 
+
+    def finish_process(self):
+        self.hash_map.put('FinishProcess','')
     def toast(self, text, add_to_log=False):
         self.hash_map.put('toast', str(text))
         if add_to_log:
@@ -37,8 +41,12 @@ class HashMap:
         notification_id = rs_settings.get("notification_id") + 1 if rs_settings.get("notification_id") else 1
         if title is None:
             title = self.get_current_screen()
-        self.hash_map.put("basic_notification", json.dumps([{'number': notification_id,
-                                                             'title': str(title), 'message': text}]))
+
+        self.hash_map.put(
+            "basic_notification",
+            json.dumps([{'number': notification_id, 'title': str(title), 'message': text}])
+        )
+
         rs_settings.put("notification_id", notification_id, True)
         if add_to_log:
             self.error_log(text)
@@ -240,3 +248,14 @@ class RsDoc(Rs_doc):
         return find_barcode_in_barcode_table(barcode)
 
 
+def get_ip_address():
+    s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+    try:
+        s.connect(("8.8.8.8", 80))
+        ip_address = s.getsockname()[0]
+    except Exception as e:
+        ip_address = None
+    finally:
+        s.close()
+
+    return ip_address
