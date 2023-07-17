@@ -1,3 +1,4 @@
+import time
 from abc import ABC, abstractmethod
 import json
 import os
@@ -641,6 +642,7 @@ class DocDetailsScreen(Screen):
         control = self.service.get_doc_value('control', self.id_doc) not in (0, '0', 'false', 'False', None)
         self.hash_map['control'] = control
 
+        self.hash_map['return_selected_data'] = ''
         self.hash_map.put("doc_goods_table", table_view.to_json())
 
     def _barcode_scanned(self):
@@ -698,12 +700,10 @@ class DocDetailsScreen(Screen):
             name = f'Show_{v}'
             self.hash_map[name] = '1' if self.hash_map[v] else '-1'
         # TODO rework this
-        if self.rs_settings.get('allow_fact_input') == 'true':
-            self.hash_map.put("Show_fact_qtty_input", "1")
-            self.hash_map.put("Show_fact_qtty_note", "-1")
-        else:
-            self.hash_map.put("Show_fact_qtty_input", "-1")
-            self.hash_map.put("Show_fact_qtty_note", "1")
+
+        allow_fact_input = self.rs_settings.get('allow_fact_input') or False
+        self.hash_map.put("Show_fact_qtty_input", 1 if allow_fact_input else -1)
+        self.hash_map.put("Show_fact_qtty_note", -1 if allow_fact_input else 1)
 
     def _get_doc_details_data(self):
         return self.service.get_doc_details_data(self.id_doc)
@@ -1116,6 +1116,7 @@ class DocumentsDocDetailScreen(DocDetailsScreen):
                 }
                 cards['customcards']['cardsdata'].append(row)
 
+
             self.hash_map.put('barcode_cards', cards, to_json=True)
             self.hash_map.show_screen("Товар выбор")
 
@@ -1212,60 +1213,35 @@ class GoodsSelectScreen(Screen):
         self.service = DocService()
 
     def on_start(self):
-        pass
+        # Режим работы с мультимедиа и файлами по ссылкам (флаг mm_local)
+        self.hash_map['mm_local'] = ''
 
     def on_input(self):
         listener = self.listener
-        # self.toast(listener)
+
         if listener == "btn_ok":
-            # получим текущую строку документа
-            current_str = self.hash_map.get("selected_card_position")
-            # Если строка не существует, создадим ее
-            doc = ui_global.Rs_doc
-            doc.id_doc = self.hash_map.get('id_doc')
+            allow_fact_input = self.rs_settings.get('allow_fact_input') or False
+            if not allow_fact_input:
+                self.hash_map.put('BackScreen')
+                return
 
-            selected_card_key = self.hash_map['selected_card_key']
-            doc_goods_table = self.hash_map.get_json('doc_goods_table')
-            table_data = doc_goods_table['customtable']['tabledata']
-
-            current_elem = None
-            current_elem_filter = [item for item in table_data if item.get('key') == selected_card_key]
-
-            if current_elem_filter:
-                current_elem = current_elem_filter[0]
-
-            doc.id_str = int(current_elem['key'])
-            qtty = self.hash_map.get('qtty')
+            current_elem = self.hash_map.get_json('selected_card_data')
+            qtty = self.hash_map['qtty']
 
             if qtty != current_elem['qtty']:
-                self.service.update_rs_docs_table_sent_status(self.hash_map.get("selected_card_key"))
-                self.service.set_doc_status_to_upload(doc.id_doc)
+                update_data = {
+                    'sent': 0,
+                    'qtty': float(qtty) if qtty else 0,
+                    'price': float(self.hash_map.get('price'))
+                }
+                row_id = int(current_elem['key'])
+                self.service.update_doc_table(data=update_data, row_id=row_id)
+                self.service.set_doc_status_to_upload(self.hash_map.get('id_doc'))
 
-            doc.qtty = float(qtty) if qtty else 0
-            doc.update_doc_str(doc, self.hash_map.get('price'))  # (doc, )
-            self.hash_map.put("ShowScreen", "Документ товары")
+            self.hash_map.put('BackScreen')
 
         elif listener in ["btn_cancel", 'BACK_BUTTON', 'ON_BACK_PRESSED']:
             self.hash_map.show_screen("Документ товары")
-
-        elif listener == "photo":
-            # Можно вообще этого не делать-оставлять как есть. Это для примера.
-            image_file = str(
-                self.hash_map.get("photo_path"))  # "переменная"+"_path" - сюда помещается путь к полученной фотографии
-
-            image = Image.open(image_file)
-
-            # сразу сделаем фотку - квадратной - это простой вариант. Можно сделать например отдельо миниатюры для списка, это немного сложнее
-            im = image.resize((500, 500))
-            im.save(image_file)
-
-            jphotoarr = json.loads(hashMap.get("photoGallery"))
-            self.hash_map.put("photoGallery", jphotoarr, to_json=True)
-
-        elif listener == "gallery_change":  # пользователь может удалить фото из галереи. Новый массив надо поместить к документу
-            if self.hash_map.containsKey("photoGallery"):  # эти 2 обработчика - аналогичные, просто для разных событий
-                jphotoarr = json.loads(hashMap.get("photoGallery"))
-                self.hash_map.put("photoGallery", jphotoarr, to_json=True)
 
     def on_post_start(self):
         pass
@@ -1345,7 +1321,7 @@ class SettingsScreen(Screen):
     def _update_rs_settings(self) -> None:
         use_mark = self.hash_map.get('use_mark') or 'false'
         path = self.hash_map.get('path') or '//storage/emulated/0/Android/data/ru.travelfood.simple_ui/'
-        allow_fact_input = self.hash_map.get('allow_fact_input') or 'false'
+        allow_fact_input = self.hash_map.get_bool('allow_fact_input') or False
 
         self.rs_settings.put('use_mark', use_mark, True)
         self.rs_settings.put('path', path, True)
@@ -1932,13 +1908,14 @@ class MainEvents:
             'sqlite_name': 'SimpleKeep',
             'log_name': 'log.json',
             'timer_is_disabled': False,
-            'allow_fact_input': 'false'
+            'allow_fact_input': False
         }
 
         for k, v in rs_default_settings.items():
             if self.rs_settings.get(k) is None:
                 self.rs_settings.put(k, v, True)
 
+        self.hash_map["SQLConnectDatabase"] = "SimpleKeep"
         self.hash_map.toast(toast)
 
     def on_sql_error(self):
