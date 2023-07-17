@@ -1455,6 +1455,8 @@ class ItemCard(Screen):
     def on_input(self):
         listener = self.listener
         if listener == "ON_BACK_PRESSED":
+            if self.hash_map.get('barcode_cards'):
+                self.hash_map.put('barcode_cards', '')
             self.hash_map.put("BackScreen", "")
 
     def on_post_start(self):
