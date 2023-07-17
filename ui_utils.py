@@ -1,5 +1,5 @@
 import json
-from typing import Callable
+from typing import Callable, Union, List, Dict, Optional
 from functools import wraps
 import socket
 
@@ -109,10 +109,12 @@ class HashMap:
         value = str(self.hash_map.get(item)).lower() not in ('0', 'false', 'none')
         return value
 
-    def put(self, key, value, to_json=False):
+    def put(self, key, value: Union[str, List, Dict] = '', to_json=False):
         if to_json:
             self.hash_map.put(key, json.dumps(value))
         else:
+            if isinstance(value, bool):
+                value = str(value).lower()
             self.hash_map.put(key, str(value))
 
     def put_data(self, data: dict):
@@ -171,6 +173,23 @@ class HashMap:
         """
 
         self['RunPyThreadProgressDef'] = handlers_name
+
+    def sql_exec(self, query, params=''):
+        self._put_sql('SQLExec', query, params)
+
+    def sql_exec_many(self, query, params=None):
+        params = params or []
+        self._put_sql('SQLExecMany', query, params)
+
+    def sql_query(self, query, params=''):
+        self._put_sql('SQLQuery', query, params)
+
+    def _put_sql(self, sql_type, query, params):
+        self.put(
+            sql_type,
+            {"query": query, 'params': params},
+            to_json=True
+        )
 
 
 class RsDoc(Rs_doc):
