@@ -1235,7 +1235,7 @@ class GoodsSelectScreen(Screen):
                     'price': float(self.hash_map.get('price'))
                 }
                 row_id = int(current_elem['key'])
-                self.service.update_doc_table(data=update_data, row_id=row_id)
+                self.service.update_doc_table_row(data=update_data, row_id=row_id)
                 self.service.set_doc_status_to_upload(self.hash_map.get('id_doc'))
 
             self.hash_map.put('BackScreen')
