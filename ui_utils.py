@@ -29,6 +29,9 @@ class HashMap:
     def init(self, hashMap):
         self.hash_map = hashMap
 
+    def finish_process(self):
+        self.hash_map.put('FinishProcess', '')
+
     def toast(self, text, add_to_log=False):
         self.hash_map.put('toast', str(text))
         if add_to_log:
@@ -158,7 +161,7 @@ class HashMap:
 
     def get_current_screen(self):
 
-        return self['current_screen_name'] if self.containsKey('current_screen_name') else  ''
+        return self['current_screen_name'] if self.containsKey('current_screen_name') else ''
 
     def get_current_process(self):
         return self['current_process_name']
@@ -215,7 +218,6 @@ class RsDoc(Rs_doc):
         result = super().find_barcode_in_table(search_value, func_compared)
         if result:
             return result[0]
-
 
     def find_barcode_in_mark_table(self, search_value: str, func_compared='=?'):
         pass

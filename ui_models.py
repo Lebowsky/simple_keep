@@ -5,7 +5,7 @@ import os
 import db_services
 import hs_services
 from ui_utils import HashMap, RsDoc, BarcodeParser, get_ip_address
-from db_services import DocService, ErrorService, GoodsService
+from db_services import DocService, ErrorService, GoodsService, AdrDocService
 from hs_services import HsService
 import http_exchange
 from http_exchange import post_changes_to_server
