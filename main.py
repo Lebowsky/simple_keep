@@ -434,19 +434,6 @@ def elem_on_click(hashMap, _files=None, _data=None):
     return hashMap
 
 
-@HashMap()
-def elem_viev_on_start(hash_map):
-
-    screen = ui_models.GoodsSelectScreen(hash_map, rs_settings)
-    screen.on_start()
-
-
-@HashMap()
-def elem_viev_on_click(hash_map):
-    screen = ui_models.GoodsSelectScreen(hash_map, rs_settings)
-    screen.on_input()
-
-
 def remove_added_good_highlight(hashMap, good_id=None, property_id=None):
     if hashMap.get("added_goods"):
         id_doc = hashMap.get('id_doc')
@@ -863,26 +850,11 @@ def file_list_on_start(hashMap, _files=None, _data=None):
     return hashMap
 
 
-@HashMap()
-def settings_errors_on_start(hash_map: HashMap):
-    screen: ui_models.ErrorLogScreen = create_screen(hash_map)
-    screen.on_start()
+
 
 
 @HashMap()
-def settings_errors_on_click(hash_map: HashMap):
-    screen: ui_models.ErrorLogScreen = create_screen(hash_map)
-    screen.on_input()
-
-
-@HashMap()
-def http_settings_on_start(hash_map):
-    screen: ui_models.HttpSettingsScreen = create_screen(hash_map)
-    screen.on_start()
-
-
-@HashMap()
-def http_settings_on_click(hashMap,  _files=None, _data=None):
+def http_settings_on_click_(hashMap,  _files=None, _data=None):
     listener = hashMap.get('listener')
     if listener == 'btn_save':
         if not all([hashMap.get('url'), hashMap.get('user'), hashMap.get('pass')]):
