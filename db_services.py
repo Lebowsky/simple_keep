@@ -452,9 +452,8 @@ class DocService:
         qtext = f'UPDATE RS_docs_table SET sent = 0  WHERE id in ({table_string_id}) '
         get_query_result(qtext)
 
-    @staticmethod
-    def set_doc_status_to_upload(doc_id):
-        qtext = f"UPDATE RS_docs SET sent = 0, verified = 0  WHERE id_doc = '{doc_id}'"
+    def set_doc_status_to_upload(self, doc_id):
+        qtext = f"UPDATE {self.docs_table_name} SET sent = 0, verified = 0  WHERE id_doc = '{doc_id}'"
         get_query_result(qtext)
 
     def update_doc_table_row(self, row_id, data):
@@ -483,6 +482,7 @@ class AdrDocService(DocService):
         self.isAdr = True
         self.current_cell  = cur_cell
         self.table_type = table_type
+        self.provider = SqlQueryProvider(self.docs_table_name, sql_class=sqlClass())
 
     def get_current_cell(self):
         pass
@@ -741,7 +741,7 @@ class SqlQueryProvider:
 
         str_values = ', '.join([f'{name}=?' for name in columns])
 
-        q = f'UPDATE RS_docs_table SET {str_values} WHERE {str_where}'
+        q = f'UPDATE {self.table_name} SET {str_values} WHERE {str_where}'
 
         params = json.dumps(params, ensure_ascii=False)
         return self.sql_exec_many(q, params)
