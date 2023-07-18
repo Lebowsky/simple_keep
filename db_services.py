@@ -531,7 +531,7 @@ class AdrDocService(DocService):
             '''
 
         query_text = query_text + ' ORDER BY RS_cells.name, RS_adr_docs_table.last_updated DESC'
-        self.table_type = 'out'  #****** ОТЛАДОЧНОЕ
+        #self.table_type = 'out'  #****** ОТЛАДОЧНОЕ
         params_dict = {'id_doc':id_doc, 'NullValue':None, 'EmptyString':'', 'table_type':self.table_type}
         if curCell:
             params_dict['current_cell'] = curCell
@@ -547,16 +547,16 @@ class GoodsService:
         query_text = f"SELECT name FROM RS_types_goods WHERE id ='{id}'"
         return self._get_query_result(query_text, return_dict=True)
 
-    def get_goods_list_data(self, goods_type='') -> list:
+    def get_goods_list_data(self, goods_type='', item_id='') -> list:
         query_text = f"""
             SELECT
             RS_goods.id,
             ifnull(RS_goods.code, '—') as code,
             RS_goods.name,
             RS_goods.art,
-            ifnull(RS_units.name,'-') as unit,
+            ifnull(RS_units.name,'—') as unit,
             ifnull(RS_types_goods.name, '—') as type_good,
-            ifnull(RS_goods.description,'-') as description
+            ifnull(RS_goods.description,'—') as description
             
             FROM RS_goods
             LEFT JOIN RS_types_goods
@@ -565,6 +565,8 @@ class GoodsService:
             ON RS_units.id = RS_goods.unit
             """
         where = '' if not goods_type else 'WHERE RS_goods.type_good=?'
+        if where == '' and item_id:
+            where += 'WHERE RS_goods.id=?'
 
         query_text = f'''
                     {query_text}
@@ -572,7 +574,14 @@ class GoodsService:
                     ORDER BY RS_goods.id
                 '''
 
-        args = (goods_type,) if goods_type else None
+        if goods_type:
+            args = (goods_type,)
+        elif item_id:
+            args = (item_id,)
+        else:
+            args = None
+
+        # args = (goods_type,) if goods_type else None
 
         result = self._get_query_result(query_text, args, return_dict=True)
         return result
