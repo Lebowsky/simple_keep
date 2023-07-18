@@ -1917,6 +1917,7 @@ class GoodsSelectScreen(Screen):
                 return
 
             current_elem = self.hash_map.get_json('selected_card_data')
+
             qtty = self.hash_map['qtty']
 
             if qtty != current_elem['qtty']:
@@ -1943,6 +1944,11 @@ class GoodsSelectScreen(Screen):
     def get_doc(self):
         pass
 
+
+class AdrGoodsSelectScreen(GoodsSelectScreen):
+    def __init__(self, hash_map: HashMap, rs_settings):
+        super().__init__(hash_map, rs_settings)
+        self.service = AdrDocService()
 
 # ^^^^^^^^^^^^^^^^^^^^^ Goods select ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
