@@ -141,6 +141,17 @@ def elem_viev_on_click(hash_map):
     screen.on_input()
 
 
+@HashMap()
+def adr_elem_viev_on_start(hash_map):
+    screen = ui_models.GoodsSelectScreen(hash_map, rs_settings)
+    screen.on_start()
+
+
+@HashMap()
+def adr_elem_viev_on_click(hash_map):
+    screen = ui_models.GoodsSelectScreen(hash_map, rs_settings)
+    screen.on_input()
+
 # ^^^^^^^^^^^^^^^^^ Documents ^^^^^^^^^^^^^^^^^
 
 # =============== Goods =================

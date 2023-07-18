@@ -167,67 +167,6 @@ def adr_elem_on_click(hashMap, _files=None, _data=None):
     return hashMap
 
 
-def adr_elem_viev_on_start(hashMap, _files=None, _data=None):
-    hashMap.put('mm_local', '')
-    return hashMap
-
-
-def adr_elem_viev_on_click(hashMap, _files=None, _data=None):
-    listener = hashMap.get("listener")
-
-    if listener == "btn_ok":
-        # получим текущую строку документа
-        current_str = hashMap.get("selected_card_position")
-        doc = ui_global.Rs_adr_doc
-        if not current_str == '0':
-            jlist = json.loads(hashMap.get("doc_goods"))
-            current_elem = jlist['customcards']['cardsdata'][int(current_str)]
-            key = int(current_elem['key'])
-            doc.id_str = int(current_elem['key'])
-        # ... и запишем ее в базу
-        qtty = hashMap.get('qtty')
-        doc.qtty = float(qtty) if qtty else 0
-
-        doc.update_doc_str(doc) #(doc, )
-
-        hashMap.put("ShowScreen", "Документ товары")
-
-    elif listener == "btn_cancel":
-
-        hashMap.put("ShowScreen", "Документ товары")
-    elif listener == "BACK_BUTTON":
-        hashMap.put("ShowScreen", "Документ товары")
-    elif listener == "":
-        hashMap.put("qtty", str(float(hashMap.get('qtty'))))
-    elif listener == 'ON_BACK_PRESSED':
-        hashMap.put("ShowScreen", "Документ товары")
-
-    elif listener == "photo":
-
-        # Можно вообще этого не делать-оставлять как есть. Это для примера.
-        image_file = str(
-            hashMap.get("photo_path"))  # "переменная"+"_path" - сюда помещается путь к полученной фотографии
-
-        image = Image.open(image_file)
-
-        # сразу сделаем фотку - квадратной - это простой вариант. Можно сделать например отдельо миниатюры для списка, это немного сложнее
-        im = image.resize((500, 500))
-        im.save(image_file)
-
-        jphotoarr = json.loads(hashMap.get("photoGallery"))
-        hashMap.put("photoGallery", json.dumps(jphotoarr))
-        # hashMap.put("toast",json.dumps(jphotoarr))
-
-    elif listener == "gallery_change":  # пользователь может удалить фото из галереи. Новый массив надо поместить к документу
-
-        if hashMap.containsKey("photoGallery"):  # эти 2 обработчика - аналогичные, просто для разных событий
-            jphotoarr = json.loads(hashMap.get("photoGallery"))
-            hashMap.put("photoGallery", json.dumps(jphotoarr))
-            # hashMap.put("toast","#2"+json.dumps(jphotoarr))
-
-    return hashMap
-
-
 def new_adr_doc_on_start(hashMap, _files=None, _data=None):
     if hashMap.get('doc_adr_type_select') == None:
         # Заполним поле фильтра по виду документов
