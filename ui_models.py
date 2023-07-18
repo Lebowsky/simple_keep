@@ -609,8 +609,14 @@ class AdrDocsListScreen(DocsListScreen):
         self.hash_map['doc_status_select'] = 'Все;К выполнению;Выгружен;К выгрузке'
 
         doc_type = self.hash_map['doc_type_click']
+        if not doc_type:
+            doc_type = 'Все'
+            self.hash_map['doc_type_click'] = doc_type
         doc_status = self.hash_map['selected_doc_status']
-        self.hash_map['doc_type_click'] = doc_type
+        if not doc_status:
+            doc_status = 'Все'
+            self.hash_map['selected_doc_status'] = doc_status
+        #self.hash_map['doc_type_click'] = doc_type
         self.hash_map['selected_tile_key'] = ''
         list_data = self._get_doc_list_data(doc_type, doc_status)
         doc_cards = self._get_doc_cards_view(list_data,
