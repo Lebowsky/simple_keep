@@ -17,11 +17,11 @@ class Test_Model_Name_Class(unittest.TestCase):
     def test_some_method_result(self):
         # init test data
         self.hash_map['some_key'] = 'some_value'
-        actual = 'some_result_value'
+        expect = 'some_result_value'
 
         # execute test method
-        expect = self.sut.some_method()
+        actual = self.sut.some_method()
 
         # assert test method results
-        self.assertEqual(actual, expect)
+        self.assertEqual(expect, actual)
 
