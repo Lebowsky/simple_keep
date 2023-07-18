@@ -1925,13 +1925,14 @@ class GoodsSelectScreen(Screen):
                 update_data = {
                     'sent': 0,
                     'qtty': float(qtty) if qtty else 0,
-                    'price': float(price)
+                    # 'price': float(price) # в Adr docs нет колонки прайс, не понятно нужна она вообще или нет
                 }
                 row_id = int(current_elem['key'])
                 self.service.update_doc_table_row(data=update_data, row_id=row_id)
                 self.service.set_doc_status_to_upload(self.hash_map.get('id_doc'))
 
             self.hash_map.put('BackScreen')
+
 
         elif listener in ["btn_cancel", 'BACK_BUTTON', 'ON_BACK_PRESSED']:
             self.hash_map.show_screen("Документ товары")

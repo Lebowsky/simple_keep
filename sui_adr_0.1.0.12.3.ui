@@ -2646,6 +2646,14 @@
                 "method": "UpdateConfigurations",
                 "postExecute": "",
                 "alias": ""
+            },
+            {
+                "event": "onSQLError",
+                "action": "run",
+                "type": "set",
+                "method": "beep",
+                "postExecute": "",
+                "alias": ""
             }
         ]
     }
