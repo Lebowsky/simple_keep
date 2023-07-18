@@ -927,6 +927,9 @@ class GroupScanDocDetailsScreen(DocDetailsScreen):
             self._barcode_scanned()
             self.hash_map.run_event_async('doc_details_barcode_scanned')
 
+        elif self._is_result_positive('RetryConnection'):
+            self._run_progress_barcode_scanning()
+
         elif listener == 'btn_barcodes':
             self.hash_map.show_dialog('ВвестиШтрихкод')
 
@@ -952,7 +955,8 @@ class GroupScanDocDetailsScreen(DocDetailsScreen):
             # self.hash_map.run_event_async('doc_details_barcode_scanned')
         else:
             self.hash_map.beep('70')
-            self.hash_map.show_dialog('Отсутствует соединение с сервером')
+            self.hash_map.show_dialog(listener="RetryConnection", title='Отсутствует соединение с сервером',
+                                      buttons=["Повторить", "Отмена"])
 
     def _update_document_data(self):
         docs_data = self._get_update_current_doc_data()
