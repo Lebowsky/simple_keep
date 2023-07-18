@@ -1498,13 +1498,13 @@ class AdrDocDetailsScreen(DocDetailsScreen):
                 self.hash_map.put('current_cell', doc_cell['name'])
                 self.hash_map.put('current_cell_id', doc_cell['id'])
 
-            have_qtty_plan = self.hash_map.get('have_qtty_plan')
-            have_zero_plan = self.hash_map.get('have_zero_plan')
-            have_mark_plan = self.hash_map.get('have_mark_plan')
-            control = self.hash_map.get('control')
+            have_qtty_plan = self.hash_map.get_bool('have_qtty_plan')
+            have_zero_plan = self.hash_map.get_bool('have_zero_plan')
+            have_mark_plan = self.hash_map.get_bool('have_mark_plan')
+            control = self.hash_map.get_bool('control')
 
             res = doc.process_the_barcode(doc, barcode
-                                          , eval(have_qtty_plan), eval(have_zero_plan), eval(control),
+                                          , (have_qtty_plan), (have_zero_plan), (control),
                                           self.hash_map.get('current_cell_id'))
             if res == None:
                 self.hash_map.put('scanned_barcode', barcode)
