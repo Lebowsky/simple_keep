@@ -7,9 +7,9 @@ import hs_services
 from ui_utils import HashMap, RsDoc, BarcodeParser, get_ip_address
 from db_services import DocService, ErrorService, GoodsService, AdrDocService
 from hs_services import HsService
-import http_exchange
+#import http_exchange
 from http_exchange import post_changes_to_server
-from PIL import Image
+#from PIL import Image
 import widgets
 import ui_global
 
@@ -609,8 +609,14 @@ class AdrDocsListScreen(DocsListScreen):
         self.hash_map['doc_status_select'] = 'Все;К выполнению;Выгружен;К выгрузке'
 
         doc_type = self.hash_map['doc_type_click']
+        if not doc_type:
+            doc_type = 'Все'
+            self.hash_map['doc_type_click'] = doc_type
         doc_status = self.hash_map['selected_doc_status']
-        self.hash_map['doc_type_click'] = doc_type
+        if not doc_status:
+            doc_status = 'Все'
+            self.hash_map['selected_doc_status'] = doc_status
+        #self.hash_map['doc_type_click'] = doc_type
         self.hash_map['selected_tile_key'] = ''
         list_data = self._get_doc_list_data(doc_type, doc_status)
         doc_cards = self._get_doc_cards_view(list_data,
@@ -630,8 +636,10 @@ class AdrDocsListScreen(DocsListScreen):
             self.confirm_delete_doc_listener()
 
         elif self.listener == "CardsClick":
+            args = self._get_selected_card_put_data()
+
             screen = AdrDocDetailsScreen(self.hash_map, self.rs_settings)
-            screen.show(args=self._get_selected_card_put_data())
+            screen.show(args = args)
 
             # adr_list_screen.screen_values = self._get_selected_card_put_data(self) # {'doc_n': '', 'doc_date': '', 'warehouse': ''}
             # adr_list_screen.show({'id_doc': self.hash_map['selected_card_key']})
@@ -1396,17 +1404,17 @@ class DocumentsDocDetailScreen(DocDetailsScreen):
 class AdrDocDetailsScreen(DocDetailsScreen):
     screen_name = 'Документ товары'
     process_name = 'Адресное хранение'
+    table_types_from_doc_type = {'Отбор': ['out', ], 'Размещение': ['in', ],
+                                      'Перемещение': ['in', 'out']}
 
-    def __init__(self, hash_map, rs_settings, table_type = 'in'):
+    def __init__(self, hash_map, rs_settings):
         super().__init__(rs_settings=rs_settings, hash_map=hash_map)
-        self.service = AdrDocService(self.id_doc, table_type = self._get_table_type_from_screen())
+
         self.current_cell = self.hash_map.get('current_cell_id')
         self.screen_values ={'doc_n': '', 'doc_date': '', 'warehouse': ''}
-        self.table_type = table_type
+        self.table_type = ''
+        self.service = AdrDocService(self.id_doc, table_type=self.table_type)
 
-    def _get_table_type_from_screen(self):
-        #TODO сюда механизм выбора типа табличной части (отбор in или размещение out)
-        return 'in'
 
 
     def on_start(self) -> None:
@@ -1414,13 +1422,21 @@ class AdrDocDetailsScreen(DocDetailsScreen):
 
 
     def _on_start(self):
+
+        if not self.table_type:
+            self.table_type = self._get_table_type_for_screen()
+        else:
+            #Выбор табличной части (отбор/размещение)
+            #self._get_table_type_from_screen()
+            self.table_type = self._get_table_type_from_name(self.hash_map['table_type'])
+
         self._set_visibility_on_start()
         self.hash_map.put('SetTitle', self.hash_map["doc_type"])
 
         have_qtty_plan = False
         have_zero_plan = False
         have_mark_plan = False
-
+        self.service.table_type = self.table_type
         doc_details = self._get_doc_details_data()
         table_data = self._prepare_table_data(doc_details)
         table_view = self._get_doc_table_view(table_data=table_data)
@@ -1454,7 +1470,7 @@ class AdrDocDetailsScreen(DocDetailsScreen):
         listener = self.hash_map['listener']
 
         if listener == "CardsClick":
-            self._fill_one_string_screen(self.hash_map)
+            self._fill_one_string_screen()
             #self.hash_map.show_screen("Товар выбор") ---*** Экран в функции _fill_one_string_screen
         elif listener == "BACK_BUTTON":
             self.hash_map.show_screen("Документы")
@@ -1482,13 +1498,13 @@ class AdrDocDetailsScreen(DocDetailsScreen):
                 self.hash_map.put('current_cell', doc_cell['name'])
                 self.hash_map.put('current_cell_id', doc_cell['id'])
 
-            have_qtty_plan = self.hash_map.get('have_qtty_plan')
-            have_zero_plan = self.hash_map.get('have_zero_plan')
-            have_mark_plan = self.hash_map.get('have_mark_plan')
-            control = self.hash_map.get('control')
+            have_qtty_plan = self.hash_map.get_bool('have_qtty_plan')
+            have_zero_plan = self.hash_map.get_bool('have_zero_plan')
+            have_mark_plan = self.hash_map.get_bool('have_mark_plan')
+            control = self.hash_map.get_bool('control')
 
             res = doc.process_the_barcode(doc, barcode
-                                          , eval(have_qtty_plan), eval(have_zero_plan), eval(control),
+                                          , (have_qtty_plan), (have_zero_plan), (control),
                                           self.hash_map.get('current_cell_id'))
             if res == None:
                 self.hash_map.put('scanned_barcode', barcode)
@@ -1576,7 +1592,30 @@ class AdrDocDetailsScreen(DocDetailsScreen):
         elif listener == 'btn_rows_filter_off':
             self.hash_map.remove('rows_filter')
             self.hash_map.put('RefreshScreen', '')
+        elif listener == 'table_type':
+            self.table_type = self._get_table_type_from_name(self.hash_map['table_type'])
+            self._on_start()
+            self.hash_map.refresh_screen()
 
+    # В зависимости от вида документа назначаем для отображения табличную часть по умолчаниюю
+    # Например, для документа Отбор это out а для Размещение in
+    def _get_table_type_for_screen(self):
+        tables_type = 'Отбор;Размещение' # ';'.join(self.table_types_from_doc_type[
+                                  # self.hash_map['doc_type']])
+        self.hash_map.put('tables_type', tables_type)
+
+        if self.hash_map.get('doc_type') in ['Отбор', 'Перемещение']:
+            self.hash_map['table_type'] = 'Отбор'
+            return 'out'
+        else:
+            self.hash_map['table_type'] = 'Размещение'
+            return 'in'
+
+    @staticmethod
+    def _get_table_type_from_name(_val):
+
+        return 'in' if _val == 'Размещение' else 'out'
+          #current_table_type']]
 
     def _layout_action(self):
         layout_listener = self.hash_map.get('layout_listener')
@@ -1595,7 +1634,7 @@ class AdrDocDetailsScreen(DocDetailsScreen):
             self.hash_map.put('filter_fields', 'name;barcode')
             self.hash_map.put('ShowProcessResult', 'Универсальный справочник|Справочник')
 
-    def _fill_one_string_screen(self, filter=''):
+    def _fill_one_string_screen(self, _filter=''):
         hashMap = self.hash_map
         # Находим ID документа
         current_str = hashMap.get("selected_card_position")
