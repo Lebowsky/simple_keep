@@ -901,11 +901,10 @@ class DocDetailsScreen(Screen):
         for v in _vars:
             name = f'Show_{v}'
             self.hash_map[name] = '1' if self.hash_map[v] else '-1'
-        # TODO rework this
 
         allow_fact_input = self.rs_settings.get('allow_fact_input') or False
-        self.hash_map.put("Show_fact_qtty_input", 1 if allow_fact_input else -1)
-        self.hash_map.put("Show_fact_qtty_note", -1 if allow_fact_input else 1)
+        self.hash_map.put("Show_fact_qtty_input", '1' if allow_fact_input else '-1')
+        self.hash_map.put("Show_fact_qtty_note", '-1' if allow_fact_input else '1')
 
     def _get_doc_details_data(self):
         return self.service.get_doc_details_data(self.id_doc)
@@ -1464,6 +1463,7 @@ class AdrDocDetailsScreen(DocDetailsScreen):
         self.hash_map['control'] = control
 
         self.hash_map.put("doc_goods_table", table_view.to_json())
+        self.hash_map.put("return_selected_data", table_view.to_json())
 
 
     def _get_doc_details_data(self):
@@ -1919,12 +1919,13 @@ class GoodsSelectScreen(Screen):
             current_elem = self.hash_map.get_json('selected_card_data')
 
             qtty = self.hash_map['qtty']
+            price = self.hash_map.get('price') or 0
 
             if qtty != current_elem['qtty']:
                 update_data = {
                     'sent': 0,
                     'qtty': float(qtty) if qtty else 0,
-                    'price': float(self.hash_map.get('price'))
+                    'price': float(price)
                 }
                 row_id = int(current_elem['key'])
                 self.service.update_doc_table_row(data=update_data, row_id=row_id)
