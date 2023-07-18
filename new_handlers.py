@@ -4,7 +4,6 @@ from ru.travelfood.simple_ui import SimpleUtilites as suClass
 from ui_utils import HashMap
 import ui_models
 
-
 noClass = jclass("ru.travelfood.simple_ui.NoSQL")
 rs_settings = noClass("rs_settings")
 current_screen = None
@@ -34,6 +33,7 @@ def create_screen(hash_map: HashMap):
         current_screen.event = hash_map['event']
 
     return current_screen
+
 
 # =============== Main events =================
 
@@ -129,6 +129,18 @@ def doc_details_listener(hash_map: HashMap):
     screen.on_input()
 
 
+@HashMap()
+def elem_viev_on_start(hash_map):
+    screen = ui_models.GoodsSelectScreen(hash_map, rs_settings)
+    screen.on_start()
+
+
+@HashMap()
+def elem_viev_on_click(hash_map):
+    screen = ui_models.GoodsSelectScreen(hash_map, rs_settings)
+    screen.on_input()
+
+
 # ^^^^^^^^^^^^^^^^^ Documents ^^^^^^^^^^^^^^^^^
 
 # =============== Goods =================
@@ -138,13 +150,13 @@ def goods_on_start(hash_map):
     screen: ui_models.GoodsListScreen = create_screen(hash_map)
     screen.on_start()
 
+
 @HashMap()
 def goods_on_input(hash_map: HashMap):
     screen = ui_models.GoodsListScreen(hash_map, rs_settings)
     # screen: ui_models.GoodsListScreen = create_screen(hash_map)
     screen.on_input()
     # hash_map.toast(f'{hash_map.get_current_screen()} {hash_map.get_current_process()}')
-
 
 
 @HashMap()
@@ -211,5 +223,29 @@ def test_barcode_listener(hash_map: HashMap):
     screen: ui_models.BarcodeTestScreen = create_screen(hash_map)
     screen.on_input()
 
-# ^^^^^^^^^^^^^^^^^ Settings ^^^^^^^^^^^^^^^^^
 
+@HashMap()
+def settings_errors_on_start(hash_map: HashMap):
+    screen: ui_models.ErrorLogScreen = create_screen(hash_map)
+    screen.on_start()
+
+
+@HashMap()
+def settings_errors_on_click(hash_map: HashMap):
+    screen: ui_models.ErrorLogScreen = create_screen(hash_map)
+    screen.on_input()
+
+
+@HashMap()
+def http_settings_on_start(hash_map):
+    screen: ui_models.HttpSettingsScreen = create_screen(hash_map)
+    screen.on_start()
+
+
+@HashMap()
+def http_settings_on_click(hash_map):
+    screen: ui_models.HttpSettingsScreen = create_screen(hash_map)
+    screen.on_input()
+
+
+# ^^^^^^^^^^^^^^^^^ Settings ^^^^^^^^^^^^^^^^^

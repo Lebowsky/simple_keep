@@ -1,5 +1,6 @@
 from abc import ABC, abstractmethod
 import json
+from json.decoder import JSONDecodeError
 import os
 
 import db_services
@@ -1908,7 +1909,7 @@ class GoodsListScreen(Screen):
     screen_name = 'Товары список'
     process_name = 'Товары'
 
-    def __init__(self, hash_map: HashMap,  rs_settings):
+    def __init__(self, hash_map: HashMap, rs_settings):
         super().__init__(hash_map, rs_settings)
         self.service = GoodsService()
 
@@ -2187,6 +2188,7 @@ class ItemCard(Screen):
         )
         return variants_cards
 
+
 # ^^^^^^^^^^^^^^^^^^^^^ Goods(Process) ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 
@@ -2404,79 +2406,32 @@ class HttpSettingsScreen(Screen):
 
     def __init__(self, hash_map: HashMap, rs_settings):
         super().__init__(hash_map, rs_settings)
+        self.hs_service = None
 
     def on_start(self) -> None:
+        self.hash_map.remove('toast')
         self.hash_map['btn_test_connection'] = 'Тест соединения'
-        http_settings = self.get_http_settings()
+        http_settings = self._get_http_settings()
+
         put_data = {
-            'url': widgets.ModernField(hint='Адрес сервера', default_text=http_settings['url'] or '').to_json(),
-            'user': widgets.ModernField(hint='Пользователь', default_text=http_settings['user'] or '').to_json(),
-            'pass': widgets.ModernField(hint='Пароль', default_text=http_settings['pass'] or '',
-                                        password=True).to_json(),
-            'user_name': widgets.ModernField(hint='Ваше имя для идентификации в 1С',
-                                             default_text=http_settings['user_name'] or '').to_json(),
+            'url': self._get_modern_field(hint='Адрес сервера', default_text=http_settings['url'] or ''),
+            'user': self._get_modern_field(hint='Пользователь', default_text=http_settings['user'] or ''),
+            'pass': self._get_modern_field(hint='Пароль', default_text=http_settings['pass'] or '', password=True),
+            'user_name': self._get_modern_field(hint='Ваше имя для идентификации в 1С',
+                                                default_text=http_settings['user_name'] or ''),
         }
         self.hash_map.put_data(put_data)
 
     def on_input(self) -> None:
-        pass
-
-        # if listener == 'btn_save':
-        #     hashMap.toast('saved')
-        #     hashMap.toast(hashMap.get('pass'))
-        #     rs_settings.put('url', hashMap.get('url'), True)
-        #     rs_settings.put('user', hashMap.get('user'), True)
-        #     rs_settings.put('pass', hashMap.get('pass'), True)
-        #     rs_settings.put('user_name', hashMap.get('user_name'), True)
-        #
-        #     hashMap.put('url', ui_form_data.ModernField(hint='url', default_text=rs_settings.get('url')).to_json())
-        #     hashMap.put('user', ui_form_data.ModernField(hint='user', default_text=rs_settings.get('user')).to_json())
-        #     hashMap.put('pass', ui_form_data.ModernField(hint='pass', default_text=rs_settings.get('pass')).to_json())
-        #     hashMap.put('user_name',
-        #                 ui_form_data.ModernField(hint='user_name', default_text=rs_settings.get('user_name')).to_json())
-        #
-        #     # hashMap.put('ShowScreen', 'Настройки и обмен')
-        # elif listener == 'btn_cancel':
-        #     hashMap.put('ShowScreen', 'Настройки и обмен')
-        # elif listener == 'ON_BACK_PRESSED':
-        #     hashMap.put('ShowScreen', 'Настройки и обмен')
-        # elif listener == 'barcode':
-        #     barcode = hashMap.get('barcode_camera2')
-        #     try:
-        #         barc_struct = json.loads(barcode)
-        #
-        #         rs_settings.put('url', barc_struct.get('url'), True)
-        #         rs_settings.put('user', barc_struct.get('user'), True)
-        #         rs_settings.put('pass', barc_struct.get('pass'), True)
-        #         rs_settings.put('user_name', barc_struct.get('user_name'), True)
-        #
-        #         hashMap.put('url', ui_form_data.ModernField(hint='url', default_text=barc_struct.get('url')).to_json())
-        #         hashMap.put('user',
-        #                     ui_form_data.ModernField(hint='user', default_text=barc_struct.get('user')).to_json())
-        #         hashMap.put('pass',
-        #                     ui_form_data.ModernField(hint='pass', default_text=barc_struct.get('pass')).to_json())
-        #         hashMap.put('user_name', ui_form_data.ModernField(hint='user_name',
-        #                                                           default_text=barc_struct.get('user_name')).to_json())
-        #     except:
-        #         hashMap.put('toast', 'неверный формат QR-кода')
-        # elif listener == 'btn_test_connection':
-        #     # /communication_test
-        #     http = get_http_settings(hashMap)
-        #     r = requests.get(http['url'] + '/simple_accounting/communication_test?android_id=' + http['android_id'],
-        #                      auth=HTTPBasicAuth(http['user'], http['pass']),
-        #                      headers={'Content-Type': 'application/x-www-form-urlencoded; charset=utf-8'},
-        #                      params={'user_name': http['user_name'], 'device_model': http['device_model']})
-        #     if r.status_code == 200:
-        #         hashMap.put('btn_test_connection', 'Соединение установлено')
-        #         hashMap.put('toast', 'Соединение установлено')
-        #     else:
-        #         hashMap.put('btn_test_connection', 'Тест соединения')
-        #         hashMap.put('toast', 'Не удалось установить соединение')
-        #
-        # elif listener == 'timer_is_disabled':
-        #     rs_settings.put('timer_is_disabled', hashMap['timer_is_disabled'], True)
-        #
-        # return hashMap
+        listeners = {
+            'btn_test_connection': self._test_connection,
+            'btn_save': self._save_settings,
+            'barcode': self._barcode_scanned,
+            'btn_cancel': self._back_screen,
+            'ON_BACK_PRESSED': self._back_screen,
+        }
+        if self.listener in listeners:
+            listeners[self.listener]()
 
     def on_post_start(self):
         pass
@@ -2484,8 +2439,71 @@ class HttpSettingsScreen(Screen):
     def show(self, args=None):
         pass
 
-    def get_modern_field(self, **data):
+    def _test_connection(self):
+        self.hs_service = hs_services.HsService(self._get_http_settings())
+
+        if self._check_http_settings():
+            self.hs_service.communication_test()
+            result = self.hs_service.http_answer
+
+            if result.unauthorized:
+                self.hash_map.toast('Ошибка авторизации сервера 1С')
+            elif result.forbidden:
+                self.toast('Запрос на авторизацию принят')
+            elif result.error:
+                self.toast('Не удалось установить соединение')
+            else:
+                self.toast('Соединение установлено')
+
+        else:
+            self.toast("Не указаны настройки HTTP подключения к серверу")
+
+    def _save_settings(self):
+        self.rs_settings.put('URL', self.hash_map['url'], True)
+        self.rs_settings.put('USER', self.hash_map['user'], True)
+        self.rs_settings.put('PASS', self.hash_map['pass'], True)
+        self.rs_settings.put('user_name', self.hash_map['user_name'], True)
+
+        self._back_screen()
+
+    def _barcode_scanned(self):
+        barcode = self.hash_map.get('barcode_camera2')
+        try:
+            barc_struct = json.loads(barcode)
+
+            self.rs_settings.put('URL', barc_struct.get('url'), True)
+            self.rs_settings.put('USER', barc_struct.get('user'), True)
+            self.rs_settings.put('PASS', barc_struct.get('pass'), True)
+            self.rs_settings.put('user_name', barc_struct.get('user_name'), True)
+
+            self.hash_map.put('url', self._get_modern_field(hint='url', default_text=barc_struct.get('url')))
+            self.hash_map.put('user', self._get_modern_field(hint='user', default_text=barc_struct.get('user')))
+            self.hash_map.put('pass', self._get_modern_field(hint='pass', default_text=barc_struct.get('pass')))
+            self.hash_map.put('user_name',
+                              self._get_modern_field(hint='user_name', default_text=barc_struct.get('user_name')))
+        except (JSONDecodeError, AttributeError) as e:
+            self.toast('Неверный формат QR-кода')
+
+
+    def _back_screen(self):
+        self.hash_map.put('BackScreen', '')
+
+    def _get_modern_field(self, **data):
         return widgets.ModernField(**data).to_json()
+
+    def _check_http_settings(self) -> bool:
+        http = self._get_http_settings()
+        return all([http.get('url'), http.get('user'), http.get('pass')])
+
+    def _get_http_settings(self):
+        http_settings = {
+            'url': self.rs_settings.get("URL"),
+            'user': self.rs_settings.get('USER'),
+            'pass': self.rs_settings.get('PASS'),
+            'device_model': self.hash_map['DEVICE_MODEL'],
+            'android_id': self.hash_map['ANDROID_ID'],
+            'user_name': self.rs_settings.get('user_name')}
+        return http_settings
 
 
 class ErrorLogScreen(Screen):
