@@ -53,17 +53,14 @@
                                             },
                                             {
                                                 "type": "SpinnerLayout",
-                                                "height": "wrap_content",
-                                                "width": "wrap_content",
-                                                "weight": "0",
                                                 "Value": "@doc_status_select",
                                                 "Variable": "doc_status_click",
-                                                "gravity_horizontal": "right"
+                                                "height": "wrap_content",
+                                                "width": "wrap_content",
+                                                "gravity_horizontal": "right",
+                                                "weight": "0"
                                             }
-                                        ],
-                                        "BackgroundColor": "",
-                                        "StrokeWidth": "",
-                                        "Padding": ""
+                                        ]
                                     },
                                     {
                                         "height": "wrap_content",
@@ -75,10 +72,7 @@
                                         "Value": "@docAdrCards",
                                         "Variable": "doc_adr_cards"
                                     }
-                                ],
-                                "BackgroundColor": "",
-                                "StrokeWidth": "",
-                                "Padding": ""
+                                ]
                             }
                         ],
                         "Handlers": [
@@ -98,10 +92,7 @@
                                 "method": "adr_doc_on_select",
                                 "postExecute": ""
                             }
-                        ],
-                        "onlineOnStart": false,
-                        "onlineOnAfterStart": false,
-                        "onlineOnInput": false
+                        ]
                     },
                     {
                         "type": "Operation",
@@ -171,50 +162,44 @@
                                                 "Value": "x",
                                                 "Variable": "btn_clear_cell"
                                             }
-                                        ],
-                                        "BackgroundColor": "",
-                                        "StrokeWidth": "",
-                                        "Padding": ""
+                                        ]
                                     },
                                     {
-                                        "type": "LinearLayout",
+                                        "orientation": "horizontal",
                                         "height": "wrap_content",
                                         "width": "match_parent",
                                         "weight": "0",
-                                        "Value": "",
+                                        "type": "LinearLayout",
                                         "Variable": "",
-                                        "orientation": "horizontal",
+                                        "Value": "",
                                         "Elements": [
                                             {
-                                                "type": "TextView",
+                                                "TextSize": "18",
                                                 "height": "wrap_content",
                                                 "width": "wrap_content",
                                                 "weight": "1",
+                                                "type": "TextView",
                                                 "Value": "@doc_type",
-                                                "Variable": "",
-                                                "TextSize": "18"
+                                                "Variable": ""
                                             },
                                             {
-                                                "type": "TextView",
                                                 "height": "wrap_content",
                                                 "width": "wrap_content",
                                                 "weight": "0",
+                                                "type": "TextView",
                                                 "Value": "Табл.",
                                                 "Variable": ""
                                             },
                                             {
                                                 "type": "SpinnerLayout",
-                                                "height": "wrap_content",
-                                                "width": "wrap_content",
-                                                "weight": "1",
                                                 "Value": "@tables_type",
                                                 "Variable": "table_type",
-                                                "gravity_horizontal": "right"
+                                                "height": "wrap_content",
+                                                "width": "wrap_content",
+                                                "gravity_horizontal": "right",
+                                                "weight": "1"
                                             }
-                                        ],
-                                        "BackgroundColor": "",
-                                        "StrokeWidth": "",
-                                        "Padding": ""
+                                        ]
                                     },
                                     {
                                         "orientation": "horizontal",
@@ -258,10 +243,7 @@
                                                 "Value": "|| ||| ||",
                                                 "Variable": "btn_barcodes"
                                             }
-                                        ],
-                                        "BackgroundColor": "",
-                                        "StrokeWidth": "",
-                                        "Padding": ""
+                                        ]
                                     },
                                     {
                                         "height": "wrap_content",
@@ -293,10 +275,7 @@
                                         "Value": "Отметить к отправке",
                                         "Variable": "btn_doc_mark_verified"
                                     }
-                                ],
-                                "BackgroundColor": "",
-                                "StrokeWidth": "",
-                                "Padding": ""
+                                ]
                             },
                             {
                                 "type": "barcode",
@@ -344,10 +323,7 @@
                                 "method": "adr_doc_details_on_input",
                                 "postExecute": ""
                             }
-                        ],
-                        "onlineOnStart": false,
-                        "onlineOnAfterStart": false,
-                        "onlineOnInput": false
+                        ]
                     },
                     {
                         "type": "Operation",
@@ -616,10 +592,7 @@
                                 "method": "adr_elem_on_click",
                                 "postExecute": ""
                             }
-                        ],
-                        "onlineOnStart": false,
-                        "onlineOnAfterStart": false,
-                        "onlineOnInput": false
+                        ]
                     },
                     {
                         "type": "Operation",
@@ -809,10 +782,7 @@
                                 "method": "adr_elem_viev_on_click",
                                 "postExecute": ""
                             }
-                        ],
-                        "onlineOnStart": false,
-                        "onlineOnAfterStart": false,
-                        "onlineOnInput": false
+                        ]
                     },
                     {
                         "type": "Operation",
@@ -895,10 +865,7 @@
                                 "method": "barcode_error_screen_listener",
                                 "postExecute": ""
                             }
-                        ],
-                        "onlineOnStart": false,
-                        "onlineOnAfterStart": false,
-                        "onlineOnInput": false
+                        ]
                     },
                     {
                         "type": "Operation",
@@ -941,10 +908,7 @@
                                 ]
                             }
                         ],
-                        "Handlers": [],
-                        "onlineOnStart": false,
-                        "onlineOnAfterStart": false,
-                        "onlineOnInput": false
+                        "Handlers": []
                     },
                     {
                         "type": "Operation",
@@ -1076,10 +1040,7 @@
                                 "method": "new_adr_doc_on_select",
                                 "postExecute": ""
                             }
-                        ],
-                        "onlineOnStart": false,
-                        "onlineOnAfterStart": false,
-                        "onlineOnInput": false
+                        ]
                     }
                 ]
             },
@@ -1135,10 +1096,7 @@
                                 "method": "universal_cards_listener",
                                 "postExecute": ""
                             }
-                        ],
-                        "onlineOnStart": false,
-                        "onlineOnAfterStart": false,
-                        "onlineOnInput": false
+                        ]
                     }
                 ]
             },
@@ -1242,10 +1200,7 @@
                                 "method": "goods_on_input",
                                 "postExecute": ""
                             }
-                        ],
-                        "onlineOnStart": false,
-                        "onlineOnAfterStart": false,
-                        "onlineOnInput": false
+                        ]
                     },
                     {
                         "type": "Operation",
@@ -1503,10 +1458,7 @@
                                 "method": "get_good_variants",
                                 "postExecute": ""
                             }
-                        ],
-                        "onlineOnStart": false,
-                        "onlineOnAfterStart": false,
-                        "onlineOnInput": false
+                        ]
                     }
                 ]
             },
@@ -1696,10 +1648,7 @@
                                 "method": "settings_on_click",
                                 "postExecute": ""
                             }
-                        ],
-                        "onlineOnStart": false,
-                        "onlineOnAfterStart": false,
-                        "onlineOnInput": false
+                        ]
                     },
                     {
                         "type": "Operation",
@@ -1741,10 +1690,7 @@
                                 "method": "file_list_on_start",
                                 "postExecute": ""
                             }
-                        ],
-                        "onlineOnStart": false,
-                        "onlineOnAfterStart": false,
-                        "onlineOnInput": false
+                        ]
                     },
                     {
                         "type": "Operation",
@@ -1893,10 +1839,7 @@
                                 "method": "font_size_settings_listener",
                                 "postExecute": ""
                             }
-                        ],
-                        "onlineOnStart": false,
-                        "onlineOnAfterStart": false,
-                        "onlineOnInput": false
+                        ]
                     },
                     {
                         "type": "Operation",
@@ -2027,10 +1970,7 @@
                                 "method": "test_barcode_listener",
                                 "postExecute": ""
                             }
-                        ],
-                        "onlineOnStart": false,
-                        "onlineOnAfterStart": false,
-                        "onlineOnInput": false
+                        ]
                     },
                     {
                         "type": "Operation",
@@ -2120,10 +2060,7 @@
                                 "method": "settings_errors_on_click",
                                 "postExecute": ""
                             }
-                        ],
-                        "onlineOnStart": false,
-                        "onlineOnAfterStart": false,
-                        "onlineOnInput": false
+                        ]
                     },
                     {
                         "type": "Operation",
@@ -2259,10 +2196,7 @@
                                 "method": "http_settings_on_click",
                                 "postExecute": ""
                             }
-                        ],
-                        "onlineOnStart": false,
-                        "onlineOnAfterStart": false,
-                        "onlineOnInput": false
+                        ]
                     },
                     {
                         "type": "Operation",
@@ -2389,10 +2323,7 @@
                                 "method": "sound_settings_listener",
                                 "postExecute": ""
                             }
-                        ],
-                        "onlineOnStart": false,
-                        "onlineOnAfterStart": false,
-                        "onlineOnInput": false
+                        ]
                     }
                 ]
             },
@@ -2569,10 +2500,7 @@
                                 "method": "debug_on_start",
                                 "postExecute": ""
                             }
-                        ],
-                        "onlineOnStart": false,
-                        "onlineOnAfterStart": false,
-                        "onlineOnInput": false
+                        ]
                     }
                 ]
             }
@@ -2599,6 +2527,12 @@
                 "MenuId": "01",
                 "MenuItem": "faq",
                 "MenuTitle": "FAQ",
+                "MenuTop": false
+            },
+            {
+                "MenuId": "02",
+                "MenuItem": "update_conf",
+                "MenuTitle": "Обновить конфигурацию",
                 "MenuTop": false
             }
         ],
@@ -2660,6 +2594,10 @@
             {
                 "PyFileKey": "widgets",
                 "PyFileData": ""
+            },
+            {
+                "PyFileKey": "new_handlers",
+                "PyFileData": ""
             }
         ],
         "StyleTemplates": [],
@@ -2697,6 +2635,15 @@
                 "action": "run",
                 "type": "python",
                 "method": "put_notification",
+                "postExecute": "",
+                "alias": ""
+            },
+            {
+                "event": "onBackgroundCommand",
+                "listener": "menu_2",
+                "action": "run",
+                "type": "set",
+                "method": "UpdateConfigurations",
                 "postExecute": "",
                 "alias": ""
             }
