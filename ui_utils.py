@@ -32,6 +32,10 @@ class HashMap:
     def finish_process(self):
         self.hash_map.put('FinishProcess', '')
 
+
+    def finish_process(self):
+        self.hash_map.put('FinishProcess','')
+
     def toast(self, text, add_to_log=False):
         self.hash_map.put('toast', str(text))
         if add_to_log:

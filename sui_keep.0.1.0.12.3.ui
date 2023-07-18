@@ -73,7 +73,10 @@
                                 "method": "tiles_on_input",
                                 "postExecute": ""
                             }
-                        ]
+                        ],
+                        "onlineOnStart": false,
+                        "onlineOnAfterStart": false,
+                        "onlineOnInput": false
                     },
                     {
                         "type": "Operation",
@@ -127,7 +130,10 @@
                                                 "gravity_vertical": "center",
                                                 "weight": "1"
                                             }
-                                        ]
+                                        ],
+                                        "BackgroundColor": "",
+                                        "StrokeWidth": "",
+                                        "Padding": ""
                                     },
                                     {
                                         "height": "wrap_content",
@@ -139,7 +145,10 @@
                                         "Value": "@docCards",
                                         "Variable": "doc_cards"
                                     }
-                                ]
+                                ],
+                                "BackgroundColor": "",
+                                "StrokeWidth": "",
+                                "Padding": ""
                             }
                         ],
                         "Handlers": [
@@ -159,7 +168,10 @@
                                 "method": "docs_on_select",
                                 "postExecute": ""
                             }
-                        ]
+                        ],
+                        "onlineOnStart": false,
+                        "onlineOnAfterStart": false,
+                        "onlineOnInput": false
                     },
                     {
                         "type": "Operation",
@@ -256,7 +268,10 @@
                                                             }
                                                         ]
                                                     }
-                                                ]
+                                                ],
+                                                "BackgroundColor": "",
+                                                "StrokeWidth": "",
+                                                "Padding": ""
                                             }
                                         ]
                                     },
@@ -356,7 +371,10 @@
                                 "method": "doc_details_listener",
                                 "postExecute": ""
                             }
-                        ]
+                        ],
+                        "onlineOnStart": false,
+                        "onlineOnAfterStart": false,
+                        "onlineOnInput": false
                     },
                     {
                         "type": "Operation",
@@ -686,7 +704,10 @@
                                 "method": "elem_on_click",
                                 "postExecute": ""
                             }
-                        ]
+                        ],
+                        "onlineOnStart": false,
+                        "onlineOnAfterStart": false,
+                        "onlineOnInput": false
                     },
                     {
                         "type": "Operation",
@@ -1125,7 +1146,10 @@
                                 "method": "elem_viev_on_click",
                                 "postExecute": ""
                             }
-                        ]
+                        ],
+                        "onlineOnStart": false,
+                        "onlineOnAfterStart": false,
+                        "onlineOnInput": false
                     },
                     {
                         "type": "Operation",
@@ -1173,7 +1197,10 @@
                                 "method": "doc_barcodes_listener",
                                 "postExecute": ""
                             }
-                        ]
+                        ],
+                        "onlineOnStart": false,
+                        "onlineOnAfterStart": false,
+                        "onlineOnInput": false
                     },
                     {
                         "type": "Operation",
@@ -1295,7 +1322,10 @@
                                 "method": "delete_barcode_screen_click",
                                 "postExecute": ""
                             }
-                        ]
+                        ],
+                        "onlineOnStart": false,
+                        "onlineOnAfterStart": false,
+                        "onlineOnInput": false
                     },
                     {
                         "type": "Operation",
@@ -1378,7 +1408,10 @@
                                 "method": "barcode_error_screen_listener",
                                 "postExecute": ""
                             }
-                        ]
+                        ],
+                        "onlineOnStart": false,
+                        "onlineOnAfterStart": false,
+                        "onlineOnInput": false
                     },
                     {
                         "type": "Operation",
@@ -1421,7 +1454,10 @@
                                 ]
                             }
                         ],
-                        "Handlers": []
+                        "Handlers": [],
+                        "onlineOnStart": false,
+                        "onlineOnAfterStart": false,
+                        "onlineOnInput": false
                     },
                     {
                         "type": "Operation",
@@ -1561,7 +1597,10 @@
                                 "method": "barcode_flow_listener",
                                 "postExecute": ""
                             }
-                        ]
+                        ],
+                        "onlineOnStart": false,
+                        "onlineOnAfterStart": false,
+                        "onlineOnInput": false
                     }
                 ]
             },
@@ -1635,7 +1674,10 @@
                                 "method": "tiles_on_input",
                                 "postExecute": ""
                             }
-                        ]
+                        ],
+                        "onlineOnStart": false,
+                        "onlineOnAfterStart": false,
+                        "onlineOnInput": false
                     },
                     {
                         "type": "Operation",
@@ -1715,7 +1757,10 @@
                                 "method": "docs_on_select",
                                 "postExecute": ""
                             }
-                        ]
+                        ],
+                        "onlineOnStart": false,
+                        "onlineOnAfterStart": false,
+                        "onlineOnInput": false
                     },
                     {
                         "type": "Operation",
@@ -1897,7 +1942,10 @@
                                 "method": "doc_details_listener",
                                 "postExecute": ""
                             }
-                        ]
+                        ],
+                        "onlineOnStart": false,
+                        "onlineOnAfterStart": false,
+                        "onlineOnInput": false
                     },
                     {
                         "type": "Operation",
@@ -1980,7 +2028,10 @@
                                 "method": "barcode_error_screen_listener",
                                 "postExecute": ""
                             }
-                        ]
+                        ],
+                        "onlineOnStart": false,
+                        "onlineOnAfterStart": false,
+                        "onlineOnInput": false
                     },
                     {
                         "type": "Operation",
@@ -2023,7 +2074,10 @@
                                 ]
                             }
                         ],
-                        "Handlers": []
+                        "Handlers": [],
+                        "onlineOnStart": false,
+                        "onlineOnAfterStart": false,
+                        "onlineOnInput": false
                     },
                     {
                         "type": "Operation",
@@ -2067,7 +2121,10 @@
                                 ]
                             }
                         ],
-                        "Handlers": []
+                        "Handlers": [],
+                        "onlineOnStart": false,
+                        "onlineOnAfterStart": false,
+                        "onlineOnInput": false
                     }
                 ]
             },
@@ -2123,7 +2180,10 @@
                                 "method": "universal_cards_listener",
                                 "postExecute": ""
                             }
-                        ]
+                        ],
+                        "onlineOnStart": false,
+                        "onlineOnAfterStart": false,
+                        "onlineOnInput": false
                     }
                 ]
             },
@@ -2227,7 +2287,10 @@
                                 "method": "goods_on_input",
                                 "postExecute": ""
                             }
-                        ]
+                        ],
+                        "onlineOnStart": false,
+                        "onlineOnAfterStart": false,
+                        "onlineOnInput": false
                     },
                     {
                         "type": "Operation",
@@ -2485,7 +2548,10 @@
                                 "method": "good_card_post_start",
                                 "postExecute": ""
                             }
-                        ]
+                        ],
+                        "onlineOnStart": false,
+                        "onlineOnAfterStart": false,
+                        "onlineOnInput": false
                     },
                     {
                         "type": "Operation",
@@ -2531,7 +2597,10 @@
                                 "method": "select_type_goods_on_input",
                                 "postExecute": ""
                             }
-                        ]
+                        ],
+                        "onlineOnStart": false,
+                        "onlineOnAfterStart": false,
+                        "onlineOnInput": false
                     }
                 ]
             },
@@ -2720,7 +2789,10 @@
                                 "method": "settings_on_click",
                                 "postExecute": ""
                             }
-                        ]
+                        ],
+                        "onlineOnStart": false,
+                        "onlineOnAfterStart": false,
+                        "onlineOnInput": false
                     },
                     {
                         "type": "Operation",
@@ -2762,7 +2834,10 @@
                                 "method": "file_list_on_start",
                                 "postExecute": ""
                             }
-                        ]
+                        ],
+                        "onlineOnStart": false,
+                        "onlineOnAfterStart": false,
+                        "onlineOnInput": false
                     },
                     {
                         "type": "Operation",
@@ -2911,7 +2986,10 @@
                                 "method": "font_size_settings_listener",
                                 "postExecute": ""
                             }
-                        ]
+                        ],
+                        "onlineOnStart": false,
+                        "onlineOnAfterStart": false,
+                        "onlineOnInput": false
                     },
                     {
                         "type": "Operation",
@@ -3042,7 +3120,10 @@
                                 "method": "test_barcode_listener",
                                 "postExecute": ""
                             }
-                        ]
+                        ],
+                        "onlineOnStart": false,
+                        "onlineOnAfterStart": false,
+                        "onlineOnInput": false
                     },
                     {
                         "type": "Operation",
@@ -3132,7 +3213,10 @@
                                 "method": "settings_errors_on_click",
                                 "postExecute": ""
                             }
-                        ]
+                        ],
+                        "onlineOnStart": false,
+                        "onlineOnAfterStart": false,
+                        "onlineOnInput": false
                     },
                     {
                         "type": "Operation",
@@ -3268,7 +3352,10 @@
                                 "method": "http_settings_on_click",
                                 "postExecute": ""
                             }
-                        ]
+                        ],
+                        "onlineOnStart": false,
+                        "onlineOnAfterStart": false,
+                        "onlineOnInput": false
                     },
                     {
                         "type": "Operation",
@@ -3395,7 +3482,10 @@
                                 "method": "sound_settings_listener",
                                 "postExecute": ""
                             }
-                        ]
+                        ],
+                        "onlineOnStart": false,
+                        "onlineOnAfterStart": false,
+                        "onlineOnInput": false
                     }
                 ]
             },
@@ -3572,7 +3662,10 @@
                                 "method": "debug_on_start",
                                 "postExecute": ""
                             }
-                        ]
+                        ],
+                        "onlineOnStart": false,
+                        "onlineOnAfterStart": false,
+                        "onlineOnInput": false
                     }
                 ]
             }
@@ -3620,11 +3713,35 @@
         ],
         "PyFiles": [
             {
-                "PyFileKey": "ui_csv",
+                "PyFileKey": "database_init_queryes",
                 "PyFileData": ""
             },
             {
-                "PyFileKey": "ui_global",
+                "PyFileKey": "db_models",
+                "PyFileData": ""
+            },
+            {
+                "PyFileKey": "db_models_new",
+                "PyFileData": ""
+            },
+            {
+                "PyFileKey": "db_services",
+                "PyFileData": ""
+            },
+            {
+                "PyFileKey": "hs_services",
+                "PyFileData": ""
+            },
+            {
+                "PyFileKey": "http_exchange",
+                "PyFileData": ""
+            },
+            {
+                "PyFileKey": "ui_barcodes",
+                "PyFileData": ""
+            },
+            {
+                "PyFileKey": "ui_csv",
                 "PyFileData": ""
             },
             {
@@ -3632,11 +3749,7 @@
                 "PyFileData": ""
             },
             {
-                "PyFileKey": "database_init_queryes",
-                "PyFileData": ""
-            },
-            {
-                "PyFileKey": "http_exchange",
+                "PyFileKey": "ui_models",
                 "PyFileData": ""
             },
             {
@@ -3645,26 +3758,6 @@
             },
             {
                 "PyFileKey": "widgets",
-                "PyFileData": ""
-            },
-            {
-                "PyFileKey": "ui_models",
-                "PyFileData": ""
-            },
-            {
-                "PyFileKey": "db_services",
-                "PyFileData": ""
-            },
-            {
-                "PyFileKey": "ui_barcodes",
-                "PyFileData": ""
-            },
-            {
-                "PyFileKey": "hs_services",
-                "PyFileData": ""
-            },
-            {
-                "PyFileKey": "new_handlers",
                 "PyFileData": ""
             }
         ],
