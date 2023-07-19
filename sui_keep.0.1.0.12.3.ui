@@ -3686,8 +3686,8 @@
         },
         "ConfigurationTags": "Py,off-line",
         "FaceRecognitionURL": "",
-        "ForegroundService": true,
-        "StopForegroundServiceOnExit": true,
+        "ForegroundService": false,
+        "StopForegroundServiceOnExit": false,
         "RunPython": true,
         "LaunchProcess": "",
         "MainMenu": [
