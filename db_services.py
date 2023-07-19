@@ -454,8 +454,9 @@ class DocService:
             get_query_result(qtext, (Err_value,))
 
     def get_docs_and_goods_for_upload(self):
-        query_docs = '''SELECT * FROM RS_docs WHERE verified = 1  and (sent <> 1 or sent is null)'''
-        query_goods = '''SELECT * FROM RS_docs_table WHERE sent = 0'''
+
+        query_docs = f'''SELECT * FROM {self.docs_table_name} WHERE verified = 1  and (sent <> 1 or sent is null)'''
+        query_goods = f'''SELECT * FROM {self.details_table_name} WHERE (sent = 0 OR sent is Null)'''
         try:
             res_docs = get_query_result(query_docs, None, True)
             res_goods = get_query_result(query_goods, None, True)
@@ -566,7 +567,16 @@ class AdrDocService(DocService):
             params_dict['current_cell'] = curCell
         res = self._get_query_result(query_text, params_dict, return_dict=True)
         return res
+    def clear_barcode_data(self, id_doc):
+        query_text = ('Update RS_adr_docs_table Set qtty = 0 Where id_doc=:id_doc',
+                      'Delete From RS_adr_docs_table Where id_doc=:id_doc and is_plan = "False"')
+        try:
+            for el in query_text:
+                get_query_result(el, ({'id_doc': id_doc}))
+        except Exception as e:
+            return {'result': False, 'error': e.args[0]}
 
+        return {'result': True, 'error': ''}
 
 class GoodsService:
     def __init__(self, item_id=''):

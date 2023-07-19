@@ -654,6 +654,10 @@ class AdrDocsListScreen(DocsListScreen):
         elif self.listener == 'ON_BACK_PRESSED':
             self.hash_map.finish_process()
 
+        elif self.listener == 'confirm_clear_barcode_data':
+
+            self._clear_barcode_data(self.get_id_doc())
+
     def _layout_action(self) -> None:
         layout_listener = self.hash_map['layout_listener']
 
@@ -733,6 +737,13 @@ class AdrDocsListScreen(DocsListScreen):
                         TextSize=card_title_text_size
                     )
                 ),
+                widgets.LinearLayout(
+
+                    widgets.TextView(
+                        Value='@warehouse',
+                        TextSize=card_date_text_size
+                    )
+                ),
 
                 width="match_parent"
             ),
@@ -790,6 +801,15 @@ class AdrDocsListScreen(DocsListScreen):
         selected_card = jlist['customcards']['cardsdata'][int(current_str)]
 
         return selected_card
+
+
+    def _clear_barcode_data(self, id_doc):
+        return self.service.clear_barcode_data(id_doc)
+
+    def get_id_doc(self):
+        card_data = self.hash_map.get_json("card_data") or {}
+        id_doc = card_data.get('key') or self.hash_map['selected_card_key']
+        return id_doc
 # ^^^^^^^^^^^^^^^^^^^^^ DocsList ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 # ==================== DocDetails =============================
@@ -1463,8 +1483,7 @@ class AdrDocDetailsScreen(DocDetailsScreen):
         self.hash_map['control'] = control
 
         self.hash_map.put("doc_goods_table", table_view.to_json())
-        self.hash_map.put("return_selected_data", table_view.to_json())
-
+        self.hash_map.put('return_selected_data','')
 
     def _get_doc_details_data(self):
         return self.service.get_doc_details_data(self.id_doc, self.current_cell)
@@ -1510,7 +1529,7 @@ class AdrDocDetailsScreen(DocDetailsScreen):
 
             res = doc.process_the_barcode(doc, barcode
                                           , (have_qtty_plan), (have_zero_plan), (control),
-                                          self.hash_map.get('current_cell_id'))
+                                          self.hash_map.get('current_cell_id'), self.table_type)
             if res == None:
                 self.hash_map.put('scanned_barcode', barcode)
                 # suClass.urovo_set_lock_trigger(True)
@@ -1753,7 +1772,6 @@ class AdrDocDetailsScreen(DocDetailsScreen):
         return table_view
 
 
-
     def _get_doc_table_row_view(self):
 
         row_view = widgets.LinearLayout(
@@ -1816,20 +1834,6 @@ class AdrDocDetailsScreen(DocDetailsScreen):
 
         return row_view
 
-
-    def _set_visibility_on_start(self):
-        _vars = ['warehouse']
-
-        for v in _vars:
-            name = f'Show_{v}'
-            self.hash_map[name] = '1' if self.hash_map[v] else '-1'
-        # TODO rework this
-        if self.rs_settings.get('allow_fact_input') == 'true':
-            self.hash_map.put("Show_fact_qtty_input", "1")
-            self.hash_map.put("Show_fact_qtty_note", "-1")
-        else:
-            self.hash_map.put("Show_fact_qtty_input", "-1")
-            self.hash_map.put("Show_fact_qtty_note", "1")
 
     def _get_detail_cards(self, q_result):
         results = q_result
@@ -1999,10 +2003,10 @@ class GoodsListScreen(Screen):
                 'key': record['id'],
                 'code': record['code'],
                 'name': record['name'],
-                'art': record['art'],
-                'unit': record['unit'],
+                'art': record['art'] if record['art'] else "—",
+                'unit': record['unit'] if record['unit'] else "—",
                 'type_good': record['type_good'],
-                'description': record['description']
+                'description': record['description'] if record['description'] else "—"
             }
             cards_data.append(single_card_data)
 
@@ -2050,13 +2054,18 @@ class GoodsListScreen(Screen):
     def _identify_barcode_goods(self):
         if self.hash_map.get('barcode'):
             barcode = self.hash_map.get('barcode')
-            item_values = self.service.get_values_from_barcode("id_good,id_property", "barcode", barcode)
-            if item_values[0][1]:
-                self.hash_map.put("property_id", item_values[0][1])
-            if item_values[0][0]:
-                self.hash_map.put("selected_good_id", item_values[0][0])
+            if self.service.get_values_from_barcode("barcode", barcode):
+                item_id = self.service.get_values_from_barcode("barcode", barcode)[0]['id_good']
+                item_values = self.service.get_goods_list_data(item_id=item_id)[0]
+                self.toast(item_values)
+                self.hash_map.put("selected_good_id", item_id)
+                self.hash_map.put("good_name", item_values['name'])
+                self.hash_map.put("good_art", item_values['art'] if item_values['art'] else "—")
+                self.hash_map.put("good_code", item_values['code'])
+                self.hash_map.put("good_descr", item_values['description'] if item_values['description'] else "—")
+                self.hash_map.put("good_type", item_values['type_good'])
                 self.hash_map.show_screen('Карточка товара')
-            if not any(item_values):
+            else:
                 self.toast('Товар не распознан по штрихкоду')
 
 
@@ -2139,7 +2148,7 @@ class ItemCard(Screen):
     def on_start(self):
         self.hash_map.put("Show_buttons", "-1")  # Пока спрятали переход к процессам "остатки" и "цены"
         card_data = self.hash_map.get("selected_card_data", from_json=True)
-        if card_data:
+        if not self.hash_map.get('barcode'):
             self.hash_map.put("selected_good_id", card_data['key'])
             self.hash_map.put("good_name", card_data['name'])
             self.hash_map.put("good_art", card_data['art'])
@@ -2296,7 +2305,7 @@ class SettingsScreen(Screen):
     def _upload_docs(self):
         if self._check_http_settings():
             timer = Timer(self.hash_map, self.rs_settings)
-            timer.upload_docs()
+            timer.upload_all_docs()
         else:
             self.toast('Не заданы настройки соединения')
 
@@ -2785,7 +2794,7 @@ class Timer:
 
     def timer_on_start(self):
         self.load_docs()
-        self.upload_docs()
+        self.upload_all_docs()
 
     def put_notification(self, text, title=None):
         self.hash_map.notification(text, title)
@@ -2816,9 +2825,23 @@ class Timer:
             except Exception as e:
                 self.db_service.write_error_on_log(f'Ошибка загрузки документов: {e}')
 
+    def upload_all_docs(self):
+        self.db_service = DocService()
+        self.upload_docs()
+        self.db_service = AdrDocService()
+        self.upload_docs()
+
+
+    def load_all_docs(self):
+        self.db_service = DocService()
+        self.load_docs()
+        self.db_service = AdrDocService()
+        self.load_docs()
     def upload_docs(self):
+
         if self._check_http_settings():
             try:
+
                 docs_goods_formatted_list = self.db_service.get_docs_and_goods_for_upload()
                 if docs_goods_formatted_list:
                     answer = self.http_service.send_documents(docs_goods_formatted_list)

@@ -326,7 +326,10 @@
                                         "Value": "@new_text",
                                         "Variable": "new_text"
                                     }
-                                ]
+                                ],
+                                "BackgroundColor": "",
+                                "StrokeWidth": "",
+                                "Padding": ""
                             },
                             {
                                 "type": "barcode",
@@ -3683,8 +3686,8 @@
         },
         "ConfigurationTags": "Py,off-line",
         "FaceRecognitionURL": "",
-        "ForegroundService": true,
-        "StopForegroundServiceOnExit": true,
+        "ForegroundService": false,
+        "StopForegroundServiceOnExit": false,
         "RunPython": true,
         "LaunchProcess": "",
         "MainMenu": [

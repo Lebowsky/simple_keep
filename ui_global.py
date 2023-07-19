@@ -562,8 +562,8 @@ class Rs_adr_doc():
         # cell_id = res[0][0] if res else None
 
         # Сначала определим, есть ли в списке товаров документа наш товар:
-        qtext = 'Select * from RS_adr_docs_table Where id_doc=? and id_good = ? and id_properties = ? and id_series = ?  and (id_cell=?  OR id_cell= "" OR id_cell is Null)'  #and id_unit = ?
-        args = (self.id_doc, elem_for_add['id_good'], elem_for_add['id_property'], elem_for_add['id_series'], cell_id) #,elem_for_add['id_unit']
+        qtext = 'Select * from RS_adr_docs_table Where id_doc=? and id_good = ? and id_properties = ? and id_series = ?  and (id_cell=?  OR id_cell= "" OR id_cell is Null) and table_type = ?'  #and id_unit = ?
+        args = (self.id_doc, elem_for_add['id_good'], elem_for_add['id_property'], elem_for_add['id_series'], cell_id, table_type) #,elem_for_add['id_unit']
         res = get_query_result(qtext, args, True)
         if res:  # Нашли строки документа, добавляем количество
 
@@ -589,7 +589,7 @@ class Rs_adr_doc():
     # КОнтроль планов в документе - control
     # Есть план по маркируемой продукции have_mark_plan
     def process_the_barcode(self, barcode, have_qtty_plan = False, have_zero_plan = False, control = False,
-                            cell_id = None, user_tmz=0): # add_if_not_found=False, add_if_not_in_plan=False):
+                            cell_id = None, table_type = 'out', user_tmz=0): # add_if_not_found=False, add_if_not_in_plan=False):
 
         # Получим структуру баркода
         if barcode[0] == chr(29) and len(barcode) > 31:  # Remove first GS1 char from barcode
@@ -634,7 +634,7 @@ class Rs_adr_doc():
 
 
         # Обновляем таблицу товары
-        self.update_doc_table_data(self, elem, 1, cell_id, user_tmz)
+        self.update_doc_table_data(self, elem, 1, cell_id, table_type, user_tmz)
 
         return {'Result': 'Марка добавлена в документ', 'Error': None,
                         'barcode': barcode_info['GTIN'] + barcode_info['SERIAL']}
