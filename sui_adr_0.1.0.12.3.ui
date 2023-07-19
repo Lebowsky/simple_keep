@@ -320,7 +320,7 @@
                             },
                             {
                                 "type": "MenuItem",
-                                "Value": "Отметить к отправке",
+                                "Value": "Выгрузить документ",
                                 "Variable": "btn_doc_mark_verified"
                             }
                         ],
