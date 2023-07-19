@@ -2757,7 +2757,7 @@ class Timer:
         self.http_service = HsService(self.http_settings)
 
     def timer_on_start(self):
-        self.load_all_docs()
+        self.load_docs()
         self.upload_all_docs()
 
     def save_data_to_db(self, data: dict):

@@ -427,7 +427,7 @@ class DocService:
     def get_docs_and_goods_for_upload(self):
 
         query_docs = f'''SELECT * FROM {self.docs_table_name} WHERE verified = 1  and (sent <> 1 or sent is null)'''
-        query_goods = f'''SELECT * FROM {self.details_table_name} WHERE sent = 0'''
+        query_goods = f'''SELECT * FROM {self.details_table_name} WHERE (sent = 0 OR sent is Null)'''
         try:
             res_docs = get_query_result(query_docs, None, True)
             res_goods = get_query_result(query_goods, None, True)
