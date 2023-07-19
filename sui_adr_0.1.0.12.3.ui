@@ -707,8 +707,8 @@
                                                 "width": "match_parent",
                                                 "weight": "1",
                                                 "type": "LinearLayout",
-                                                "Variable": "",
-                                                "Value": "",
+                                                "Variable": "fact_qtty_input",
+                                                "Value": "fact_qtty_input",
                                                 "Elements": [
                                                     {
                                                         "height": "wrap_content",

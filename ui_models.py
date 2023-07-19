@@ -926,6 +926,7 @@ class DocDetailsScreen(Screen):
         self.hash_map.put("Show_fact_qtty_input", '1' if allow_fact_input else '-1')
         self.hash_map.put("Show_fact_qtty_note", '-1' if allow_fact_input else '1')
 
+
     def _get_doc_details_data(self):
         return self.service.get_doc_details_data(self.id_doc)
 
