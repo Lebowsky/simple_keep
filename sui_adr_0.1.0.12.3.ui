@@ -2600,6 +2600,12 @@
                 "MenuItem": "faq",
                 "MenuTitle": "FAQ",
                 "MenuTop": false
+            },
+            {
+                "MenuItem": "update_conf",
+                "MenuTitle": "Обновить конфигурацию",
+                "MenuId": "2",
+                "MenuTop": false
             }
         ],
         "Mediafile": [],
@@ -2660,6 +2666,10 @@
             {
                 "PyFileKey": "widgets",
                 "PyFileData": ""
+            },
+            {
+                "PyFileKey": "new_handlers",
+                "PyFileData": ""
             }
         ],
         "StyleTemplates": [],
@@ -2699,6 +2709,15 @@
                 "method": "put_notification",
                 "postExecute": "",
                 "alias": ""
+            },
+            {
+                "alias": "",
+                "event": "onBackgroundCommand",
+                "action": "run",
+                "type": "set",
+                "method": "UpdateConfigurations",
+                "postExecute": "",
+                "listener": "menu_2"
             }
         ]
     }

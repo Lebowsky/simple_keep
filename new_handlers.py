@@ -129,6 +129,30 @@ def doc_details_listener(hash_map: HashMap):
     screen.on_input()
 
 
+
+@HashMap()
+def adr_docs_on_start(hash_map: HashMap):
+    screen: ui_models.AdrDocsListScreen = create_screen(hash_map)
+    screen.on_start()
+
+
+@HashMap()
+def adr_doc_on_select(hash_map: HashMap):
+    screen: ui_models.AdrDocsListScreen = create_screen(hash_map)
+    screen.on_input()
+
+@HashMap()
+def adr_doc_details_on_start(hash_map: HashMap):
+    screen: ui_models.AdrDocDetailsScreen = create_screen(hash_map)
+    screen._on_start()
+
+@HashMap()
+def adr_doc_details_on_input(hash_map: HashMap):
+    screen: ui_models.AdrDocDetailsScreen = create_screen(hash_map)
+    screen.on_input()
+
+
+
 # ^^^^^^^^^^^^^^^^^ Documents ^^^^^^^^^^^^^^^^^
 
 # =============== Goods =================

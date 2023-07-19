@@ -87,6 +87,7 @@ class Goods(BaseEntity, db.Entity):
     id = PrimaryKey(str, auto=True)
     code = Required(str)
     name = Required(str)
+    name = Required(str)
     art = Optional(str)
     description = Optional(str)
 

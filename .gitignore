@@ -17,3 +17,13 @@ android
 pre_commit
 *.sqlite
 Database_copy.py
+/Fill_data_for_test.py
+/FromAdrDetails.py
+/FromAdrList.py
+/sui_test2_0.1.0.12.ui
+/sui_test_0.1.0.12.ui
+/test3.py
+/test4.py
+/test5.py
+/test_http_get_data.py
+/tests_main.py
