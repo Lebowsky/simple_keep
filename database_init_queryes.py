@@ -220,7 +220,10 @@ def database_shema():
         sent               INTEGER,
         add_mark_selection INTEGER,
         created_at         DATETIME DEFAULT CURRENT_TIMESTAMP,
-        control            TEXT DEFAULT 0
+        control            TEXT DEFAULT 0,
+        is_gorup_scan      TEXT DEFAULT 0,
+        allow_fact_input   TEXT DEFAULT 0
+        
     )
     ''')
 
@@ -296,7 +299,8 @@ def database_shema():
     sent               INTEGER,
     add_mark_selection INTEGER,
     created_at         DATETIME DEFAULT CURRENT_TIMESTAMP,
-    control            TEXT     DEFAULT 0
+    control            TEXT     DEFAULT 0,
+    allow_fact_input   TEXT DEFAULT 0
     )
     ''')
 
