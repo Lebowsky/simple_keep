@@ -711,10 +711,11 @@
                                                 "width": "match_parent",
                                                 "weight": "1",
                                                 "type": "LinearLayout",
-                                                "Variable": "",
+                                                "Variable": "fact_qtty_input",
                                                 "Value": "",
                                                 "Elements": [
                                                     {
+                                                        "orientation": "",
                                                         "height": "wrap_content",
                                                         "width": "match_parent",
                                                         "gravity_horizontal": "center",
@@ -722,10 +723,12 @@
                                                         "weight": "0",
                                                         "type": "TextView",
                                                         "Value": "Факт",
-                                                        "Variable": ""
+                                                        "Variable": "",
+                                                        "drawable": "forward"
                                                     },
                                                     {
                                                         "TextSize": "24",
+                                                        "orientation": "",
                                                         "height": "wrap_content",
                                                         "width": "match_parent",
                                                         "gravity_horizontal": "center",
@@ -736,6 +739,61 @@
                                                         "Variable": "qtty"
                                                     }
                                                 ]
+                                            },
+                                            {
+                                                "orientation": "vertical",
+                                                "height": "wrap_content",
+                                                "width": "match_parent",
+                                                "weight": "1",
+                                                "type": "LinearLayout",
+                                                "Variable": "fact_qtty_note",
+                                                "Value": "",
+                                                "Elements": [
+                                                    {
+                                                        "TextSize": "",
+                                                        "TextColor": "",
+                                                        "TextBold": false,
+                                                        "TextItalic": false,
+                                                        "BackgroundColor": "",
+                                                        "StrokeWidth": "",
+                                                        "Padding": "",
+                                                        "orientation": "",
+                                                        "height": "wrap_content",
+                                                        "width": "match_parent",
+                                                        "gravity_horizontal": "center",
+                                                        "gravity_vertical": "center",
+                                                        "weight": "",
+                                                        "height_value": "",
+                                                        "width_value": "",
+                                                        "type": "TextView",
+                                                        "Value": "Факт",
+                                                        "Variable": "",
+                                                        "style_name": "",
+                                                        "drawable": "forward"
+                                                    },
+                                                    {
+                                                        "TextSize": "24",
+                                                        "TextColor": "",
+                                                        "TextBold": false,
+                                                        "TextItalic": false,
+                                                        "BackgroundColor": "",
+                                                        "StrokeWidth": "",
+                                                        "Padding": "",
+                                                        "orientation": "",
+                                                        "height": "wrap_content",
+                                                        "width": "match_parent",
+                                                        "gravity_horizontal": "center",
+                                                        "gravity_vertical": "center",
+                                                        "weight": "",
+                                                        "height_value": "",
+                                                        "width_value": "",
+                                                        "type": "TextView",
+                                                        "Value": "@qtty",
+                                                        "Variable": "qtty",
+                                                        "style_name": "",
+                                                        "drawable": "forward"
+                                                    }
+                                                ]
                                             }
                                         ]
                                     },
@@ -743,7 +801,7 @@
                                         "orientation": "horizontal",
                                         "height": "wrap_content",
                                         "width": "match_parent",
-                                        "weight": "0",
+                                        "weight": "1",
                                         "type": "LinearLayout",
                                         "Variable": "",
                                         "Value": "",
@@ -774,7 +832,7 @@
                                         "orientation": "horizontal",
                                         "height": "wrap_content",
                                         "width": "match_parent",
-                                        "weight": "0",
+                                        "weight": "1",
                                         "type": "LinearLayout",
                                         "Variable": "",
                                         "Value": "",
@@ -1500,7 +1558,72 @@
                                 "event": "onPostStart",
                                 "action": "run",
                                 "type": "python",
-                                "method": "get_good_variants",
+                                "method": "good_card_post_start",
+                                "postExecute": ""
+                            }
+                        ],
+                        "onlineOnStart": false,
+                        "onlineOnAfterStart": false,
+                        "onlineOnInput": false
+                    },
+                    {
+                        "type": "Operation",
+                        "Name": "Выбор категории товаров",
+                        "Timer": false,
+                        "noScroll": false,
+                        "hideBottomBarScreen": true,
+                        "hideToolBarScreen": false,
+                        "noConfirmation": false,
+                        "handleKeyUp": false,
+                        "Elements": [
+                            {
+                                "orientation": "",
+                                "height": "wrap_content",
+                                "width": "wrap_content",
+                                "weight": "",
+                                "height_value": "",
+                                "width_value": "",
+                                "type": "LinearLayout",
+                                "Variable": "",
+                                "Value": "",
+                                "Elements": [
+                                    {
+                                        "TextSize": "",
+                                        "TextColor": "",
+                                        "TextBold": false,
+                                        "TextItalic": false,
+                                        "BackgroundColor": "",
+                                        "StrokeWidth": "",
+                                        "Padding": "",
+                                        "orientation": "",
+                                        "height": "wrap_content",
+                                        "width": "wrap_content",
+                                        "gravity_horizontal": "center",
+                                        "gravity_vertical": "center",
+                                        "weight": "",
+                                        "height_value": "",
+                                        "width_value": "",
+                                        "type": "CardsLayout",
+                                        "Value": "@goods_types_cards",
+                                        "Variable": "goods_types_cards",
+                                        "style_name": ""
+                                    }
+                                ]
+                            }
+                        ],
+                        "Handlers": [
+                            {
+                                "event": "onStart",
+                                "action": "run",
+                                "type": "python",
+                                "method": "select_type_goods_on_start",
+                                "postExecute": ""
+                            },
+                            {
+                                "event": "onInput",
+                                "action": "run",
+                                "type": "python",
+                                "method": "select_type_goods_on_input",
                                 "postExecute": ""
                             }
                         ],
