@@ -3,6 +3,79 @@ from ru.travelfood.simple_ui import SimpleSQLProvider as sqlClass
 from ui_global import get_query_result
 
 
+class DbService:
+    def __init__(self):
+        self.sql_text = ''
+        self.sql_params = None
+        self.debug = False
+        self.provider = SqlQueryProvider(sql_class=sqlClass())
+
+    def _write_error_on_log(self, error_text: str):
+        if error_text:
+            self.provider.table_name = 'Error_log'
+            self.provider.create({'log': error_text})
+            self.sql_text = self.provider.sql_text
+            self.sql_params = self.provider.sql_params
+    def _sql_exec(self, q, params, table_name=''):
+        if table_name:
+            self.provider.table_name = table_name
+        if isinstance(params, str):
+            self.provider.sql_exec(q, params)
+        else:
+            self.provider.sql_exec_many(q, params)
+
+    def _sql_query(self, q, params: str, table_name=''):
+        if table_name:
+            self.provider.table_name = table_name
+        return self.provider.sql_query(q, params)
+
+
+class TimerService(DbService):
+    def __int__(self):
+        super().__init__()
+
+    def save_load_data(self, data):
+        if not data:
+            return
+
+        clear_tables = ['RS_docs_table', 'RS_adr_docs_table', 'RS_docs_barcodes, RS_barc_flow']
+
+        for table_name, values in data.items():
+            self.provider.table_name = table_name
+
+            if table_name in clear_tables and values:
+                id_doc = values[0]['id_doc']
+                _filter = {'id_doc': id_doc}
+
+                self.provider.delete(_filter)
+                self.provider.replace(values)
+            else:
+                self.provider.replace(values)
+
+    def get_new_load_docs(self, data: dict) -> dict:
+        loaded_documents = {}
+
+        for doc_type in ['RS_docs', 'RS_adr_docs']:
+            for item in data.get(doc_type, []):
+                loaded_documents[item['id_doc']] = item
+
+        if not loaded_documents:
+            return loaded_documents
+
+        q = '''
+            SELECT id_doc FROM RS_docs
+            UNION
+            SELECT id_doc FROM RS_adr_docs
+        '''
+
+        db_docs = self.provider.sql_query(q)
+        for doc in db_docs:
+            if doc['id_doc'] in loaded_documents:
+                loaded_documents.pop(doc['id_doc'])
+
+        return loaded_documents
+
+
 class DocService:
     def __init__(self, doc_id=''):
         self.doc_id = doc_id
@@ -412,7 +485,6 @@ class DocService:
             return res[0].get('docs_count', 0)
         return 0
 
-
     def get_existing_docs(self):
         query_text = f"SELECT doc_n,doc_type FROM {self.docs_table_name}"
         res = get_query_result(query_text)
@@ -476,12 +548,12 @@ class DocService:
 
 
 class AdrDocService(DocService):
-    def __init__(self, doc_id='', cur_cell='', table_type = 'in'):
+    def __init__(self, doc_id='', cur_cell='', table_type='in'):
         self.doc_id = doc_id
         self.docs_table_name = 'RS_Adr_docs'
         self.details_table_name = 'RS_adr_docs_table'
         self.isAdr = True
-        self.current_cell  = cur_cell
+        self.current_cell = cur_cell
         self.table_type = table_type
         self.provider = SqlQueryProvider(self.docs_table_name, sql_class=sqlClass())
 
@@ -532,12 +604,13 @@ class AdrDocService(DocService):
             '''
 
         query_text = query_text + ' ORDER BY RS_cells.name, RS_adr_docs_table.last_updated DESC'
-        #self.table_type = 'out'  #****** ОТЛАДОЧНОЕ
-        params_dict = {'id_doc':id_doc, 'NullValue':None, 'EmptyString':'', 'table_type':self.table_type}
+        # self.table_type = 'out'  #****** ОТЛАДОЧНОЕ
+        params_dict = {'id_doc': id_doc, 'NullValue': None, 'EmptyString': '', 'table_type': self.table_type}
         if curCell:
             params_dict['current_cell'] = curCell
         res = self._get_query_result(query_text, params_dict, return_dict=True)
         return res
+
     def clear_barcode_data(self, id_doc):
         query_text = ('Update RS_adr_docs_table Set qtty = 0 Where id_doc=:id_doc',
                       'Delete From RS_adr_docs_table Where id_doc=:id_doc and is_plan = "False"')
@@ -548,6 +621,7 @@ class AdrDocService(DocService):
             return {'result': False, 'error': e.args[0]}
 
         return {'result': True, 'error': ''}
+
 
 class GoodsService:
     def __init__(self, item_id=''):
@@ -653,12 +727,23 @@ class ErrorService:
 
 
 class SqlQueryProvider:
-    def __init__(self, table_name, sql_class=None):
+    def __init__(self, table_name='', sql_class=None, debug=False):
         self.table_name = table_name
         self.sql = sql_class
         self.sql_text = ''
         self.sql_params = None
-        self.debug = False
+        self.debug = debug
+
+    @property
+    def table_name(self):
+        if self._table_name:
+            return self._table_name
+        else:
+            raise ValueError('table_name must be specified')
+
+    @table_name.setter
+    def table_name(self, v):
+        self._table_name = v
 
     def create(self, data):
         if not data:
@@ -728,8 +813,9 @@ class SqlQueryProvider:
 
     def _exec_create(self, columns, params):
         str_values = ','.join('?' * len(columns))
+        str_keys = ', '.join([f'{name}' for name in columns])
 
-        q = f'INSERT INTO {self.table_name} VALUES ({str_values})'
+        q = f'INSERT INTO {self.table_name} ({str_keys}) VALUES ({str_values})'
 
         params = json.dumps(params, ensure_ascii=False)
         return self.sql_exec_many(q, params)
@@ -792,12 +878,13 @@ class SqlQueryProvider:
         if not self.debug:
             return self.sql.SQLExec(q, params=params)
 
-    def sql_query(self, q, params: str):
+    def sql_query(self, q, params: str = '') -> list:
         self.sql_text = q
         self.sql_params = params
 
         if not self.debug:
-            return self.sql.SQLQuery(q, params)
+            result = self.sql.SQLQuery(q, params)
+            return json.loads(result)
 
     @staticmethod
     def _convert_query_data(data, filter_data=None):
