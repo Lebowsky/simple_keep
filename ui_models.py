@@ -2810,20 +2810,25 @@ class Timer:
         return http_settings
 
     def load_docs(self):
-        if self._check_http_settings():
-            try:
-                docs_data = self.http_service.get_data()
-                if docs_data.get('data'):
-                    existing_docs = self.db_service.get_existing_docs()
-                    self.db_service.update_data_from_json(docs_data['data'])
-                    docs_after_load = self.db_service.get_existing_docs()
-                    diff = [f'{x[1]}: {x[0]}' for x in docs_after_load if x not in existing_docs]
-                    if diff:
-                        self.hash_map.toast(str(diff))
-                        self.put_notification(text=", ".join(diff), title="Загружены документы:")
+        if not self._check_http_settings():
+            return
 
-            except Exception as e:
-                self.db_service.write_error_on_log(f'Ошибка загрузки документов: {e}')
+        try:
+            docs_data = self.http_service.get_data()
+            data = docs_data.get('data')
+            if not data:
+                return
+
+            service = db_services.TimerService()
+            new_documents = service.get_new_load_docs(data)
+            service.save_load_data(data)
+
+            if new_documents:
+                notify_text = self._get_notify_text(new_documents)
+                self.put_notification(text=notify_text, title="Загружены документы:")
+
+        except Exception as e:
+            self.db_service.write_error_on_log(f'Ошибка загрузки документов: {e}')
 
     def upload_all_docs(self):
         self.db_service = DocService()
@@ -2860,6 +2865,13 @@ class Timer:
     def _check_http_settings(self) -> bool:
         http = self._get_http_settings()
         return all([http.get('url'), http.get('user'), http.get('pass')])
+
+    @staticmethod
+    def _get_notify_text(new_documents):
+        doc_titles = [
+            '{} № {} от {}'.format(item['doc_type'], item['doc_n'], item['doc_date'])
+            for item in new_documents.values()]
+        return ", ".join(doc_titles)
 
 
 # ^^^^^^^^^^^^^^^^^^^^^ Timer ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
