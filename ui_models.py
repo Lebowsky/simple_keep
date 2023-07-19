@@ -1525,7 +1525,7 @@ class AdrDocDetailsScreen(DocDetailsScreen):
 
             res = doc.process_the_barcode(doc, barcode
                                           , (have_qtty_plan), (have_zero_plan), (control),
-                                          self.hash_map.get('current_cell_id'))
+                                          self.hash_map.get('current_cell_id'), self.table_type)
             if res == None:
                 self.hash_map.put('scanned_barcode', barcode)
                 # suClass.urovo_set_lock_trigger(True)
@@ -2757,8 +2757,8 @@ class Timer:
         self.http_service = HsService(self.http_settings)
 
     def timer_on_start(self):
-        self.load_docs()
-        self.upload_docs()
+        self.load_all_docs()
+        self.upload_all_docs()
 
     def save_data_to_db(self, data: dict):
         # TODO доделать через пони
@@ -2821,6 +2821,12 @@ class Timer:
         self.db_service = AdrDocService()
         self.upload_docs()
 
+
+    def load_all_docs(self):
+        self.db_service = DocService()
+        self.load_docs()
+        self.db_service = AdrDocService()
+        self.load_docs()
     def upload_docs(self):
 
         if self._check_http_settings():
