@@ -2787,32 +2787,6 @@ class Timer:
         self.load_docs()
         self.upload_docs()
 
-    def save_data_to_db(self, data: dict):
-        # TODO доделать через пони
-        if not data:
-            return
-
-        table_list = [
-            'RS_countragents',
-            'RS_warehouses',
-            'RS_cells',
-            'RS_types_goods',
-            'RS_classifier_units',
-            'RS_goods',
-            'RS_properties',
-            'RS_series',
-            'RS_units',
-            'RS_price_types',
-            'RS_prices',
-            'RS_barcodes',
-        ]
-
-        for table_name in table_list:
-            table = data.get(table_name, {})
-            service = self.db_service(None, table_name=table_name)
-            for item_data in table:
-                service.update(item_data)
-
     def put_notification(self, text, title=None):
         self.hash_map.notification(text, title)
 
