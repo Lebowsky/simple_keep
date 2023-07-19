@@ -2,7 +2,7 @@ import unittest
 import json
 import os
 
-from db_services import DocService, DbCreator
+from db_services import DocService, DbCreator, TimerService, DbService
 
 
 class TestDocService(unittest.TestCase):
@@ -40,7 +40,8 @@ class TestDocService(unittest.TestCase):
         data = self.get_data_from_file('get_doc_data_example.json')
 
         values = ','.join(
-            ['("{}", "{}", "{}", "{}", "{}", "{}", "{}", {}, {}, {})'.format(*item.values()) for item in data['RS_docs_table']])
+            ['("{}", "{}", "{}", "{}", "{}", "{}", "{}", {}, {}, {})'.format(*item.values()) for item in
+             data['RS_docs_table']])
         expected = [
             'REPLACE INTO RS_docs '
             '(id_doc, doc_type, doc_n, doc_date, id_countragents, id_warehouse, control, verified) '
@@ -66,3 +67,28 @@ class TestDocService(unittest.TestCase):
     def get_data_from_file(self, file_name):
         with open(f'{self.http_results_path}/{file_name}', encoding='utf-8') as fp:
             return json.load(fp)
+
+
+class TestTimerService(unittest.TestCase):
+    def setUp(self) -> None:
+        self.service = TimerService()
+        self.http_results_path = './tests_db_services/http_result_data_example'
+
+    def test_save_load_data(self):
+        # TODO create test
+        pass
+
+    def get_data_from_file(self, file_name):
+        with open(f'{self.http_results_path}/{file_name}', encoding='utf-8') as fp:
+            return json.load(fp)
+
+
+class TestDbService(unittest.TestCase):
+    def setUp(self) -> None:
+        pass
+
+    def test_write_error_log(self):
+        sut = DbService()
+        sut._write_error_on_log('123')
+        self.assertEqual('INSERT INTO Error_log (log) VALUES (?)', sut.sql_text)
+        self.assertEqual([["123"]], json.loads(sut.sql_params))
