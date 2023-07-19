@@ -3717,14 +3717,6 @@
                 "PyFileData": ""
             },
             {
-                "PyFileKey": "db_models",
-                "PyFileData": ""
-            },
-            {
-                "PyFileKey": "db_models_new",
-                "PyFileData": ""
-            },
-            {
                 "PyFileKey": "db_services",
                 "PyFileData": ""
             },
@@ -3737,6 +3729,10 @@
                 "PyFileData": ""
             },
             {
+                "PyFileKey": "new_handlers",
+                "PyFileData": ""
+            },
+            {
                 "PyFileKey": "ui_barcodes",
                 "PyFileData": ""
             },
@@ -3746,6 +3742,10 @@
             },
             {
                 "PyFileKey": "ui_form_data",
+                "PyFileData": ""
+            },
+            {
+                "PyFileKey": "ui_global",
                 "PyFileData": ""
             },
             {
