@@ -284,13 +284,14 @@
                                         "Variable": "doc_goods_table"
                                     },
                                     {
+                                        "orientation": "",
                                         "height": "wrap_content",
                                         "width": "match_parent",
                                         "gravity_horizontal": "center",
                                         "gravity_vertical": "center",
                                         "weight": "0",
                                         "type": "Button",
-                                        "Value": "Отметить к отправке",
+                                        "Value": "Выгрузить документ",
                                         "Variable": "btn_doc_mark_verified"
                                     }
                                 ],
