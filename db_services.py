@@ -1,6 +1,35 @@
+import functools
 import json
 from ru.travelfood.simple_ui import SimpleSQLProvider as sqlClass
 from ui_global import get_query_result
+
+
+class DbService:
+    def __init__(self):
+        self.sql_text = ''
+        self.sql_params = None
+        self.debug = False
+        self.provider = SqlQueryProvider(sql_class=sqlClass())
+
+    def _sql_exec(self, q, params, table_name=''):
+        if table_name:
+            self.provider.table_name = table_name
+        if isinstance(params, str):
+            self.provider.sql_exec(q, params)
+        else:
+            self.provider.sql_exec_many(q, params)
+
+    def _sql_query(self, q, params, table_name=''):
+        if table_name:
+            self.provider.table_name = table_name
+        return self.provider.sql_query(q, params)
+
+
+class TimerService(DbService):
+    def __int__(self):
+        self.sql_text = ''
+        self.sql_params = None
+        self.debug = False
 
 
 class DocService:
@@ -643,12 +672,23 @@ class ErrorService:
 
 
 class SqlQueryProvider:
-    def __init__(self, table_name, sql_class=None):
+    def __init__(self, table_name='', sql_class=None, debug=False):
         self.table_name = table_name
         self.sql = sql_class
         self.sql_text = ''
         self.sql_params = None
-        self.debug = False
+        self.debug = debug
+
+    @property
+    def table_name(self):
+        if self._table_name:
+            return self._table_name
+        else:
+            raise ValueError('table_name must be specified')
+
+    @table_name.setter
+    def table_name(self, v):
+        self._table_name = v
 
     def create(self, data):
         if not data:
@@ -807,4 +847,3 @@ class SqlQueryProvider:
             ValueError(f'data must be list or dict, not {type(data)}')
 
         return {'columns': columns, 'params': params}
-
