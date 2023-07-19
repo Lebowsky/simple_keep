@@ -1530,6 +1530,11 @@ class AdrDocDetailsScreen(DocDetailsScreen):
             res = doc.process_the_barcode(doc, barcode
                                           , (have_qtty_plan), (have_zero_plan), (control),
                                           self.hash_map.get('current_cell_id'), self.table_type)
+
+            #self.service.update_rs_docs_table_sent_status(res.get('key'))
+            self.service.set_doc_status_to_upload(self.id_doc)
+
+
             if res == None:
                 self.hash_map.put('scanned_barcode', barcode)
                 # suClass.urovo_set_lock_trigger(True)
