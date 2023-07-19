@@ -326,7 +326,10 @@
                                         "Value": "@new_text",
                                         "Variable": "new_text"
                                     }
-                                ]
+                                ],
+                                "BackgroundColor": "",
+                                "StrokeWidth": "",
+                                "Padding": ""
                             },
                             {
                                 "type": "barcode",

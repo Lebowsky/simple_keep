@@ -17,28 +17,6 @@ from new_handlers import *
 # ********************* Старое адресное хранение
 # Todo Переписать это по новой классовой схеме и удалить из кода
 
-@HashMap()
-def adr_docs_on_start(hash_map: HashMap):
-    screen: ui_models.AdrDocsListScreen = create_screen(hash_map)
-    screen.on_start()
-
-
-@HashMap()
-def adr_doc_on_select(hash_map: HashMap):
-    screen: ui_models.AdrDocsListScreen = create_screen(hash_map)
-    screen.on_input()
-
-@HashMap()
-def adr_doc_details_on_start(hash_map: HashMap):
-    screen: ui_models.AdrDocDetailsScreen = create_screen(hash_map)
-    screen._on_start()
-
-@HashMap()
-def adr_doc_details_on_input(hash_map: HashMap):
-    screen: ui_models.AdrDocDetailsScreen = create_screen(hash_map)
-    screen.on_input()
-
-
 def adr_elem_on_start(hashMap, _files=None, _data=None):
     hashMap.put('mm_local', '')
     return hashMap

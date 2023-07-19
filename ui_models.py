@@ -1463,8 +1463,7 @@ class AdrDocDetailsScreen(DocDetailsScreen):
         self.hash_map['control'] = control
 
         self.hash_map.put("doc_goods_table", table_view.to_json())
-        self.hash_map.put("return_selected_data", table_view.to_json())
-
+        self.hash_map.put('return_selected_data','')
 
     def _get_doc_details_data(self):
         return self.service.get_doc_details_data(self.id_doc, self.current_cell)
@@ -1510,7 +1509,7 @@ class AdrDocDetailsScreen(DocDetailsScreen):
 
             res = doc.process_the_barcode(doc, barcode
                                           , (have_qtty_plan), (have_zero_plan), (control),
-                                          self.hash_map.get('current_cell_id'))
+                                          self.hash_map.get('current_cell_id'), self.table_type)
             if res == None:
                 self.hash_map.put('scanned_barcode', barcode)
                 # suClass.urovo_set_lock_trigger(True)
@@ -1753,7 +1752,6 @@ class AdrDocDetailsScreen(DocDetailsScreen):
         return table_view
 
 
-
     def _get_doc_table_row_view(self):
 
         row_view = widgets.LinearLayout(
@@ -1816,20 +1814,6 @@ class AdrDocDetailsScreen(DocDetailsScreen):
 
         return row_view
 
-
-    def _set_visibility_on_start(self):
-        _vars = ['warehouse']
-
-        for v in _vars:
-            name = f'Show_{v}'
-            self.hash_map[name] = '1' if self.hash_map[v] else '-1'
-        # TODO rework this
-        if self.rs_settings.get('allow_fact_input') == 'true':
-            self.hash_map.put("Show_fact_qtty_input", "1")
-            self.hash_map.put("Show_fact_qtty_note", "-1")
-        else:
-            self.hash_map.put("Show_fact_qtty_input", "-1")
-            self.hash_map.put("Show_fact_qtty_note", "1")
 
     def _get_detail_cards(self, q_result):
         results = q_result
@@ -2296,7 +2280,7 @@ class SettingsScreen(Screen):
     def _upload_docs(self):
         if self._check_http_settings():
             timer = Timer(self.hash_map, self.rs_settings)
-            timer.upload_docs()
+            timer.upload_all_docs()
         else:
             self.toast('Не заданы настройки соединения')
 
@@ -2785,7 +2769,7 @@ class Timer:
 
     def timer_on_start(self):
         self.load_docs()
-        self.upload_docs()
+        self.upload_all_docs()
 
     def save_data_to_db(self, data: dict):
         # TODO доделать через пони
@@ -2842,9 +2826,23 @@ class Timer:
             except Exception as e:
                 self.db_service.write_error_on_log(f'Ошибка загрузки документов: {e}')
 
+    def upload_all_docs(self):
+        self.db_service = DocService()
+        self.upload_docs()
+        self.db_service = AdrDocService()
+        self.upload_docs()
+
+
+    def load_all_docs(self):
+        self.db_service = DocService()
+        self.load_docs()
+        self.db_service = AdrDocService()
+        self.load_docs()
     def upload_docs(self):
+
         if self._check_http_settings():
             try:
+
                 docs_goods_formatted_list = self.db_service.get_docs_and_goods_for_upload()
                 if docs_goods_formatted_list:
                     answer = self.http_service.send_documents(docs_goods_formatted_list)
