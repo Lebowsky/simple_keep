@@ -818,3 +818,17 @@ class SqlQueryProvider:
 
         return {'columns': columns, 'params': params}
 
+    @staticmethod
+    def convert_sql_params(sql_query, params_dict):
+        import re
+        param_values = []
+        def replace_named_param(match):
+            param_name = match.group(1)
+
+            param_values.append(params_dict[param_name])
+
+            return "?"
+        new_query = re.sub(r':(\w+)'    , replace_named_param, sql_query)
+
+        return new_query, param_values
+

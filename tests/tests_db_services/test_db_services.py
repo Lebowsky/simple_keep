@@ -2,7 +2,7 @@ import unittest
 import json
 import os
 
-from db_services import DocService, DbCreator
+from db_services import DocService, DbCreator, SqlQueryProvider
 
 
 class TestDocService(unittest.TestCase):
@@ -66,3 +66,127 @@ class TestDocService(unittest.TestCase):
     def get_data_from_file(self, file_name):
         with open(f'{self.http_results_path}/{file_name}', encoding='utf-8') as fp:
             return json.load(fp)
+
+
+class TestSQLQueryProvider(unittest.TestCase):
+    service = SqlQueryProvider
+
+    def tests_convert_sql_params(self):
+
+        # Test 1
+
+        query = "SELECT * FROM users WHERE name = :name AND age = :age"
+
+        params = {"name": "John", "age": 30}
+
+        new_query, param_values = self.service.convert_sql_params(query, params)
+
+        assert new_query == "SELECT * FROM users WHERE name = ? AND age = ?"
+
+        assert param_values == ["John", 30]
+
+        # Test 2
+
+        query = "INSERT INTO users (name, age) VALUES (:name, :age)"
+
+        params = {"name": "Jane", "age": 25}
+
+        new_query, param_values = self.service.convert_sql_params(query, params)
+
+        assert new_query == "INSERT INTO users (name, age) VALUES (?, ?)"
+
+        assert param_values == ["Jane", 25]
+
+        # Test 3
+
+        query = "UPDATE users SET name = :name, age = :age WHERE id = :id"
+
+        params = {"name": "Alice", "age": 20, "id": 1}
+
+        new_query, param_values = self.service.convert_sql_params(query, params)
+
+        assert new_query == "UPDATE users SET name = ?, age = ? WHERE id = ?"
+
+        assert param_values == ["Alice", 20, 1]
+
+        query = '''
+        SELECT
+            RS_adr_docs_table.id,
+            RS_adr_docs_table.id_doc,
+            RS_adr_docs_table.id_good,
+            ifnull(RS_goods.name, :NullValue) as good_name,
+            ifnull(RS_goods.code, :EmptyString) as code,
+            ifnull(RS_goods.art, :EmptyString) as art,
+            ifnull(RS_adr_docs_table.id_properties, :EmptyString) as id_properties,
+            ifnull(RS_properties.name, :EmptyString) as properties_name,
+            ifnull(RS_adr_docs_table.id_series, :EmptyString) as id_series,
+            ifnull(RS_series.name, :EmptyString) as series_name,
+            ifnull(RS_adr_docs_table.id_unit, :EmptyString) as id_unit,
+            ifnull(RS_units.name, :EmptyString) as units_name,
+            RS_adr_docs_table.qtty as qtty,
+            RS_adr_docs_table.qtty_plan as qtty_plan,
+            RS_adr_docs_table.qtty_plan - RS_adr_docs_table.qtty as IsDone,
+            ifnull(RS_adr_docs_table.id_cell, :EmptyString) as id_cell,
+            ifnull(RS_cells.name, :NullValue) as cell_name
+
+
+            FROM RS_adr_docs_table 
+
+            LEFT JOIN RS_goods 
+            ON RS_goods.id=RS_adr_docs_table.id_good
+            LEFT JOIN RS_properties
+            ON RS_properties.id = RS_adr_docs_table.id_properties
+            LEFT JOIN RS_series
+            ON RS_series.id = RS_adr_docs_table.id_series
+            LEFT JOIN RS_units
+            ON RS_units.id=RS_adr_docs_table.id_unit
+            LEFT JOIN RS_cells
+            ON RS_cells.id=RS_adr_docs_table.id_cell
+
+            WHERE id_doc = :id_doc and table_type = :table_type
+
+             ORDER BY RS_cells.name, RS_adr_docs_table.last_updated DESC'''
+        params = {'NullValue':None, 'EmptyString':'', 'table_type':'out', 'id_doc':'773c92ab-fd28-11e4-92f1-0050568b35ac'}
+
+        new_query, param_values = self.service.convert_sql_params(query, params)
+
+        assert new_query == '''
+        SELECT
+            RS_adr_docs_table.id,
+            RS_adr_docs_table.id_doc,
+            RS_adr_docs_table.id_good,
+            ifnull(RS_goods.name, ?) as good_name,
+            ifnull(RS_goods.code, ?) as code,
+            ifnull(RS_goods.art, ?) as art,
+            ifnull(RS_adr_docs_table.id_properties, ?) as id_properties,
+            ifnull(RS_properties.name, ?) as properties_name,
+            ifnull(RS_adr_docs_table.id_series, ?) as id_series,
+            ifnull(RS_series.name, ?) as series_name,
+            ifnull(RS_adr_docs_table.id_unit, ?) as id_unit,
+            ifnull(RS_units.name, ?) as units_name,
+            RS_adr_docs_table.qtty as qtty,
+            RS_adr_docs_table.qtty_plan as qtty_plan,
+            RS_adr_docs_table.qtty_plan - RS_adr_docs_table.qtty as IsDone,
+            ifnull(RS_adr_docs_table.id_cell, ?) as id_cell,
+            ifnull(RS_cells.name, ?) as cell_name
+
+
+            FROM RS_adr_docs_table 
+
+            LEFT JOIN RS_goods 
+            ON RS_goods.id=RS_adr_docs_table.id_good
+            LEFT JOIN RS_properties
+            ON RS_properties.id = RS_adr_docs_table.id_properties
+            LEFT JOIN RS_series
+            ON RS_series.id = RS_adr_docs_table.id_series
+            LEFT JOIN RS_units
+            ON RS_units.id=RS_adr_docs_table.id_unit
+            LEFT JOIN RS_cells
+            ON RS_cells.id=RS_adr_docs_table.id_cell
+
+            WHERE id_doc = ? and table_type = ?
+
+             ORDER BY RS_cells.name, RS_adr_docs_table.last_updated DESC'''
+
+        assert param_values == [None, '', '', '', '', '', '', '', '', '', None, '773c92ab-fd28-11e4-92f1-0050568b35ac', 'out']
+
