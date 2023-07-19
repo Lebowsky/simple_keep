@@ -654,6 +654,10 @@ class AdrDocsListScreen(DocsListScreen):
         elif self.listener == 'ON_BACK_PRESSED':
             self.hash_map.finish_process()
 
+        elif self.listener == 'confirm_clear_barcode_data':
+
+            self._clear_barcode_data(self.get_id_doc())
+
     def _layout_action(self) -> None:
         layout_listener = self.hash_map['layout_listener']
 
@@ -733,6 +737,13 @@ class AdrDocsListScreen(DocsListScreen):
                         TextSize=card_title_text_size
                     )
                 ),
+                widgets.LinearLayout(
+
+                    widgets.TextView(
+                        Value='@warehouse',
+                        TextSize=card_date_text_size
+                    )
+                ),
 
                 width="match_parent"
             ),
@@ -790,6 +801,15 @@ class AdrDocsListScreen(DocsListScreen):
         selected_card = jlist['customcards']['cardsdata'][int(current_str)]
 
         return selected_card
+
+
+    def _clear_barcode_data(self, id_doc):
+        return self.service.clear_barcode_data(id_doc)
+
+    def get_id_doc(self):
+        card_data = self.hash_map.get_json("card_data") or {}
+        id_doc = card_data.get('key') or self.hash_map['selected_card_key']
+        return id_doc
 # ^^^^^^^^^^^^^^^^^^^^^ DocsList ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 # ==================== DocDetails =============================
