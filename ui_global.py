@@ -14,7 +14,7 @@ query_list = queue.Queue()
 if os.path.exists('//data/data/ru.travelfood.simple_ui/databases/'): #локально
     db_path = '//data/data/ru.travelfood.simple_ui/databases/SimpleKeep'  # rightscan'
 else:
-    db_path = 'Rightscan.db'  # D:\PythonProjects\RightScan\SUI_noPony\
+    db_path = 'rightscan5.db'  # D:\PythonProjects\RightScan\SUI_noPony\
 
 conn = None
 
