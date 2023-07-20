@@ -1514,14 +1514,19 @@ class AdrDocDetailsScreen(DocDetailsScreen):
                 barcode = self.hash_map.get('barcode_camera')
 
             doc_cell = doc.find_cell(doc, barcode)
+
+            if doc_cell:
+                self.hash_map.put('current_cell', doc_cell['name'])
+                self.hash_map.put('current_cell_id', doc_cell['id'])
+                self.current_cell = doc_cell['id']
+                return
+
             if not current_cell and not doc_cell:
                 self.hash_map.put('beep_duration ', self.rs_settings.get('beep_duration'))
                 self.hash_map.put("beep", self.rs_settings.get('signal_num'))
                 self.hash_map.put('toast', 'Не найдена ячейка')
                 return
-            if doc_cell:
-                self.hash_map.put('current_cell', doc_cell['name'])
-                self.hash_map.put('current_cell_id', doc_cell['id'])
+
 
             have_qtty_plan = self.hash_map.get_bool('have_qtty_plan')
             have_zero_plan = self.hash_map.get_bool('have_zero_plan')
@@ -1557,6 +1562,8 @@ class AdrDocDetailsScreen(DocDetailsScreen):
                     self.hash_map.put('toast', res['Descr'])  # + ' '+ res['Barcode']
             else:
                 self.hash_map.put('toast', 'Товар добавлен в документ')
+
+
                 # ---------------------------------------------------------
         elif listener == 'btn_doc_mark_verified':
             doc = ui_global.Rs_adr_doc
@@ -1568,6 +1575,8 @@ class AdrDocDetailsScreen(DocDetailsScreen):
             if  self.hash_map.get('current_cell_id'):
                 self.hash_map.remove('current_cell')
                 self.hash_map.remove('current_cell_id')
+                self.current_cell = None
+                self.hash_map.refresh_screen()
             else:
                 self.hash_map.show_screen("Документы")
 
@@ -2827,7 +2836,8 @@ class Timer:
 
             service = db_services.TimerService()
             new_documents = service.get_new_load_docs(data)
-            service.save_load_data(data)
+            # service.save_load_data(data)
+            self.db_service.update_data_from_json(docs_data['data'])
 
             if new_documents:
                 notify_text = self._get_notify_text(new_documents)
@@ -2835,6 +2845,7 @@ class Timer:
 
         except Exception as e:
             self.db_service.write_error_on_log(f'Ошибка загрузки документов: {e}')
+
 
     def upload_all_docs(self):
         self.db_service = DocService()
