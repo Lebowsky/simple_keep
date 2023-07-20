@@ -874,8 +874,7 @@ class DocDetailsScreen(Screen):
             self.hash_map.put('scanned_barcode', barcode)
             self.hash_map.show_screen('Ошибка сканера')
         elif res['Error']:
-            self.hash_map.put('beep_duration ', self.rs_settings.get('beep_duration'))
-            self.hash_map.put("beep", self.rs_settings.get('signal_num'))
+            self.hash_map.playsound('error')
             if res['Error'] == 'AlreadyScanned':
                 self.hash_map.put('barcode', json.dumps({'barcode': res['Barcode'], 'doc_info': res['doc_info']}))
                 self.hash_map.show_screen('Удаление штрихкода')
@@ -884,6 +883,7 @@ class DocDetailsScreen(Screen):
                 self.hash_map.show_screen('Ошибка превышения плана')
                 self.hash_map.show_dialog(listener='Ошибка превышения плана',
                                           title='Количество план в документе превышено')
+                self.hash_map.playsound('warning')
                 # self.hash_map.toast('toast', res['Descr'])
             elif res['Error'] == 'Zero_plan_error':
                 self.hash_map.toast(res['Descr'])
@@ -1405,6 +1405,7 @@ class DocumentsDocDetailScreen(DocDetailsScreen):
     def _get_doc_barcode_data(self, args):
         return self.service.get_doc_barcode_data(args)
 
+
 class AdrDocDetailsScreen(DocDetailsScreen):
     screen_name = 'Документ товары'
     process_name = 'Адресное хранение'
@@ -1495,8 +1496,7 @@ class AdrDocDetailsScreen(DocDetailsScreen):
 
             doc_cell = doc.find_cell(doc, barcode)
             if not current_cell and not doc_cell:
-                self.hash_map.put('beep_duration ', self.rs_settings.get('beep_duration'))
-                self.hash_map.put("beep", self.rs_settings.get('signal_num'))
+                self.hash_map.playsound('warning')
                 self.hash_map.put('toast', 'Не найдена ячейка')
                 return
             if doc_cell:
@@ -1518,8 +1518,7 @@ class AdrDocDetailsScreen(DocDetailsScreen):
                 # hashMap.put('toast',
                 #             'Штрих код не зарегистрирован в базе данных. Проверьте товар или выполните обмен данными')
             elif res['Error']:
-                self.hash_map.put('beep_duration ', self.rs_settings.get('beep_duration'))
-                self.hash_map.put("beep", self.rs_settings.get('signal_num'))
+                self.hash_map.playsound('error')
                 if res['Error'] == 'AlreadyScanned':
 
                     self.hash_map.put('barcode', json.dumps({'barcode': res['Barcode'], 'doc_info': res['doc_info']}))
@@ -1933,7 +1932,6 @@ class GoodsSelectScreen(Screen):
 
             self.hash_map.put('BackScreen')
 
-
         elif listener in ["btn_cancel", 'BACK_BUTTON', 'ON_BACK_PRESSED']:
             self.hash_map.show_screen("Документ товары")
 
@@ -2050,8 +2048,9 @@ class GoodsListScreen(Screen):
     def _identify_barcode_goods(self):
         if self.hash_map.get('barcode'):
             barcode = self.hash_map.get('barcode')
-            if self.service.get_values_from_barcode("barcode", barcode):
-                item_id = self.service.get_values_from_barcode("barcode", barcode)[0]['id_good']
+            values = self.service.get_values_from_barcode("barcode", barcode)
+            if values:
+                item_id = values[0]['id_good']
                 item_values = self.service.get_goods_list_data(item_id=item_id)[0]
                 self.toast(item_values)
                 self.hash_map.put("selected_good_id", item_id)
@@ -2467,7 +2466,6 @@ class HttpSettingsScreen(Screen):
         self.hs_service = None
 
     def on_start(self) -> None:
-        self.hash_map.remove('toast')
         self.hash_map['btn_test_connection'] = 'Тест соединения'
         http_settings = self._get_http_settings()
 
@@ -2510,8 +2508,12 @@ class HttpSettingsScreen(Screen):
                 self.toast('Запрос на авторизацию принят')
             elif result.error:
                 self.toast('Не удалось установить соединение')
+                self.hash_map.playsound('error')
             else:
                 self.toast('Соединение установлено')
+                self.hash_map.playsound('success')
+
+
 
         else:
             self.toast("Не указаны настройки HTTP подключения к серверу")
@@ -2562,6 +2564,133 @@ class HttpSettingsScreen(Screen):
             'android_id': self.hash_map['ANDROID_ID'],
             'user_name': self.rs_settings.get('user_name')}
         return http_settings
+
+
+class SoundSettings(Screen):
+    screen_name = 'Настройка звука'
+    process_name = 'Параметры'
+
+    def __init__(self, hash_map: HashMap, rs_settings):
+        super().__init__(hash_map, rs_settings)
+        self.events = {'success': 'Сигнал удачного события', 'warning': 'Сигнал предупреждения',
+                       'error': 'Сигнал ошибки'}
+
+    def on_start(self):
+        self._init_sounds()
+        events_data = self._get_events_data()
+        events_cards = self._get_event_cards_view(events_data, popup_menu_data='1;2;3;4;5;6;7;8;9;10;11;12;13;14;15')
+        self.hash_map.put('event_cards', events_cards.to_json())
+
+
+    def on_input(self):
+        if self.listener == 'save_btn':
+            self.rs_settings.put('success_signal', self.hash_map.get("current_success_signal"), True)
+            self.rs_settings.put('warning_signal', self.hash_map.get("current_warning_signal"), True)
+            self.rs_settings.put('error_signal', self.hash_map.get("current_error_signal"), True)
+            self.hash_map.show_screen('Настройки и обмен')
+            # self.hash_map.finish_process()
+
+        elif self.listener == 'btn_on_cancel' or self.listener == 'ON_BACK_PRESSED':
+            self.hash_map.put('current_success_signal', '')
+            self.hash_map.put('current_warning_signal', '')
+            self.hash_map.put('current_error_signal', '')
+            self.hash_map.show_screen('Настройки и обмен')
+
+        elif self.listener == 'CardsClick':
+            selected_event = self.hash_map.get('selected_card_key')
+            self.hash_map.playsound(event=selected_event,
+                                    sound_val=self.hash_map.get(f'current_{selected_event}_signal'))
+
+        elif self.listener == 'LayoutAction':
+            self._layout_action()
+
+    def on_post_start(self):
+        pass
+
+    def show(self, args=None):
+        pass
+
+    def _init_sounds(self):
+        # for key, val in self.events.items():
+        #     if not self.hash_map.get(f'current_{key}_signal'):
+        #         self.hash_map.put(f'current_{key}_signal', self.rs_settings.get(f'{event}_signal' or "6"))
+
+        if not self.hash_map.get('current_success_signal'):
+            self.hash_map.put('current_success_signal', self.rs_settings.get('success_signal'))
+        if not self.hash_map.get('current_warning_signal'):
+            self.hash_map.put('current_warning_signal', self.rs_settings.get('warning_signal'))
+        if not self.hash_map.get('current_error_signal'):
+            self.hash_map.put('current_error_signal', self.rs_settings.get('error_signal'))
+
+    def _get_events_data(self):
+        data = []
+        for key, val in self.events.items():
+            event = {
+                'key': key,
+                'event_name': val,
+                'selected_value': self.hash_map.get(f'current_{key}_signal')
+            }
+            data.append(event)
+        return data
+
+    def _get_event_cards_view(self, events_data, popup_menu_data):
+        title_text_size = self.rs_settings.get("TitleTextSize")
+        card_title_text_size = self.rs_settings.get("CardTitleTextSize")
+        doc_cards = widgets.CustomCards(
+            widgets.LinearLayout(
+                widgets.LinearLayout(
+                    widgets.TextView(
+                        Value='@event_name',
+                        TextBold=True,
+                        TextSize=title_text_size,
+                        gravity_horizontal='center',
+                        width='match_parent',
+                    ),
+                    orientation='horizontal',
+                    width='match_parent',
+                    gravity_horizontal='center',
+                    weight=0
+                ),
+                widgets.LinearLayout(
+                    widgets.TextView(
+                        Value='@selected_value',
+                        TextSize=28,
+                        gravity_horizontal='center',
+                        weight=1,
+                    ),
+                    widgets.PopupMenuButton(
+                        Value=popup_menu_data,
+                        Variable="menu_select_sound",
+                        gravity_horizontal='center',
+                        weight=1
+                    ),
+                    widgets.TextView(
+                        Value="Прослушать",
+                        gravity_horizontal='center',
+                        TextSize=card_title_text_size,
+                        weight=1
+                    ),
+
+                    orientation='horizontal',
+                    width='match_parent',
+
+                ),
+
+                width="match_parent",
+                orientation='vertical',
+                gravity_horizontal='center',
+                gravity_vertical="center",
+            ),
+            options=widgets.Options().options,
+            cardsdata=events_data
+        )
+
+        return doc_cards
+
+    def _layout_action(self):
+        layout_listener = self.hash_map.get('layout_listener')
+        current_key = self.hash_map.get_json("card_data")['key']
+        self.hash_map.put(f'current_{current_key}_signal', layout_listener)
 
 
 class ErrorLogScreen(Screen):
@@ -2843,6 +2972,7 @@ class Timer:
                     if diff:
                         self.hash_map.toast(str(diff))
                         self.put_notification(text=", ".join(diff), title="Загружены документы:")
+                        self.hash_map.playsound('success')
 
             except Exception as e:
                 self.db_service.write_error_on_log(f'Ошибка загрузки документов: {e}')
@@ -2907,12 +3037,14 @@ class MainEvents:
             'goodsTextSize': 18,
             'SeriesPropertiesTextSize': 16,
             'DocTypeCardTextSize': 15,
-            'signal_num': 83,
-            'beep_duration': 1000,
+            'signal_num': 5,
             'use_mark': 'false',
             'add_if_not_in_plan': 'false',
             'path': '',
             'delete_files': 'false',
+            'success_signal' : 7,
+            'warning_signal': 8,
+            'error_signal': 5,
             'allow_overscan': 'false',
             'path_to_databases': '//data/data/ru.travelfood.simple_ui/databases',
             'sqlite_name': 'SimpleKeep',
@@ -2992,7 +3124,8 @@ class ScreensFactory:
         SelectGoodsType,
         ItemCard,
         FontSizeSettingsScreen,
-        BarcodeTestScreen
+        BarcodeTestScreen,
+        SoundSettings,
     ]
 
     @staticmethod

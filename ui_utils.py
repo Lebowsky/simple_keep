@@ -74,6 +74,13 @@ class HashMap:
     def beep(self, tone=''):
         self.hash_map.put('beep', str(tone))
 
+    def playsound(self, event: str, sound_val: str = ''):
+        if not sound_val:
+            sound = rs_settings.get(f'{event}_signal')
+        else:
+            sound = sound_val
+        self.hash_map.put(f'playsound_{sound}', "")
+
     def _get_event(self, method_name, action=None):
         """
         :param method_name: handlers name

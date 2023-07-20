@@ -259,4 +259,19 @@ def http_settings_on_click(hash_map):
     screen.on_input()
 
 
+@HashMap()
+def sound_settings_on_start(hash_map):
+    screen = ui_models.SoundSettings(hash_map, rs_settings)
+    screen.on_start()
+
+    screen = ui_models.SelectGoodsType(hash_map, rs_settings)
+    screen.on_input()
+
+
+@HashMap()
+def sound_settings_listener(hash_map):
+    screen = ui_models.SoundSettings(hash_map, rs_settings)
+    screen.on_input()
+
+
 # ^^^^^^^^^^^^^^^^^ Settings ^^^^^^^^^^^^^^^^^
