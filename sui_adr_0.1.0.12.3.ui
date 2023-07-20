@@ -157,10 +157,24 @@
                                                 "gravity_horizontal": "center",
                                                 "gravity_vertical": "center",
                                                 "weight": "0",
-                                                "type": "Button",
-                                                "Value": "...",
-                                                "Variable": "btn_select_cell"
-                                            },
+                                                "type": "TextView",
+                                                "Value": "",
+                                                "Variable": ""
+                                            }
+                                        ],
+                                        "BackgroundColor": "",
+                                        "StrokeWidth": "",
+                                        "Padding": ""
+                                    },
+                                    {
+                                        "orientation": "horizontal",
+                                        "height": "wrap_content",
+                                        "width": "match_parent",
+                                        "weight": "0",
+                                        "type": "LinearLayout",
+                                        "Variable": "",
+                                        "Value": "",
+                                        "Elements": [
                                             {
                                                 "height": "wrap_content",
                                                 "width": "wrap_content",
@@ -168,13 +182,10 @@
                                                 "gravity_vertical": "center",
                                                 "weight": "0",
                                                 "type": "Button",
-                                                "Value": "x",
+                                                "Value": "Отменить выбор",
                                                 "Variable": "btn_clear_cell"
                                             }
-                                        ],
-                                        "BackgroundColor": "",
-                                        "StrokeWidth": "",
-                                        "Padding": ""
+                                        ]
                                     },
                                     {
                                         "orientation": "horizontal",
@@ -323,6 +334,11 @@
                                 "type": "MenuItem",
                                 "Value": "Выгрузить документ",
                                 "Variable": "btn_doc_mark_verified"
+                            },
+                            {
+                                "type": "MenuItem",
+                                "Value": "Выбрать ячейку",
+                                "Variable": "btn_select_cell"
                             }
                         ],
                         "Handlers": [
