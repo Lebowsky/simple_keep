@@ -2519,7 +2519,7 @@ class HttpSettingsScreen(Screen):
         self.hs_service = hs_services.HsService(self._get_http_settings())
 
         if self._check_http_settings():
-            self.hs_service.communication_test()
+            self.hs_service.communication_test(timeout=3)
             result = self.hs_service.http_answer
 
             if result.unauthorized:
