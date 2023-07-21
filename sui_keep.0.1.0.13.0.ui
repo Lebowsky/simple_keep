@@ -3287,14 +3287,14 @@
                             {
                                 "event": "onStart",
                                 "action": "run",
-                                "type": "online",
+                                "type": "python",
                                 "method": "universal_cards_on_start",
                                 "postExecute": ""
                             },
                             {
                                 "event": "onInput",
                                 "action": "run",
-                                "type": "online",
+                                "type": "python",
                                 "method": "universal_cards_listener",
                                 "postExecute": ""
                             }
