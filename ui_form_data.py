@@ -1392,7 +1392,8 @@ id_good,
 RS_goods.type_good,
 id_property,
 id_series,
-id_unit
+id_unit,
+ratio
  FROM RS_barcodes 
  Left Join RS_goods
  ON RS_barcodes.id_good = RS_goods.id

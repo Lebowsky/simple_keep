@@ -3080,6 +3080,48 @@ class MainEvents:
 
         self.hash_map["SQLConnectDatabase"] = "SimpleKeep"
         self.hash_map.toast(toast)
+        self.do_update()
+
+
+    def do_update(self):
+        qtext = '''PRAGMA foreign_keys = 0;
+            
+            CREATE TABLE sqlitestudio_temp_table AS SELECT *
+                                                      FROM RS_barcodes;
+            
+            DROP TABLE RS_barcodes;
+            
+            CREATE TABLE RS_barcodes (
+                barcode     TEXT NOT NULL
+                                 PRIMARY KEY,
+                id_good     TEXT NOT NULL,
+                id_property TEXT,
+                id_series   TEXT,
+                id_unit     TEXT,
+                ratio       INT  DEFAULT (1) 
+                                 NOT NULL
+            );
+            
+            INSERT INTO RS_barcodes (
+                                        barcode,
+                                        id_good,
+                                        id_property,
+                                        id_series,
+                                        id_unit
+                                    )
+                                    SELECT barcode,
+                                           id_good,
+                                           id_property,
+                                           id_series,
+                                           id_unit
+                                      FROM sqlitestudio_temp_table;
+            
+            DROP TABLE sqlitestudio_temp_table;
+            
+            PRAGMA foreign_keys = 1;
+            '''
+
+        ui_global.execute_script(query_text=qtext)
 
     def on_sql_error(self):
         sql_error = self.hash_map['SQLError']

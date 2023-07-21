@@ -14,7 +14,7 @@ query_list = queue.Queue()
 if os.path.exists('//data/data/ru.travelfood.simple_ui/databases/'): #локально
     db_path = '//data/data/ru.travelfood.simple_ui/databases/SimpleKeep'  # rightscan'
 else:
-    db_path = 'rightscan5.db'  # D:\PythonProjects\RightScan\SUI_noPony\
+    db_path = 'Rightscan.db'  # D:\PythonProjects\RightScan\SUI_noPony\
 
 conn = None
 
@@ -278,6 +278,9 @@ class Rs_doc():
         return get_query_result(query, (self.id_doc, search_value), True)
 
     def update_doc_table_data(self, elem_for_add: dict, qtty=1, user_tmz=0):
+        #Если elem_for_add содержит ратио - умножим его на qtty
+        qtty = elem_for_add.get('ratio')*qtty if elem_for_add.get('ratio') is not None else qtty
+
         # Сначала определим, есть ли в списке товаров документа наш товар:
         qtext = 'Select * from RS_docs_table Where id_doc=? and id_good = ? and id_properties = ? and id_series = ? ' #and id_unit = ?
         args = (self.id_doc, elem_for_add['id_good'], elem_for_add['id_property'], elem_for_add['id_series']) #,elem_for_add['id_unit']
@@ -560,6 +563,8 @@ class Rs_adr_doc():
         # res  = get_query_result('Select id From RS_cells Where name = ?',(cell_name,))
         #
         # cell_id = res[0][0] if res else None
+        #Если elem_for_add содержит ратио - умножим его на qtty
+        qtty = elem_for_add.get('ratio')*qtty if elem_for_add.get('ratio') is not None else qtty
 
         # Сначала определим, есть ли в списке товаров документа наш товар:
         qtext = 'Select * from RS_adr_docs_table Where id_doc=? and id_good = ? and id_properties = ? and id_series = ?  and (id_cell=?  OR id_cell= "" OR id_cell is Null) and table_type = ?'  #and id_unit = ?
