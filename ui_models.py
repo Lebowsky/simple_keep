@@ -3042,7 +3042,7 @@ class MainEvents:
             toast = 'Не удалось определить версию конфигурации'
 
         if current_release and release != current_release:
-            self.hash_map.put('UpdateConfigurations', '')
+            self.hash_map.put('InstallConfiguration', '')
             self.rs_settings.put('Release', current_release, True)
             toast = f'Выполнено обновление на версию {current_release}'
 
