@@ -824,46 +824,6 @@ def http_settings_on_click_(hashMap,  _files=None, _data=None):
     return hashMap
 
 
-def sound_settings_on_start(hashMap, _files=None, _data=None):
-    # ss = {'signal_num': "Номер сигнала",
-    #       'beep_duration':'Длительность(мс)'}  # ,
-
-    hashMap.put('signal_num_card',
-                ui_form_data.ModernField(hint='Номер сигнала', default_text=rs_settings.get('signal_num'),
-                                         password=False).to_json())  # )
-    hashMap.put('beep_duration_card',
-                ui_form_data.ModernField(hint='Длительность(мс)', default_text=rs_settings.get('beep_duration'),
-                                         password=False).to_json())  # )
-    #fields_from_settings(hashMap, ss)
-
-    return hashMap
-
-
-def sound_settings_listener(hashMap, _files=None, _data=None):
-    listener = hashMap.get('listener')
-    if listener == 'btn_on_save':  # or hashMap.get('event') == 'Input'
-
-        rs_settings.put('signal_num', hashMap.get("signal_num_value"), True)
-        rs_settings.put('beep_duration', hashMap.get('beep_duration_value'), True)
-        hashMap.put('ShowScreen', 'Настройки и обмен')
-
-    elif listener == 'btn_on_cancel' or listener == 'ON_BACK_PRESSED':
-        hashMap.put('ShowScreen', 'Настройки и обмен')
-    elif listener == 'btn_test_sound':
-        rs_settings.put('signal_num', hashMap.get("signal_num_value"), True)
-        rs_settings.put('beep_duration', hashMap.get('beep_duration_value'), True)
-        hashMap.put('beep_duration', hashMap.get("beep_duration_value"))
-        hashMap.put('beep', hashMap.get('signal_num_value'))
-
-        # hashMap.put('beep_duration', str(rs_settings.get('beep_duration')))
-        # hashMap.put("beep", str(rs_settings.get('signal_num')))
-
-        # hashMap.put('beep_duration', '83')
-        # hashMap.put("beep", '1000')
-
-    return hashMap
-
-
 # ^^^^^^^^^^^^^^^^^ Settings ^^^^^^^^^^^^^^^^^
 
 
