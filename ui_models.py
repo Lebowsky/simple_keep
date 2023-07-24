@@ -2485,7 +2485,7 @@ class HttpSettingsScreen(Screen):
         self.hs_service = None
 
     def on_start(self) -> None:
-        # self.hash_map.remove('toast')
+        self.hash_map.remove('toast')
         self.hash_map['btn_test_connection'] = 'Тест соединения'
         http_settings = self._get_http_settings()
 
