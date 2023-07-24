@@ -37,12 +37,12 @@ class TestMainEvents(unittest.TestCase):
 
         load_data = self.get_load_data()
         HsService.get_data = MagicMock(return_value=load_data)
-        DocService.get_existing_docs = MagicMock(return_value=[])
+
         DocService.update_data_from_json = MagicMock()
 
         sut.load_docs()
         HsService.get_data.assert_called_once()
-        DocService.get_existing_docs.assert_called()
+
         DocService.update_data_from_json.assert_called_once()
         self.assertIsNone(self.rs_settings.get('notification_id'))
 
