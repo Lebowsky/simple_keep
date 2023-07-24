@@ -2485,7 +2485,7 @@ class HttpSettingsScreen(Screen):
         self.hs_service = None
 
     def on_start(self) -> None:
-        self.hash_map.remove('toast')
+        # self.hash_map.remove('toast')
         self.hash_map['btn_test_connection'] = 'Тест соединения'
         http_settings = self._get_http_settings()
 
@@ -2519,7 +2519,7 @@ class HttpSettingsScreen(Screen):
         self.hs_service = hs_services.HsService(self._get_http_settings())
 
         if self._check_http_settings():
-            self.hs_service.communication_test()
+            self.hs_service.communication_test(timeout=3)
             result = self.hs_service.http_answer
 
             if result.unauthorized:
@@ -3042,7 +3042,7 @@ class MainEvents:
             toast = 'Не удалось определить версию конфигурации'
 
         if current_release and release != current_release:
-            self.hash_map.put('UpdateConfigurations', '')
+            self.hash_map.put('InstallConfiguration', '')
             self.rs_settings.put('Release', current_release, True)
             toast = f'Выполнено обновление на версию {current_release}'
 
