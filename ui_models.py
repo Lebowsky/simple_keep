@@ -2852,6 +2852,7 @@ class DebugSettingsScreen(Screen):
 
     def on_input(self):
         listeners = {
+            'btn_fill_ratio': self._fill_ratio,
             'btn_copy_base': self._copy_base,
             'btn_unload_log': self._unload_log,
             'btn_local_files': self._local_files,
@@ -2865,6 +2866,18 @@ class DebugSettingsScreen(Screen):
 
     def show(self, args=None):
         pass
+
+    def _fill_ratio(self):
+        qtext = '''
+        UPDATE RS_barcodes
+        SET ratio = COALESCE((
+            SELECT RS_units.nominator / RS_units.denominator
+            FROM RS_units
+            WHERE RS_units.id = RS_barcodes.id_unit
+        ), 1)'''
+
+        res = ui_global.get_query_result(qtext)
+        self.hash_map.toast('Таблица баркодов заполнена значениями из единиц измерения')
 
     def _copy_base(self):
         ip_host = self.hash_map['ip_host']
