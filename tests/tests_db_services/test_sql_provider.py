@@ -30,7 +30,7 @@ class TestSqlQueryProvider(unittest.TestCase):
         data = {'id': 'id_5', 'id_doc': 'id_doc_5', 'qtty': 5, 'price': '500'}
         sut.create(data)
 
-        expect = 'INSERT INTO table VALUES (?,?,?,?)'
+        expect = 'INSERT INTO table (id, id_doc, qtty, price) VALUES (?,?,?,?)'
         actual = sut.sql_text
         self.assertEqual(expect, actual)
 
@@ -44,7 +44,7 @@ class TestSqlQueryProvider(unittest.TestCase):
         ]
         sut.create(data)
 
-        expect = 'INSERT INTO table VALUES (?,?,?,?)'
+        expect = 'INSERT INTO table (id, id_doc, qtty, price) VALUES (?,?,?,?)'
         actual = sut.sql_text
         self.assertEqual(expect, actual)
 
