@@ -391,6 +391,7 @@ def doc_barcodes_on_start(hashMap, _files=None, _data=None):
         product_row = {
             'key': str(record[0]),
             'barcode_value': str(record[3]),
+            'ratio':str(record[6]),
             'approved': str(record[4])
 
         }
