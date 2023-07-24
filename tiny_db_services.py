@@ -32,13 +32,13 @@ class TinyNoSQLProvider:
     def search(self, **cond) -> list:
         return self.table.search(cond=self._create_condition(**cond))
 
-    def insert(self, data: dict):
+    def insert(self, data: dict) -> int:
         return self.table.insert(data)
 
-    def insert_multiple(self, data: List[dict]):
-        self.table.insert_multiple(data)
+    def insert_multiple(self, data: List[dict]) -> List[int]:
+        return self.table.insert_multiple(data)
 
-    def update(self, data: dict, **cond):
+    def update(self, data: dict, **cond) -> List[int]:
         """
         delete(key): delete a key from the document
         increment(key): increment the value of a key
@@ -50,10 +50,10 @@ class TinyNoSQLProvider:
         db.update(your_operation(arguments), query)
         """
 
-        self.table.update(data, cond=self._create_condition(**cond))
+        return self.table.update(data, cond=self._create_condition(**cond))
 
-    def upsert(self, data, **cond):
-        self.table.upsert(data, cond=self._create_condition(**cond))
+    def upsert(self, data, **cond) -> List[int]:
+        return self.table.upsert(data, cond=self._create_condition(**cond))
 
     def remove(self, **cond):
         self.table.remove(cond=self._create_condition(**cond))
