@@ -2852,6 +2852,7 @@ class DebugSettingsScreen(Screen):
 
     def on_input(self):
         listeners = {
+            'btn_fill_ratio': self._fill_ratio,
             'btn_copy_base': self._copy_base,
             'btn_unload_log': self._unload_log,
             'btn_local_files': self._local_files,
@@ -2865,6 +2866,18 @@ class DebugSettingsScreen(Screen):
 
     def show(self, args=None):
         pass
+
+    def _fill_ratio(self):
+        qtext = '''
+        UPDATE RS_barcodes
+        SET ratio = COALESCE((
+            SELECT RS_units.nominator / RS_units.denominator
+            FROM RS_units
+            WHERE RS_units.id = RS_barcodes.id_unit
+        ), 1)'''
+
+        res = ui_global.get_query_result(qtext)
+        self.hash_map.toast('Таблица баркодов заполнена значениями из единиц измерения')
 
     def _copy_base(self):
         ip_host = self.hash_map['ip_host']
@@ -3080,6 +3093,48 @@ class MainEvents:
 
         self.hash_map["SQLConnectDatabase"] = "SimpleKeep"
         self.hash_map.toast(toast)
+        self.do_update()
+
+
+    def do_update(self):
+        qtext = '''PRAGMA foreign_keys = 0;
+            
+            CREATE TABLE sqlitestudio_temp_table AS SELECT *
+                                                      FROM RS_barcodes;
+            
+            DROP TABLE RS_barcodes;
+            
+            CREATE TABLE RS_barcodes (
+                barcode     TEXT NOT NULL
+                                 PRIMARY KEY,
+                id_good     TEXT NOT NULL,
+                id_property TEXT,
+                id_series   TEXT,
+                id_unit     TEXT,
+                ratio       INT  DEFAULT (1) 
+                                 NOT NULL
+            );
+            
+            INSERT INTO RS_barcodes (
+                                        barcode,
+                                        id_good,
+                                        id_property,
+                                        id_series,
+                                        id_unit
+                                    )
+                                    SELECT barcode,
+                                           id_good,
+                                           id_property,
+                                           id_series,
+                                           id_unit
+                                      FROM sqlitestudio_temp_table;
+            
+            DROP TABLE sqlitestudio_temp_table;
+            
+            PRAGMA foreign_keys = 1;
+            '''
+
+        ui_global.execute_script(query_text=qtext)
 
     def on_sql_error(self):
         sql_error = self.hash_map['SQLError']

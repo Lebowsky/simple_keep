@@ -3686,8 +3686,8 @@
         },
         "ConfigurationTags": "Py,off-line",
         "FaceRecognitionURL": "",
-        "ForegroundService": false,
-        "StopForegroundServiceOnExit": false,
+        "ForegroundService": true,
+        "StopForegroundServiceOnExit": true,
         "RunPython": true,
         "LaunchProcess": "",
         "MainMenu": [
@@ -3717,6 +3717,10 @@
         "PyFiles": [
             {
                 "PyFileKey": "database_init_queryes",
+                "PyFileData": ""
+            },
+            {
+                "PyFileKey": "db_models",
                 "PyFileData": ""
             },
             {
