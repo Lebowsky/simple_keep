@@ -118,9 +118,10 @@ def database_shema():
     id_good     TEXT NOT NULL,
     id_property TEXT,
     id_series   TEXT,
-    id_unit     TEXT
-)
-
+    id_unit     TEXT,
+    ratio       INT  DEFAULT (1) 
+                NOT NULL
+    )
     ''')
 
     #Коды маркировки RS_marking_codes
