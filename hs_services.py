@@ -1,8 +1,9 @@
+from typing import Optional
+from dataclasses import dataclass
+
 import requests
 import json
-from dataclasses import dataclass, fields
 from requests.auth import HTTPBasicAuth
-from typing import Optional
 
 
 class HsService:
@@ -47,6 +48,39 @@ class HsService:
 
         self.http_answer = self._create_http_answer(answer)
         return answer
+
+    def get_document_lines(self, id_doc: str, **kwargs) -> 'HttpAnswer':
+        self._hs = 'document_lines'
+        self._method = requests.get
+        self.params['id_doc'] = id_doc
+        answer = self._send_request(kwargs)
+
+        if answer['status_code'] == 200:
+            json_data = json.loads(answer.get('text'))
+            answer['data'] = json_data
+
+        self.http_answer = self._create_http_answer(answer)
+        return self.http_answer
+
+    def send_document_lines(self, id_doc, data, **kwargs):
+        if not data:
+            return {'empty': True}
+
+        kwargs['data'] = data if isinstance(data, str) else json.dumps(data)
+
+        self._hs = 'document_lines'
+        self._method = requests.post
+        self.params['id_doc'] = id_doc
+
+        answer = self._send_request(kwargs)
+        if answer['status_code'] == 200:
+            json_data = json.loads(answer.get('text'))
+            answer['data'] = json_data
+
+        self.http_answer = self._create_http_answer(answer)
+
+        return self.http_answer
+
 
     def reset_exchange(self, **kwargs):
         self._hs = 'reset_exchange'
@@ -121,16 +155,17 @@ class HsService:
             if answer_data['status_code'] == 401:
                 answer_data['unauthorized'] = True
             elif answer_data['status_code'] == 403:
-                error_text = ''
-                if answer.get('text'):
-                    try:
-                        json_result = json.loads(answer['text'])
-                        error_text = json_result.get('error')
-                    except Exception as e:
-                        error_text = answer['text'].decode()
+                answer_data['forbidden'] = True
+
+            if answer.get('text'):
+                try:
+                    json_result = json.loads(answer['text'])
+                    error_text = json_result.get('error')
+                except Exception as e:
+                    error_text = answer['text'].decode()
 
                 answer_data['error_text'] = error_text
-                answer_data['forbidden'] = True
+
 
         return self.HttpAnswer(**answer_data)
 
