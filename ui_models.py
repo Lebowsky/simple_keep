@@ -966,15 +966,10 @@ class DocDetailsScreen(Screen):
                 ', {}'.format(product_row['units_name']) if product_row['units_name'] else '',
             ]
             product_row['good_info'] = ''.join(props)
-            if record['qtty'] is not None:
-                product_row['qtty'] = str(int(record['qtty']) if record['qtty'].is_integer() else record['qtty'])
-            else:
-                product_row['qtty'] = "0"
-            if record['qtty_plan'] is not None:
-                product_row['qtty_plan'] = str(int(record['qtty_plan']) if record['qtty_plan'].is_integer()
-                                               else record['qtty_plan'])
-            else:
-                product_row['qtty_plan'] = "0"
+
+            for key in ['qtty', 'd_qtty', 'qtty_plan']:
+                value = record.get(key, 0.0)
+                product_row[key] = str(int(value)) if value.is_integer() else value
 
             product_row['_layout'] = self._get_doc_table_row_view()
             self._set_background_row_color(product_row)
@@ -991,15 +986,19 @@ class DocDetailsScreen(Screen):
             widgets.LinearLayout(
                 self.LinearLayout(
                     self.TextView('Название'),
-                    weight=3
+                    weight=4
                 ),
                 self.LinearLayout(
                     self.TextView('План'),
-                    weight=1
+                    weight=2
                 ),
                 self.LinearLayout(
-                    self.TextView('Факт'),
-                    weight=1
+                    self.TextView('Факт устройства'),
+                    weight=2
+                ),
+                self.LinearLayout(
+                    self.TextView('Общий факт'),
+                    weight=2
                 ),
                 orientation='horizontal',
                 height="match_parent",
@@ -1030,7 +1029,7 @@ class DocDetailsScreen(Screen):
                     StrokeWidth=1
                 ),
                 width='match_parent',
-                weight=3,
+                weight=4,
                 StrokeWidth=1
             ),
             widgets.LinearLayout(
@@ -1041,7 +1040,18 @@ class DocDetailsScreen(Screen):
                 ),
                 width='match_parent',
                 height='match_parent',
-                weight=1,
+                weight=2,
+                StrokeWidth=1
+            ),
+            widgets.LinearLayout(
+                widgets.TextView(
+                    Value='@d_qtty',
+                    TextSize=15,
+                    width='match_parent',
+                ),
+                width='match_parent',
+                height='match_parent',
+                weight=2,
                 StrokeWidth=1
             ),
             widgets.LinearLayout(
@@ -1052,7 +1062,7 @@ class DocDetailsScreen(Screen):
                 ),
                 width='match_parent',
                 height='match_parent',
-                weight=1,
+                weight=2,
                 StrokeWidth=1
             ),
             orientation='horizontal',
