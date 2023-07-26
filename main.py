@@ -936,6 +936,6 @@ def get_table_cards(table_name: str, filter_fields=list(), filter_value='', excl
 
     return json.dumps(cards)
 
-@HashMap
+@HashMap()
 def debug_barcode_error_screen_listener(hash_map: HashMap):
     hash_map.show_screen(listener='Ошибка превышения плана', title='Количество план в документе превышено')

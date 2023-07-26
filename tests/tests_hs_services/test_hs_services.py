@@ -24,6 +24,28 @@ class TestHsService(unittest.TestCase):
         res = self.service.http_answer
         self.assertEqual(res.status_code, 200)
 
+    def test_get_document_lines(self):
+        id_doc = '37c4c709-d22b-11e4-869d-0050568b35ac'
+        res = self.service.get_document_lines(id_doc)
+        print(res)
+
+    def test_send_document_lines(self):
+        data = [{
+            "id_doc": "37c4c709-d22b-11e4-869d-0050568b35ac",
+            "id_good": "cbcf493f-55bc-11d9-848a-00112f43529a",
+            "id_properties": "",
+            "id_series": "",
+            "id_unit": "",
+            "id_cell": "",
+            "d_qtty": 1
+        }]
+
+        res = self.service.send_document_lines(
+            id_doc='37c4c709-d22b-11e4-869d-0050568b35ac',
+            data=data
+        )
+        print(res)
+
     @unittest.skip
     def test_get_data(self):
         self.service.reset_exchange()

@@ -118,7 +118,10 @@ def database_shema():
     id_good     TEXT NOT NULL,
     id_property TEXT,
     id_series   TEXT,
-    id_unit     TEXT
+    id_unit     TEXT,
+    ratio       INT  DEFAULT (1) 
+                NOT NULL
+    )
 )
 
     ''')
@@ -221,7 +224,7 @@ def database_shema():
         add_mark_selection INTEGER,
         created_at         DATETIME DEFAULT CURRENT_TIMESTAMP,
         control            TEXT DEFAULT 0,
-        is_gorup_scan      TEXT DEFAULT 0,
+        is_group_scan      TEXT DEFAULT 0,
         allow_fact_input   TEXT DEFAULT 0
         
     )

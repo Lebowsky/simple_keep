@@ -895,12 +895,12 @@ class DocDetailsScreen(Screen):
             self.hash_map.show_screen('Ошибка сканера')
         elif res['Error']:
             self.hash_map.playsound('error')
+
             if res['Error'] == 'AlreadyScanned':
                 self.hash_map.put('barcode', json.dumps({'barcode': res['Barcode'], 'doc_info': res['doc_info']}))
                 self.hash_map.show_screen('Удаление штрихкода')
             elif res['Error'] == 'QuantityPlanReached':
                 self.hash_map.put('Error_description', 'Количество план в документе превышено')
-                self.hash_map.show_screen('Ошибка превышения плана')
                 self.hash_map.show_dialog(listener='Ошибка превышения плана',
                                           title='Количество план в документе превышено')
                 self.hash_map.playsound('warning')

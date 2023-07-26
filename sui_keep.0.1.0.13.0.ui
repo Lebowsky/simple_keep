@@ -4887,7 +4887,7 @@
             },
             {
                 "event": "onBackgroundCommand",
-                "listener": "menu_02",
+                "listener": "menu_2",
                 "action": "run",
                 "type": "set",
                 "method": "UpdateConfigurations",
