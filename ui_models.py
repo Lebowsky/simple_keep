@@ -3059,7 +3059,10 @@ class MainEvents:
 
         if current_release and release != current_release:
             import version_control
-            version_control.run_releases(release, current_release, self.hash_map)
+            result_list = version_control.run_releases(release, current_release)
+            for elem in result_list:
+                if not elem['result']:
+                    pass
             self.hash_map.put('InstallConfiguration', '')
             self.rs_settings.put('Release', current_release, True)
             toast = f'Выполнено обновление на версию {current_release}'
@@ -3098,87 +3101,14 @@ class MainEvents:
 
         self.hash_map["SQLConnectDatabase"] = "SimpleKeep"
         self.hash_map.toast(toast)
-        self.do_update()
 
 
-    def do_update(self):
-        qtext = '''PRAGMA foreign_keys = 0;
-            
-            CREATE TABLE sqlitestudio_temp_table AS SELECT *
-                                                      FROM RS_barcodes;
-            
-            DROP TABLE RS_barcodes;
-            
-            CREATE TABLE RS_barcodes (
-                barcode     TEXT NOT NULL
-                                 PRIMARY KEY,
-                id_good     TEXT NOT NULL,
-                id_property TEXT,
-                id_series   TEXT,
-                id_unit     TEXT,
-                ratio       INT  DEFAULT (1) 
-                                 NOT NULL
-            );
-            
-            INSERT INTO RS_barcodes (
-                                        barcode,
-                                        id_good,
-                                        id_property,
-                                        id_series,
-                                        id_unit
-                                    )
-                                    SELECT barcode,
-                                           id_good,
-                                           id_property,
-                                           id_series,
-                                           id_unit
-                                      FROM sqlitestudio_temp_table;
-            
-            DROP TABLE sqlitestudio_temp_table;
-            
-            PRAGMA foreign_keys = 1;
-            '''
-
-        ui_global.execute_script(query_text=qtext)
 
     def on_sql_error(self):
         sql_error = self.hash_map['SQLError']
         if sql_error:
             service = db_services.DocService()
             service.write_error_on_log(f'SQL_Error: {sql_error}')
-
-    def put_notification(self):
-        self.hash_map['_configuration'] = ''
-        qtext = '''
-        SELECT 
-            doc_type, 
-            count(id_doc) as count, 
-            max(created_at) as dt 
-        FROM RS_docs 
-        WHERE created_at > ? 
-        GROUP BY doc_type 
-        '''
-
-        last_date = self.rs_settings.get('lastDate')
-        if not last_date:
-            last_date = '2020-01-01 00:00:00'
-
-        res = ui_global.get_query_result(qtext, (last_date,), True)
-
-        doc_list = ''
-        if res:
-            for el in res:
-                doc_list = doc_list + (' ' + el['doc_type'] + ': ' + str(el['count']))
-
-            self.hash_map.put(
-                'basic_notification',
-                json.dumps([{'number': 1, 'title': 'Новые документы', 'message': doc_list}]))
-
-            qtext = 'SELECT max(created_at) as dt FROM RS_docs'
-            res2 = ui_global.get_query_result(qtext)
-
-            self.rs_settings.put('lastDate', res2[0][0], True)
-            self.hash_map.toast(last_date)
 
     def _create_tables(self):
         service = db_services.DbCreator()

@@ -67,13 +67,6 @@ def on_sql_error(hash_map):
     model.on_sql_error()
 
 
-@HashMap()
-def put_notification(hash_map: HashMap):
-    """ Обработчик для работы МП в режиме сервера. Уведомления о входящих документах """
-
-    model = ui_models.MainEvents(hash_map, rs_settings)
-    model.put_notification()
-
 
 @HashMap()
 def on_close_app(hash_map):
