@@ -79,7 +79,6 @@ class TestTinyNoSQLProvider(unittest.TestCase):
         )
         self.assertEqual([3], res)
 
-
     def test_must_remove_data(self):
         data = [
             {'row_id': 5, 'test_data': 'test_data'},
@@ -96,4 +95,16 @@ class TestTinyNoSQLProvider(unittest.TestCase):
 
         self.assertEqual(expect, actual)
 
+    def test_must_check_count_data(self):
+        self.assertEqual(self.provider.count(test_data='test_data'), 0)
+
+        data = [
+            {'row_id': 5, 'test_data': 'test_data'},
+            {'row_id': 6, 'test_data': 'test_data'},
+            {'row_id': 7, 'test_data': 'test_data_new'}
+        ]
+
+        self.provider.insert_multiple(data)
+
+        self.assertEqual(self.provider.count(test_data='test_data'), 2)
 
