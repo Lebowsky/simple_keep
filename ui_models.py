@@ -3050,14 +3050,18 @@ class MainEvents:
         # TODO Обработчики обновления!
         release = self.rs_settings.get('Release') or ''
         toast = 'Готов к работе'
+
         current_release = self.hash_map['_configurationVersion']
+        #toast = (f'Обновляемся с {release} на {current_release}')
 
         self._create_tables()
 
         if current_release is None:
             toast = 'Не удалось определить версию конфигурации'
-
+        #self.hash_map.toast(f'Обновляемся с {release} на {current_release}')
         if current_release and release != current_release:
+            toast = (f'Обновляемся с {release} на {current_release}')
+            pass
             import version_control
             result_list = version_control.run_releases(release, current_release)
             for elem in result_list:

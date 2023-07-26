@@ -417,7 +417,7 @@ class Rs_doc():
                     if control:
                         return {'Result': f'Количество план будет превышено при добавлении {str(ratio)} единиц товара',
                                 'Error': 'QuantityPlanReached',
-                                'barcode': barcode, 'Descr': 'Количество план превышено, больше товар в данный документ добавить нельзя'}
+                                'barcode': barcode, 'Descr': f'Количество план будет превышено при добавлении {str(ratio)} единиц товара'}
 
         else: #Товар не найден в документе
             if have_zero_plan and control:
@@ -537,26 +537,6 @@ class Rs_adr_doc():
 
         return get_query_result(query, (self.id_doc, search_value), True)
 
-    # def find_barcode_in_mark_table(self, search_value: str, func_compared='=?') -> object:
-    #     query = '''
-    #                     SELECT
-    #                     RS_marking_codes.id_good,
-    #                     RS_marking_codes.id_property,
-    #                     RS_marking_codes.id_series,
-    #                     RS_marking_codes.id_unit,
-    #                     RS_docs_table.id,
-    #                     RS_docs_table.qtty
-    #                     FROM RS_marking_codes
-    #                     Left join RS_docs_table ON
-    #                     RS_docs_table.id_good= RS_marking_codes.id_good and
-    #                     RS_docs_table.id_properties= RS_marking_codes.id_property and
-    #                     RS_docs_table.id_unit= RS_marking_codes.id_unit And
-    #                     RS_docs_table.id_doc=?
-    #                     where mark_code  ''' + func_compared
-        # query = query + func_compared
-
-        return get_query_result(query, (self.id_doc, search_value), True)
-
     def update_doc_table_data(self, elem_for_add: dict, qtty=1, cell_id = None, table_type = 'out', user_tmz=0):
         #Ищем ячейку по имени, нам нужен ID
         # res  = get_query_result('Select id From RS_cells Where name = ?',(cell_name,))
@@ -628,7 +608,7 @@ class Rs_adr_doc():
                     if control:
                         return {'Result':  f'Количество план будет превышено при добавлении {str(ratio)} единиц товара',
                                 'Error': 'QuantityPlanReached',
-                                'barcode': barcode, 'Descr': 'Количество план превышено, больше товар в данный документ добавить нельзя'}
+                                'barcode': barcode, 'Descr': f'Количество план будет превышено при добавлении {str(ratio)} единиц товара'}
 
         else: #Товар не найден в документе
             if have_zero_plan and control:
