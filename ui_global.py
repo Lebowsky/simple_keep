@@ -83,7 +83,7 @@ def check_adr_barcode_compliance(el_dict: dict, id_doc):
 #
 
 
-def get_query_result(query_text: object, args: object = "", return_dict=False) -> list:
+def get_query_result(query_text: str, args = "", return_dict=False) -> list:
     # **********************
 
     # global conn
@@ -278,8 +278,6 @@ class Rs_doc():
         return get_query_result(query, (self.id_doc, search_value), True)
 
     def update_doc_table_data(self, elem_for_add: dict, qtty=1, user_tmz=0):
-        #Если elem_for_add содержит ратио - умножим его на qtty
-        qtty = elem_for_add.get('ratio')*qtty if elem_for_add.get('ratio') is not None else qtty
 
         # Сначала определим, есть ли в списке товаров документа наш товар:
         qtext = 'Select * from RS_docs_table Where id_doc=? and id_good = ? and id_properties = ? and id_series = ? ' #and id_unit = ?
@@ -303,7 +301,7 @@ class Rs_doc():
 
         return res
 
-    # Фугкция добавляет строку в маркировку документа на основании баркода (dataMatrix)
+    # Функция добавляет строку в маркировку документа на основании баркода (dataMatrix)
     def add_marked_codes_in_doc(self, barcode_info):
         qtext = 'SELECT * FROM RS_marking_codes Where mark_code =?'
         q_doc_text = 'REPLACE INTO RS_docs_barcodes (id_doc, id_barcode, barcode_from_scanner, is_plan, approved) VALUES (?,?,?,?,?)'
@@ -373,6 +371,7 @@ class Rs_doc():
         res = find_barcode_in_barcode_table(search_value)  # Ищет баркод или ГТИИН по общей таблице штрихкодов. Возвращает товар, его вид, характеристику серию итп.
         if not len(res) == 0:
             elem = res[0] #Берем первый результат. В правильном списке штрихкодов не может быть повторений
+            ratio = elem['ratio']
         else:
             return {'Error': 'NotFound', 'Descr': 'Штрихкод не найден в базе', 'Barcode': barcode}
 
@@ -414,9 +413,9 @@ class Rs_doc():
         res = check_barcode_compliance(elem, self.id_doc)  #Получаем строку таблицы товары документа
         if res: #Товар найден в документе
             if have_qtty_plan: #Есть план по количеству
-                if res[0]['qtty_plan'] <= res[0]['qtty']: #Количество товара в документе уже набрано, и мы превышаем план
+                if res[0]['qtty_plan'] < res[0]['qtty'] + ratio: #Количество товара в документе уже набрано, и мы превышаем план
                     if control:
-                        return {'Result': 'Количество план превышено, больше товар в данный документ добавить нельзя',
+                        return {'Result': f'Количество план будет превышено при добавлении {str(ratio)} единиц товара',
                                 'Error': 'QuantityPlanReached',
                                 'barcode': barcode, 'Descr': 'Количество план превышено, больше товар в данный документ добавить нельзя'}
 
@@ -439,7 +438,7 @@ class Rs_doc():
 
 
         # Обновляем таблицу товары
-        self.update_doc_table_data(self, elem, 1, user_tmz)
+        self.update_doc_table_data(self, elem, ratio, user_tmz)
 
         return {'Result': 'Марка добавлена в документ', 'Error': None,
                         'barcode': barcode_info['GTIN'] + barcode_info['SERIAL']}
@@ -564,7 +563,7 @@ class Rs_adr_doc():
         #
         # cell_id = res[0][0] if res else None
         #Если elem_for_add содержит ратио - умножим его на qtty
-        qtty = elem_for_add.get('ratio')*qtty if elem_for_add.get('ratio') is not None else qtty
+        #qtty = elem_for_add.get('ratio')*qtty if elem_for_add.get('ratio') is not None else qtty
 
         # Сначала определим, есть ли в списке товаров документа наш товар:
         qtext = 'Select * from RS_adr_docs_table Where id_doc=? and id_good = ? and id_properties = ? and id_series = ?  and (id_cell=?  OR id_cell= "" OR id_cell is Null) and table_type = ?'  #and id_unit = ?
@@ -615,6 +614,7 @@ class Rs_adr_doc():
         res = find_barcode_in_barcode_table(search_value)  # Ищет баркод или ГТИИН по общей таблице штрихкодов. Возвращает товар, его вид, характеристику серию итп.
         if not len(res) == 0:
             elem = res[0] #Берем первый результат. В правильном списке штрихкодов не может быть повторений
+            ratio = elem['ratio']
         else:
             return {'Error': 'NotFound', 'Descr': 'Штрихкод не найден в базе', 'Barcode': barcode}
 
@@ -624,9 +624,9 @@ class Rs_adr_doc():
         res = check_adr_barcode_compliance(elem, self.id_doc)  #Получаем строку таблицы товары документа
         if res: #Товар найден в документе
             if have_qtty_plan: #Есть план по количеству
-                if res[0]['qtty_plan'] <= res[0]['qtty']: #Количество товара в документе уже набрано, и мы превышаем план
+                if res[0]['qtty_plan'] < res[0]['qtty'] + ratio: #Количество товара в документе уже набрано, и мы превышаем план
                     if control:
-                        return {'Result': 'Количество план превышено, больше товар в данный документ добавить нельзя',
+                        return {'Result':  f'Количество план будет превышено при добавлении {str(ratio)} единиц товара',
                                 'Error': 'QuantityPlanReached',
                                 'barcode': barcode, 'Descr': 'Количество план превышено, больше товар в данный документ добавить нельзя'}
 
@@ -639,7 +639,7 @@ class Rs_adr_doc():
 
 
         # Обновляем таблицу товары
-        self.update_doc_table_data(self, elem, 1, cell_id, table_type, user_tmz)
+        self.update_doc_table_data(self, elem, ratio, cell_id, table_type, user_tmz)
 
         return {'Result': 'Марка добавлена в документ', 'Error': None,
                         'barcode': barcode_info['GTIN'] + barcode_info['SERIAL']}

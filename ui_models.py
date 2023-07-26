@@ -3046,20 +3046,25 @@ class MainEvents:
         self.rs_settings = rs_settings
 
     def app_on_start(self):
+
         # TODO Обработчики обновления!
         release = self.rs_settings.get('Release') or ''
         toast = 'Готов к работе'
         current_release = self.hash_map['_configurationVersion']
 
+        self._create_tables()
+
         if current_release is None:
             toast = 'Не удалось определить версию конфигурации'
 
         if current_release and release != current_release:
+            import version_control
+            version_control.run_releases(release, current_release, self.hash_map)
             self.hash_map.put('InstallConfiguration', '')
             self.rs_settings.put('Release', current_release, True)
             toast = f'Выполнено обновление на версию {current_release}'
 
-        self._create_tables()
+
 
         rs_default_settings = {
             'TitleTextSize': 18,
