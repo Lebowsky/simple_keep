@@ -85,12 +85,8 @@ class ScanningQueueService:
 
         return result
 
-    def save_scanned_row(self, id_doc, row_key, qtty, sent=False):
-        self.provider.insert(
-            data={
-                'id_doc': id_doc,
-                'row_key': row_key,
-                'qtty': qtty,
-                'sent': sent
-            }
-        )
+    def save_scanned_row_data(self, data, sent=False):
+        # id_doc, row_key, qtty
+        data['sent'] = sent
+        self.provider.insert(data=data)
+        return self.provider.count(id_doc=data['id_doc'])
