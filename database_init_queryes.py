@@ -122,8 +122,6 @@ def database_shema():
     ratio       INT  DEFAULT (1) 
                 NOT NULL
     )
-)
-
     ''')
 
     #Коды маркировки RS_marking_codes
