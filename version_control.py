@@ -3,17 +3,22 @@ import db_services
 
 #Перебираем релизы по одному. Функция пытается найти в модуле функцию с именем,
 # соответствующим номеру релиза и если нашла - выполнить её
-def run_releases(_start_version, _end_version, hash_map):
+def run_releases(_start_version, _end_version):
+    return_list = []
     version = _start_version
     while compare_versions(version, _end_version) <= 0:
         release_function_name = 'r' + version.replace('.', '_')
         release_function = globals().get(release_function_name)
         if release_function and callable(release_function):
-            release_function(hash_map)
+
+            res = release_function(hash_map)
+            return_list.append(res)
         # else:
         #     print(f"Release function '{release_function_name}' not found.")
 
         version = increment_version(version)
+
+    return return_list
 
 
 #Сравниваем номера версии. Возвращает -1 Последняя версия все ещё больше,
@@ -100,8 +105,9 @@ def r0_1_0_12_3(hash_map):
     try:
         r = db_services.SqlQueryProvider()
         r.sql_exec(qtext,'')
+        return_value = {'result':True}
     except:
-        pass
+        return_value = {'result':False, 'details':f'Ошибка в запросе: {qtext}'}
 
 
 
