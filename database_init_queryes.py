@@ -222,7 +222,7 @@ def database_shema():
         add_mark_selection INTEGER,
         created_at         DATETIME DEFAULT CURRENT_TIMESTAMP,
         control            TEXT DEFAULT 0,
-        is_gorup_scan      TEXT DEFAULT 0,
+        is_group_scan      TEXT DEFAULT 0,
         allow_fact_input   TEXT DEFAULT 0
         
     )
