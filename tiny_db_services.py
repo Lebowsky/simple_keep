@@ -16,7 +16,7 @@ class TinyNoSQLProvider:
         self.table_name = table_name
         self.base_name = base_name or rs_settings.get('sqlite_name')
         self.db_path = db_path or rs_settings.get('path_to_databases')
-        self.db = TinyDB(os.path.join(db_path, f'{base_name}.json'))
+        self.db = TinyDB(os.path.join(self.db_path, f'{self.base_name}.json'))
         self.table = self.db.table(self.table_name)
         self.query = Query()
 
@@ -71,3 +71,22 @@ class TinyNoSQLProvider:
         conditions = [(self.query[key] == value) for key, value in cond.items()]
         return reduce(lambda a, b: a & b, conditions)
 
+class ScanningQueueService:
+    def __init__(self):
+        self.table_name = 'scanning_queue'
+        self.provider = TinyNoSQLProvider(table_name=self.table_name)
+
+    def get_doc_scanning_queue(self, id_doc) -> dict:
+        result = {}
+        data = self.provider.search(id_doc=id_doc)
+
+        for row in data:
+            result[row['row_key']] = row['qtty']
+
+        return result
+
+    def save_scanned_row_data(self, data, sent=False):
+        # id_doc, row_key, qtty
+        data['sent'] = sent
+        self.provider.insert(data=data)
+        return self.provider.count(id_doc=data['id_doc'])

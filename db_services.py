@@ -75,6 +75,27 @@ class TimerService(DbService):
 
         return loaded_documents
 
+class BarcodeService(DbService):
+    def __init__(self):
+        super().__init__()
+        self.provider = SqlQueryProvider(table_name='Rs_barcodes', sql_class=sqlClass())
+
+    def get_barcode_data(self, barcode):
+        return self.provider.select({'barcode': barcode})
+
+    def get_document_row_by_barcode(self, doc_id, barcode):
+        q = '''
+            SELECT t.*
+            FROM RS_barcodes as b
+            JOIN RS_docs_table as t
+                ON b.id_good = t.id_good 
+                    AND b.id_property = t.id_properties 
+                    AND b.id_unit = t.id_unit
+            WHERE id_doc = ? AND barcode = ?
+        '''
+        return self.provider.sql_query(q, ','.join([doc_id, barcode]))
+
+
 
 class DocService:
     def __init__(self, doc_id=''):
