@@ -8,6 +8,8 @@ import hs_services
 from ui_utils import HashMap, RsDoc, BarcodeParser, get_ip_address
 from db_services import DocService, ErrorService, GoodsService, AdrDocService
 from hs_services import HsService
+from ru.travelfood.simple_ui import SimpleUtilites as suClass
+
 #import http_exchange
 from http_exchange import post_changes_to_server
 #from PIL import Image
@@ -47,6 +49,9 @@ class Screen(ABC):
 
     def _is_result_positive(self, listener) -> bool:
         return self.listener == listener and self.event == 'onResultPositive'
+
+    def _is_result_negative(self, listener) -> bool:
+        return self.listener == listener and self.event == 'onResultNegative'
 
     def __str__(self):
         return f'{self.process_name} / {self.screen_name}'
@@ -893,17 +898,16 @@ class DocDetailsScreen(Screen):
         if res is None:
             self.hash_map.put('scanned_barcode', barcode)
             self.hash_map.show_screen('Ошибка сканера')
+            res['Error'] = 'BarcodeError'
         elif res['Error']:
-            self.hash_map.playsound('error')
-
             if res['Error'] == 'AlreadyScanned':
                 self.hash_map.put('barcode', json.dumps({'barcode': res['Barcode'], 'doc_info': res['doc_info']}))
                 self.hash_map.show_screen('Удаление штрихкода')
             elif res['Error'] == 'QuantityPlanReached':
                 self.hash_map.put('Error_description', 'Количество план в документе превышено')
-                self.hash_map.show_dialog(listener='Ошибка превышения плана',
-                                          title='Количество план в документе превышено')
-                self.hash_map.playsound('warning')
+                self.toast('Количество план в документе превышено')
+                # self.hash_map.show_dialog(listener='Ошибка превышения плана',
+                #                           title='Количество план в документе превышено')
                 # self.hash_map.toast('toast', res['Descr'])
             elif res['Error'] == 'Zero_plan_error':
                 self.hash_map.toast(res['Descr'])
