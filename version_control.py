@@ -11,7 +11,7 @@ def run_releases(_start_version, _end_version):
         release_function = globals().get(release_function_name)
         if release_function and callable(release_function):
 
-            res = release_function(hash_map)
+            res = release_function()
             return_list.append(res)
         # else:
         #     print(f"Release function '{release_function_name}' not found.")
