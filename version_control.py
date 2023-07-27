@@ -5,8 +5,12 @@ def is_valid_version(version):
     # Regular expression to check if the version has the correct format (x.x.x.x)
     if not isinstance(version, str):
         return False
-    pattern = r"^\d{1,2}(\.\d{1,2}){1,3}$"
+
+    pattern = r'^\d{1,2}(\.\d{1,2}){4}'
+
     return bool(re.match(pattern, version))
+
+
 #Перебираем релизы по одному. Функция пытается найти в модуле функцию с именем,
 # соответствующим номеру релиза и если нашла - выполнить её
 def run_releases(_start_version:str, _end_version:str):
@@ -130,3 +134,4 @@ def r0_1_0_12_3(hash_map):
 #     end_version = "0.1.0.12.3"
 #
 #     print(run_releases(start_version, end_version))
+#print(is_valid_version("01.1.0.11.26"))
