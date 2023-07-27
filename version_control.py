@@ -11,7 +11,7 @@ def is_valid_version(version):
 # соответствующим номеру релиза и если нашла - выполнить её
 def run_releases(_start_version:str, _end_version:str):
     return_list = []
-    if not is_valid_version(start_version) or not is_valid_version(end_version):
+    if not is_valid_version(_start_version) or not is_valid_version(_end_version):
         return_list.append({'result': False, 'details': 'Неверный формат версии конфигурации. Формат конфигурации должен быть x.x.x.x'})
         return return_list
 
