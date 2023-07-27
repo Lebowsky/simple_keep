@@ -5,7 +5,7 @@ import os
 
 import db_services
 import hs_services
-from ui_utils import HashMap, RsDoc, BarcodeParser, get_ip_address
+from ui_utils import HashMap, RsDoc, BarcodeWorker, get_ip_address
 from db_services import DocService, ErrorService, GoodsService, AdrDocService
 from hs_services import HsService
 #import http_exchange
@@ -2469,7 +2469,7 @@ class BarcodeTestScreen(Screen):
         if not barcode:
             return
 
-        barcode_parser = BarcodeParser()
+        barcode_parser = BarcodeWorker()
         result = barcode_parser.parse(barcode)
         fields_count = 7
 
