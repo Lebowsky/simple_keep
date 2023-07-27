@@ -1,10 +1,21 @@
 import db_services
+import  re
 #from
-
+def is_valid_version(version):
+    # Regular expression to check if the version has the correct format (x.x.x.x)
+    if not isinstance(version, str):
+        return False
+    pattern = r"^\d{1,2}(\.\d{1,2}){1,3}$"
+    return bool(re.match(pattern, version))
 #Перебираем релизы по одному. Функция пытается найти в модуле функцию с именем,
 # соответствующим номеру релиза и если нашла - выполнить её
-def run_releases(_start_version, _end_version):
+def run_releases(_start_version:str, _end_version:str):
     return_list = []
+    if not is_valid_version(start_version) or not is_valid_version(end_version):
+        return_list.append({'result': False, 'details': 'Неверный формат версии конфигурации. Формат конфигурации должен быть x.x.x.x'})
+        return return_list
+
+
     version = _start_version
     while compare_versions(version, _end_version) <= 0:
         release_function_name = 'r' + version.replace('.', '_')
@@ -115,6 +126,7 @@ def r0_1_0_12_3(hash_map):
 # if __name__ == "__main__":
 #     # Replace these versions with your actual version numbers
 #     start_version = "0.1.0.11.7"
+#     start_version = ("s")
 #     end_version = "0.1.0.12.3"
 #
-#     run_releases(start_version, end_version)
+#     print(run_releases(start_version, end_version))
