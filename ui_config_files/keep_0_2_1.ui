@@ -151,7 +151,7 @@
                                 "listener": "",
                                 "action": "run",
                                 "type": "python",
-                                "method": "docs_on_start",
+                                "method": "docs_offline_on_start",
                                 "postExecute": ""
                             },
                             {
