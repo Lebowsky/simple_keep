@@ -8,6 +8,8 @@ import hs_services
 from ui_utils import HashMap, RsDoc, BarcodeParser, get_ip_address
 from db_services import DocService, ErrorService, GoodsService, AdrDocService
 from hs_services import HsService
+from ru.travelfood.simple_ui import SimpleUtilites as suClass
+
 #import http_exchange
 from http_exchange import post_changes_to_server
 #from PIL import Image
@@ -47,6 +49,9 @@ class Screen(ABC):
 
     def _is_result_positive(self, listener) -> bool:
         return self.listener == listener and self.event == 'onResultPositive'
+
+    def _is_result_negative(self, listener) -> bool:
+        return self.listener == listener and self.event == 'onResultNegative'
 
     def __str__(self):
         return f'{self.process_name} / {self.screen_name}'
@@ -894,16 +899,14 @@ class DocDetailsScreen(Screen):
             self.hash_map.put('scanned_barcode', barcode)
             self.hash_map.show_screen('Ошибка сканера')
         elif res['Error']:
-            self.hash_map.playsound('error')
             if res['Error'] == 'AlreadyScanned':
                 self.hash_map.put('barcode', json.dumps({'barcode': res['Barcode'], 'doc_info': res['doc_info']}))
                 self.hash_map.show_screen('Удаление штрихкода')
             elif res['Error'] == 'QuantityPlanReached':
                 self.hash_map.put('Error_description', 'Количество план в документе превышено')
-                self.hash_map.show_screen('Ошибка превышения плана')
-                self.hash_map.show_dialog(listener='Ошибка превышения плана',
-                                          title='Количество план в документе превышено')
-                self.hash_map.playsound('warning')
+                self.toast('Количество план в документе превышено')
+                # self.hash_map.show_dialog(listener='Ошибка превышения плана',
+                #                           title='Количество план в документе превышено')
                 # self.hash_map.toast('toast', res['Descr'])
             elif res['Error'] == 'Zero_plan_error':
                 self.hash_map.toast(res['Descr'])
@@ -1081,8 +1084,6 @@ class DocDetailsScreen(Screen):
         if added_goods:
             added_goods_doc = added_goods.get(self.id_doc, [])
             result = str(key) in [str(item) for item in added_goods_doc]
-            self.toast(result)
-
         return result
 
     @staticmethod
@@ -1144,13 +1145,23 @@ class GroupScanDocDetailsScreen(DocDetailsScreen):
         elif listener == 'barcode':
             self._run_progress_barcode_scanning()
 
+        elif listener == 'unlock':
+            suClass.urovo_set_lock_trigger(False)
+
         elif self._is_result_positive('ВвестиШтрихкод'):
             self._update_document_data()
             self._barcode_scanned()
             self.hash_map.run_event_async('doc_details_barcode_scanned')
 
         elif self._is_result_positive('RetryConnection'):
+            # if 'urovo' in self.hash_map.get('DEVICE_MODEL').lower():
+            #     suClass.urovo_set_lock_trigger(True)
             self._run_progress_barcode_scanning()
+
+        elif self._is_result_negative('RetryConnection'):
+            # pass
+            if 'urovo' in self.hash_map.get('DEVICE_MODEL').lower():
+                suClass.urovo_set_lock_trigger(False)
 
         elif listener == 'btn_barcodes':
             self.hash_map.show_dialog('ВвестиШтрихкод')
@@ -1170,11 +1181,19 @@ class GroupScanDocDetailsScreen(DocDetailsScreen):
         self.hash_map.run_event_progress('doc_details_before_process_barcode')
 
     def before_process_barcode(self):
+        if 'urovo' in self.hash_map.get('DEVICE_MODEL').lower():
+            suClass.urovo_set_lock_trigger(True)
         if self._check_connection():
             self._update_document_data()
-            self._barcode_scanned()
-            self.post_barcode_scanned(self.get_http_settings())
-            # self.hash_map.run_event_async('doc_details_barcode_scanned')
+            scan_result = self._barcode_scanned()
+            if scan_result['Error']:
+                self.hash_map.put('scan_error', scan_result['Error'])
+            else:
+                self.hash_map.put('scan_error', '')
+            # self.post_barcode_scanned(self.get_http_settings())
+            self.hash_map.run_event_async('doc_run_post_barcode_scanned', post_execute_method='doc_details_test')
+            if 'urovo' in self.hash_map.get('DEVICE_MODEL').lower():
+                suClass.urovo_set_lock_trigger(False)
         else:
             self.hash_map.beep('70')
             self.hash_map.show_dialog(listener="RetryConnection", title='Отсутствует соединение с сервером',
@@ -1212,6 +1231,8 @@ class GroupScanDocDetailsScreen(DocDetailsScreen):
 
             if answer and answer.get('Error') is not None:
                 self.hash_map.error_log(answer.get('Error'))
+                # self.hash_map.playsound('warning')
+                # self.toast('error here')
 
             doc_details = self._get_doc_details_data()
             table_data = self._prepare_table_data(doc_details)
@@ -1257,8 +1278,13 @@ class GroupScanDocDetailsScreen(DocDetailsScreen):
                 error_text=str(e.args[0]),
                 status_code=404,
                 url=self.hs_service.url)
+            self.toast(answer)
 
         return not answer.error
+
+    def test_post_execute(self):
+        if self.hash_map.get('scan_error'):
+            self.hash_map.playsound('warning')
 
 
 class DocumentsDocDetailScreen(DocDetailsScreen):
@@ -2279,7 +2305,7 @@ class SettingsScreen(Screen):
         self.db_service = db_services.DocService()
 
     def on_start(self):
-        self.hash_map.remove('toast')
+        # self.hash_map.remove('toast')
         settings_keys = [
             'use_mark',
             'allow_fact_input',
@@ -2485,7 +2511,6 @@ class HttpSettingsScreen(Screen):
         self.hs_service = None
 
     def on_start(self) -> None:
-        self.hash_map.remove('toast')
         self.hash_map['btn_test_connection'] = 'Тест соединения'
         http_settings = self._get_http_settings()
 
@@ -2881,6 +2906,7 @@ class DebugSettingsScreen(Screen):
 
     def _copy_base(self):
         ip_host = self.hash_map['ip_host']
+        self.hash_map.toast(ip_host)
         path_to_databases = self.rs_settings.get('path_to_databases')
         base_name = self.rs_settings.get('sqlite_name')
         file_path = os.path.join(path_to_databases, base_name)

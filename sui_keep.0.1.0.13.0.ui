@@ -1865,6 +1865,49 @@
                                         ]
                                     },
                                     {
+                                        "TextSize": "",
+                                        "TextColor": "",
+                                        "TextBold": false,
+                                        "TextItalic": false,
+                                        "BackgroundColor": "",
+                                        "StrokeWidth": "",
+                                        "Padding": "",
+                                        "orientation": "",
+                                        "height": "wrap_content",
+                                        "width": "wrap_content",
+                                        "gravity_horizontal": "center",
+                                        "gravity_vertical": "center",
+                                        "weight": "",
+                                        "height_value": "",
+                                        "width_value": "",
+                                        "type": "Button",
+                                        "Value": "unlock",
+                                        "Variable": "unlock",
+                                        "style_name": ""
+                                    },
+                                    {
+                                        "TextSize": "",
+                                        "TextColor": "",
+                                        "TextBold": false,
+                                        "TextItalic": false,
+                                        "BackgroundColor": "",
+                                        "StrokeWidth": "",
+                                        "Padding": "",
+                                        "orientation": "",
+                                        "height": "wrap_content",
+                                        "width": "wrap_content",
+                                        "gravity_horizontal": "center",
+                                        "gravity_vertical": "center",
+                                        "weight": "",
+                                        "height_value": "",
+                                        "width_value": "",
+                                        "type": "TextView",
+                                        "Value": "@note",
+                                        "Variable": "note",
+                                        "style_name": "",
+                                        "drawable": "forward"
+                                    },
+                                    {
                                         "height": "wrap_content",
                                         "width": "match_parent",
                                         "gravity_horizontal": "center",
@@ -4776,7 +4819,7 @@
             "handler_auth": "",
             "dictionaries": ""
         },
-        "ConfigurationTags": "",
+        "ConfigurationTags": "Py,off-line",
         "FaceRecognitionURL": "",
         "ForegroundService": false,
         "StopForegroundServiceOnExit": false,
@@ -4854,6 +4897,10 @@
             {
                 "PyFileKey": "widgets",
                 "PyFileData": ""
+            },
+            {
+                "PyFileKey": "database_init_queryes",
+                "PyFileData": ""
             }
         ],
         "StyleTemplates": [],
@@ -4887,7 +4934,7 @@
             },
             {
                 "event": "onBackgroundCommand",
-                "listener": "menu_02",
+                "listener": "menu_2",
                 "action": "run",
                 "type": "set",
                 "method": "UpdateConfigurations",

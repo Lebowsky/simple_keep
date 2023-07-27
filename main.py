@@ -223,6 +223,23 @@ def doc_details_barcode_scanned(hash_map: HashMap):
 
 
 @HashMap()
+def doc_run_post_barcode_scanned(hash_map):
+    """ Тестовый post_execute"""
+
+    screen = ui_models.GroupScanDocDetailsScreen(hash_map, rs_settings)
+    screen.hash_map.remove('toast')
+    screen.post_barcode_scanned(screen.get_http_settings())
+
+
+@HashMap()
+def doc_details_test(hash_map):
+    """ Тестовый post_execute"""
+
+    screen = ui_models.GroupScanDocDetailsScreen(hash_map, rs_settings)
+    screen.test_post_execute()
+
+
+@HashMap()
 def highlight_scanned_item(hash_map: HashMap):
     """ Обработчик для отмены раскраски отсканированного товара """
 
