@@ -4776,7 +4776,7 @@
             "handler_auth": "",
             "dictionaries": ""
         },
-        "ConfigurationTags": "",
+        "ConfigurationTags": "Py,on-line",
         "FaceRecognitionURL": "",
         "ForegroundService": false,
         "StopForegroundServiceOnExit": false,
