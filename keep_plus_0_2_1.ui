@@ -1,8 +1,8 @@
 {
     "ClientConfiguration": {
-        "ConfigurationName": "Simple Учет",
-        "ConfigurationDescription": "Простое решение для работы с штрихкодами товаров. Поставляется в комплекте с расширением для 1С. Подробнее про расширение Вы можете узнать по ссылке: https://www.simple-kit.ru/products/simple-uchet/ ",
-        "ConfigurationVersion": "0.1.0.13.1",
+        "ConfigurationName": "Simple Учет+",
+        "ConfigurationDescription": "Онлайн решение для работы с штрихкодами товаров, адресным хранением. Групповая работа с документом. Поставляется в комплекте с расширением для 1С. Подробнее про расширение Вы можете узнать по ссылке: https://www.simple-kit.ru/download/sui_keep_plus.last",
+        "ConfigurationVersion": "0.2.1",
         "Processes": [
             {
                 "type": "Process",
@@ -4766,10 +4766,10 @@
             }
         ],
         "ConfigurationSettings": {
-            "uid": "a6ce59bc3f714a5284213f6e293e3e91",
+            "uid": "a6ce59bc3f714a5284213f6e293e3e92",
             "vendor": "Simple",
             "vendor_url": "",
-            "vendor_auth": "",
+            "vendor_auth": "Basic ZG93bmxvYWQ6VnZ8QFBoTkpWbyNP",
             "handler_split_mode": false,
             "handler_code": "",
             "handler_url": "",
