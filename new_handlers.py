@@ -151,7 +151,10 @@ def adr_doc_details_on_input(hash_map: HashMap):
     screen: ui_models.AdrDocDetailsScreen = create_screen(hash_map)
     screen.on_input()
 
-
+@HashMap()
+def docs_offline_on_start(hash_map: HashMap):
+    screen = ui_models.DocsOfflineListScreen(hash_map, rs_settings)
+    screen.on_start()
 
 @HashMap()
 def elem_viev_on_start(hash_map):

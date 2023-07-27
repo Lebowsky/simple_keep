@@ -293,6 +293,7 @@ class DocsListScreen(Screen):
         super().__init__(hash_map, rs_settings)
         self.service = DocService()
         self.screen_values = {}
+        self.popup_menu_data = ''
 
     def on_start(self) -> None:
         doc_types = self.service.get_doc_types()
@@ -304,12 +305,13 @@ class DocsListScreen(Screen):
         self.hash_map['doc_type_click'] = doc_type
         self.hash_map['selected_tile_key'] = ''
         list_data = self._get_doc_list_data(doc_type, doc_status)
-        if self.process_name == "Групповая обработка":
-            doc_cards = self._get_doc_cards_view(list_data, 'Удалить')
-        # elif self.process_name == "Документы":     #******* При таком выражении существует вероятность что doc_cards никогдла не заполнится
-        else:
-            doc_cards = self._get_doc_cards_view(list_data,
-                                                 popup_menu_data='Удалить;Очистить данные пересчета;Отправить повторно')
+        # if self.process_name == "Групповая обработка":
+        #     doc_cards = self._get_doc_cards_view(list_data, 'Удалить')
+        # # elif self.process_name == "Документы":     #******* При таком выражении существует вероятность что doc_cards никогдла не заполнится
+        # else:
+        #     doc_cards = self._get_doc_cards_view(list_data,
+        #                                          popup_menu_data='Удалить;Очистить данные пересчета;Отправить повторно')
+        doc_cards = self._get_doc_cards_view(list_data, self.popup_menu_data)
         self.hash_map['docCards'] = doc_cards.to_json()
 
     def on_input(self) -> None:
@@ -501,6 +503,7 @@ class GroupScanDocsListScreen(DocsListScreen):
 
     def __init__(self, hash_map, rs_settings):
         super().__init__(hash_map, rs_settings)
+        self.popup_menu_data = 'Удалить'
 
     def on_start(self):
         super().on_start()
@@ -534,6 +537,8 @@ class DocumentsDocsListScreen(DocsListScreen):
     def __init__(self, hash_map, rs_settings):
         super().__init__(hash_map, rs_settings)
         self.service.docs_table_name = 'RS_docs'
+        self.popup_menu_data = ';'.join(
+            ['Удалить', 'Очистить данные пересчета', 'Отправить повторно'])
 
     def on_start(self):
         super().on_start()
@@ -810,6 +815,15 @@ class AdrDocsListScreen(DocsListScreen):
         card_data = self.hash_map.get_json("card_data") or {}
         id_doc = card_data.get('key') or self.hash_map['selected_card_key']
         return id_doc
+
+
+class DocsOfflineListScreen(DocsListScreen):
+    def __init__(self, hash_map: HashMap, rs_settings):
+        super().__init__(hash_map, rs_settings)
+        self.popup_menu_data = ';'.join(
+            ['Удалить', 'Очистить данные пересчета'])
+
+
 # ^^^^^^^^^^^^^^^^^^^^^ DocsList ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 # ==================== DocDetails =============================
