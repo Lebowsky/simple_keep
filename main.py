@@ -224,7 +224,7 @@ def doc_details_barcode_scanned(hash_map: HashMap):
 
 @HashMap()
 def doc_run_post_barcode_scanned(hash_map):
-    """ Тестовый post_execute"""
+    """ Отправка данных после обработки ШК"""
 
     screen = ui_models.GroupScanDocDetailsScreen(hash_map, rs_settings)
     screen.hash_map.remove('toast')
@@ -232,8 +232,8 @@ def doc_run_post_barcode_scanned(hash_map):
 
 
 @HashMap()
-def doc_after_barcode(hash_map):
-    """ Тестовый post_execute"""
+def doc_scan_error_sound(hash_map):
+    """ Звуковые сигналы ошибок сканирования"""
 
     screen = ui_models.GroupScanDocDetailsScreen(hash_map, rs_settings)
     screen.scan_error_sound()
