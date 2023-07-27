@@ -219,7 +219,24 @@ def doc_details_barcode_scanned(hash_map: HashMap):
     """ Обработчик для асинхронной отправки и получения данных после сканирования ШК"""
 
     screen = ui_models.GroupScanDocDetailsScreen(hash_map, rs_settings)
-    screen.post_barcode_scanned(get_http_settings(hash_map))
+    screen.post_barcode_scanned()
+
+
+@HashMap()
+def doc_run_post_barcode_scanned(hash_map):
+    """ Отправка данных после обработки ШК"""
+
+    screen = ui_models.GroupScanDocDetailsScreen(hash_map, rs_settings)
+    screen.hash_map.remove('toast')
+    screen.post_barcode_scanned()
+
+
+@HashMap()
+def doc_scan_error_sound(hash_map):
+    """ Звуковые сигналы ошибок сканирования"""
+
+    screen = ui_models.GroupScanDocDetailsScreen(hash_map, rs_settings)
+    screen.scan_error_sound()
 
 
 @HashMap()
