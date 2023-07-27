@@ -3058,20 +3058,19 @@ class MainEvents:
 
         if current_release is None:
             toast = 'Не удалось определить версию конфигурации'
+
         #self.hash_map.toast(f'Обновляемся с {release} на {current_release}')
         if current_release and release != current_release:
-            toast = (f'Обновляемся с {release} на {current_release}')
-            pass
-            import version_control
-            result_list = version_control.run_releases(release, current_release)
-            for elem in result_list:
-                if not elem['result']:
-                    pass
+            # toast = (f'Обновляемся с {release} на {current_release}')
+            # pass
+            # import version_control
+            # result_list = version_control.run_releases(release, current_release)
+            # for elem in result_list:
+            #     if not elem['result']:
+            #         pass
             self.hash_map.put('InstallConfiguration', '')
             self.rs_settings.put('Release', current_release, True)
             toast = f'Выполнено обновление на версию {current_release}'
-
-
 
         rs_default_settings = {
             'TitleTextSize': 18,
