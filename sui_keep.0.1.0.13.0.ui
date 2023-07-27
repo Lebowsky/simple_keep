@@ -1865,28 +1865,6 @@
                                         ]
                                     },
                                     {
-                                        "TextSize": "",
-                                        "TextColor": "",
-                                        "TextBold": false,
-                                        "TextItalic": false,
-                                        "BackgroundColor": "",
-                                        "StrokeWidth": "",
-                                        "Padding": "",
-                                        "orientation": "",
-                                        "height": "wrap_content",
-                                        "width": "wrap_content",
-                                        "gravity_horizontal": "center",
-                                        "gravity_vertical": "center",
-                                        "weight": "",
-                                        "height_value": "",
-                                        "width_value": "",
-                                        "type": "TextView",
-                                        "Value": "@note",
-                                        "Variable": "note",
-                                        "style_name": "",
-                                        "drawable": "forward"
-                                    },
-                                    {
                                         "height": "wrap_content",
                                         "width": "match_parent",
                                         "gravity_horizontal": "center",
@@ -4875,10 +4853,6 @@
             },
             {
                 "PyFileKey": "widgets",
-                "PyFileData": ""
-            },
-            {
-                "PyFileKey": "database_init_queryes",
                 "PyFileData": ""
             }
         ],
