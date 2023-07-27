@@ -643,6 +643,87 @@ class AdrDocService(DocService):
 
         return {'result': True, 'error': ''}
 
+class FlowDocService(DocService):
+
+    def __init__(self, doc_id=''):
+        self.doc_id = doc_id
+        self.docs_table_name = 'RS_docs'
+        self.details_table_name = 'RS_docs_table'
+        self.isAdr = False
+        self.sql_text = ''
+        self.sql_params = None
+        self.debug = False
+        self.provider = SqlQueryProvider(self.docs_table_name, sql_class=sqlClass())
+
+
+    def get_doc_view_data(self, doc_type='', doc_status='') -> list:
+        fields = [
+            f'{self.docs_table_name}.id_doc',
+            f'{self.docs_table_name}.doc_type',
+            f'{self.docs_table_name}.doc_n',
+            f'{self.docs_table_name}.doc_date',
+            f'{self.docs_table_name}.id_warehouse',
+            f'ifnull(RS_warehouses.name,"") as RS_warehouse',
+            f'ifnull({self.docs_table_name}.verified, 0) as verified',
+            f'ifnull({self.docs_table_name}.sent, 0) as sent',
+            f'{self.docs_table_name}.add_mark_selection',
+        ]
+
+        if self.docs_table_name == 'RS_docs':
+            fields.append(f'{self.docs_table_name}.id_countragents')
+            fields.append(f'ifnull(RS_countragents.full_name, "") as RS_countragent')
+
+        query_text = 'SELECT ' + ',\n'.join(fields)
+
+        joins = f'''FROM {self.docs_table_name}
+            LEFT JOIN RS_warehouses as RS_warehouses
+                ON RS_warehouses.id = {self.docs_table_name}.id_warehouse
+        '''
+
+        if self.docs_table_name == 'RS_docs':
+            joins += f'''
+            LEFT JOIN RS_countragents as RS_countragents
+                ON RS_countragents.id = {self.docs_table_name}.id_countragents
+                '''
+
+        where = f'''Where {self.docs_table_name}.id_doc in (With tabl as (
+                SELECT 
+                count(id) as count,
+                id_doc
+                From 
+                {self.details_table_name}
+                )
+                
+                Select id_doc From tabl
+                Where count = 0)'''
+
+        if doc_status:
+            if doc_status == "Выгружен":
+                where += "AND sent=1 AND verified=1"
+            elif doc_status == "К выгрузке":
+                where += "AND ifnull(verified,0)=1 AND ifnull(sent,0)=0"
+            elif doc_status == "К выполнению":
+                where += "AND ifnull(verified,0)=0 AND ifnull(sent,0)=0"
+
+        if not doc_type or doc_type == "Все":
+            args_tuple = None
+        else:
+            args_tuple = (doc_type,)
+            if not doc_status or doc_status == "Все":
+                where = 'AND doc_type=?'
+            else:
+                where += ' AND doc_type=?'
+
+        query_text = f'''
+            {query_text}
+            {joins}
+            {where}
+            ORDER BY {self.docs_table_name}.doc_date
+        '''
+
+        result = self._get_query_result(query_text, args_tuple, return_dict=True)
+        return result
+
 
 class GoodsService:
     def __init__(self, item_id=''):

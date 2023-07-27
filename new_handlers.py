@@ -78,6 +78,31 @@ def on_close_app(hash_map):
 
 
 # =============== Documents =================
+@HashMap()
+def flow_docs_on_start(hash_map: HashMap):
+    """Отдельные обработчики плиток для определения процесса hash_map'ом"""
+    screen = ui_models.FlowDocScreen(hash_map, rs_settings)
+    screen.on_start()
+
+
+@HashMap()
+def flow_docs_on_select(hash_map: HashMap):
+    """Отдельные обработчики плиток для определения процесса hash_map'ом"""
+    screen = ui_models.FlowDocScreen(hash_map, rs_settings)
+    screen.on_input()
+
+@HashMap()
+def barcode_flow_on_start(hash_map: HashMap):
+    screen :ui_models.FlowDocDetailsScreen = ui_models.FlowDocDetailsScreen(hash_map, rs_settings)
+    screen.on_start()
+
+
+@HashMap()
+def barcode_flow_listener(hash_map:HashMap):
+    screen: ui_models.FlowDocDetailsScreen = ui_models.FlowDocDetailsScreen(hash_map, rs_settings)
+    screen.on_input()
+
+
 
 @HashMap()
 def docs_tiles_on_start(hash_map: HashMap):

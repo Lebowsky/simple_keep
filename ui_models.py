@@ -154,7 +154,6 @@ class Tiles(Screen):
 
     class TextView(widgets.TextView):
         def __init__(self, value, rs_settings):
-
             super().__init__()
             self.TextSize = rs_settings.get('DocTypeCardTextSize')
             self.TextColor = '#333333'
@@ -459,7 +458,7 @@ class DocsListScreen(Screen):
         return put_data
 
     def _set_doc_verified(self, id_doc, value=True):
-       # service = DocService(id_doc)
+        # service = DocService(id_doc)
         value = str(int(value))
 
         try:
@@ -603,7 +602,6 @@ class AdrDocsListScreen(DocsListScreen):
     screen_name = 'Документы'
     process_name = 'Адресное хранение'
 
-
     def __init__(self, hash_map: HashMap, rs_settings):
         super().__init__(hash_map, rs_settings)
         self.service = AdrDocService()
@@ -612,7 +610,6 @@ class AdrDocsListScreen(DocsListScreen):
         self.screen_values = {}
         self.listener = self.hash_map['listener']
         self.event = self.hash_map['event']
-
 
     def on_start(self) -> None:
         doc_types = self.service.get_doc_types()
@@ -627,13 +624,12 @@ class AdrDocsListScreen(DocsListScreen):
         if not doc_status:
             doc_status = 'Все'
             self.hash_map['selected_doc_status'] = doc_status
-        #self.hash_map['doc_type_click'] = doc_type
+        # self.hash_map['doc_type_click'] = doc_type
         self.hash_map['selected_tile_key'] = ''
         list_data = self._get_doc_list_data(doc_type, doc_status)
         doc_cards = self._get_doc_cards_view(list_data,
                                              popup_menu_data='Удалить;Очистить данные пересчета;Отправить повторно')
         self.hash_map['docAdrCards'] = doc_cards.to_json()
-
 
     def on_input(self) -> None:
         super().on_input()
@@ -650,7 +646,7 @@ class AdrDocsListScreen(DocsListScreen):
             args = self._get_selected_card_put_data()
 
             screen = AdrDocDetailsScreen(self.hash_map, self.rs_settings)
-            screen.show(args = args)
+            screen.show(args=args)
 
             # adr_list_screen.screen_values = self._get_selected_card_put_data(self) # {'doc_n': '', 'doc_date': '', 'warehouse': ''}
             # adr_list_screen.show({'id_doc': self.hash_map['selected_card_key']})
@@ -804,14 +800,12 @@ class AdrDocsListScreen(DocsListScreen):
         else:
             self.hash_map.toast('Ошибка удаления документа')
 
-
     def _get_selected_card(self):
         current_str = self.hash_map.get("selected_card_position")
         jlist = self.hash_map.get_json("docAdrCards")
         selected_card = jlist['customcards']['cardsdata'][int(current_str)]
 
         return selected_card
-
 
     def _clear_barcode_data(self, id_doc):
         return self.service.clear_barcode_data(id_doc)
@@ -827,6 +821,32 @@ class DocsOfflineListScreen(DocsListScreen):
         super().__init__(hash_map, rs_settings)
         self.popup_menu_data = ';'.join(
             ['Удалить', 'Очистить данные пересчета'])
+
+
+
+
+class FlowDocScreen(DocsListScreen):
+    screen_name = 'Документы'
+    process_name = 'Сбор ШК'
+
+    def __init__(self, hash_map, rs_settings):
+        super().__init__(hash_map, rs_settings)
+        self.service = db_services.FlowDocService()
+        self.service.docs_table_name = 'RS_docs'
+
+    def on_start(self):
+        super().on_start()
+
+    def on_input(self):
+        if self.listener == "CardsClick":
+            args = self._get_selected_card_put_data()
+            self.hash_map.show_screen('ПотокШтрихкодовДокумента', args)
+            # screen: FlowDocDetailsScreen = FlowDocDetailsScreen(self.hash_map, self.rs_settings)
+            # screen.show(args=args)
+        elif self.listener == "ON_BACK_PRESSED":
+            self.hash_map.finish_process()
+
+        super().on_input()
 
 
 # ^^^^^^^^^^^^^^^^^^^^^ DocsList ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -944,7 +964,6 @@ class DocDetailsScreen(Screen):
         self.hash_map.put("Show_fact_qtty_input", '1' if allow_fact_input else '-1')
         self.hash_map.put("Show_fact_qtty_note", '-1' if allow_fact_input else '1')
 
-
     def _get_doc_details_data(self):
         return self.service.get_doc_details_data(self.id_doc)
 
@@ -1004,19 +1023,15 @@ class DocDetailsScreen(Screen):
             widgets.LinearLayout(
                 self.LinearLayout(
                     self.TextView('Название'),
-                    weight=4
+                    weight=3
                 ),
                 self.LinearLayout(
                     self.TextView('План'),
-                    weight=2
+                    weight=1
                 ),
                 self.LinearLayout(
-                    self.TextView('Факт устройства'),
-                    weight=2
-                ),
-                self.LinearLayout(
-                    self.TextView('Общий факт'),
-                    weight=2
+                    self.TextView('Факт'),
+                    weight=1
                 ),
                 orientation='horizontal',
                 height="match_parent",
@@ -1047,7 +1062,7 @@ class DocDetailsScreen(Screen):
                     StrokeWidth=1
                 ),
                 width='match_parent',
-                weight=4,
+                weight=3,
                 StrokeWidth=1
             ),
             widgets.LinearLayout(
@@ -1058,18 +1073,7 @@ class DocDetailsScreen(Screen):
                 ),
                 width='match_parent',
                 height='match_parent',
-                weight=2,
-                StrokeWidth=1
-            ),
-            widgets.LinearLayout(
-                widgets.TextView(
-                    Value='@d_qtty',
-                    TextSize=15,
-                    width='match_parent',
-                ),
-                width='match_parent',
-                height='match_parent',
-                weight=2,
+                weight=1,
                 StrokeWidth=1
             ),
             widgets.LinearLayout(
@@ -1080,7 +1084,7 @@ class DocDetailsScreen(Screen):
                 ),
                 width='match_parent',
                 height='match_parent',
-                weight=2,
+                weight=1,
                 StrokeWidth=1
             ),
             orientation='horizontal',
@@ -1109,6 +1113,8 @@ class DocDetailsScreen(Screen):
         if added_goods:
             added_goods_doc = added_goods.get(self.id_doc, [])
             result = str(key) in [str(item) for item in added_goods_doc]
+            self.toast(result)
+
         return result
 
     @staticmethod
@@ -1160,7 +1166,6 @@ class GroupScanDocDetailsScreen(DocDetailsScreen):
     def on_start(self) -> None:
         super()._on_start()
 
-
     def on_input(self) -> None:
         super().on_input()
         listener = self.hash_map['listener']
@@ -1178,9 +1183,6 @@ class GroupScanDocDetailsScreen(DocDetailsScreen):
 
         elif self._is_result_positive('RetryConnection'):
             self._run_progress_barcode_scanning()
-
-        elif self._is_result_negative('RetryConnection'):
-            self.set_scanner_lock(False)
 
         elif listener == 'btn_barcodes':
             self.hash_map.show_dialog('ВвестиШтрихкод')
@@ -1200,18 +1202,11 @@ class GroupScanDocDetailsScreen(DocDetailsScreen):
         self.hash_map.run_event_progress('doc_details_before_process_barcode')
 
     def before_process_barcode(self):
-        self.set_scanner_lock(True)
         if self._check_connection():
             self._update_document_data()
-            scan_result = self._barcode_scanned()
-            if scan_result.get('Error'):
-                self.hash_map.put('scan_error', scan_result['Error'])
-            else:
-                self.hash_map.put('scan_error', '')
-            self.hash_map.run_event_async('doc_run_post_barcode_scanned', post_execute_method='doc_scan_error_sound')
-            self.set_scanner_lock(False)
-
-
+            self._barcode_scanned()
+            self.post_barcode_scanned(self.get_http_settings())
+            # self.hash_map.run_event_async('doc_details_barcode_scanned')
         else:
             self.hash_map.beep('70')
             self.hash_map.show_dialog(listener="RetryConnection", title='Отсутствует соединение с сервером',
@@ -1226,23 +1221,20 @@ class GroupScanDocDetailsScreen(DocDetailsScreen):
                 self.service.write_error_on_log(f'Ошибка записи документа:  {e}')
 
     def _get_update_current_doc_data(self):
-        try:
-            self.hs_service.get_data()
-            answer = self.hs_service.http_answer
+        self.hs_service.get_data()
+        answer = self.hs_service.http_answer
 
-            if answer.unauthorized:
-                self.hash_map.toast('Ошибка авторизации сервера 1С')
-            elif answer.forbidden:
-                self.hash_map.notification(answer.error_text, title='Ошибка обмена')
-                self.hash_map.toast(answer.error_text)
-            elif answer.error:
-                self.service.write_error_on_log(f'Ошибка загрузки документа:  {answer.error_text}')
-            else:
-                return answer.data
-        except:
-            self.set_scanner_lock(False)
+        if answer.unauthorized:
+            self.hash_map.toast('Ошибка авторизации сервера 1С')
+        elif answer.forbidden:
+            self.hash_map.notification(answer.error_text, title='Ошибка обмена')
+            self.hash_map.toast(answer.error_text)
+        elif answer.error:
+            self.service.write_error_on_log(f'Ошибка загрузки документа:  {answer.error_text}')
+        else:
+            return answer.data
 
-    def post_barcode_scanned(self):
+    def post_barcode_scanned(self, http_settings):
         if self.hash_map.get_bool('barcode_scanned'):
             answer = None
             try:
@@ -1297,18 +1289,8 @@ class GroupScanDocDetailsScreen(DocDetailsScreen):
                 error_text=str(e.args[0]),
                 status_code=404,
                 url=self.hs_service.url)
+
         return not answer.error
-
-    def scan_error_sound(self):
-        if self.hash_map.get('scan_error'):
-            if self.hash_map.get('scan_error') in ['QuantityPlanReached', 'AlreadyScanned', 'Zero_plan_error']:
-                self.hash_map.playsound('warning')
-            else:
-                self.hash_map.playsound('error')
-
-    def set_scanner_lock(self, value: bool):
-        if 'urovo' in self.hash_map.get('DEVICE_MODEL').lower():
-            suClass.urovo_set_lock_trigger(value)
 
 
 class DocumentsDocDetailScreen(DocDetailsScreen):
@@ -1481,29 +1463,26 @@ class AdrDocDetailsScreen(DocDetailsScreen):
     screen_name = 'Документ товары'
     process_name = 'Адресное хранение'
     table_types_from_doc_type = {'Отбор': ['out', ], 'Размещение': ['in', ],
-                                      'Перемещение': ['in', 'out']}
+                                 'Перемещение': ['in', 'out']}
 
     def __init__(self, hash_map, rs_settings):
         super().__init__(rs_settings=rs_settings, hash_map=hash_map)
 
         self.current_cell = self.hash_map.get('current_cell_id')
-        self.screen_values ={'doc_n': '', 'doc_date': '', 'warehouse': ''}
+        self.screen_values = {'doc_n': '', 'doc_date': '', 'warehouse': ''}
         self.table_type = ''
         self.service = AdrDocService(self.id_doc, table_type=self.table_type)
 
-
-
     def on_start(self) -> None:
         super()._on_start()
-
 
     def _on_start(self):
 
         if not self.table_type:
             self.table_type = self._get_table_type_for_screen()
         else:
-            #Выбор табличной части (отбор/размещение)
-            #self._get_table_type_from_screen()
+            # Выбор табличной части (отбор/размещение)
+            # self._get_table_type_from_screen()
             self.table_type = self._get_table_type_from_name(self.hash_map['table_type'])
 
         self._set_visibility_on_start()
@@ -1535,11 +1514,10 @@ class AdrDocDetailsScreen(DocDetailsScreen):
         self.hash_map['control'] = control
 
         self.hash_map.put("doc_goods_table", table_view.to_json())
-        self.hash_map.put('return_selected_data','')
+        self.hash_map.put('return_selected_data', '')
 
     def _get_doc_details_data(self):
         return self.service.get_doc_details_data(self.id_doc, self.current_cell)
-
 
     def on_input(self) -> None:
         super().on_input()
@@ -1547,7 +1525,7 @@ class AdrDocDetailsScreen(DocDetailsScreen):
 
         if listener == "CardsClick":
             self._fill_one_string_screen()
-            #self.hash_map.show_screen("Товар выбор") ---*** Экран в функции _fill_one_string_screen
+            # self.hash_map.show_screen("Товар выбор") ---*** Экран в функции _fill_one_string_screen
         elif listener == "BACK_BUTTON":
             self.hash_map.show_screen("Документы")
         elif listener == "btn_barcodes":
@@ -1577,7 +1555,6 @@ class AdrDocDetailsScreen(DocDetailsScreen):
                 self.hash_map.put('toast', 'Не найдена ячейка')
                 return
 
-
             have_qtty_plan = self.hash_map.get_bool('have_qtty_plan')
             have_zero_plan = self.hash_map.get_bool('have_zero_plan')
             have_mark_plan = self.hash_map.get_bool('have_mark_plan')
@@ -1587,9 +1564,8 @@ class AdrDocDetailsScreen(DocDetailsScreen):
                                           , (have_qtty_plan), (have_zero_plan), (control),
                                           self.hash_map.get('current_cell_id'), self.table_type)
 
-            #self.service.update_rs_docs_table_sent_status(res.get('key'))
+            # self.service.update_rs_docs_table_sent_status(res.get('key'))
             self.service.set_doc_status_to_upload(self.id_doc)
-
 
             if res == None:
                 self.hash_map.put('scanned_barcode', barcode)
@@ -1611,7 +1587,6 @@ class AdrDocDetailsScreen(DocDetailsScreen):
             else:
                 self.hash_map.put('toast', 'Товар добавлен в документ')
 
-
                 # ---------------------------------------------------------
         elif listener == 'btn_doc_mark_verified':
             doc = ui_global.Rs_adr_doc
@@ -1620,7 +1595,7 @@ class AdrDocDetailsScreen(DocDetailsScreen):
             self.hash_map.show_screen("Документы")
 
         elif listener == 'ON_BACK_PRESSED':
-            if  self.hash_map.get('current_cell_id'):
+            if self.hash_map.get('current_cell_id'):
                 self.hash_map.remove('current_cell')
                 self.hash_map.remove('current_cell_id')
                 self.current_cell = None
@@ -1656,7 +1631,7 @@ class AdrDocDetailsScreen(DocDetailsScreen):
 
 
         elif listener == 'select_cell_value_for_card':
-            #TODO Изменение данных отправить в класс в db_service
+            # TODO Изменение данных отправить в класс в db_service
             current_key = self.hash_map.get("key")
             if current_key:
                 ui_global.get_query_result('Update RS_adr_docs_table SET id_cell = ? Where id = ?',
@@ -1687,8 +1662,8 @@ class AdrDocDetailsScreen(DocDetailsScreen):
     # В зависимости от вида документа назначаем для отображения табличную часть по умолчаниюю
     # Например, для документа Отбор это out а для Размещение in
     def _get_table_type_for_screen(self):
-        tables_type = 'Отбор;Размещение' # ';'.join(self.table_types_from_doc_type[
-                                  # self.hash_map['doc_type']])
+        tables_type = 'Отбор;Размещение'  # ';'.join(self.table_types_from_doc_type[
+        # self.hash_map['doc_type']])
         self.hash_map.put('tables_type', tables_type)
 
         if self.hash_map.get('doc_type') in ['Отбор', 'Перемещение']:
@@ -1702,7 +1677,7 @@ class AdrDocDetailsScreen(DocDetailsScreen):
     def _get_table_type_from_name(_val):
 
         return 'in' if _val == 'Размещение' else 'out'
-          #current_table_type']]
+        # current_table_type']]
 
     def _layout_action(self):
         layout_listener = self.hash_map.get('layout_listener')
@@ -1710,9 +1685,10 @@ class AdrDocDetailsScreen(DocDetailsScreen):
         current_key = self.hash_map.get("key")
         if layout_listener == 'Удалить строку':
 
-            if current_key: #current_elem['key']:
-                ui_global.get_query_result('DELETE FROM RS_adr_docs_table WHERE id = ?', (current_key, )) #current_elem['key'],))
-                self.hash_map.put('RefreshScreen','')
+            if current_key:  # current_elem['key']:
+                ui_global.get_query_result('DELETE FROM RS_adr_docs_table WHERE id = ?',
+                                           (current_key,))  # current_elem['key'],))
+                self.hash_map.put('RefreshScreen', '')
         elif layout_listener == 'Изменить ячейку':
 
             self.hash_map.remove('SearchString')
@@ -1745,10 +1721,9 @@ class AdrDocDetailsScreen(DocDetailsScreen):
 
         hashMap.put("ShowScreen", "Товар выбор")
 
-
     def _prepare_table_data(self, doc_details):
         # TODO добавить группировку по ячейкам
-        table_data = [{}] # было [{}]
+        table_data = [{}]  # было [{}]
         row_filter = self.hash_map.get_bool('rows_filter')
 
         for record in doc_details:
@@ -1808,7 +1783,7 @@ class AdrDocDetailsScreen(DocDetailsScreen):
             widgets.LinearLayout(
                 self.LinearLayout(
                     self.TextView('Ячейка'),
-                    weight = 1
+                    weight=1
                 ),
                 self.LinearLayout(
                     self.TextView('Название'),
@@ -1833,7 +1808,6 @@ class AdrDocDetailsScreen(DocDetailsScreen):
         )
 
         return table_view
-
 
     def _get_doc_table_row_view(self):
 
@@ -1897,7 +1871,6 @@ class AdrDocDetailsScreen(DocDetailsScreen):
 
         return row_view
 
-
     def _get_detail_cards(self, q_result):
         results = q_result
         hashMap = self.hash_map
@@ -1960,6 +1933,186 @@ class AdrDocDetailsScreen(DocDetailsScreen):
                 cards.customcards['cardsdata'].append(product_row)
 
 
+class FlowDocDetailsScreen(Screen):
+    screen_name = 'ПотокШтрихкодовДокумента'
+    process_name = 'Сбор ШК'
+
+    def __init__(self, hash_map: HashMap, rs_settings):
+        super().__init__(hash_map, rs_settings)
+        self.service = db_services.FlowDocService()
+
+    def show(self, args=None):
+        self.hash_map.show_screen(self.screen_name, args)
+        #self._validate_screen_values()
+
+    def on_start(self):
+        self._barcode_flow_on_start()
+
+    def on_input(self):
+
+        listener = self.hash_map.get('listener')
+        if listener == "CardsClick":
+
+            pass
+
+        elif listener == "BACK_BUTTON":
+            self.hash_map.finish_process()
+        elif listener == "btn_barcodes":
+            pass
+
+
+        elif listener == 'barcode' or self.hash_map.get("event") == "onResultPositive":
+            doc = ui_global.Rs_doc
+            doc.id_doc = self.hash_map.get('id_doc')
+            if self.hash_map.get("event") == "onResultPositive":
+                barcode = self.hash_map.get('fld_barcode')
+            else:
+                barcode = self.hash_map.get('barcode_camera')
+
+            have_qtty_plan = self.hash_map.get('have_qtty_plan')
+            have_zero_plan = self.hash_map.get('have_zero_plan')
+            have_mark_plan = self.hash_map.get('have_mark_plan')
+            control = self.hash_map.get('control')
+
+            if barcode:
+                qtext = '''
+                INSERT INTO RS_barc_flow (id_doc, barcode) VALUES (?,?)
+                '''
+                ui_global.get_query_result(qtext, (doc.id_doc, barcode))
+
+        elif listener == 'btn_doc_mark_verified':
+            doc = ui_global.Rs_doc
+            doc.id_doc = self.hash_map.get('id_doc')
+            doc.mark_verified(doc, 1)
+            self.hash_map.show_screen("Документы")
+
+        elif listener == 'ON_BACK_PRESSED':
+            self.hash_map.show_screen("Документы")
+
+    def _barcode_flow_on_start(self):
+
+        id_doc = self.hash_map.get('id_doc')
+        falseValueList = (0, '0', 'false', 'False', None)
+        # Формируем таблицу карточек и запрос к базе
+
+        doc_detail_list = {"customcards": {
+            "options": {
+                "search_enabled": True,
+                "save_position": True
+            },
+            "layout": {
+                "type": "LinearLayout",
+                "orientation": "vertical",
+                "height": "match_parent",
+                "width": "match_parent",
+                "weight": "0",
+                "Elements": [
+                    {
+                        "type": "LinearLayout",
+                        "orientation": "horizontal",
+                        "height": "match_parent",
+                        "width": "match_parent",
+                        "weight": "0",
+                        "Elements": [
+                            {
+                                "type": "TextView",
+                                "TextBold": True,
+                                "show_by_condition": "",
+                                "Value": "@barcode",
+                                "TextSize": self.rs_settings.get('GoodsCardTitleTextSize'),
+                                "NoRefresh": False,
+                                "document_type": "",
+                                "mask": "",
+                                "weight": "1",
+                                "Variable": ""
+                            }
+                        ]
+                    }
+                ]
+            }
+        }
+        }
+
+        doc_detail_list['customcards']['cardsdata'] = []
+        query_text = 'Select * from RS_barc_flow WHere id_doc =?'
+        results = ui_global.get_query_result(query_text, (id_doc,), True)
+
+        if results:
+            # hashMap.put('id_doc', str(results[0]['id_doc']))
+            for record in results:
+                pic = '#f00c'
+
+                product_row = {
+                    'key': str(record['barcode']),
+                    'barcode': str(record['barcode']),
+
+                }
+
+                doc_detail_list['customcards']['cardsdata'].append(product_row)
+
+            # Признак, have_qtty_plan ЕстьПланПОКОличеству  -  Истина когда сумма колонки Qtty_plan > 0
+            # Признак  have_mark_plan "ЕстьПланКОдовМаркировки – Истина, когда количество строк табл. RS_docs_barcodes с заданным id_doc и is_plan  больше нуля.
+            # Признак have_zero_plan "Есть строки товара в документе" Истина, когда есть заполненные строки товаров в документе
+            # Признак "Контролировать"  - признак для документа, надо ли контролировать
+
+            qtext = '''
+                SELECT distinct count(id) as col_str,
+                sum(ifnull(qtty_plan,0)) as qtty_plan
+                from RS_docs_table Where id_doc = :id_doc'''
+            res = ui_global.get_query_result(qtext, {'id_doc': id_doc})
+            if not res:
+                have_qtty_plan = False
+                have_zero_plan = False
+            else:
+                have_zero_plan = res[0][0] > 0  # В документе есть строки
+                if have_zero_plan:
+                    have_qtty_plan = res[0][1] > 0  # В документе есть колво план
+                else:
+                    have_qtty_plan = False
+            # Есть ли в документе план по кодам маркировки
+            qtext = '''
+                SELECT distinct count(id) as col_str
+                from RS_docs_barcodes Where id_doc = :id_doc AND is_plan = :is_plan'''
+            res = ui_global.get_query_result(qtext, {'id_doc': id_doc, 'is_plan': '1'})
+            if not res:
+                have_mark_plan = False
+
+            else:
+                have_mark_plan = res[0][0] > 0
+        else:
+            have_qtty_plan = False
+            have_zero_plan = False
+            have_mark_plan = False
+
+        self.hash_map.put('have_qtty_plan', str(have_qtty_plan))
+        self.hash_map.put('have_zero_plan', str(have_zero_plan))
+        self.hash_map.put('have_mark_plan', str(have_mark_plan))
+        res = ui_global.get_query_result('SELECT control from RS_docs  WHERE id_doc = ?', (id_doc,))
+        # Есть ли контроль плана в документе
+        if res:
+            if res[0][0]:
+                if res[0][0] in falseValueList:
+                    control = 'False'
+                else:
+                    control = 'True'
+
+                # control = res[0][0] #'True'
+            else:
+                control = 'False'
+        else:
+            control = 'False'
+
+        self.hash_map.put('control', control)
+        self.hash_map.put("doc_barc_flow", json.dumps(doc_detail_list))
+
+        if True in (have_qtty_plan, have_zero_plan, have_mark_plan, control):
+            self.hash_map.put('toast',
+                              'Данный документ содержит плановые строки. Список штрихкодов в него поместить нельзя')
+            self.hash_map.put('ShowScreen', 'Документы')
+
+    def on_post_start(self):
+        pass
+
 # ^^^^^^^^^^^^^^^^^^^^^ DocDetails ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 # ==================== Goods select =============================
@@ -2017,6 +2170,7 @@ class AdrGoodsSelectScreen(GoodsSelectScreen):
     def __init__(self, hash_map: HashMap, rs_settings):
         super().__init__(hash_map, rs_settings)
         self.service = AdrDocService()
+
 
 # ^^^^^^^^^^^^^^^^^^^^^ Goods select ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -2518,7 +2672,7 @@ class BarcodeTestScreen(Screen):
         values = [f'{key}: {result[key]}' for key in keys_list if result.get(key) is not None]
 
         put_data = {
-            f'fld_{i+1}': values[i] if len(values) > i else ''
+            f'fld_{i + 1}': values[i] if len(values) > i else ''
             for i in range(0, fields_count)
         }
 
@@ -2612,7 +2766,6 @@ class HttpSettingsScreen(Screen):
         except (JSONDecodeError, AttributeError) as e:
             self.toast('Неверный формат QR-кода')
 
-
     def _back_screen(self):
         self.hash_map.put('BackScreen', '')
 
@@ -2648,7 +2801,6 @@ class SoundSettings(Screen):
         events_data = self._get_events_data()
         events_cards = self._get_event_cards_view(events_data, popup_menu_data='1;2;3;4;5;6;7;8;9;10;11;12;13;14;15')
         self.hash_map.put('event_cards', events_cards.to_json())
-
 
     def on_input(self):
         if self.listener == 'save_btn':
@@ -2929,7 +3081,6 @@ class DebugSettingsScreen(Screen):
 
     def _copy_base(self):
         ip_host = self.hash_map['ip_host']
-        self.hash_map.toast(ip_host)
         path_to_databases = self.rs_settings.get('path_to_databases')
         base_name = self.rs_settings.get('sqlite_name')
         file_path = os.path.join(path_to_databases, base_name)
@@ -3038,19 +3189,18 @@ class Timer:
         except Exception as e:
             self.db_service.write_error_on_log(f'Ошибка загрузки документов: {e}')
 
-
     def upload_all_docs(self):
         self.db_service = DocService()
         self.upload_docs()
         self.db_service = AdrDocService()
         self.upload_docs()
 
-
     def load_all_docs(self):
         self.db_service = DocService()
         self.load_docs()
         self.db_service = AdrDocService()
         self.load_docs()
+
     def upload_docs(self):
 
         if self._check_http_settings():
@@ -3101,7 +3251,7 @@ class MainEvents:
         toast = 'Готов к работе'
 
         current_release = self.hash_map['_configurationVersion']
-        #toast = (f'Обновляемся с {release} на {current_release}')
+        # toast = (f'Обновляемся с {release} на {current_release}')
 
         self._create_tables()
 
@@ -3136,7 +3286,7 @@ class MainEvents:
             'add_if_not_in_plan': 'false',
             'path': '',
             'delete_files': 'false',
-            'success_signal' : 7,
+            'success_signal': 7,
             'warning_signal': 8,
             'error_signal': 5,
             'allow_overscan': 'false',
@@ -3153,8 +3303,6 @@ class MainEvents:
 
         self.hash_map["SQLConnectDatabase"] = "SimpleKeep"
         self.hash_map.toast(toast)
-
-
 
     def on_sql_error(self):
         sql_error = self.hash_map['SQLError']
@@ -3173,6 +3321,8 @@ class ScreensFactory:
     screens = [
         AdrDocsListScreen,
         AdrDocDetailsScreen,
+        FlowDocScreen,
+        FlowDocDetailsScreen,
         GroupScanTiles,
         DocumentsTiles,
         GroupScanDocsListScreen,
