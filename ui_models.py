@@ -308,13 +308,9 @@ class DocsListScreen(Screen):
         doc_status = self.hash_map['selected_doc_status']
         self.hash_map['doc_type_click'] = doc_type
         self.hash_map['selected_tile_key'] = ''
+
         list_data = self._get_doc_list_data(doc_type, doc_status)
-        # if self.process_name == "Групповая обработка":
-        #     doc_cards = self._get_doc_cards_view(list_data, 'Удалить')
-        # # elif self.process_name == "Документы":     #******* При таком выражении существует вероятность что doc_cards никогдла не заполнится
-        # else:
-        #     doc_cards = self._get_doc_cards_view(list_data,
-        #                                          popup_menu_data='Удалить;Очистить данные пересчета;Отправить повторно')
+
         doc_cards = self._get_doc_cards_view(list_data, self.popup_menu_data)
         self.hash_map['docCards'] = doc_cards.to_json()
 
@@ -823,8 +819,6 @@ class DocsOfflineListScreen(DocsListScreen):
             ['Удалить', 'Очистить данные пересчета'])
 
 
-
-
 class FlowDocScreen(DocsListScreen):
     screen_name = 'Документы'
     process_name = 'Сбор ШК'
@@ -833,9 +827,11 @@ class FlowDocScreen(DocsListScreen):
         super().__init__(hash_map, rs_settings)
         self.service = db_services.FlowDocService()
         self.service.docs_table_name = 'RS_docs'
+        self.popup_menu_data = 'Удалить'
 
     def on_start(self):
         super().on_start()
+
 
     def on_input(self):
         if self.listener == "CardsClick":

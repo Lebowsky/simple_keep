@@ -1130,6 +1130,71 @@
                 "Operations": [
                     {
                         "type": "Operation",
+                        "Name": "Плитки",
+                        "Timer": false,
+                        "noScroll": false,
+                        "hideBottomBarScreen": true,
+                        "hideToolBarScreen": false,
+                        "noConfirmation": false,
+                        "handleKeyUp": false,
+                        "Elements": [
+                            {
+                                "orientation": "vertical",
+                                "height": "wrap_content",
+                                "width": "match_parent",
+                                "gravity_horizontal": "center",
+                                "gravity_vertical": "center",
+                                "weight": "0",
+                                "type": "Tiles",
+                                "Value": "@tiles",
+                                "Variable": "tiles",
+                                "Elements": [
+                                    {
+                                        "height": "wrap_content",
+                                        "width": "match_parent",
+                                        "gravity_horizontal": "center",
+                                        "gravity_vertical": "center",
+                                        "weight": "0",
+                                        "type": "TextView",
+                                        "Value": "@gtin",
+                                        "Variable": ""
+                                    },
+                                    {
+                                        "height": "wrap_content",
+                                        "width": "wrap_content",
+                                        "gravity_horizontal": "center",
+                                        "gravity_vertical": "center",
+                                        "weight": "0",
+                                        "type": "TextView",
+                                        "Value": "@series",
+                                        "Variable": ""
+                                    }
+                                ]
+                            }
+                        ],
+                        "Handlers": [
+                            {
+                                "event": "onStart",
+                                "action": "run",
+                                "type": "python",
+                                "method": "docs_tiles_on_start",
+                                "postExecute": ""
+                            },
+                            {
+                                "event": "onInput",
+                                "listener": "",
+                                "action": "run",
+                                "type": "python",
+                                "method": "tiles_on_input",
+                                "postExecute": ""
+                            }
+                        ],
+                        "onlineOnStart": false,
+                        "onlineOnAfterStart": false,
+                        "onlineOnInput": false
+                    },
+                    {
+                        "type": "Operation",
                         "Name": "Документы",
                         "Timer": false,
                         "noScroll": false,
@@ -1166,7 +1231,7 @@
                                                 "Variable": "doc_type_click",
                                                 "height": "wrap_content",
                                                 "width": "match_parent",
-                                                "gravity_horizontal": "left",
+                                                "gravity_horizontal": "center",
                                                 "gravity_vertical": "center",
                                                 "weight": "1"
                                             },
@@ -1176,7 +1241,7 @@
                                                 "Variable": "doc_status_click",
                                                 "height": "wrap_content",
                                                 "width": "match_parent",
-                                                "gravity_horizontal": "left",
+                                                "gravity_horizontal": "center",
                                                 "gravity_vertical": "center",
                                                 "weight": "1"
                                             }
@@ -1214,7 +1279,7 @@
                                 "event": "onInput",
                                 "listener": "",
                                 "action": "run",
-                                "type": "online",
+                                "type": "python",
                                 "method": "flow_docs_on_select",
                                 "postExecute": ""
                             }
