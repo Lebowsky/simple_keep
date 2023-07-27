@@ -105,15 +105,20 @@ class Tiles(Screen):
 
     @staticmethod
     def _get_tile_data(tile_element):
+        count_verified = tile_element['count_verified'] or 0
+        count_unverified = tile_element['count_unverified'] or 0
+        qtty_plan_verified = tile_element['qtty_plan_verified'] or 0
+        qtty_plan_unverified = tile_element['qtty_plan_unverified'] or 0
+
         return {
             "docName": tile_element['docType'],
             'QttyOfDocs': '{}/{}'.format(tile_element['count'], tile_element['verified']),
             'count_verified': '{}/{}'.format(
-                tile_element['count_verified'] + tile_element['count_unverified'],
-                tile_element['count_unverified']),
+                count_verified + count_unverified,
+                count_unverified),
             'qtty_plan_verified': '{}/{}'.format(
-                tile_element['qtty_plan_verified'] + tile_element['qtty_plan_unverified'],
-                tile_element['qtty_plan_unverified'])
+                qtty_plan_verified + qtty_plan_unverified,
+                qtty_plan_unverified)
         }
 
     def _get_tile_view(self) -> widgets.LinearLayout:
@@ -286,6 +291,9 @@ class DocumentsTiles(GroupScanTiles):
     def _check_connection(self):
         return True
 
+class FlowTiles(GroupScanTiles):
+    screen_name = 'Плитки'
+    process_name = 'Сбор ШК'
 
 # ^^^^^^^^^^^^^^^^^^^^^ Tiles ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -3317,6 +3325,7 @@ class ScreensFactory:
     screens = [
         AdrDocsListScreen,
         AdrDocDetailsScreen,
+        FlowTiles,
         FlowDocScreen,
         FlowDocDetailsScreen,
         GroupScanTiles,
