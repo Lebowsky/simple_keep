@@ -881,7 +881,7 @@ class DocDetailsScreen(Screen):
             barcode = self.hash_map.get('barcode_camera')
 
         if not barcode:
-            return
+            return {}
 
         have_qtty_plan = self.hash_map.get_bool('have_qtty_plan')
         have_zero_plan = self.hash_map.get_bool('have_zero_plan')
@@ -898,6 +898,7 @@ class DocDetailsScreen(Screen):
         if res is None:
             self.hash_map.put('scanned_barcode', barcode)
             self.hash_map.show_screen('Ошибка сканера')
+            res['Error'] = 'BarcodeError'
         elif res['Error']:
             if res['Error'] == 'AlreadyScanned':
                 self.hash_map.put('barcode', json.dumps({'barcode': res['Barcode'], 'doc_info': res['doc_info']}))
@@ -1135,6 +1136,7 @@ class GroupScanDocDetailsScreen(DocDetailsScreen):
     def on_start(self) -> None:
         super()._on_start()
 
+
     def on_input(self) -> None:
         super().on_input()
         listener = self.hash_map['listener']
@@ -1145,23 +1147,16 @@ class GroupScanDocDetailsScreen(DocDetailsScreen):
         elif listener == 'barcode':
             self._run_progress_barcode_scanning()
 
-        elif listener == 'unlock':
-            suClass.urovo_set_lock_trigger(False)
-
         elif self._is_result_positive('ВвестиШтрихкод'):
             self._update_document_data()
             self._barcode_scanned()
             self.hash_map.run_event_async('doc_details_barcode_scanned')
 
         elif self._is_result_positive('RetryConnection'):
-            # if 'urovo' in self.hash_map.get('DEVICE_MODEL').lower():
-            #     suClass.urovo_set_lock_trigger(True)
             self._run_progress_barcode_scanning()
 
         elif self._is_result_negative('RetryConnection'):
-            # pass
-            if 'urovo' in self.hash_map.get('DEVICE_MODEL').lower():
-                suClass.urovo_set_lock_trigger(False)
+            self.set_scanner_lock(False)
 
         elif listener == 'btn_barcodes':
             self.hash_map.show_dialog('ВвестиШтрихкод')
@@ -1181,19 +1176,18 @@ class GroupScanDocDetailsScreen(DocDetailsScreen):
         self.hash_map.run_event_progress('doc_details_before_process_barcode')
 
     def before_process_barcode(self):
-        if 'urovo' in self.hash_map.get('DEVICE_MODEL').lower():
-            suClass.urovo_set_lock_trigger(True)
+        self.set_scanner_lock(True)
         if self._check_connection():
             self._update_document_data()
             scan_result = self._barcode_scanned()
-            if scan_result['Error']:
+            if scan_result.get('Error'):
                 self.hash_map.put('scan_error', scan_result['Error'])
             else:
                 self.hash_map.put('scan_error', '')
-            # self.post_barcode_scanned(self.get_http_settings())
-            self.hash_map.run_event_async('doc_run_post_barcode_scanned', post_execute_method='doc_details_test')
-            if 'urovo' in self.hash_map.get('DEVICE_MODEL').lower():
-                suClass.urovo_set_lock_trigger(False)
+            self.hash_map.run_event_async('doc_run_post_barcode_scanned', post_execute_method='doc_after_barcode')
+            self.set_scanner_lock(False)
+
+
         else:
             self.hash_map.beep('70')
             self.hash_map.show_dialog(listener="RetryConnection", title='Отсутствует соединение с сервером',
@@ -1208,20 +1202,23 @@ class GroupScanDocDetailsScreen(DocDetailsScreen):
                 self.service.write_error_on_log(f'Ошибка записи документа:  {e}')
 
     def _get_update_current_doc_data(self):
-        self.hs_service.get_data()
-        answer = self.hs_service.http_answer
+        try:
+            self.hs_service.get_data()
+            answer = self.hs_service.http_answer
 
-        if answer.unauthorized:
-            self.hash_map.toast('Ошибка авторизации сервера 1С')
-        elif answer.forbidden:
-            self.hash_map.notification(answer.error_text, title='Ошибка обмена')
-            self.hash_map.toast(answer.error_text)
-        elif answer.error:
-            self.service.write_error_on_log(f'Ошибка загрузки документа:  {answer.error_text}')
-        else:
-            return answer.data
+            if answer.unauthorized:
+                self.hash_map.toast('Ошибка авторизации сервера 1С')
+            elif answer.forbidden:
+                self.hash_map.notification(answer.error_text, title='Ошибка обмена')
+                self.hash_map.toast(answer.error_text)
+            elif answer.error:
+                self.service.write_error_on_log(f'Ошибка загрузки документа:  {answer.error_text}')
+            else:
+                return answer.data
+        except:
+            self.set_scanner_lock(False)
 
-    def post_barcode_scanned(self, http_settings):
+    def post_barcode_scanned(self):
         if self.hash_map.get_bool('barcode_scanned'):
             answer = None
             try:
@@ -1231,8 +1228,6 @@ class GroupScanDocDetailsScreen(DocDetailsScreen):
 
             if answer and answer.get('Error') is not None:
                 self.hash_map.error_log(answer.get('Error'))
-                # self.hash_map.playsound('warning')
-                # self.toast('error here')
 
             doc_details = self._get_doc_details_data()
             table_data = self._prepare_table_data(doc_details)
@@ -1278,13 +1273,18 @@ class GroupScanDocDetailsScreen(DocDetailsScreen):
                 error_text=str(e.args[0]),
                 status_code=404,
                 url=self.hs_service.url)
-            self.toast(answer)
-
         return not answer.error
 
-    def test_post_execute(self):
+    def scan_error_sound(self):
         if self.hash_map.get('scan_error'):
-            self.hash_map.playsound('warning')
+            if self.hash_map.get('scan_error') in ['QuantityPlanReached', 'AlreadyScanned', 'Zero_plan_error']:
+                self.hash_map.playsound('warning')
+            else:
+                self.hash_map.playsound('error')
+
+    def set_scanner_lock(self, value: bool):
+        if 'urovo' in self.hash_map.get('DEVICE_MODEL').lower():
+            suClass.urovo_set_lock_trigger(value)
 
 
 class DocumentsDocDetailScreen(DocDetailsScreen):
@@ -1574,7 +1574,6 @@ class AdrDocDetailsScreen(DocDetailsScreen):
                 # hashMap.put('toast',
                 #             'Штрих код не зарегистрирован в базе данных. Проверьте товар или выполните обмен данными')
             elif res['Error']:
-                self.hash_map.playsound('error')
                 if res['Error'] == 'AlreadyScanned':
 
                     self.hash_map.put('barcode', json.dumps({'barcode': res['Barcode'], 'doc_info': res['doc_info']}))
