@@ -5,6 +5,9 @@ from datetime import datetime
 
 
 def parse_barcode(barcode):
+    #Отладочное
+    return {'SCHEME': 'EAN13', 'BARCODE': barcode, 'GTIN': barcode, 'SERIAL': ''}
+
     if barcode:
         # Простой EAN13
         if not re.fullmatch(r'\d{13}', barcode) is None and re.fullmatch(r'\d{13}', barcode).string == barcode:
@@ -43,8 +46,7 @@ def datamatrix(barcode: str) -> dict:
         or relevant error strings.
     """
 
-    if barcode[
-       :3] == "]d2":  # Most barcode scanners prepend ']d2' identifier for the GS1 datamatrix. This section removes the identifier.
+    if barcode[:3] == "]d2":  # Most barcode scanners prepend ']d2' identifier for the GS1 datamatrix. This section removes the identifier.
         barcode = barcode[3:]
         result = gs1_gtin(barcode)
 

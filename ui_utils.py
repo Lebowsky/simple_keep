@@ -1,10 +1,11 @@
 import json
-from typing import Callable
+from typing import Callable, Union, List, Dict, Optional
 from functools import wraps
+import socket
 
 from java import jclass
 from ui_global import Rs_doc, find_barcode_in_barcode_table
-from db_services import DocService
+from db_services import DocService, BarcodeService
 
 noClass = jclass("ru.travelfood.simple_ui.NoSQL")
 rs_settings = noClass("rs_settings")
@@ -28,6 +29,9 @@ class HashMap:
     def init(self, hashMap):
         self.hash_map = hashMap
 
+    def finish_process(self):
+        self.hash_map.put('FinishProcess', '')
+
     def toast(self, text, add_to_log=False):
         self.hash_map.put('toast', str(text))
         if add_to_log:
@@ -37,8 +41,12 @@ class HashMap:
         notification_id = rs_settings.get("notification_id") + 1 if rs_settings.get("notification_id") else 1
         if title is None:
             title = self.get_current_screen()
-        self.hash_map.put("basic_notification", json.dumps([{'number': notification_id,
-                                                             'title': str(title), 'message': text}]))
+
+        self.hash_map.put(
+            "basic_notification",
+            json.dumps([{'number': notification_id, 'title': str(title), 'message': text}])
+        )
+
         rs_settings.put("notification_id", notification_id, True)
         if add_to_log:
             self.error_log(text)
@@ -53,15 +61,41 @@ class HashMap:
     def run_event(self, method_name):
         self['RunEvent'] = json.dumps(self._get_event(method_name))
 
-    def run_event_async(self, method_name):
-        self['RunEvent'] = json.dumps(self._get_event(method_name, True))
+    def run_event_async(self, method_name, post_execute_method=None):
+        run_event = self._get_event(method_name, 'runasync')
+        if post_execute_method:
+            run_event[0]['postExecute'] = json.dumps(self._get_event(post_execute_method))
+        # return json.dumps(run_event)
+        self['RunEvent'] = json.dumps(run_event)
 
-    def _get_event(self, method_name, async_action=False):
+    def run_event_progress(self, method_name):
+        self['RunEvent'] = json.dumps(self._get_event(method_name, 'runprogress'))
+
+
+    def beep(self, tone=''):
+        self.hash_map.put('beep', str(tone))
+
+    def playsound(self, event: str, sound_val: str = ''):
+        if not sound_val:
+            sound = rs_settings.get(f'{event}_signal')
+        else:
+            sound = sound_val
+        self.hash_map.put(f'playsound_{sound}', "")
+
+    def _get_event(self, method_name, action=None):
+        """
+        :param method_name: handlers name
+        :param action: run|runasync|runprogress
+
+        :return: event dict
+        """
+
         evt = [{
-            'action': 'runasync' if async_action else 'run',
+            'action': action if action else 'run',
             'type': 'python',
             'method': method_name,
         }]
+
         return evt
 
     def error_log(self, err_data):
@@ -91,10 +125,12 @@ class HashMap:
         value = str(self.hash_map.get(item)).lower() not in ('0', 'false', 'none')
         return value
 
-    def put(self, key, value, to_json=False):
+    def put(self, key, value: Union[str, List, Dict] = '', to_json=False):
         if to_json:
             self.hash_map.put(key, json.dumps(value))
         else:
+            if isinstance(value, bool):
+                value = str(value).lower()
             self.hash_map.put(key, str(value))
 
     def put_data(self, data: dict):
@@ -138,7 +174,7 @@ class HashMap:
 
     def get_current_screen(self):
 
-        return self['current_screen_name'] if self.containsKey('current_screen_name') else  ''
+        return self['current_screen_name'] if self.containsKey('current_screen_name') else ''
 
     def get_current_process(self):
         return self['current_process_name']
@@ -153,6 +189,23 @@ class HashMap:
         """
 
         self['RunPyThreadProgressDef'] = handlers_name
+
+    def sql_exec(self, query, params=''):
+        self._put_sql('SQLExec', query, params)
+
+    def sql_exec_many(self, query, params=None):
+        params = params or []
+        self._put_sql('SQLExecMany', query, params)
+
+    def sql_query(self, query, params=''):
+        self._put_sql('SQLQuery', query, params)
+
+    def _put_sql(self, sql_type, query, params):
+        self.put(
+            sql_type,
+            {"query": query, 'params': params},
+            to_json=True
+        )
 
 
 class RsDoc(Rs_doc):
@@ -178,7 +231,6 @@ class RsDoc(Rs_doc):
         result = super().find_barcode_in_table(search_value, func_compared)
         if result:
             return result[0]
-
 
     def find_barcode_in_mark_table(self, search_value: str, func_compared='=?'):
         pass
@@ -227,7 +279,27 @@ class RsDoc(Rs_doc):
         return find_barcode_in_barcode_table(barcode)
 
 
-def format_doc_date(date_string):
-    new_date_string = date_string[8:10] + "." + date_string[5:7] + "." + date_string[0:4] + " " + \
-                      date_string[11:13] + ":" + date_string[14:16] + ":" + date_string[17:19]
-    return new_date_string
+class BarcodeWorker:
+    def __init__(self):
+        self.db_service = BarcodeService()
+
+    def get_document_row_by_barcode(self, id_doc, barcode):
+        row_data = self.db_service.get_document_row_by_barcode(id_doc, barcode)
+        if row_data:
+            return row_data[0]
+
+    def parse(self, barcode: str) -> dict:
+        return {'SCHEME': 'EAN13', 'BARCODE': barcode, 'GTIN': barcode, 'SERIAL': ''}
+
+
+def get_ip_address():
+    s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+    try:
+        s.connect(("8.8.8.8", 80))
+        ip_address = s.getsockname()[0]
+    except Exception as e:
+        ip_address = None
+    finally:
+        s.close()
+
+    return ip_address

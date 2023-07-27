@@ -60,6 +60,7 @@
                         "Handlers": [
                             {
                                 "event": "onStart",
+                                "listener": "",
                                 "action": "run",
                                 "type": "python",
                                 "method": "tiles_on_start",
@@ -1882,6 +1883,91 @@
                         "onlineOnStart": false,
                         "onlineOnAfterStart": false,
                         "onlineOnInput": false
+                    },
+                    {
+                        "type": "Operation",
+                        "Name": "Экран превышения плана",
+                        "Timer": false,
+                        "noScroll": false,
+                        "hideBottomBarScreen": false,
+                        "hideToolBarScreen": false,
+                        "noConfirmation": false,
+                        "handleKeyUp": false,
+                        "Elements": [
+                            {
+                                "BackgroundColor": "",
+                                "StrokeWidth": "",
+                                "Padding": "",
+                                "orientation": "",
+                                "height": "wrap_content",
+                                "width": "wrap_content",
+                                "gravity_horizontal": "center",
+                                "gravity_vertical": "center",
+                                "weight": "",
+                                "height_value": "",
+                                "width_value": "",
+                                "type": "LinearLayout",
+                                "Variable": "",
+                                "Elements": [
+                                    {
+                                        "TextSize": "",
+                                        "TextColor": "",
+                                        "TextBold": false,
+                                        "TextItalic": false,
+                                        "BackgroundColor": "",
+                                        "StrokeWidth": "",
+                                        "Padding": "",
+                                        "orientation": "",
+                                        "height": "wrap_content",
+                                        "width": "match_parent",
+                                        "gravity_horizontal": "center",
+                                        "gravity_vertical": "center",
+                                        "weight": "",
+                                        "height_value": "",
+                                        "width_value": "",
+                                        "type": "TextView",
+                                        "Value": "@descr_text",
+                                        "Variable": "descr_text",
+                                        "style_name": "",
+                                        "drawable": "forward"
+                                    },
+                                    {
+                                        "TextSize": "",
+                                        "TextColor": "",
+                                        "TextBold": false,
+                                        "TextItalic": false,
+                                        "BackgroundColor": "",
+                                        "StrokeWidth": "",
+                                        "Padding": "",
+                                        "orientation": "",
+                                        "height": "wrap_content",
+                                        "width": "wrap_content",
+                                        "gravity_horizontal": "center",
+                                        "gravity_vertical": "center",
+                                        "weight": "",
+                                        "height_value": "",
+                                        "width_value": "",
+                                        "type": "Button",
+                                        "Value": "Ok",
+                                        "Variable": "btn_ok",
+                                        "style_name": ""
+                                    }
+                                ]
+                            }
+                        ],
+                        "Handlers": [
+                            {
+                                "event": "onInput",
+                                "listener": "",
+                                "action": "run",
+                                "type": "python",
+                                "method": "test_screen_input",
+                                "postExecute": ""
+                            }
+                        ],
+                        "onlineOnStart": false,
+                        "onlineOnAfterStart": false,
+                        "onlineOnInput": false
                     }
                 ]
             },
@@ -1984,34 +2070,33 @@
                                 "Variable": "",
                                 "Elements": [
                                     {
-                                        "type": "LinearLayout",
+                                        "BackgroundColor": "",
+                                        "StrokeWidth": "",
+                                        "Padding": "",
+                                        "orientation": "horizontal",
                                         "height": "wrap_content",
                                         "width": "match_parent",
                                         "weight": "0",
-                                        "Value": "",
+                                        "type": "LinearLayout",
                                         "Variable": "",
-                                        "orientation": "horizontal",
                                         "Elements": [
                                             {
                                                 "type": "SpinnerLayout",
+                                                "Value": "@doc_type_select",
+                                                "Variable": "doc_type_click",
                                                 "height": "wrap_content",
                                                 "width": "match_parent",
-                                                "weight": "1",
-                                                "Value": "@doc_type_select",
-                                                "Variable": "doc_type_click"
+                                                "weight": "1"
                                             },
                                             {
                                                 "type": "SpinnerLayout",
+                                                "Value": "@doc_status_select",
+                                                "Variable": "doc_status_click",
                                                 "height": "wrap_content",
                                                 "width": "match_parent",
-                                                "weight": "1",
-                                                "Value": "@doc_status_select",
-                                                "Variable": "doc_status_click"
+                                                "weight": "1"
                                             }
-                                        ],
-                                        "BackgroundColor": "",
-                                        "StrokeWidth": "",
-                                        "Padding": ""
+                                        ]
                                     },
                                     {
                                         "height": "wrap_content",
@@ -3568,8 +3653,11 @@
             {
                 "type": "Process",
                 "ProcessName": "Адресное хранение",
-                "hidden": true,
+                "hidden": false,
                 "DefineOnBackPressed": true,
+                "login_screen": false,
+                "PlanFactHeader": "",
+                "SC": false,
                 "Operations": [
                     {
                         "type": "Operation",
@@ -3646,6 +3734,7 @@
                         "Handlers": [
                             {
                                 "event": "onStart",
+                                "listener": "",
                                 "action": "run",
                                 "type": "python",
                                 "method": "docs_adr_on_start",
@@ -3653,6 +3742,7 @@
                             },
                             {
                                 "event": "onInput",
+                                "listener": "",
                                 "action": "run",
                                 "type": "python",
                                 "method": "docs_adr_on_select",
@@ -5590,8 +5680,9 @@
                             },
                             {
                                 "event": "onInput",
+                                "listener": "",
                                 "action": "run",
-                                "type": "python",
+                                "type": "online",
                                 "method": "settings_on_click",
                                 "postExecute": ""
                             }
@@ -7547,7 +7638,11 @@
             {
                 "type": "Process",
                 "ProcessName": "Отладка",
-                "hidden": true,
+                "hidden": false,
+                "DefineOnBackPressed": false,
+                "login_screen": false,
+                "PlanFactHeader": "",
+                "SC": false,
                 "Operations": [
                     {
                         "type": "Operation",
@@ -7569,6 +7664,8 @@
                                 "gravity_horizontal": "center",
                                 "gravity_vertical": "center",
                                 "weight": "0",
+                                "height_value": "",
+                                "width_value": "",
                                 "type": "LinearLayout",
                                 "Variable": "",
                                 "Elements": [
@@ -7592,16 +7689,6 @@
                                         "type": "CheckBox",
                                         "Value": "ИспользоватьМаркировку",
                                         "Variable": "use_mark"
-                                    },
-                                    {
-                                        "height": "0",
-                                        "width": "0",
-                                        "gravity_horizontal": "center",
-                                        "gravity_vertical": "center",
-                                        "weight": "0",
-                                        "type": "EditTextText",
-                                        "Value": "@ip_host",
-                                        "Variable": "ip_host"
                                     },
                                     {
                                         "height": "wrap_content",
@@ -7692,6 +7779,48 @@
                                         "type": "ProgressButton",
                                         "Value": "Очистить базу",
                                         "Variable": "bnt_clear_tables"
+                                    },
+                                    {
+                                        "TextSize": "",
+                                        "TextColor": "",
+                                        "TextBold": false,
+                                        "TextItalic": false,
+                                        "BackgroundColor": "",
+                                        "StrokeWidth": "",
+                                        "Padding": "",
+                                        "orientation": "",
+                                        "height": "wrap_content",
+                                        "width": "wrap_content",
+                                        "gravity_horizontal": "center",
+                                        "gravity_vertical": "center",
+                                        "weight": "",
+                                        "height_value": "",
+                                        "width_value": "",
+                                        "type": "EditTextText",
+                                        "Value": "@ip_host",
+                                        "Variable": "ip_host",
+                                        "style_name": ""
+                                    },
+                                    {
+                                        "TextSize": "",
+                                        "TextColor": "",
+                                        "TextBold": false,
+                                        "TextItalic": false,
+                                        "BackgroundColor": "",
+                                        "StrokeWidth": "",
+                                        "Padding": "",
+                                        "orientation": "",
+                                        "height": "wrap_content",
+                                        "width": "wrap_content",
+                                        "gravity_horizontal": "center",
+                                        "gravity_vertical": "center",
+                                        "weight": "",
+                                        "height_value": "",
+                                        "width_value": "",
+                                        "type": "ProgressButton",
+                                        "Value": "Экран превышения плана",
+                                        "Variable": "btn_plan",
+                                        "style_name": ""
                                     }
                                 ]
                             }
@@ -7703,6 +7832,97 @@
                                 "action": "run",
                                 "type": "python",
                                 "method": "debug_listener",
+                                "postExecute": ""
+                            },
+                            {
+                                "event": "onStart",
+                                "listener": "",
+                                "action": "run",
+                                "type": "python",
+                                "method": "debug_on_start",
+                                "postExecute": ""
+                            }
+                        ],
+                        "onlineOnStart": false,
+                        "onlineOnAfterStart": false,
+                        "onlineOnInput": false
+                    },
+                    {
+                        "type": "Operation",
+                        "Name": "ЭкранПлан",
+                        "Timer": false,
+                        "noScroll": true,
+                        "hideBottomBarScreen": true,
+                        "hideToolBarScreen": true,
+                        "noConfirmation": true,
+                        "handleKeyUp": false,
+                        "Elements": [
+                            {
+                                "BackgroundColor": "",
+                                "StrokeWidth": "",
+                                "Padding": "",
+                                "orientation": "vertical",
+                                "height": "match_parent",
+                                "width": "match_parent",
+                                "gravity_horizontal": "center",
+                                "gravity_vertical": "center",
+                                "weight": "0",
+                                "type": "LinearLayout",
+                                "Variable": "",
+                                "Elements": [
+                                    {
+                                        "TextSize": "20",
+                                        "TextColor": "",
+                                        "TextBold": false,
+                                        "TextItalic": false,
+                                        "BackgroundColor": "",
+                                        "StrokeWidth": "",
+                                        "Padding": "",
+                                        "orientation": "",
+                                        "height": "wrap_content",
+                                        "width": "wrap_content",
+                                        "gravity_horizontal": "center",
+                                        "gravity_vertical": "center",
+                                        "weight": "",
+                                        "height_value": "",
+                                        "width_value": "",
+                                        "type": "TextView",
+                                        "Value": "@decr_text",
+                                        "Variable": "decr_text",
+                                        "style_name": "",
+                                        "drawable": "forward"
+                                    },
+                                    {
+                                        "TextSize": "20",
+                                        "TextColor": "",
+                                        "TextBold": false,
+                                        "TextItalic": false,
+                                        "BackgroundColor": "",
+                                        "StrokeWidth": "",
+                                        "Padding": "",
+                                        "orientation": "",
+                                        "height": "wrap_content",
+                                        "width": "match_parent",
+                                        "gravity_horizontal": "center",
+                                        "gravity_vertical": "center",
+                                        "weight": "",
+                                        "height_value": "",
+                                        "width_value": "",
+                                        "type": "ProgressButton",
+                                        "Value": "Ok",
+                                        "Variable": "btn_ok",
+                                        "style_name": ""
+                                    }
+                                ]
+                            }
+                        ],
+                        "Handlers": [
+                            {
+                                "event": "onStart",
+                                "listener": "",
+                                "action": "run",
+                                "type": "python",
+                                "method": "test_screen_input",
                                 "postExecute": ""
                             }
                         ],
@@ -7740,66 +7960,10 @@
         ],
         "Mediafile": [],
         "PyHandlers": "",
-        "PyTimerTask": [
-            {
-                "PyTimerTaskKey": "timer_update",
-                "PyTimerTaskDef": "timer_update",
-                "PyTimerTaskPeriod": "15000",
-                "PyTimerTaskBuilIn": false
-            }
-        ],
-        "PyFiles": [
-            {
-                "PyFileKey": "ui_csv",
-                "PyFileData": ""
-            },
-            {
-                "PyFileKey": "ui_global",
-                "PyFileData": ""
-            },
-            {
-                "PyFileKey": "ui_form_data",
-                "PyFileData": ""
-            },
-            {
-                "PyFileKey": "ui_form_data2",
-                "PyFileData": ""
-            },
-            {
-                "PyFileKey": "database_init_queryes",
-                "PyFileData": ""
-            },
-            {
-                "PyFileKey": "http_exchange",
-                "PyFileData": ""
-            },
-            {
-                "PyFileKey": "ui_utils",
-                "PyFileData": ""
-            },
-            {
-                "PyFileKey": "widgets",
-                "PyFileData": ""
-            },
-            {
-                "PyFileKey": "ui_models",
-                "PyFileData": ""
-            },
-            {
-                "PyFileKey": "db_services",
-                "PyFileData": ""
-            },
-            {
-                "PyFileKey": "ui_barcodes",
-                "PyFileData": ""
-            },
-            {
-                "PyFileKey": "hs_services",
-                "PyFileData": ""
-            }
-        ],
+        "PyTimerTask": [],
+        "PyFiles": [],
         "StyleTemplates": [],
-        "arch2": true,
+        "arch2": false,
         "CommonHandlers": [
             {
                 "event": "onLaunch",
