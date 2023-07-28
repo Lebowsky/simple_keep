@@ -686,16 +686,11 @@ class FlowDocService(DocService):
                 ON RS_countragents.id = {self.docs_table_name}.id_countragents
                 '''
 
-        where = f'''Where {self.docs_table_name}.id_doc in (With tabl as (
-                SELECT 
-                count(id) as count,
+        where = f'''Where {self.docs_table_name}.id_doc not in (SELECT distinct
                 id_doc
                 From 
                 {self.details_table_name}
-                )
-                
-                Select id_doc From tabl
-                Where count = 0)'''
+                ) '''
 
         if doc_status:
             if doc_status == "Выгружен":

@@ -3333,7 +3333,7 @@
                                 "event": "onStart",
                                 "listener": "",
                                 "action": "run",
-                                "type": "python",
+                                "type": "online",
                                 "method": "flow_docs_on_start",
                                 "postExecute": ""
                             },
@@ -3477,14 +3477,14 @@
                             {
                                 "event": "onStart",
                                 "action": "run",
-                                "type": "python",
+                                "type": "online",
                                 "method": "barcode_flow_on_start",
                                 "postExecute": ""
                             },
                             {
                                 "event": "onInput",
                                 "action": "run",
-                                "type": "python",
+                                "type": "online",
                                 "method": "barcode_flow_listener",
                                 "postExecute": ""
                             }

@@ -849,7 +849,8 @@ class FlowDocScreen(DocsListScreen):
             # screen.show(args=args)
         elif self.listener == "ON_BACK_PRESSED":
             self.hash_map.finish_process()
-
+        elif self.listener == 'doc_type_click':
+            self.hash_map.refresh_screen()
         super().on_input()
 
 
