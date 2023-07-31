@@ -167,6 +167,102 @@ class Tiles(Screen):
             self.Value = value
 
 
+class FlowTilesScreen(Tiles):
+    screen_name = 'Плитки'
+    process_name = 'Сбор ШК'
+
+    def __init__(self, hash_map: HashMap, rs_settings):
+        super().__init__(hash_map, rs_settings)
+        self.db_service = DocService()
+
+    def on_start(self) -> None:
+
+        data = self.db_service.get_doc_flow_stat()
+        if data:
+            #layout = self._get_tile_view()
+            layout = json.loads(self._get_tile_view().to_json())
+
+            tiles_list = [self._get_tile_row(layout, item) for item in data]
+
+            # split list by two element in row
+            count_row_elements = 2
+            tiles = {
+                'tiles': [
+                    tiles_list[i:i + count_row_elements]
+                    for i in range(0, len(tiles_list), count_row_elements)
+                ],
+                'background_color': '#f5f5f5'
+
+            }
+        else:
+            tiles = self._get_message_tile("Нет загруженных документов")
+
+        self.hash_map.put('tiles', tiles, to_json=True)
+        self.hash_map.refresh_screen()
+
+
+    def on_input(self) -> None:
+        super().on_input()
+        if self.listener == 'ON_BACK_PRESSED':
+            self.hash_map.put('FinishProcess', '')
+        #elif self.listener == ''
+
+    def _get_tile_view(self) -> widgets.LinearLayout:
+        tiles_view = widgets.LinearLayout(
+            widgets.TextView(
+                Value='@docName',
+                TextSize=self.rs_settings.get('titleDocTypeCardTextSize'),
+                TextColor='#000000',
+                width='match_parent',
+                weight=0
+            ),
+            widgets.LinearLayout(
+                self.TextView('@QttyOfDocs', self.rs_settings),
+                orientation='horizontal',
+                width="match_parent",
+                weight=1
+            ),
+            widgets.LinearLayout(
+                self.TextView('Строк: ', self.rs_settings),
+                self.TextView('@barc_count', self.rs_settings),
+                orientation='horizontal',
+                width="match_parent",
+                weight=1
+            ),
+
+            width='match_parent',
+            autoSizeTextType='uniform',
+            weight=0
+        )
+
+        return tiles_view
+
+    def _get_tile_row(self, layout, tile_element, start_screen='Сбор ШК'):
+        tile = {
+            "layout": layout,
+            "data": self._get_tile_data(tile_element),
+            "height": "wrap_content",
+            "color": '#FFFFFF',
+            "start_screen": f"{start_screen}",
+            "start_process": "",
+            'key': tile_element['docType']
+        }
+        return tile
+
+    @staticmethod
+    def _get_tile_data(tile_element):
+        count_verified = tile_element['verified'] or 0
+        #count_unverified = tile_element['count_unverified'] or 0
+        barc_count = tile_element['barc_count'] or 0
+
+
+        return {
+            "docName": tile_element['docType'],
+            'QttyOfDocs': '{}/{}'.format(tile_element['count'], tile_element['verified']),
+            'count_verified': str(count_verified),
+            'barc_count': str(barc_count)
+        }
+
 class GroupScanTiles(Tiles):
     screen_name = 'Плитки'
     process_name = 'Групповая обработка'
@@ -291,9 +387,6 @@ class DocumentsTiles(GroupScanTiles):
     def _check_connection(self):
         return True
 
-class FlowTiles(GroupScanTiles):
-    screen_name = 'Плитки'
-    process_name = 'Сбор ШК'
 
 # ^^^^^^^^^^^^^^^^^^^^^ Tiles ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 

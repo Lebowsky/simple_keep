@@ -407,6 +407,46 @@ class DocService:
         res = self._get_query_result(query, return_dict=True)
         return res
 
+    def get_doc_flow_stat(self):
+        query = f'''
+        WITH tmp AS (
+            SELECT 
+                doc_type,
+                RS_docs.id_doc,
+                1 as doc_Count,
+                IFNULL(RS_docs.sent,0) as sent,
+                IFNULL(RS_docs.verified,0) as verified,
+
+                count(RS_barc_flow.barcode) as barc_count
+
+            FROM RS_docs
+            
+            LEFT JOIN RS_barc_flow 
+                ON RS_docs.id_doc = RS_barc_flow.id_doc
+                
+           WHERE  RS_docs.id_doc not in (SELECT distinct
+                id_doc
+                From 
+                RS_docs_table
+                )              
+                  
+            GROUP BY RS_docs.id_doc
+        )
+        SELECT 
+            doc_type as docType, 
+            COUNT(id_doc) as id_count,
+            SUM(doc_Count) as count, 
+            SUM(sent) as sent, 
+            SUM(verified) as verified,
+            SUM(barc_count) as barc_count
+        FROM tmp
+        GROUP BY doc_type
+        '''
+        res = self._get_query_result(query, return_dict=True)
+        return res
+
+
+
     def get_doc_details_data(self, id_doc) -> list:
         query = f"""
             SELECT
