@@ -933,20 +933,21 @@ class DocDetailsScreen(Screen):
             control,
             have_mark_plan,
             use_mark_setting=self.rs_settings.get('use_mark'))
+
         if res is None:
             self.hash_map.put('scanned_barcode', barcode)
             self.hash_map.show_screen('Ошибка сканера')
-            res['Error'] = 'BarcodeError'
+            res = {'Error': 'BarcodeError'}
         elif res['Error']:
             if res['Error'] == 'AlreadyScanned':
                 self.hash_map.put('barcode', json.dumps({'barcode': res['Barcode'], 'doc_info': res['doc_info']}))
                 self.hash_map.show_screen('Удаление штрихкода')
             elif res['Error'] == 'QuantityPlanReached':
                 self.hash_map.put('Error_description', 'Количество план в документе превышено')
-                self.toast('Количество план в документе превышено')
-                # self.hash_map.show_dialog(listener='Ошибка превышения плана',
-                #                           title='Количество план в документе превышено')
-                # self.hash_map.toast('toast', res['Descr'])
+                self.hash_map.show_dialog(
+                    listener='Ошибка превышения плана',
+                    title='Количество план в документе превышено')
+
             elif res['Error'] == 'Zero_plan_error':
                 self.hash_map.toast(res['Descr'])
             else:
@@ -955,6 +956,12 @@ class DocDetailsScreen(Screen):
             # self.hash_map.toast('Товар добавлен в документ')
             self.hash_map.put('highlight', True)
             self.hash_map.put('barcode_scanned', True)
+
+        if res.get('Error'):
+            self.hash_map.put('scan_error', res['Error'])
+        else:
+            self.hash_map.put('scan_error', '')
+
         return res
 
     def _set_visibility_on_start(self):
@@ -1134,6 +1141,13 @@ class DocDetailsScreen(Screen):
         for key in keys:
             data[key] = default if data[key] in none_list else data[key]
 
+    def scan_error_sound(self):
+        if self.hash_map.get('scan_error'):
+            if self.hash_map.get('scan_error') in ['QuantityPlanReached', 'AlreadyScanned', 'Zero_plan_error']:
+                self.hash_map.playsound('warning')
+            else:
+                self.hash_map.playsound('error')
+
     class TextView(widgets.TextView):
         def __init__(self, value):
             super().__init__()
@@ -1213,10 +1227,7 @@ class GroupScanDocDetailsScreen(DocDetailsScreen):
         if self._check_connection():
             self._update_document_data()
             scan_result = self._barcode_scanned()
-            if scan_result.get('Error'):
-                self.hash_map.put('scan_error', scan_result['Error'])
-            else:
-                self.hash_map.put('scan_error', '')
+
             self.hash_map.run_event_async('doc_run_post_barcode_scanned', post_execute_method='doc_scan_error_sound')
             self.set_scanner_lock(False)
 
@@ -1309,11 +1320,7 @@ class GroupScanDocDetailsScreen(DocDetailsScreen):
         return not answer.error
 
     def scan_error_sound(self):
-        if self.hash_map.get('scan_error'):
-            if self.hash_map.get('scan_error') in ['QuantityPlanReached', 'AlreadyScanned', 'Zero_plan_error']:
-                self.hash_map.playsound('warning')
-            else:
-                self.hash_map.playsound('error')
+        super().scan_error_sound()
 
     def set_scanner_lock(self, value: bool):
         if 'urovo' in self.hash_map.get('DEVICE_MODEL').lower():
