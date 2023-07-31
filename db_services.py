@@ -725,34 +725,34 @@ class FlowDocService(DocService):
             LEFT JOIN RS_countragents as RS_countragents
                 ON RS_countragents.id = {self.docs_table_name}.id_countragents
                 '''
-
-        where = f'''Where {self.docs_table_name}.id_doc not in (SELECT distinct
+        where = []
+        where.append( f'''{self.docs_table_name}.id_doc not in (SELECT distinct
                 id_doc
                 From 
                 {self.details_table_name}
-                ) '''
+                ) ''')
 
         if doc_status:
             if doc_status == "Выгружен":
-                where += "AND sent=1 AND verified=1"
+                where.append(" sent=1 AND verified=1")
             elif doc_status == "К выгрузке":
-                where += "AND ifnull(verified,0)=1 AND ifnull(sent,0)=0"
+                where.append(" ifnull(verified,0)=1 AND ifnull(sent,0)=0")
             elif doc_status == "К выполнению":
-                where += "AND ifnull(verified,0)=0 AND ifnull(sent,0)=0"
+                where.append(" ifnull(verified,0)=0 AND ifnull(sent,0)=0")
 
         if not doc_type or doc_type == "Все":
             args_tuple = None
         else:
             args_tuple = (doc_type,)
             if not doc_status or doc_status == "Все":
-                where = 'AND doc_type=?'
+                where.append('doc_type=?')
             else:
-                where += ' AND doc_type=?'
-
+                where.append(' doc_type=?')
+        where_text = f'WHERE ' + ' AND '.join(where)
         query_text = f'''
             {query_text}
             {joins}
-            {where}
+            {where_text}
             ORDER BY {self.docs_table_name}.doc_date
         '''
 

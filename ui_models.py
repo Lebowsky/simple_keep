@@ -205,7 +205,8 @@ class FlowTilesScreen(Tiles):
         super().on_input()
         if self.listener == 'ON_BACK_PRESSED':
             self.hash_map.put('FinishProcess', '')
-        #elif self.listener == ''
+        # elif self.listener == 'CardsClick':
+        #     self.hash_map.show_screen('Документы')
 
     def _get_tile_view(self) -> widgets.LinearLayout:
         tiles_view = widgets.LinearLayout(
@@ -237,7 +238,7 @@ class FlowTilesScreen(Tiles):
 
         return tiles_view
 
-    def _get_tile_row(self, layout, tile_element, start_screen='Сбор ШК'):
+    def _get_tile_row(self, layout, tile_element, start_screen='Документы'):
         tile = {
             "layout": layout,
             "data": self._get_tile_data(tile_element),
@@ -928,7 +929,7 @@ class FlowDocScreen(DocsListScreen):
         super().__init__(hash_map, rs_settings)
         self.service = db_services.FlowDocService()
         self.service.docs_table_name = 'RS_docs'
-        self.popup_menu_data = 'Удалить'
+        #self.popup_menu_data = 'Удалить'
 
     def on_start(self):
         super().on_start()
@@ -3419,7 +3420,7 @@ class ScreensFactory:
     screens = [
         AdrDocsListScreen,
         AdrDocDetailsScreen,
-        FlowTiles,
+        FlowTilesScreen,
         FlowDocScreen,
         FlowDocDetailsScreen,
         GroupScanTiles,
