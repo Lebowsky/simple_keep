@@ -933,20 +933,21 @@ class DocDetailsScreen(Screen):
             control,
             have_mark_plan,
             use_mark_setting=self.rs_settings.get('use_mark'))
+
         if res is None:
             self.hash_map.put('scanned_barcode', barcode)
             self.hash_map.show_screen('Ошибка сканера')
-            res['Error'] = 'BarcodeError'
+            res = {'Error': 'BarcodeError'}
         elif res['Error']:
             if res['Error'] == 'AlreadyScanned':
                 self.hash_map.put('barcode', json.dumps({'barcode': res['Barcode'], 'doc_info': res['doc_info']}))
                 self.hash_map.show_screen('Удаление штрихкода')
             elif res['Error'] == 'QuantityPlanReached':
                 self.hash_map.put('Error_description', 'Количество план в документе превышено')
-                self.toast('Количество план в документе превышено')
-                # self.hash_map.show_dialog(listener='Ошибка превышения плана',
-                #                           title='Количество план в документе превышено')
-                # self.hash_map.toast('toast', res['Descr'])
+                self.hash_map.show_dialog(
+                    listener='Ошибка превышения плана',
+                    title='Количество план в документе превышено')
+
             elif res['Error'] == 'Zero_plan_error':
                 self.hash_map.toast(res['Descr'])
             else:
@@ -955,6 +956,12 @@ class DocDetailsScreen(Screen):
             # self.hash_map.toast('Товар добавлен в документ')
             self.hash_map.put('highlight', True)
             self.hash_map.put('barcode_scanned', True)
+
+        if res.get('Error'):
+            self.hash_map.put('scan_error', res['Error'])
+        else:
+            self.hash_map.put('scan_error', '')
+
         return res
 
     def _set_visibility_on_start(self):
@@ -1134,6 +1141,13 @@ class DocDetailsScreen(Screen):
         for key in keys:
             data[key] = default if data[key] in none_list else data[key]
 
+    def scan_error_sound(self):
+        if self.hash_map.get('scan_error'):
+            if self.hash_map.get('scan_error') in ['QuantityPlanReached', 'AlreadyScanned', 'Zero_plan_error']:
+                self.hash_map.playsound('warning')
+            else:
+                self.hash_map.playsound('error')
+
     class TextView(widgets.TextView):
         def __init__(self, value):
             super().__init__()
@@ -1188,6 +1202,9 @@ class GroupScanDocDetailsScreen(DocDetailsScreen):
         elif self._is_result_positive('RetryConnection'):
             self._run_progress_barcode_scanning()
 
+        elif self._is_result_negative('RetryConnection'):
+            self.set_scanner_lock(False)
+
         elif listener == 'btn_barcodes':
             self.hash_map.show_dialog('ВвестиШтрихкод')
 
@@ -1206,11 +1223,15 @@ class GroupScanDocDetailsScreen(DocDetailsScreen):
         self.hash_map.run_event_progress('doc_details_before_process_barcode')
 
     def before_process_barcode(self):
+        self.set_scanner_lock(True)
         if self._check_connection():
             self._update_document_data()
-            self._barcode_scanned()
-            self.post_barcode_scanned(self.get_http_settings())
-            # self.hash_map.run_event_async('doc_details_barcode_scanned')
+            scan_result = self._barcode_scanned()
+
+            self.hash_map.run_event_async('doc_run_post_barcode_scanned', post_execute_method='doc_scan_error_sound')
+            self.set_scanner_lock(False)
+
+
         else:
             self.hash_map.beep('70')
             self.hash_map.show_dialog(listener="RetryConnection", title='Отсутствует соединение с сервером',
@@ -1225,20 +1246,23 @@ class GroupScanDocDetailsScreen(DocDetailsScreen):
                 self.service.write_error_on_log(f'Ошибка записи документа:  {e}')
 
     def _get_update_current_doc_data(self):
-        self.hs_service.get_data()
-        answer = self.hs_service.http_answer
+        try:
+            self.hs_service.get_data()
+            answer = self.hs_service.http_answer
 
-        if answer.unauthorized:
-            self.hash_map.toast('Ошибка авторизации сервера 1С')
-        elif answer.forbidden:
-            self.hash_map.notification(answer.error_text, title='Ошибка обмена')
-            self.hash_map.toast(answer.error_text)
-        elif answer.error:
-            self.service.write_error_on_log(f'Ошибка загрузки документа:  {answer.error_text}')
-        else:
-            return answer.data
+            if answer.unauthorized:
+                self.hash_map.toast('Ошибка авторизации сервера 1С')
+            elif answer.forbidden:
+                self.hash_map.notification(answer.error_text, title='Ошибка обмена')
+                self.hash_map.toast(answer.error_text)
+            elif answer.error:
+                self.service.write_error_on_log(f'Ошибка загрузки документа:  {answer.error_text}')
+            else:
+                return answer.data
+        except:
+            self.set_scanner_lock(False)
 
-    def post_barcode_scanned(self, http_settings):
+    def post_barcode_scanned(self):
         if self.hash_map.get_bool('barcode_scanned'):
             answer = None
             try:
@@ -1293,8 +1317,14 @@ class GroupScanDocDetailsScreen(DocDetailsScreen):
                 error_text=str(e.args[0]),
                 status_code=404,
                 url=self.hs_service.url)
-
         return not answer.error
+
+    def scan_error_sound(self):
+        super().scan_error_sound()
+
+    def set_scanner_lock(self, value: bool):
+        if 'urovo' in self.hash_map.get('DEVICE_MODEL').lower():
+            suClass.urovo_set_lock_trigger(value)
 
 
 class DocumentsDocDetailScreen(DocDetailsScreen):
@@ -1386,6 +1416,8 @@ class DocumentsDocDetailScreen(DocDetailsScreen):
             if res.get('key'):
                 self.service.update_rs_docs_table_sent_status(res.get('key'))
                 self.service.set_doc_status_to_upload(id_doc)
+
+            super().scan_error_sound()
 
         elif listener == 'btn_barcodes':
             self.hash_map.show_dialog('ВвестиШтрихкод')
