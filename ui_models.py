@@ -937,8 +937,7 @@ class FlowDocScreen(DocsListScreen):
         super().__init__(hash_map, rs_settings)
         self.service = db_services.FlowDocService()
         self.service.docs_table_name = 'RS_docs'
-        self.popup_menu_data = ';'.join(
-            ['Удалить','Очистить данные пересчета'])
+        self.popup_menu_data = 'Удалить;Очистить данные пересчета'
 
     def on_start(self):
         super().on_start()
@@ -2092,6 +2091,7 @@ class FlowDocDetailsScreen(Screen):
                 INSERT INTO RS_barc_flow (id_doc, barcode) VALUES (?,?)
                 '''
                 ui_global.get_query_result(qtext, (doc.id_doc, barcode))
+                self.service.set_doc_status_to_upload(doc.id_doc)
 
             if self._is_result_positive('confirm_verified'):
                 id_doc = self.hash_map['id_doc']
@@ -2100,7 +2100,7 @@ class FlowDocDetailsScreen(Screen):
 
                 self.hash_map.show_screen("Документы")
 
-            self.service.set_doc_status_to_upload(doc.id_doc)
+
 
         elif listener == 'btn_doc_mark_verified':
             self.hash_map.show_dialog('confirm_verified', 'Завершить документ?', ['Да', 'Нет'])
