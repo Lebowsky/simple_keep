@@ -957,10 +957,11 @@ class FlowDocScreen(DocsListScreen):
         elif self._is_result_positive('confirm_clear_barcode_data'):
             id_doc = self.get_id_doc()
             res = self._clear_barcode_data(id_doc)
+            self.service.set_doc_status_to_upload(id_doc)
             if res.get('result'):
-                self.toast('Данные пересчета и маркировки очищены')
+                self.toast('Все штрихкоды удалены из документа')
             else:
-                self.toast('При очистке данных пересчета возникла ошибка.')
+                self.toast('При очистке данных возникла ошибка.')
                 self.hash_map.error_log(res.get('error'))
 
         #elif self
@@ -1435,6 +1436,7 @@ class GroupScanDocDetailsScreen(DocDetailsScreen):
                 error_text=str(e.args[0]),
                 status_code=404,
                 url=self.hs_service.url)
+
         return not answer.error
 
     def scan_error_sound(self):
@@ -2106,10 +2108,7 @@ class FlowDocDetailsScreen(Screen):
 
         listener = self.hash_map.get('listener')
         if listener == "CardsClick":
-
             pass
-
-
 
         elif listener == "BACK_BUTTON":
             self.hash_map.finish_process()
@@ -2135,11 +2134,19 @@ class FlowDocDetailsScreen(Screen):
                 id_doc = self.hash_map['id_doc']
                 doc = RsDoc(id_doc)
                 doc.mark_verified(1)
+
                 self.hash_map.show_screen("Документы")
+
+            self.service.set_doc_status_to_upload(doc.id_doc)
 
         elif listener == 'btn_doc_mark_verified':
             self.hash_map.show_dialog('confirm_verified', 'Завершить документ?', ['Да', 'Нет'])
 
+        elif self._is_result_positive('confirm_verified'):
+            id_doc = self.hash_map['id_doc']
+            doc = RsDoc(id_doc)
+            doc.mark_verified(1)
+            self.hash_map.show_screen("Документы")
 
         elif listener == 'ON_BACK_PRESSED':
             self.hash_map.show_screen("Документы")
