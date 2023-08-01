@@ -932,7 +932,8 @@ class FlowDocScreen(DocsListScreen):
         super().__init__(hash_map, rs_settings)
         self.service = db_services.FlowDocService()
         self.service.docs_table_name = 'RS_docs'
-        self.popup_menu_data = 'Удалить'
+        self.popup_menu_data = ';'.join(
+            ['Удалить', 'Отправить повторно'])
 
     def on_start(self):
         super().on_start()
@@ -948,6 +949,7 @@ class FlowDocScreen(DocsListScreen):
             self.hash_map.show_screen('Плитки')  #finish_process()
         elif self.listener == 'doc_type_click':
             self.hash_map.refresh_screen()
+        #elif self
         super().on_input()
 
 
@@ -2089,6 +2091,8 @@ class FlowDocDetailsScreen(Screen):
 
             pass
 
+
+
         elif listener == "BACK_BUTTON":
             self.hash_map.finish_process()
 
@@ -2109,11 +2113,15 @@ class FlowDocDetailsScreen(Screen):
                 '''
                 ui_global.get_query_result(qtext, (doc.id_doc, barcode))
 
+            if self._is_result_positive('confirm_verified'):
+                id_doc = self.hash_map['id_doc']
+                doc = RsDoc(id_doc)
+                doc.mark_verified(1)
+                self.hash_map.show_screen("Документы")
+
         elif listener == 'btn_doc_mark_verified':
-            doc = ui_global.Rs_doc
-            doc.id_doc = self.hash_map.get('id_doc')
-            doc.mark_verified(doc, 1)
-            self.hash_map.show_screen("Документы")
+            self.hash_map.show_dialog('confirm_verified', 'Завершить документ?', ['Да', 'Нет'])
+
 
         elif listener == 'ON_BACK_PRESSED':
             self.hash_map.show_screen("Документы")

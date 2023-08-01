@@ -351,10 +351,14 @@ class DocService:
         return result
 
     def delete_doc(self, id_doc):
-        query_doc = f'DELETE FROM {self.docs_table_name} WHERE id_doc = ?'
-        res = self._get_query_result(query_doc, (id_doc,))
+        queryes = (f'DELETE FROM {self.docs_table_name} WHERE id_doc = ?',
+        'DELETE FROM RS_barc_flow WHERE id_doc = ?',
+        'DELETE FROM RS_docs_table WHERE id_doc = ?',
+        'DELETE FROM RS_adr_docs_table WHERE id_doc = ?')
 
-        return res
+        for query in queryes:
+            self._get_query_result(query, (id_doc,))
+
 
     def get_docs_stat(self):
         query = f'''
@@ -507,7 +511,8 @@ class DocService:
         query_text = ('Update RS_docs_barcodes Set approved = 0 Where id_doc=:id_doc',
                       'Delete From RS_docs_barcodes Where  id_doc=:id_doc And is_plan = 0',
                       'Update RS_docs_table Set qtty = 0 Where id_doc=:id_doc',
-                      'Delete From RS_docs_table Where id_doc=:id_doc and is_plan = "False"')
+                      'Delete From RS_docs_table Where id_doc=:id_doc and is_plan = "False"',
+                      'Delete From RS_barc_flow Where id_doc = :id_doc')
         try:
             for el in query_text:
                 get_query_result(el, ({'id_doc': id_doc}))
