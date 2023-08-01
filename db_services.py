@@ -407,6 +407,46 @@ class DocService:
         res = self._get_query_result(query, return_dict=True)
         return res
 
+    def get_doc_flow_stat(self):
+        query = f'''
+        WITH tmp AS (
+            SELECT 
+                doc_type,
+                RS_docs.id_doc,
+                1 as doc_Count,
+                IFNULL(RS_docs.sent,0) as sent,
+                IFNULL(RS_docs.verified,0) as verified,
+
+                count(RS_barc_flow.barcode) as barc_count
+
+            FROM RS_docs
+            
+            LEFT JOIN RS_barc_flow 
+                ON RS_docs.id_doc = RS_barc_flow.id_doc
+                
+           WHERE  RS_docs.id_doc not in (SELECT distinct
+                id_doc
+                From 
+                RS_docs_table
+                )              
+                  
+            GROUP BY RS_docs.id_doc
+        )
+        SELECT 
+            doc_type as docType, 
+            COUNT(id_doc) as id_count,
+            SUM(doc_Count) as count, 
+            SUM(sent) as sent, 
+            SUM(verified) as verified,
+            SUM(barc_count) as barc_count
+        FROM tmp
+        GROUP BY doc_type
+        '''
+        res = self._get_query_result(query, return_dict=True)
+        return res
+
+
+
     def get_doc_details_data(self, id_doc) -> list:
         query = f"""
             SELECT
@@ -685,39 +725,34 @@ class FlowDocService(DocService):
             LEFT JOIN RS_countragents as RS_countragents
                 ON RS_countragents.id = {self.docs_table_name}.id_countragents
                 '''
-
-        where = f'''Where {self.docs_table_name}.id_doc in (With tabl as (
-                SELECT 
-                count(id) as count,
+        where = []
+        where.append( f'''{self.docs_table_name}.id_doc not in (SELECT distinct
                 id_doc
                 From 
                 {self.details_table_name}
-                )
-                
-                Select id_doc From tabl
-                Where count = 0)'''
+                ) ''')
 
         if doc_status:
             if doc_status == "Выгружен":
-                where += "AND sent=1 AND verified=1"
+                where.append(" sent=1 AND verified=1")
             elif doc_status == "К выгрузке":
-                where += "AND ifnull(verified,0)=1 AND ifnull(sent,0)=0"
+                where.append(" ifnull(verified,0)=1 AND ifnull(sent,0)=0")
             elif doc_status == "К выполнению":
-                where += "AND ifnull(verified,0)=0 AND ifnull(sent,0)=0"
+                where.append(" ifnull(verified,0)=0 AND ifnull(sent,0)=0")
 
         if not doc_type or doc_type == "Все":
             args_tuple = None
         else:
             args_tuple = (doc_type,)
             if not doc_status or doc_status == "Все":
-                where = 'AND doc_type=?'
+                where.append('doc_type=?')
             else:
-                where += ' AND doc_type=?'
-
+                where.append(' doc_type=?')
+        where_text = f'WHERE ' + ' AND '.join(where)
         query_text = f'''
             {query_text}
             {joins}
-            {where}
+            {where_text}
             ORDER BY {self.docs_table_name}.doc_date
         '''
 
