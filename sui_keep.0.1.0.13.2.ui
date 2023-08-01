@@ -3322,6 +3322,101 @@
                     },
                     {
                         "type": "Operation",
+                        "Name": "Документы",
+                        "Timer": false,
+                        "noScroll": false,
+                        "hideBottomBarScreen": true,
+                        "hideToolBarScreen": false,
+                        "noConfirmation": true,
+                        "handleKeyUp": false,
+                        "Elements": [
+                            {
+                                "orientation": "vertical",
+                                "height": "match_parent",
+                                "width": "match_parent",
+                                "weight": "0",
+                                "height_value": "",
+                                "width_value": "",
+                                "type": "LinearLayout",
+                                "Variable": "",
+                                "Value": "",
+                                "Elements": [
+                                    {
+                                        "orientation": "horizontal",
+                                        "height": "wrap_content",
+                                        "width": "match_parent",
+                                        "weight": "0",
+                                        "height_value": "",
+                                        "width_value": "",
+                                        "type": "LinearLayout",
+                                        "Variable": "",
+                                        "Value": "",
+                                        "Elements": [
+                                            {
+                                                "type": "SpinnerLayout",
+                                                "Value": "@doc_type_select",
+                                                "Variable": "doc_type_click",
+                                                "height": "wrap_content",
+                                                "width": "match_parent",
+                                                "gravity_horizontal": "left",
+                                                "gravity_vertical": "center",
+                                                "weight": "1"
+                                            },
+                                            {
+                                                "type": "SpinnerLayout",
+                                                "Value": "@doc_status_select",
+                                                "Variable": "doc_status_click",
+                                                "height": "wrap_content",
+                                                "width": "match_parent",
+                                                "gravity_horizontal": "left",
+                                                "gravity_vertical": "center",
+                                                "weight": "1"
+                                            }
+                                        ],
+                                        "BackgroundColor": "",
+                                        "StrokeWidth": "",
+                                        "Padding": ""
+                                    },
+                                    {
+                                        "height": "wrap_content",
+                                        "width": "match_parent",
+                                        "gravity_horizontal": "center",
+                                        "gravity_vertical": "center",
+                                        "weight": "0",
+                                        "type": "CardsLayout",
+                                        "Value": "@docCards",
+                                        "Variable": "doc_cards"
+                                    }
+                                ],
+                                "BackgroundColor": "",
+                                "StrokeWidth": "",
+                                "Padding": ""
+                            }
+                        ],
+                        "Handlers": [
+                            {
+                                "event": "onStart",
+                                "listener": "",
+                                "action": "run",
+                                "type": "python",
+                                "method": "flow_docs_on_start",
+                                "postExecute": ""
+                            },
+                            {
+                                "event": "onInput",
+                                "listener": "",
+                                "action": "run",
+                                "type": "python",
+                                "method": "flow_docs_on_select",
+                                "postExecute": ""
+                            }
+                        ],
+                        "onlineOnStart": false,
+                        "onlineOnAfterStart": false,
+                        "onlineOnInput": false
+                    },
+                    {
+                        "type": "Operation",
                         "Name": "ПотокШтрихкодовДокумента",
                         "Timer": false,
                         "noScroll": false,
@@ -3436,6 +3531,11 @@
                                 "type": "MenuItem",
                                 "Value": "Ввести штрихкод",
                                 "Variable": "btn_barcodes"
+                            },
+                            {
+                                "type": "MenuItem",
+                                "Value": "Выгрузить документ",
+                                "Variable": "btn_doc_mark_verified"
                             }
                         ],
                         "Handlers": [
@@ -3451,101 +3551,6 @@
                                 "action": "run",
                                 "type": "python",
                                 "method": "barcode_flow_listener",
-                                "postExecute": ""
-                            }
-                        ],
-                        "onlineOnStart": false,
-                        "onlineOnAfterStart": false,
-                        "onlineOnInput": false
-                    },
-                    {
-                        "type": "Operation",
-                        "Name": "Документы",
-                        "Timer": false,
-                        "noScroll": false,
-                        "hideBottomBarScreen": true,
-                        "hideToolBarScreen": false,
-                        "noConfirmation": true,
-                        "handleKeyUp": false,
-                        "Elements": [
-                            {
-                                "orientation": "vertical",
-                                "height": "match_parent",
-                                "width": "match_parent",
-                                "weight": "0",
-                                "height_value": "",
-                                "width_value": "",
-                                "type": "LinearLayout",
-                                "Variable": "",
-                                "Value": "",
-                                "Elements": [
-                                    {
-                                        "orientation": "horizontal",
-                                        "height": "wrap_content",
-                                        "width": "match_parent",
-                                        "weight": "0",
-                                        "height_value": "",
-                                        "width_value": "",
-                                        "type": "LinearLayout",
-                                        "Variable": "",
-                                        "Value": "",
-                                        "Elements": [
-                                            {
-                                                "type": "SpinnerLayout",
-                                                "Value": "@doc_type_select",
-                                                "Variable": "doc_type_click",
-                                                "height": "wrap_content",
-                                                "width": "match_parent",
-                                                "gravity_horizontal": "left",
-                                                "gravity_vertical": "center",
-                                                "weight": "1"
-                                            },
-                                            {
-                                                "type": "SpinnerLayout",
-                                                "Value": "@doc_status_select",
-                                                "Variable": "doc_status_click",
-                                                "height": "wrap_content",
-                                                "width": "match_parent",
-                                                "gravity_horizontal": "left",
-                                                "gravity_vertical": "center",
-                                                "weight": "1"
-                                            }
-                                        ],
-                                        "BackgroundColor": "",
-                                        "StrokeWidth": "",
-                                        "Padding": ""
-                                    },
-                                    {
-                                        "height": "wrap_content",
-                                        "width": "match_parent",
-                                        "gravity_horizontal": "center",
-                                        "gravity_vertical": "center",
-                                        "weight": "0",
-                                        "type": "CardsLayout",
-                                        "Value": "@docCards",
-                                        "Variable": "doc_cards"
-                                    }
-                                ],
-                                "BackgroundColor": "",
-                                "StrokeWidth": "",
-                                "Padding": ""
-                            }
-                        ],
-                        "Handlers": [
-                            {
-                                "event": "onStart",
-                                "listener": "",
-                                "action": "run",
-                                "type": "python",
-                                "method": "flow_docs_on_start",
-                                "postExecute": ""
-                            },
-                            {
-                                "event": "onInput",
-                                "listener": "",
-                                "action": "run",
-                                "type": "python",
-                                "method": "flow_docs_on_select",
                                 "postExecute": ""
                             }
                         ],
