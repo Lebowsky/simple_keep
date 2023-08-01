@@ -601,6 +601,11 @@ class DocsListScreen(Screen):
         else:
             self.hash_map.toast('Ошибка удаления документа')
 
+    def get_id_doc(self):
+        card_data = self.hash_map.get_json("card_data") or {}
+        id_doc = card_data.get('key') or self.hash_map['selected_card_key']
+        return id_doc
+
 
 class GroupScanDocsListScreen(DocsListScreen):
     screen_name = 'Документы'
@@ -932,7 +937,8 @@ class FlowDocScreen(DocsListScreen):
         super().__init__(hash_map, rs_settings)
         self.service = db_services.FlowDocService()
         self.service.docs_table_name = 'RS_docs'
-        self.popup_menu_data = ';'.join(['Удалить'])
+        self.popup_menu_data = ';'.join(
+            ['Удалить','Очистить данные пересчета'])
 
     def on_start(self):
         super().on_start()
@@ -948,6 +954,15 @@ class FlowDocScreen(DocsListScreen):
             self.hash_map.show_screen('Плитки')  #finish_process()
         elif self.listener == 'doc_type_click':
             self.hash_map.refresh_screen()
+        elif self._is_result_positive('confirm_clear_barcode_data'):
+            id_doc = self.get_id_doc()
+            res = self._clear_barcode_data(id_doc)
+            if res.get('result'):
+                self.toast('Данные пересчета и маркировки очищены')
+            else:
+                self.toast('При очистке данных пересчета возникла ошибка.')
+                self.hash_map.error_log(res.get('error'))
+
         #elif self
         super().on_input()
 
