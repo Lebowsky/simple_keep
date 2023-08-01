@@ -103,6 +103,58 @@ class Tiles(Screen):
         }
         return tile
 
+
+    def _get_message_tile(self, message, text_color='#000000'):
+        tile_view = widgets.LinearLayout(
+            widgets.TextView(
+                Value='@no_data',
+                TextSize=self.rs_settings.get('titleDocTypeCardTextSize'),
+                TextColor=text_color,
+                height='match_parent',
+                width='match_parent',
+                weight=0,
+                gravity_horizontal="center",
+                gravity_vertical="center",
+                StrokeWidth=0,
+                BackgroundColor="#ffffff",
+                Padding=0
+
+            ),
+            width='match_parent',
+            autoSizeTextType='uniform',
+            weight=0,
+            height='match_parent',
+            gravity_horizontal="center",
+            gravity_vertical="center",
+            StrokeWidth=3,
+            BackgroundColor="#ffffff",
+            Padding=0
+        )
+
+        layout = json.loads(tile_view.to_json())
+
+        tiles_list = [{
+            "layout": layout,
+            "data": {"no_data": message},
+            "height": "wrap_content",
+            "color": '#ffffff',
+            "start_screen": "",
+            "start_process": "",
+            'StrokeWidth': '',
+        }]
+
+        count_row_elements = 1
+        tiles = {
+            'tiles': [tiles_list],
+            'background_color': '#ffffff',
+            'StrokeWidth': '',
+            'height': ''
+
+        }
+
+        return tiles
+
+
     @staticmethod
     def _get_tile_data(tile_element):
         count_verified = tile_element['count_verified'] or 0
@@ -166,6 +218,103 @@ class Tiles(Screen):
             self.weight = 0
             self.Value = value
 
+
+class FlowTilesScreen(Tiles):
+    screen_name = 'Плитки'
+    process_name = 'Сбор ШК'
+
+    def __init__(self, hash_map: HashMap, rs_settings):
+        super().__init__(hash_map, rs_settings)
+        self.db_service = DocService()
+
+    def on_start(self) -> None:
+
+        data = self.db_service.get_doc_flow_stat()
+        if data:
+            #layout = self._get_tile_view()
+            layout = json.loads(self._get_tile_view().to_json())
+
+            tiles_list = [self._get_tile_row(layout, item) for item in data]
+
+            # split list by two element in row
+            count_row_elements = 2
+            tiles = {
+                'tiles': [
+                    tiles_list[i:i + count_row_elements]
+                    for i in range(0, len(tiles_list), count_row_elements)
+                ],
+                'background_color': '#f5f5f5'
+
+            }
+        else:
+            tiles = self._get_message_tile("Нет загруженных документов")
+
+        self.hash_map.put('tiles', tiles, to_json=True)
+        self.hash_map.refresh_screen()
+
+
+    def on_input(self) -> None:
+        super().on_input()
+        if self.listener == 'ON_BACK_PRESSED':
+            self.hash_map.put('FinishProcess', '')
+        # elif self.listener == 'CardsClick':
+        #     self.hash_map.show_screen('Документы')
+
+    def _get_tile_view(self) -> widgets.LinearLayout:
+        tiles_view = widgets.LinearLayout(
+            widgets.TextView(
+                Value='@docName',
+                TextSize=self.rs_settings.get('titleDocTypeCardTextSize'),
+                TextColor='#000000',
+                width='match_parent',
+                weight=0
+            ),
+            widgets.LinearLayout(
+                self.TextView('@QttyOfDocs', self.rs_settings),
+                orientation='horizontal',
+                width="match_parent",
+                weight=1
+            ),
+            widgets.LinearLayout(
+                self.TextView('Строк: ', self.rs_settings),
+                self.TextView('@barc_count', self.rs_settings),
+                orientation='horizontal',
+                width="match_parent",
+                weight=1
+            ),
+
+            width='match_parent',
+            autoSizeTextType='uniform',
+            weight=0
+        )
+
+        return tiles_view
+
+    def _get_tile_row(self, layout, tile_element, start_screen='Документы'):
+        tile = {
+            "layout": layout,
+            "data": self._get_tile_data(tile_element),
+            "height": "wrap_content",
+            "color": '#FFFFFF',
+            "start_screen": f"{start_screen}",
+            "start_process": "",
+            'key': tile_element['docType']
+        }
+        return tile
+
+    @staticmethod
+    def _get_tile_data(tile_element):
+        count_verified = tile_element['verified'] or 0
+        #count_unverified = tile_element['count_unverified'] or 0
+        barc_count = tile_element['barc_count'] or 0
+
+
+        return {
+            "docName": tile_element['docType'],
+            'QttyOfDocs': '{}/{}'.format(tile_element['count'], tile_element['verified']),
+            'count_verified': str(count_verified),
+            'barc_count': str(barc_count)
+        }
 
 class GroupScanTiles(Tiles):
     screen_name = 'Плитки'
@@ -233,55 +382,6 @@ class GroupScanTiles(Tiles):
                 url=hs_service.url)
         return not answer.error
 
-    def _get_message_tile(self, message, text_color='#000000'):
-        tile_view = widgets.LinearLayout(
-            widgets.TextView(
-                Value='@no_data',
-                TextSize=self.rs_settings.get('titleDocTypeCardTextSize'),
-                TextColor=text_color,
-                height='match_parent',
-                width='match_parent',
-                weight=0,
-                gravity_horizontal="center",
-                gravity_vertical="center",
-                StrokeWidth=0,
-                BackgroundColor="#ffffff",
-                Padding=0
-
-            ),
-            width='match_parent',
-            autoSizeTextType='uniform',
-            weight=0,
-            height='match_parent',
-            gravity_horizontal="center",
-            gravity_vertical="center",
-            StrokeWidth=3,
-            BackgroundColor="#ffffff",
-            Padding=0
-        )
-
-        layout = json.loads(tile_view.to_json())
-
-        tiles_list = [{
-            "layout": layout,
-            "data": {"no_data": message},
-            "height": "wrap_content",
-            "color": '#ffffff',
-            "start_screen": "",
-            "start_process": "",
-            'StrokeWidth': '',
-        }]
-
-        count_row_elements = 1
-        tiles = {
-            'tiles': [tiles_list],
-            'background_color': '#ffffff',
-            'StrokeWidth': '',
-            'height': ''
-
-        }
-
-        return tiles
 
 
 class DocumentsTiles(GroupScanTiles):
@@ -291,9 +391,6 @@ class DocumentsTiles(GroupScanTiles):
     def _check_connection(self):
         return True
 
-class FlowTiles(GroupScanTiles):
-    screen_name = 'Плитки'
-    process_name = 'Сбор ШК'
 
 # ^^^^^^^^^^^^^^^^^^^^^ Tiles ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -503,6 +600,11 @@ class DocsListScreen(Screen):
                 self.hash_map.show_screen('Плитки')
         else:
             self.hash_map.toast('Ошибка удаления документа')
+
+    def get_id_doc(self):
+        card_data = self.hash_map.get_json("card_data") or {}
+        id_doc = card_data.get('key') or self.hash_map['selected_card_key']
+        return id_doc
 
 
 class GroupScanDocsListScreen(DocsListScreen):
@@ -835,7 +937,8 @@ class FlowDocScreen(DocsListScreen):
         super().__init__(hash_map, rs_settings)
         self.service = db_services.FlowDocService()
         self.service.docs_table_name = 'RS_docs'
-        self.popup_menu_data = 'Удалить'
+        self.popup_menu_data = ';'.join(
+            ['Удалить','Очистить данные пересчета'])
 
     def on_start(self):
         super().on_start()
@@ -848,8 +951,19 @@ class FlowDocScreen(DocsListScreen):
             # screen: FlowDocDetailsScreen = FlowDocDetailsScreen(self.hash_map, self.rs_settings)
             # screen.show(args=args)
         elif self.listener == "ON_BACK_PRESSED":
-            self.hash_map.finish_process()
+            self.hash_map.show_screen('Плитки')  #finish_process()
+        elif self.listener == 'doc_type_click':
+            self.hash_map.refresh_screen()
+        elif self._is_result_positive('confirm_clear_barcode_data'):
+            id_doc = self.get_id_doc()
+            res = self._clear_barcode_data(id_doc)
+            if res.get('result'):
+                self.toast('Данные пересчета и маркировки очищены')
+            else:
+                self.toast('При очистке данных пересчета возникла ошибка.')
+                self.hash_map.error_log(res.get('error'))
 
+        #elif self
         super().on_input()
 
 
@@ -1227,9 +1341,12 @@ class GroupScanDocDetailsScreen(DocDetailsScreen):
             self._update_document_data()
             scan_result = self._barcode_scanned()
 
-            self.hash_map.run_event_async('doc_run_post_barcode_scanned', post_execute_method='doc_scan_error_sound')
+            if scan_result.get('Error'):
+                self.hash_map.run_event('doc_scan_error_sound')
+            else:
+                self.hash_map.run_event_async('doc_run_post_barcode_scanned',
+                                              post_execute_method='doc_scan_error_sound')
             self.set_scanner_lock(False)
-
 
         else:
             self.hash_map.beep('70')
@@ -1988,11 +2105,13 @@ class FlowDocDetailsScreen(Screen):
 
             pass
 
+
+
         elif listener == "BACK_BUTTON":
             self.hash_map.finish_process()
-        elif listener == "btn_barcodes":
-            pass
 
+        elif listener == 'btn_barcodes':
+            self.hash_map.show_dialog('ВвестиШтрихкод')
 
         elif listener == 'barcode' or self.hash_map.get("event") == "onResultPositive":
             doc = ui_global.Rs_doc
@@ -2002,22 +2121,21 @@ class FlowDocDetailsScreen(Screen):
             else:
                 barcode = self.hash_map.get('barcode_camera')
 
-            have_qtty_plan = self.hash_map.get('have_qtty_plan')
-            have_zero_plan = self.hash_map.get('have_zero_plan')
-            have_mark_plan = self.hash_map.get('have_mark_plan')
-            control = self.hash_map.get('control')
-
             if barcode:
                 qtext = '''
                 INSERT INTO RS_barc_flow (id_doc, barcode) VALUES (?,?)
                 '''
                 ui_global.get_query_result(qtext, (doc.id_doc, barcode))
 
+            if self._is_result_positive('confirm_verified'):
+                id_doc = self.hash_map['id_doc']
+                doc = RsDoc(id_doc)
+                doc.mark_verified(1)
+                self.hash_map.show_screen("Документы")
+
         elif listener == 'btn_doc_mark_verified':
-            doc = ui_global.Rs_doc
-            doc.id_doc = self.hash_map.get('id_doc')
-            doc.mark_verified(doc, 1)
-            self.hash_map.show_screen("Документы")
+            self.hash_map.show_dialog('confirm_verified', 'Завершить документ?', ['Да', 'Нет'])
+
 
         elif listener == 'ON_BACK_PRESSED':
             self.hash_map.show_screen("Документы")
@@ -3399,7 +3517,7 @@ class ScreensFactory:
     screens = [
         AdrDocsListScreen,
         AdrDocDetailsScreen,
-        FlowTiles,
+        FlowTilesScreen,
         FlowDocScreen,
         FlowDocDetailsScreen,
         GroupScanTiles,

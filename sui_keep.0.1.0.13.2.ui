@@ -4166,6 +4166,71 @@
                 "Operations": [
                     {
                         "type": "Operation",
+                        "Name": "Плитки",
+                        "Timer": false,
+                        "noScroll": false,
+                        "hideBottomBarScreen": true,
+                        "hideToolBarScreen": false,
+                        "noConfirmation": false,
+                        "handleKeyUp": false,
+                        "Elements": [
+                            {
+                                "orientation": "vertical",
+                                "height": "wrap_content",
+                                "width": "match_parent",
+                                "gravity_horizontal": "center",
+                                "gravity_vertical": "center",
+                                "weight": "0",
+                                "type": "Tiles",
+                                "Value": "@tiles",
+                                "Variable": "tiles",
+                                "Elements": [
+                                    {
+                                        "height": "wrap_content",
+                                        "width": "match_parent",
+                                        "gravity_horizontal": "center",
+                                        "gravity_vertical": "center",
+                                        "weight": "0",
+                                        "type": "TextView",
+                                        "Value": "@gtin",
+                                        "Variable": ""
+                                    },
+                                    {
+                                        "height": "wrap_content",
+                                        "width": "wrap_content",
+                                        "gravity_horizontal": "center",
+                                        "gravity_vertical": "center",
+                                        "weight": "0",
+                                        "type": "TextView",
+                                        "Value": "@series",
+                                        "Variable": ""
+                                    }
+                                ]
+                            }
+                        ],
+                        "Handlers": [
+                            {
+                                "event": "onStart",
+                                "action": "run",
+                                "type": "python",
+                                "method": "flow_tiles_on_start",
+                                "postExecute": ""
+                            },
+                            {
+                                "event": "onInput",
+                                "listener": "",
+                                "action": "run",
+                                "type": "python",
+                                "method": "flow_tiles_on_select",
+                                "postExecute": ""
+                            }
+                        ],
+                        "onlineOnStart": false,
+                        "onlineOnAfterStart": false,
+                        "onlineOnInput": false
+                    },
+                    {
+                        "type": "Operation",
                         "Name": "Документы",
                         "Timer": false,
                         "noScroll": false,
@@ -4250,7 +4315,7 @@
                                 "event": "onInput",
                                 "listener": "",
                                 "action": "run",
-                                "type": "online",
+                                "type": "python",
                                 "method": "flow_docs_on_select",
                                 "postExecute": ""
                             }
@@ -4320,16 +4385,6 @@
                                                 "type": "TextView",
                                                 "Value": "@doc_date",
                                                 "Variable": ""
-                                            },
-                                            {
-                                                "height": "wrap_content",
-                                                "width": "wrap_content",
-                                                "gravity_horizontal": "center",
-                                                "gravity_vertical": "center",
-                                                "weight": "0",
-                                                "type": "Button",
-                                                "Value": "|| ||| ||",
-                                                "Variable": "btn_barcodes"
                                             }
                                         ]
                                     },
@@ -4380,6 +4435,16 @@
                                 "type": "barcode",
                                 "Value": "",
                                 "Variable": "barcode_camera"
+                            },
+                            {
+                                "type": "MenuItem",
+                                "Value": "Ввести штрихкод",
+                                "Variable": "btn_barcodes"
+                            },
+                            {
+                                "type": "MenuItem",
+                                "Value": "Выгрузить документ",
+                                "Variable": "btn_doc_mark_verified"
                             }
                         ],
                         "Handlers": [
@@ -4398,6 +4463,52 @@
                                 "postExecute": ""
                             }
                         ],
+                        "onlineOnStart": false,
+                        "onlineOnAfterStart": false,
+                        "onlineOnInput": false
+                    },
+                    {
+                        "type": "Operation",
+                        "Name": "ВвестиШтрихкод",
+                        "Timer": false,
+                        "noScroll": false,
+                        "hideBottomBarScreen": false,
+                        "hideToolBarScreen": false,
+                        "handleKeyUp": false,
+                        "Elements": [
+                            {
+                                "orientation": "vertical",
+                                "height": "wrap_content",
+                                "width": "wrap_content",
+                                "weight": "0",
+                                "type": "LinearLayout",
+                                "Variable": "",
+                                "Value": "",
+                                "Elements": [
+                                    {
+                                        "height": "wrap_content",
+                                        "width": "wrap_content",
+                                        "gravity_horizontal": "center",
+                                        "gravity_vertical": "center",
+                                        "weight": "0",
+                                        "type": "TextView",
+                                        "Value": "Введите значение штрихкода",
+                                        "Variable": ""
+                                    },
+                                    {
+                                        "height": "wrap_content",
+                                        "width": "match_parent",
+                                        "gravity_horizontal": "center",
+                                        "gravity_vertical": "center",
+                                        "weight": "0",
+                                        "type": "EditTextText",
+                                        "Value": "@fld_barcode",
+                                        "Variable": "fld_barcode"
+                                    }
+                                ]
+                            }
+                        ],
+                        "Handlers": [],
                         "onlineOnStart": false,
                         "onlineOnAfterStart": false,
                         "onlineOnInput": false
