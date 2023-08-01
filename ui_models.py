@@ -932,7 +932,7 @@ class FlowDocScreen(DocsListScreen):
         super().__init__(hash_map, rs_settings)
         self.service = db_services.FlowDocService()
         self.service.docs_table_name = 'RS_docs'
-        #self.popup_menu_data = 'Удалить'
+        self.popup_menu_data = 'Удалить'
 
     def on_start(self):
         super().on_start()
@@ -2092,9 +2092,9 @@ class FlowDocDetailsScreen(Screen):
 
         elif listener == "BACK_BUTTON":
             self.hash_map.finish_process()
-        elif listener == "btn_barcodes":
-            pass
 
+        elif listener == 'btn_barcodes':
+            self.hash_map.show_dialog('ВвестиШтрихкод')
 
         elif listener == 'barcode' or self.hash_map.get("event") == "onResultPositive":
             doc = ui_global.Rs_doc
@@ -2103,11 +2103,6 @@ class FlowDocDetailsScreen(Screen):
                 barcode = self.hash_map.get('fld_barcode')
             else:
                 barcode = self.hash_map.get('barcode_camera')
-
-            have_qtty_plan = self.hash_map.get('have_qtty_plan')
-            have_zero_plan = self.hash_map.get('have_zero_plan')
-            have_mark_plan = self.hash_map.get('have_mark_plan')
-            control = self.hash_map.get('control')
 
             if barcode:
                 qtext = '''
