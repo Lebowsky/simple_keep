@@ -1533,6 +1533,8 @@ class DocumentsDocDetailScreen(DocDetailsScreen):
                 self.service.update_rs_docs_table_sent_status(res.get('key'))
                 self.service.set_doc_status_to_upload(id_doc)
 
+            super().scan_error_sound()
+
         elif listener == 'btn_barcodes':
             self.hash_map.show_dialog('ВвестиШтрихкод')
 
