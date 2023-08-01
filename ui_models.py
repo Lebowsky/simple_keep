@@ -1228,9 +1228,12 @@ class GroupScanDocDetailsScreen(DocDetailsScreen):
             self._update_document_data()
             scan_result = self._barcode_scanned()
 
-            self.hash_map.run_event_async('doc_run_post_barcode_scanned', post_execute_method='doc_scan_error_sound')
+            if scan_result.get('Error'):
+                self.hash_map.run_event('doc_scan_error_sound')
+            else:
+                self.hash_map.run_event_async('doc_run_post_barcode_scanned',
+                                              post_execute_method='doc_scan_error_sound')
             self.set_scanner_lock(False)
-
 
         else:
             self.hash_map.beep('70')
