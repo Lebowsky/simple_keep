@@ -2152,9 +2152,6 @@ class FlowDocDetailsScreen(Screen):
 
 
 class GoodsSelectScreen(Screen):
-    screen_name = 'Товар выбор'
-    process_name = 'Документы'
-
     def __init__(self, hash_map: HashMap, rs_settings):
         super().__init__(hash_map, rs_settings)
         self.service = DocService()
@@ -2177,18 +2174,13 @@ class GoodsSelectScreen(Screen):
         listener = self.listener
 
         if listener is None:
+            """Ввод дельты из современного поля ввода (через enter клавиатуры)"""
             if self._validate_delta_input():
                 self._set_delta(0)
 
         elif listener == "btn_ok":
             if int(self.hash_map.get('new_qtty')) >= 0:
-                allow_fact_input = self.rs_settings.get('allow_fact_input') or False
-                if not allow_fact_input:
-                    self.hash_map.put('BackScreen')
-                    return
-
                 current_elem = self.hash_map.get_json('selected_card_data')
-
                 qtty = self.hash_map['new_qtty']
                 price = self.hash_map.get('price') or 0
 
@@ -2211,6 +2203,7 @@ class GoodsSelectScreen(Screen):
                 self._set_delta(reset=True)
 
         elif 'ops' in listener:
+            """Префикс кнопок +/-, значение в названиях кнопок"""
             self._set_delta(int(listener[4:]))
 
         elif listener in ["btn_cancel", 'BACK_BUTTON', 'ON_BACK_PRESSED']:
@@ -2231,12 +2224,13 @@ class GoodsSelectScreen(Screen):
         try:
             int(self.hash_map.get('delta'))
             return True
-        except int:
+        except:
             self.toast('Введенное значение не является целым числом')
             self.hash_map.playsound('error')
             self._set_delta(reset=True)
 
     def _set_delta(self, value: int = 0, reset: bool = False):
+        """Создаем (обнуляем) поле ввода"""
         if reset:
             delta_field = widgets.ModernField(default_text='', input_type=3)
         else:
@@ -2251,9 +2245,6 @@ class GoodsSelectScreen(Screen):
 
 
 class AdrGoodsSelectScreen(GoodsSelectScreen):
-    screen_name = 'Товар выбор'
-    process_name = 'Адресное хранение'
-
     def __init__(self, hash_map: HashMap, rs_settings):
         super().__init__(hash_map, rs_settings)
         self.service = AdrDocService()
