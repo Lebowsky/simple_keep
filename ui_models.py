@@ -103,6 +103,58 @@ class Tiles(Screen):
         }
         return tile
 
+
+    def _get_message_tile(self, message, text_color='#000000'):
+        tile_view = widgets.LinearLayout(
+            widgets.TextView(
+                Value='@no_data',
+                TextSize=self.rs_settings.get('titleDocTypeCardTextSize'),
+                TextColor=text_color,
+                height='match_parent',
+                width='match_parent',
+                weight=0,
+                gravity_horizontal="center",
+                gravity_vertical="center",
+                StrokeWidth=0,
+                BackgroundColor="#ffffff",
+                Padding=0
+
+            ),
+            width='match_parent',
+            autoSizeTextType='uniform',
+            weight=0,
+            height='match_parent',
+            gravity_horizontal="center",
+            gravity_vertical="center",
+            StrokeWidth=3,
+            BackgroundColor="#ffffff",
+            Padding=0
+        )
+
+        layout = json.loads(tile_view.to_json())
+
+        tiles_list = [{
+            "layout": layout,
+            "data": {"no_data": message},
+            "height": "wrap_content",
+            "color": '#ffffff',
+            "start_screen": "",
+            "start_process": "",
+            'StrokeWidth': '',
+        }]
+
+        count_row_elements = 1
+        tiles = {
+            'tiles': [tiles_list],
+            'background_color': '#ffffff',
+            'StrokeWidth': '',
+            'height': ''
+
+        }
+
+        return tiles
+
+
     @staticmethod
     def _get_tile_data(tile_element):
         count_verified = tile_element['count_verified'] or 0
@@ -330,55 +382,6 @@ class GroupScanTiles(Tiles):
                 url=hs_service.url)
         return not answer.error
 
-    def _get_message_tile(self, message, text_color='#000000'):
-        tile_view = widgets.LinearLayout(
-            widgets.TextView(
-                Value='@no_data',
-                TextSize=self.rs_settings.get('titleDocTypeCardTextSize'),
-                TextColor=text_color,
-                height='match_parent',
-                width='match_parent',
-                weight=0,
-                gravity_horizontal="center",
-                gravity_vertical="center",
-                StrokeWidth=0,
-                BackgroundColor="#ffffff",
-                Padding=0
-
-            ),
-            width='match_parent',
-            autoSizeTextType='uniform',
-            weight=0,
-            height='match_parent',
-            gravity_horizontal="center",
-            gravity_vertical="center",
-            StrokeWidth=3,
-            BackgroundColor="#ffffff",
-            Padding=0
-        )
-
-        layout = json.loads(tile_view.to_json())
-
-        tiles_list = [{
-            "layout": layout,
-            "data": {"no_data": message},
-            "height": "wrap_content",
-            "color": '#ffffff',
-            "start_screen": "",
-            "start_process": "",
-            'StrokeWidth': '',
-        }]
-
-        count_row_elements = 1
-        tiles = {
-            'tiles': [tiles_list],
-            'background_color': '#ffffff',
-            'StrokeWidth': '',
-            'height': ''
-
-        }
-
-        return tiles
 
 
 class DocumentsTiles(GroupScanTiles):
