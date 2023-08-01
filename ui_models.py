@@ -674,6 +674,7 @@ class DocumentsDocsListScreen(DocsListScreen):
             res = self._clear_barcode_data(id_doc)
             if res.get('result'):
                 self.toast('Данные пересчета и маркировки очищены')
+                self.service.set_doc_status_to_upload(id_doc)
             else:
                 self.toast('При очистке данных пересчета возникла ошибка.')
                 self.hash_map.error_log(res.get('error'))
@@ -1534,6 +1535,8 @@ class DocumentsDocDetailScreen(DocDetailsScreen):
             if res.get('key'):
                 self.service.update_rs_docs_table_sent_status(res.get('key'))
                 self.service.set_doc_status_to_upload(id_doc)
+
+            super().scan_error_sound()
 
         elif listener == 'btn_barcodes':
             self.hash_map.show_dialog('ВвестиШтрихкод')
