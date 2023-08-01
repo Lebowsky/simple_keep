@@ -910,6 +910,7 @@ class DocDetailsScreen(Screen):
         self.hash_map['return_selected_data'] = ''
         self.hash_map.put("doc_goods_table", table_view.to_json())
 
+
     def _barcode_scanned(self):
         id_doc = self.hash_map.get('id_doc')
         doc = RsDoc(id_doc)
@@ -1195,9 +1196,7 @@ class GroupScanDocDetailsScreen(DocDetailsScreen):
             self._run_progress_barcode_scanning()
 
         elif self._is_result_positive('ВвестиШтрихкод'):
-            self._update_document_data()
-            self._barcode_scanned()
-            self.hash_map.run_event_async('doc_details_barcode_scanned')
+            self._run_progress_barcode_scanning()
 
         elif self._is_result_positive('RetryConnection'):
             self._run_progress_barcode_scanning()
@@ -2153,6 +2152,9 @@ class FlowDocDetailsScreen(Screen):
 
 
 class GoodsSelectScreen(Screen):
+    screen_name = 'Товар выбор'
+    process_name = 'Документы'
+
     def __init__(self, hash_map: HashMap, rs_settings):
         super().__init__(hash_map, rs_settings)
         self.service = DocService()
@@ -2161,33 +2163,59 @@ class GoodsSelectScreen(Screen):
         # Режим работы с мультимедиа и файлами по ссылкам (флаг mm_local)
         self.hash_map['mm_local'] = ''
 
+        if not self.hash_map.get('qtty'):
+            self.hash_map.put('qtty', '0')
+
+        if not self.hash_map.get('new_qtty'):
+            self.hash_map.put('new_qtty', self.hash_map.get('qtty'))
+
+        if not self.hash_map.get('delta'):
+            self._set_delta(reset=True)
+
     def on_input(self):
+
         listener = self.listener
 
-        if listener == "btn_ok":
-            allow_fact_input = self.rs_settings.get('allow_fact_input') or False
-            if not allow_fact_input:
-                self.hash_map.put('BackScreen')
-                return
+        if listener is None:
+            if self._validate_delta_input():
+                self._set_delta(0)
 
-            current_elem = self.hash_map.get_json('selected_card_data')
+        elif listener == "btn_ok":
+            if int(self.hash_map.get('new_qtty')) >= 0:
+                allow_fact_input = self.rs_settings.get('allow_fact_input') or False
+                if not allow_fact_input:
+                    self.hash_map.put('BackScreen')
+                    return
 
-            qtty = self.hash_map['qtty']
-            price = self.hash_map.get('price') or 0
+                current_elem = self.hash_map.get_json('selected_card_data')
 
-            if qtty != current_elem['qtty']:
-                update_data = {
-                    'sent': 0,
-                    'qtty': float(qtty) if qtty else 0,
-                    # 'price': float(price) # в Adr docs нет колонки прайс, не понятно нужна она вообще или нет
-                }
-                row_id = int(current_elem['key'])
-                self.service.update_doc_table_row(data=update_data, row_id=row_id)
-                self.service.set_doc_status_to_upload(self.hash_map.get('id_doc'))
+                qtty = self.hash_map['new_qtty']
+                price = self.hash_map.get('price') or 0
 
-            self.hash_map.put('BackScreen')
+                if qtty != current_elem['qtty']:
+                    update_data = {
+                        'sent': 0,
+                        'qtty': float(qtty) if qtty else 0,
+                        # 'price': float(price) # в Adr docs нет колонки прайс, не понятно нужна она вообще или нет
+                    }
+                    row_id = int(current_elem['key'])
+                    self.service.update_doc_table_row(data=update_data, row_id=row_id)
+                    self.service.set_doc_status_to_upload(self.hash_map.get('id_doc'))
+
+                self._set_delta(reset=True)
+                self.hash_map.put('new_qtty', '')
+                self.hash_map.show_screen("Документ товары")
+            else:
+                self.hash_map.toast('Итоговое количество меньше 0')
+                self.hash_map.playsound('error')
+                self._set_delta(reset=True)
+
+        elif 'ops' in listener:
+            self._set_delta(int(listener[4:]))
 
         elif listener in ["btn_cancel", 'BACK_BUTTON', 'ON_BACK_PRESSED']:
+            self._set_delta(reset=True)
+            self.hash_map.put('new_qtty', '')
             self.hash_map.show_screen("Документ товары")
 
     def on_post_start(self):
@@ -2199,8 +2227,33 @@ class GoodsSelectScreen(Screen):
     def get_doc(self):
         pass
 
+    def _validate_delta_input(self):
+        try:
+            int(self.hash_map.get('delta'))
+            return True
+        except int:
+            self.toast('Введенное значение не является целым числом')
+            self.hash_map.playsound('error')
+            self._set_delta(reset=True)
+
+    def _set_delta(self, value: int = 0, reset: bool = False):
+        if reset:
+            delta_field = widgets.ModernField(default_text='', input_type=3)
+        else:
+            delta = int(self.hash_map.get('delta')) + value if self.hash_map.get('delta') else value
+            delta_field = widgets.ModernField(default_text=delta, input_type=3)
+            self._set_result_qtty(delta)
+        self.hash_map.put('delta', delta_field.to_json())
+
+    def _set_result_qtty(self, delta):
+        new_qtty = str(int(self.hash_map.get('qtty')) + delta)
+        self.hash_map.put('new_qtty', new_qtty)
+
 
 class AdrGoodsSelectScreen(GoodsSelectScreen):
+    screen_name = 'Товар выбор'
+    process_name = 'Адресное хранение'
+
     def __init__(self, hash_map: HashMap, rs_settings):
         super().__init__(hash_map, rs_settings)
         self.service = AdrDocService()

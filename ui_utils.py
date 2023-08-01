@@ -65,7 +65,6 @@ class HashMap:
         run_event = self._get_event(method_name, 'runasync')
         if post_execute_method:
             run_event[0]['postExecute'] = json.dumps(self._get_event(post_execute_method))
-        # return json.dumps(run_event)
         self['RunEvent'] = json.dumps(run_event)
 
     def run_event_progress(self, method_name):
