@@ -5789,7 +5789,7 @@
                                         "TextColor": "",
                                         "TextBold": false,
                                         "TextItalic": false,
-                                        "BackgroundColor": "",
+                                        "BackgroundColor": "#FFFFFF",
                                         "StrokeWidth": "",
                                         "Padding": "",
                                         "orientation": "",
