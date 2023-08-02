@@ -2331,24 +2331,16 @@ class FlowDocDetailsScreen(DocDetailsScreen):
         return row_view
 
     def _prepare_table_data(self, doc_details):
-        # TODO добавить группировку по ячейкам
-        table_data = [{}]  # было [{}]
-        #row_filter = self.hash_map.get_bool('rows_filter')
+
+        table_data = [{}]
 
         for record in doc_details:
 
-            product_row = {
-                'key': str(record['barcode']),
-                'barcode': str(record['barcode']),
-                'name': str(record['name']),
-                'qtty': str(record['qtty']),
-                'qtty_plan':0
+            product_row = {'key': str(record['barcode']), 'barcode': str(record['barcode']),
+                           'name': record['name'] if record['name'] is not None else '-нет данных-', 'qtty': str(record['qtty']),
+                           '_layout': self._get_doc_table_row_view()}
 
-            }
-
-
-            product_row['_layout'] = self._get_doc_table_row_view()
-            self._set_background_row_color(product_row)
+            product_row['_layout'].BackgroundColor = '#FFFFFF' if record['name'] is not None else "#FBE9E7"
 
             if self._added_goods_has_key(product_row['key']):
                 table_data.insert(1, product_row)
@@ -2358,6 +2350,7 @@ class FlowDocDetailsScreen(DocDetailsScreen):
             #table_data.append(product_row)
 
         return table_data
+
 
 # ^^^^^^^^^^^^^^^^^^^^^ DocDetails ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
