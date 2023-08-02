@@ -1631,48 +1631,14 @@ class AdrDocDetailsScreen(DocDetailsScreen):
         self.table_type = ''
         self.service = AdrDocService(self.id_doc, table_type=self.table_type)
 
-    def on_start(self) -> None:
-        super()._on_start()
-
-    def _on_start(self):
-
+    def on_start(self):
         if not self.table_type:
             self.table_type = self._get_table_type_for_screen()
         else:
-            # Выбор табличной части (отбор/размещение)
-            # self._get_table_type_from_screen()
             self.table_type = self._get_table_type_from_name(self.hash_map['table_type'])
-
-        self._set_visibility_on_start()
-        self.hash_map.put('SetTitle', self.hash_map["doc_type"])
-
-        have_qtty_plan = False
-        have_zero_plan = False
-        have_mark_plan = False
         self.service.table_type = self.table_type
-        doc_details = self._get_doc_details_data()
-        table_data = self._prepare_table_data(doc_details)
-        table_view = self._get_doc_table_view(table_data=table_data)
 
-        if self.hash_map.get_bool('highlight'):
-            self.hash_map.put('highlight', False)
-            # self.enable_highlight(table_view.customtable)
-            # self.hash_map.run_event_async('highlight_scanned_item')
-
-        if doc_details:
-            self.hash_map['table_lines_qtty'] = len(doc_details)
-            have_zero_plan = True
-            have_qtty_plan = sum([item['qtty_plan'] for item in doc_details if item['qtty_plan']]) > 0
-
-        self.hash_map['have_qtty_plan'] = have_qtty_plan
-        self.hash_map['have_zero_plan'] = have_zero_plan
-        self.hash_map['have_mark_plan'] = have_mark_plan
-
-        control = self.service.get_doc_value('control', self.id_doc) not in (0, '0', 'false', 'False', None)
-        self.hash_map['control'] = control
-
-        self.hash_map.put("doc_goods_table", table_view.to_json())
-        self.hash_map.put('return_selected_data', '')
+        super()._on_start()
 
     def _get_doc_details_data(self):
         return self.service.get_doc_details_data(self.id_doc, self.current_cell)
