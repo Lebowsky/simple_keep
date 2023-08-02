@@ -6,7 +6,7 @@ from datetime import datetime
 
 def parse_barcode(barcode):
     #Отладочное
-    return {'SCHEME': 'EAN13', 'BARCODE': barcode, 'GTIN': barcode, 'SERIAL': ''}
+    # return {'SCHEME': 'EAN13', 'BARCODE': barcode, 'GTIN': barcode, 'SERIAL': ''}
 
     if barcode:
         # Простой EAN13
