@@ -1312,9 +1312,7 @@ class GroupScanDocDetailsScreen(DocDetailsScreen):
             self._run_progress_barcode_scanning()
 
         elif self._is_result_positive('ВвестиШтрихкод'):
-            self._update_document_data()
-            self._barcode_scanned()
-            self.hash_map.run_event_async('doc_details_barcode_scanned')
+            self._run_progress_barcode_scanning()
 
         elif self._is_result_positive('RetryConnection'):
             self._run_progress_barcode_scanning()
