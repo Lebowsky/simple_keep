@@ -1005,15 +1005,12 @@ class DocDetailsScreen(Screen):
         table_data = self._prepare_table_data(doc_details)
         table_view = self._get_doc_table_view(table_data=table_data)
 
-        if self.hash_map.get_bool('highlight'):
-            self.hash_map.put('highlight', False)
-            # self.enable_highlight(table_view.customtable)
-            # self.hash_map.run_event_async('highlight_scanned_item')
-
         if doc_details:
             self.hash_map['table_lines_qtty'] = len(doc_details)
-            have_zero_plan = True
-            have_qtty_plan = sum([item['qtty_plan'] for item in doc_details if item['qtty_plan']]) > 0
+            have_qtty_plan = sum(
+                [self._format_to_float(str(item['qtty_plan'])) for item in doc_details if item['qtty_plan']]) > 0
+            have_zero_plan = not have_qtty_plan
+            have_mark_plan = self._get_have_mark_plan()
 
         self.hash_map['have_qtty_plan'] = have_qtty_plan
         self.hash_map['have_zero_plan'] = have_zero_plan
@@ -1132,8 +1129,7 @@ class DocDetailsScreen(Screen):
             product_row['good_info'] = ''.join(props)
 
             for key in ['qtty', 'd_qtty', 'qtty_plan']:
-                value = record.get(key, 0.0) or 0.0
-
+                value = self._format_to_float(str(record.get(key, 0.0)))
                 product_row[key] = str(int(value)) if value.is_integer() else value
 
             product_row['_layout'] = self._get_doc_table_row_view()
@@ -1264,6 +1260,13 @@ class DocDetailsScreen(Screen):
                 self.hash_map.playsound('warning')
             else:
                 self.hash_map.playsound('error')
+
+    def _format_to_float(self, value: str):
+        return float(value.replace(u'\xa0', u'').replace(',', '.') or '0.0')
+
+    def _get_have_mark_plan(self):
+        count = self.service.get_count_mark_codes(id_doc=self.id_doc)
+        return count > 0
 
     class TextView(widgets.TextView):
         def __init__(self, value):

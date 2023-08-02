@@ -359,7 +359,6 @@ class DocService:
         for query in queryes:
             self._get_query_result(query, (id_doc,))
 
-
     def get_docs_stat(self):
         query = f'''
         WITH tmp AS (
@@ -448,8 +447,6 @@ class DocService:
         '''
         res = self._get_query_result(query, return_dict=True)
         return res
-
-
 
     def get_doc_details_data(self, id_doc) -> list:
         query = f"""
@@ -574,6 +571,18 @@ class DocService:
         if not res_goods:
             return None
         return self.form_data_for_request(res_docs, res_goods, False)
+
+    def get_count_mark_codes(self, id_doc):
+        q = '''
+            SELECT DISTINCT COUNT(id) as col_str 
+            FROM RS_docs_barcodes WHERE id_doc = ? AND is_plan = 1
+        '''
+        res = self._sql_query(
+            q=q,
+            params=id_doc,
+        )
+
+        return res[0]['col_str']
 
     @staticmethod
     def update_uploaded_docs_status(doc_in_str):
