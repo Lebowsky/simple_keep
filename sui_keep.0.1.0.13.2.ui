@@ -4388,14 +4388,25 @@
                                         "Variable": ""
                                     },
                                     {
+                                        "TextSize": "",
+                                        "TextColor": "",
+                                        "TextBold": false,
+                                        "TextItalic": false,
+                                        "BackgroundColor": "",
+                                        "StrokeWidth": "",
+                                        "Padding": "",
+                                        "orientation": "",
                                         "height": "wrap_content",
-                                        "width": "match_parent",
+                                        "width": "wrap_content",
                                         "gravity_horizontal": "center",
                                         "gravity_vertical": "center",
-                                        "weight": "0",
-                                        "type": "CardsLayout",
+                                        "weight": "",
+                                        "height_value": "",
+                                        "width_value": "",
+                                        "type": "TableLayout",
                                         "Value": "@doc_barc_flow",
-                                        "Variable": "doc_barc_flow"
+                                        "Variable": "doc_barc_flow",
+                                        "style_name": ""
                                     },
                                     {
                                         "height": "wrap_content",

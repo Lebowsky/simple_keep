@@ -553,6 +553,7 @@ class DocService:
         res = get_query_result(query_text)
         return res
 
+
     @staticmethod
     def write_error_on_log(Err_value):
         if Err_value:
@@ -772,6 +773,30 @@ class FlowDocService(DocService):
 
         result = self._get_query_result(query_text, args_tuple, return_dict=True)
         return result
+
+
+    def get_flow_table_data(self):
+        query_text = '''WITH temp_q as (SELECT
+                        RS_barc_flow.barcode,
+                        RS_barcodes.id_good as id_good,
+                        RS_barcodes.id_property as id_property,
+                        1 as qtty
+
+                        FROM RS_barc_flow
+                        LEFT JOIN RS_barcodes
+                            ON RS_barcodes.barcode = RS_barc_flow.barcode
+                        WHERE RS_barc_flow.id_doc = ?)
+
+                        SELECT temp_q.barcode, temp_q.id_good, temp_q.id_property,
+                        RS_goods.name as name, 
+                        sum(qtty) as qtty
+                        FROM temp_q
+                        LEFT JOIN RS_goods
+                          ON RS_goods.id = temp_q.id_good
+                        GROUP BY temp_q.barcode'''
+
+        return self._get_query_result(query_text, (self.doc_id,), True)
+
 
 
 class GoodsService:
