@@ -1869,7 +1869,7 @@ class AdrDocDetailsScreen(DocDetailsScreen):
                 'art': str(record['art']),
                 'picture': pic,
             }
-            #222
+
             props = [
                 '{} '.format(product_row['art']) if product_row['art'] else '',
                 '({}) '.format(product_row['properties_name']) if product_row['properties_name'] else '',
@@ -2121,87 +2121,9 @@ class FlowDocDetailsScreen(DocDetailsScreen):
         falseValueList = (0, '0', 'false', 'False', None)
         # Формируем таблицу карточек и запрос к базе
 
-        # doc_detail_list = {"customcards": {
-        #     "options": {
-        #         "search_enabled": True,
-        #         "save_position": True
-        #     },
-        #     "layout": {
-        #         "type": "LinearLayout",
-        #         "orientation": "vertical",
-        #         "height": "match_parent",
-        #         "width": "match_parent",
-        #         "weight": "0",
-        #         "Elements": [
-        #             {
-        #                 "type": "LinearLayout",
-        #                 "orientation": "horizontal",
-        #                 "height": "match_parent",
-        #                 "width": "match_parent",
-        #                 "weight": "0",
-        #                 "Elements": [
-        #                     {
-        #                         "type": "LinearLayout",
-        #                         "orientation": "vertical",
-        #                         "height": "match_parent",
-        #                         "width": "match_parent",
-        #                         "weight": "0",
-        #                         "Elements": [
-        #                         {
-        #                         "type": "TextView",
-        #                         "TextBold": True,
-        #                         "show_by_condition": "",
-        #                         "Value": "@barcode",
-        #                         "TextSize": self.rs_settings.get('GoodsCardTitleTextSize'),
-        #                         "NoRefresh": False,
-        #                         "document_type": "",
-        #                         "mask": "",
-        #                         "weight": "1",
-        #                         "Variable": ""
-        #                         },
-        #                         {
-        #                         "type": "TextView",
-        #                         "TextBold": True,
-        #                         "show_by_condition": "",
-        #                         "Value": "@name",
-        #                         "TextSize": self.rs_settings.get('CardDateTextSize'),
-        #                         "NoRefresh": False,
-        #                         "document_type": "",
-        #                         "mask": "",
-        #                         "weight": "1",
-        #                         "Variable": ""
-        #                         }
-        #                         ]
-        #                         },
-        #
-        #                     {
-        #                         "type": "TextView",
-        #                         "TextBold": True,
-        #                         "show_by_condition": "",
-        #                         "Value": "@qtty",
-        #                         "TextSize": self.rs_settings.get('CardDateTextSize'),
-        #                         "NoRefresh": False,
-        #                         "document_type": "",
-        #                         "mask": "",
-        #                         "weight": "1",
-        #                         "Variable": ""
-        #                     },
-        #
-        #                 ]
-        #             }
-        #         ]
-        #     }
-        # }
-        # }
-
-        #doc_detail_list['customcards']['cardsdata'] = []
-        #111
         doc_details = self.service.get_flow_table_data()
         table_data = self._prepare_table_data(doc_details)
         table_view = self._get_doc_table_view(table_data=table_data)
-        #table_data = self.service.get_flow_table_data()
-
-
 
         if doc_details:
             # hashMap.put('id_doc', str(results[0]['id_doc']))

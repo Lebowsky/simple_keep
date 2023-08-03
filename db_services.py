@@ -767,23 +767,24 @@ class FlowDocService(DocService):
 
 
     def get_flow_table_data(self):
-        query_text = '''with temp_q as (sElect RS_barc_flow.barcode,
-                                  RS_barcodes.id_good as id_good,
-                                  RS_barcodes.id_property as id_property,
-                                  1 as qtty
+        query_text = '''WITH temp_q as (SELECT
+                        RS_barc_flow.barcode,
+                        RS_barcodes.id_good as id_good,
+                        RS_barcodes.id_property as id_property,
+                        1 as qtty
 
-                                  From RS_barc_flow
-                                  Left Join RS_barcodes
-                                  ON RS_barcodes.barcode = RS_barc_flow.barcode
-                                   Where RS_barc_flow.id_doc = ?)
+                        FROM RS_barc_flow
+                        LEFT JOIN RS_barcodes
+                            ON RS_barcodes.barcode = RS_barc_flow.barcode
+                        WHERE RS_barc_flow.id_doc = ?)
 
-                                select temp_q.barcode, temp_q.id_good, temp_q.id_property,
-                                RS_goods.name as name, 
-                                sum(qtty) as qtty
-                                 from temp_q
-                                   Left Join RS_goods
-                                  ON RS_goods.id = temp_q.id_good
-                                  group by temp_q.barcode'''
+                        SELECT temp_q.barcode, temp_q.id_good, temp_q.id_property,
+                        RS_goods.name as name, 
+                        sum(qtty) as qtty
+                        FROM temp_q
+                        LEFT JOIN RS_goods
+                          ON RS_goods.id = temp_q.id_good
+                        GROUP BY temp_q.barcode'''
 
         return self._get_query_result(query_text, (self.doc_id,), True)
 
