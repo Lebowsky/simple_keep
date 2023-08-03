@@ -177,7 +177,7 @@ def adr_doc_on_select(hash_map: HashMap):
 @HashMap()
 def adr_doc_details_on_start(hash_map: HashMap):
     screen: ui_models.AdrDocDetailsScreen = create_screen(hash_map)
-    screen._on_start()
+    screen.on_start()
 
 @HashMap()
 def adr_doc_details_on_input(hash_map: HashMap):
