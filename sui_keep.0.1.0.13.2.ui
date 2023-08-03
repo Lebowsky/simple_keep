@@ -1391,7 +1391,7 @@
                                         "width": "match_parent",
                                         "weight": "0",
                                         "type": "LinearLayout",
-                                        "Variable": "",
+                                        "Variable": "fact_qtty_input",
                                         "Value": "",
                                         "Elements": [
                                             {
@@ -5789,7 +5789,7 @@
                                         "TextColor": "",
                                         "TextBold": false,
                                         "TextItalic": false,
-                                        "BackgroundColor": "",
+                                        "BackgroundColor": "#FFFFFF",
                                         "StrokeWidth": "",
                                         "Padding": "",
                                         "orientation": "",

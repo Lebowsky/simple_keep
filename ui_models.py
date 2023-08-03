@@ -1725,12 +1725,13 @@ class AdrDocDetailsScreen(DocDetailsScreen):
             if res == None:
                 self.hash_map.put('scanned_barcode', barcode)
                 # suClass.urovo_set_lock_trigger(True)
+                self.hash_map.playsound('error')
                 self.hash_map.put('ShowScreen', 'Ошибка сканера')
                 # hashMap.put('toast',
                 #             'Штрих код не зарегистрирован в базе данных. Проверьте товар или выполните обмен данными')
             elif res['Error']:
+                self.hash_map.playsound('warning')
                 if res['Error'] == 'AlreadyScanned':
-
                     self.hash_map.put('barcode', json.dumps({'barcode': res['Barcode'], 'doc_info': res['doc_info']}))
                     self.hash_map.put('ShowScreen', 'Удаление штрихкода')
                 elif res['Error'] == 'QuantityPlanReached':
@@ -2481,7 +2482,6 @@ class GoodsListScreen(Screen):
             if values:
                 item_id = values[0]['id_good']
                 item_values = self.service.get_goods_list_data(item_id=item_id)[0]
-                self.toast(item_values)
                 self.hash_map.put("selected_good_id", item_id)
                 self.hash_map.put("good_name", item_values['name'])
                 self.hash_map.put("good_art", item_values['art'] if item_values['art'] else "—")
@@ -2942,10 +2942,9 @@ class HttpSettingsScreen(Screen):
                 self.toast('Соединение установлено')
                 self.hash_map.playsound('success')
 
-
-
         else:
             self.toast("Не указаны настройки HTTP подключения к серверу")
+            self.hash_map.playsound('error')
 
     def _save_settings(self):
         self.rs_settings.put('URL', self.hash_map['url'], True)
