@@ -2088,13 +2088,13 @@ class AdrDocDetailsScreen(DocDetailsScreen):
                 cards.customcards['cardsdata'].append(product_row)
 
 
-class FlowDocDetailsScreen(Screen):
+class FlowDocDetailsScreen(DocDetailsScreen):
     screen_name = 'ПотокШтрихкодовДокумента'
     process_name = 'Сбор ШК'
 
     def __init__(self, hash_map: HashMap, rs_settings):
         super().__init__(hash_map, rs_settings)
-        self.service = db_services.FlowDocService()
+        self.service = db_services.FlowDocService(self.id_doc)
 
     def show(self, args=None):
         self.hash_map.show_screen(self.screen_name, args)
@@ -2157,60 +2157,12 @@ class FlowDocDetailsScreen(Screen):
         falseValueList = (0, '0', 'false', 'False', None)
         # Формируем таблицу карточек и запрос к базе
 
-        doc_detail_list = {"customcards": {
-            "options": {
-                "search_enabled": True,
-                "save_position": True
-            },
-            "layout": {
-                "type": "LinearLayout",
-                "orientation": "vertical",
-                "height": "match_parent",
-                "width": "match_parent",
-                "weight": "0",
-                "Elements": [
-                    {
-                        "type": "LinearLayout",
-                        "orientation": "horizontal",
-                        "height": "match_parent",
-                        "width": "match_parent",
-                        "weight": "0",
-                        "Elements": [
-                            {
-                                "type": "TextView",
-                                "TextBold": True,
-                                "show_by_condition": "",
-                                "Value": "@barcode",
-                                "TextSize": self.rs_settings.get('GoodsCardTitleTextSize'),
-                                "NoRefresh": False,
-                                "document_type": "",
-                                "mask": "",
-                                "weight": "1",
-                                "Variable": ""
-                            }
-                        ]
-                    }
-                ]
-            }
-        }
-        }
+        doc_details = self.service.get_flow_table_data()
+        table_data = self._prepare_table_data(doc_details)
+        table_view = self._get_doc_table_view(table_data=table_data)
 
-        doc_detail_list['customcards']['cardsdata'] = []
-        query_text = 'Select * from RS_barc_flow WHere id_doc =?'
-        results = ui_global.get_query_result(query_text, (id_doc,), True)
-
-        if results:
+        if doc_details:
             # hashMap.put('id_doc', str(results[0]['id_doc']))
-            for record in results:
-                pic = '#f00c'
-
-                product_row = {
-                    'key': str(record['barcode']),
-                    'barcode': str(record['barcode']),
-
-                }
-
-                doc_detail_list['customcards']['cardsdata'].append(product_row)
 
             # Признак, have_qtty_plan ЕстьПланПОКОличеству  -  Истина когда сумма колонки Qtty_plan > 0
             # Признак  have_mark_plan "ЕстьПланКОдовМаркировки – Истина, когда количество строк табл. RS_docs_barcodes с заданным id_doc и is_plan  больше нуля.
@@ -2265,7 +2217,7 @@ class FlowDocDetailsScreen(Screen):
             control = 'False'
 
         self.hash_map.put('control', control)
-        self.hash_map.put("doc_barc_flow", json.dumps(doc_detail_list))
+        self.hash_map.put("doc_barc_flow", table_view.to_json())
 
         if True in (have_qtty_plan, have_zero_plan, have_mark_plan, control):
             self.hash_map.put('toast',
@@ -2274,6 +2226,89 @@ class FlowDocDetailsScreen(Screen):
 
     def on_post_start(self):
         pass
+
+    def _get_doc_table_view(self, table_data):
+        table_view = widgets.CustomTable(
+            widgets.LinearLayout(
+                self.LinearLayout(
+                    self.TextView('Название'),
+                    weight=3
+                ),
+                self.LinearLayout(
+                    self.TextView('План'),
+                    weight=1
+                ),
+                orientation='horizontal',
+                height="match_parent",
+                width="match_parent",
+                BackgroundColor='#FFFFFF'
+            ),
+            options=widgets.Options().options,
+            tabledata=table_data
+        )
+
+        return table_view
+
+    def _get_doc_table_row_view(self):
+        row_view = widgets.LinearLayout(
+            widgets.LinearLayout(
+                widgets.LinearLayout(
+                    widgets.LinearLayout(
+                        self.TextView('@barcode'),
+                        widgets.TextView(
+                            Value='@name',
+                            TextSize=15,
+                            width='match_parent'
+                        ),
+                        width='match_parent',
+                    ),
+                    width='match_parent',
+                    orientation='horizontal',
+                    StrokeWidth=1
+                ),
+                width='match_parent',
+                weight=3,
+                StrokeWidth=1
+            ),
+            widgets.LinearLayout(
+                widgets.TextView(
+                    Value='@qtty',
+                    TextSize=15,
+                    width='match_parent'
+                ),
+                width='match_parent',
+                height='match_parent',
+                weight=1,
+                StrokeWidth=1
+            ),
+            orientation='horizontal',
+            width='match_parent',
+            BackgroundColor='#FFFFFF'
+        )
+
+        return row_view
+
+    def _prepare_table_data(self, doc_details):
+
+        table_data = [{}]
+
+        for record in doc_details:
+
+            product_row = {'key': str(record['barcode']), 'barcode': str(record['barcode']),
+                           'name': record['name'] if record['name'] is not None else '-нет данных-', 'qtty': str(record['qtty']),
+                           '_layout': self._get_doc_table_row_view()}
+
+            product_row['_layout'].BackgroundColor = '#FFFFFF' if record['name'] is not None else "#FBE9E7"
+
+            if self._added_goods_has_key(product_row['key']):
+                table_data.insert(1, product_row)
+            else:
+                table_data.append(product_row)
+
+            #table_data.append(product_row)
+
+        return table_data
+
 
 # ^^^^^^^^^^^^^^^^^^^^^ DocDetails ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
