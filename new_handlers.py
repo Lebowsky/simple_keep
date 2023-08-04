@@ -324,8 +324,8 @@ def sound_settings_on_start(hash_map):
     screen = ui_models.SoundSettings(hash_map, rs_settings)
     screen.on_start()
 
-    screen = ui_models.SelectGoodsType(hash_map, rs_settings)
-    screen.on_input()
+    # screen = ui_models.SelectGoodsType(hash_map, rs_settings)
+    # screen.on_input()
 
 
 @HashMap()
@@ -335,3 +335,18 @@ def sound_settings_listener(hash_map):
 
 
 # ^^^^^^^^^^^^^^^^^ Settings ^^^^^^^^^^^^^^^^^
+
+# =============== Html =================
+
+@HashMap()
+def html_view_on_start(hash_map):
+    screen = ui_models.HtmlView(hash_map, rs_settings)
+    screen.on_start()
+
+
+@HashMap()
+def html_view_on_input(hash_map):
+    screen = ui_models.HtmlView(hash_map, rs_settings)
+    screen.on_input()
+
+# ^^^^^^^^^^^^^^^^^ Html ^^^^^^^^^^^^^^^^^

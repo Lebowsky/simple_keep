@@ -797,7 +797,30 @@ class FlowDocService(DocService):
 
         return self._get_query_result(query_text, (self.doc_id,), True)
 
+    def get_data_for_ticket_printing(self, barcode):
+        query_text = '''WITH temp_q as (SELECT
+                        RS_barc_flow.barcode,
+                        RS_barcodes.id_good as id_good,
+                        RS_barcodes.id_property as id_property,
+                        1 as qtty
 
+                        FROM RS_barc_flow
+                        LEFT JOIN RS_barcodes
+                            ON RS_barcodes.barcode = RS_barc_flow.barcode
+                        WHERE RS_barc_flow.id_doc=? AND RS_barc_flow.barcode = ?)
+
+                        SELECT temp_q.barcode, temp_q.id_good, temp_q.id_property,
+                        RS_goods.name as name, 
+                        RS_properties.name as Prop_name,
+                        sum(qtty) as qtty
+                        FROM temp_q
+                        LEFT JOIN RS_goods
+                          ON RS_goods.id = temp_q.id_good
+                      LEFT JOIN RS_properties
+                      ON RS_properties.id = temp_q.id_property    
+                      GROUP BY temp_q.barcode
+                      '''
+        return self._get_query_result(query_text, (self.doc_id, barcode), True)
 
 class GoodsService:
     def __init__(self, item_id=''):

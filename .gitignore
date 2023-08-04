@@ -1,5 +1,6 @@
 /java.py
 /OldModules
+/New_features
 _tests
 venv
 .idea
@@ -30,4 +31,4 @@ Database_copy.py
 /HashMap.json
 /main_local.py
 /rightscan5.db-journal
-/Reklama.html
+

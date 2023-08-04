@@ -5,6 +5,7 @@ import os
 
 import db_services
 import hs_services
+import printing_factory
 from ui_utils import HashMap, RsDoc, BarcodeWorker, get_ip_address
 from db_services import DocService, ErrorService, GoodsService, AdrDocService
 from hs_services import HsService
@@ -75,6 +76,55 @@ class Screen(ABC):
     def put_notification(self, text, title=None):
         self.hash_map.notification(text, title)
 
+
+# ==================== Pritnting screens =============================
+class HtmlView(Screen):
+    import printing_factory
+    screen_name = 'Результат'
+    process_name = 'Печать'
+
+    def __init__(self, hash_map: HashMap, rs_settings):
+        super.__init__(hash_map, rs_settings)
+        self.params = json.load(self.hash_map.get('print_parameters'))
+
+
+    def on_start(self,):
+        params = json.load(self.hash_map.get('print_parameters'))
+        if params:
+            #Если есть конкретный шаблон, ищем его в локальных файлах
+            if params.get('template'):
+                pass
+            else:
+                params['template'] = self.get_template_by_default()
+
+            self.hash_map.put('html', printing_factory.HTMLDocument(params['template']).create_html(params))
+            self.hash_map.put("PrintPreview", self.hash_map.get('html'))
+        else:
+            self.hash_map.finish_process_result()
+
+    def on_input(self):
+        super().on_input()
+        if self.listener == 'ON_BACK_PRESSED':
+            self.hash_map.finish_process_result()
+        elif self.listener == 'print':
+            self.hash_map.put("PrintPreview", self.hash_map.get('html'))
+
+
+
+    @staticmethod
+    def get_template_by_default():
+        file_name  = suClass.get_stored_file("Шаблон.htm")
+        return file_name
+
+    @staticmethod
+    def show_screen(hash_map, data_for_printing):
+        if data_for_printing:
+            hash_map.put('print_parameters', json.dumps(data_for_printing))
+        #if self.params:
+            hash_map.show_process_result('Печать','Результат')
+
+
+# ^^^^^^^^^^^^^^^^^^^^^ Pritnting screens ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 # ==================== Tiles =============================
 
@@ -2077,7 +2127,13 @@ class FlowDocDetailsScreen(DocDetailsScreen):
 
         listener = self.hash_map.get('listener')
         if listener == "CardsClick":
-            pass
+            current_str = self.hash_map.get("selected_card_position")
+            jlist = json.loads(self.hash_map.get("doc_barc_flow"))
+            current_elem = jlist['customtable']['tabledata'][int(current_str)]
+            data_dict = {'barcode': current_elem['barcode'],
+                           'Наименование': current_elem['name'],
+                           'qtty': current_elem['qtty']}
+            HtmlView.show_screen(self.hash_map, data_for_printing = data_dict)
 
         elif listener == "BACK_BUTTON":
             self.hash_map.finish_process()
@@ -3528,7 +3584,7 @@ class MainEvents:
 # ^^^^^^^^^^^^^^^^^^^^^ Main events ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 class ScreensFactory:
-    screens = [
+    screens = [HtmlView,
         AdrDocsListScreen,
         AdrDocDetailsScreen,
         FlowTilesScreen,
@@ -3586,3 +3642,5 @@ class MockScreen(Screen):
 
     def show(self, args=None):
         pass
+
+
