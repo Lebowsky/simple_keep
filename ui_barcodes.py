@@ -16,8 +16,8 @@ def parse_barcode(barcode):
 
         elif len(barcode) == 29:  # Это датаматрикс Табак, Пачка
             # res = parse_tobacco(barcode)
-            res = {'SCHEME': 'GS1', 'GTIN': barcode[0:14], 'SERIAL': barcode[14:21], 'MRC': barcode[21:25],
-                   'CHECK': barcode[25:29]}
+            res = {'SCHEME': 'GS1', 'GTIN': barcode[1:14], 'SERIAL': barcode[14:21], 'MRC': barcode[21:25],
+                   'CHECK': barcode[25:29], 'FullCode': barcode}
 
         elif chr(29) in barcode:  # Datamatrix
 

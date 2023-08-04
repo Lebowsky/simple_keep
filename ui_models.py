@@ -1129,7 +1129,7 @@ class DocDetailsScreen(Screen):
             product_row['good_info'] = ''.join(props)
 
             for key in ['qtty', 'd_qtty', 'qtty_plan']:
-                value = self._format_to_float(str(record.get(key, 0.0)))
+                value = self._format_to_float(str(record.get(key, 0.0) or 0.0))
                 product_row[key] = str(int(value)) if value.is_integer() else value
 
             product_row['_layout'] = self._get_doc_table_row_view()
