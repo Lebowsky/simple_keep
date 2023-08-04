@@ -99,8 +99,23 @@ class HsService:
         self.http_answer = self._create_http_answer(answer)
         return answer
 
-    def get_balances_goods(self, warehouses=False, cells=False):
-        pass
+    def get_balances_goods(self, id_warehouse=False, id_cell=False, id_good=False, **kwargs):
+        self._method = requests.get
+        params = {}
+        if id_good:
+            params['id_good'] = id_good
+        if id_cell:
+            self._hs = 'good_balances/cells'
+            params['id_cell'] = id_cell
+        else:
+            self._hs = 'good_balances/warehouses'
+            if id_warehouse:
+                params['id_warehouse'] = id_warehouse
+        self.params = params
+        answer = self._send_request(kwargs)
+        self.http_answer = self._create_http_answer(answer)
+        return answer
+
 
     def get_prices_goods(self):
         pass

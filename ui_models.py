@@ -1536,6 +1536,7 @@ class DocumentsDocDetailScreen(DocDetailsScreen):
                 self.service.update_rs_docs_table_sent_status(res.get('key'))
                 self.service.set_doc_status_to_upload(id_doc)
 
+            self.hash_map.put('scan_error', res['Error'])
             super().scan_error_sound()
 
         elif listener == 'btn_barcodes':
@@ -1727,7 +1728,7 @@ class AdrDocDetailsScreen(DocDetailsScreen):
                 # suClass.urovo_set_lock_trigger(True)
                 self.hash_map.playsound('error')
                 self.hash_map.put('ShowScreen', 'Ошибка сканера')
-                # hashMap.put('toast',
+                # self.hash_map.put('toast',
                 #             'Штрих код не зарегистрирован в базе данных. Проверьте товар или выполните обмен данными')
             elif res['Error']:
                 self.hash_map.playsound('warning')
@@ -1856,26 +1857,26 @@ class AdrDocDetailsScreen(DocDetailsScreen):
     def _fill_one_string_screen(self, _filter=''):
         hashMap = self.hash_map
         # Находим ID документа
-        current_str = hashMap.get("selected_card_position")
-        jlist = json.loads(hashMap.get("doc_goods_table"))
+        current_str = self.hash_map.get("selected_card_position")
+        jlist = json.loads(self.hash_map.get("doc_goods_table"))
         current_elem = jlist['customtable']['tabledata'][int(current_str)]
-        hashMap.put("Doc_data",
-                    hashMap.get('doc_type') + ' №' + hashMap.get('doc_n') +
-                    ' от' + hashMap.get('doc_date'))
-        hashMap.put("current_cell_name", 'Ячейка: ' + current_elem['cell'])
-        hashMap.put('id_cell', current_elem['id_cell'])
-        hashMap.put("Good", current_elem['good_name'])
-        hashMap.put("qtty_plan", str(current_elem['qtty_plan']))
+        self.hash_map.put("Doc_data",
+                    self.hash_map.get('doc_type') + ' №' + self.hash_map.get('doc_n') +
+                    ' от' + self.hash_map.get('doc_date'))
+        self.hash_map.put("current_cell_name", 'Ячейка: ' + current_elem['cell'])
+        self.hash_map.put('id_cell', current_elem['id_cell'])
+        self.hash_map.put("Good", current_elem['good_name'])
+        self.hash_map.put("qtty_plan", str(current_elem['qtty_plan']))
         if not current_elem['qtty']:  # or float(current_elem['qtty']) == 0:
-            hashMap.put("qtty", '')
+            self.hash_map.put("qtty", '')
         else:
             if float(current_elem['qtty']) == 0:
-                hashMap.put("qtty", '')
+                self.hash_map.put("qtty", '')
             else:
-                hashMap.put("qtty", str(current_elem['qtty']))
-        hashMap.put('key', current_elem['key'])
+                self.hash_map.put("qtty", str(current_elem['qtty']))
+        self.hash_map.put('key', current_elem['key'])
 
-        hashMap.put("ShowScreen", "Товар выбор")
+        self.hash_map.put("ShowScreen", "Товар выбор")
 
     def _prepare_table_data(self, doc_details):
         # TODO добавить группировку по ячейкам
@@ -2051,7 +2052,7 @@ class AdrDocDetailsScreen(DocDetailsScreen):
                     orientation="horizontal"), orientation="vertical"), options=widgets.Options())
 
         if results:
-            hashMap.put('id_doc', str(results[0]['id_doc']))
+            self.hash_map.put('id_doc', str(results[0]['id_doc']))
             current_cell = ''
             for record in results:
                 if self.row_filter and record['qtty'] == record['qtty_plan']:
@@ -2201,7 +2202,7 @@ class FlowDocDetailsScreen(Screen):
         results = ui_global.get_query_result(query_text, (id_doc,), True)
 
         if results:
-            # hashMap.put('id_doc', str(results[0]['id_doc']))
+            # self.hash_map.put('id_doc', str(results[0]['id_doc']))
             for record in results:
                 pic = '#f00c'
 
@@ -2419,7 +2420,6 @@ class GoodsListScreen(Screen):
         self.hash_map.show_screen(self.screen_name, args)
 
     def _get_goods_list_data(self, selected_good_type=None) -> list:
-
         results = self.service.get_goods_list_data(selected_good_type)
         cards_data = []
         for record in results:
@@ -2491,6 +2491,7 @@ class GoodsListScreen(Screen):
                 self.hash_map.show_screen('Карточка товара')
             else:
                 self.toast('Товар не распознан по штрихкоду')
+                self.hash_map.playsound('error')
 
 
 class SelectGoodsType(Screen):
@@ -2570,7 +2571,9 @@ class ItemCard(Screen):
         self.service = GoodsService()
 
     def on_start(self):
-        self.hash_map.put("Show_buttons", "-1")  # Пока спрятали переход к процессам "остатки" и "цены"
+
+        # self.hash_map.put("Show_buttons", "-1")  # Пока спрятали переход к процессам "остатки" и "цены"
+        self.hash_map.remove('return_selected_data')
         card_data = self.hash_map.get("selected_card_data", from_json=True)
         if not self.hash_map.get('barcode'):
             self.hash_map.put("selected_good_id", card_data['key'])
@@ -2586,6 +2589,20 @@ class ItemCard(Screen):
             if self.hash_map.get('barcode_cards'):
                 self.hash_map.put('barcode_cards', '')
             self.hash_map.put("BackScreen", "")
+        if self.hash_map.get('listener') == 'to_prices':
+            self.hash_map.put('input_good_id', self.hash_map.get('selected_good_id'))
+            self.hash_map.put('input_good_art', self.hash_map.get('good_art'))
+            self.hash_map.put('prices_object_name', self.hash_map.get('good_name') + ", " + self.hash_map.get('good_code'))
+            self.hash_map.put("return_to_item_card", "true")
+            self.hash_map.put('property_id', self.hash_map.get('property_id'))
+            self.hash_map.put('ShowProcessResult', 'Цены|Проверка цен')
+            self.hash_map.put("noRefresh", '')
+        if self.hash_map.get('listener') == 'to_balances':
+            self.hash_map.put("return_to_item_card", "true")
+            # self.hash_map.put("noRefresh", '')
+            self.hash_map.put('ShowProcessResult', 'Остатки|Проверить остатки')
+        if listener == "CardsClick":
+            pass
 
     def on_post_start(self):
         selected_good_id = self.hash_map.get("selected_good_id")
@@ -2676,6 +2693,295 @@ class ItemCard(Screen):
 
 
 # ^^^^^^^^^^^^^^^^^^^^^ Goods(Process) ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+# ==================== GoodsBalances =============================
+
+class GoodsBalancesItemCard(Screen):
+    screen_name = 'Проверить остатки'
+    process_name = 'Остатки'
+
+    def __init__(self, hash_map, rs_settings):
+        super().__init__(hash_map, rs_settings)
+        self.service = GoodsService()
+        self.hs_service = hs_services.HsService(self.get_http_settings())
+
+    def on_start(self):
+        self._set_visibility_on_start(['error_msg'])
+        if self.hash_map.get('return_to_item_card'):
+            self.hash_map.put('input_item_id', self.hash_map.get('selected_good_id'))
+            self.hash_map.put('item_art_input', self.hash_map.get('good_art'))
+            self.hash_map.put('selected_object_name',
+                              f'{self.hash_map.get("good_name")}, {self.hash_map.get("good_code")}')
+            self.hash_map.put('object_name', self.hash_map.get('good_name'))
+            self.hash_map.put('property_id', self.hash_map.get('property_id'))
+
+    def on_input(self):
+
+        listener = self.listener
+
+        if listener == 'wh_select':
+            self.hash_map.show_screen('Выбор склада')
+        if listener == 'get_balance_btn':
+            self._get_balances()
+        if listener == 'barcode':
+            self._dentify_barcode_balances()
+        if listener == 'ON_BACK_PRESSED':
+            self._reset_balances_tables()
+            if self.hash_map.get('return_to_item_card'):
+                self.hash_map.put('noRefresh', '')
+                self.hash_map.put("FinishProcessResult", "")
+            else:
+                self.hash_map.put("FinishProcess", "")
+        if listener == 'test_btn':
+            self._get_balances()
+
+    def on_post_start(self):
+        pass
+
+    def show(self, args=None):
+        pass
+
+    def _get_balances(self):
+        # http = get_http_settings(hashMap)
+
+        self.validate_input()
+
+        # answer = self.hs_service.get_balances_goods(id_good=self.hash_map.get('selected_good_id'))
+        # self.toast(answer)
+
+        answer = self.hs_service.get_balances_goods(id_good=self.hash_map.get('selected_good_id'))
+        self.toast(answer.text)
+
+
+
+
+
+        # if self.hash_map.get('selected_cell_id'):
+        #
+        #     get_remains_url = http['url'] + '/simple_accounting/good_balances/cells?'
+        #
+        #     params = {'android_id': http['android_id'], 'id_cell': self.hash_map.get('selected_cell_id')}
+        #
+        #     goods_custom_table = ui_form_data2.goods_custom_table_cell
+        #
+        #     tbody_layout = ui_form_data2.tbody_remains_layout_cell
+        #
+        #     self.hash_map.put('selected_cell_name', self.hash_map.get('cell_input'))
+        #     self.hash_map.put('Show_selected_cell_name', '1')
+        #     self.hash_map.put('Show_selected_wh_name', '-1')
+        #
+        #     if self.hash_map.get('selected_good_id'):
+        #         params['id_good'] = self.hash_map.get('selected_good_id')
+        #         self.hash_map.put('selected_object_name',
+        #                           self.hash_map.get('object_name') + ", " + self.hash_map.get('good_code'))
+        #         self.hash_map.put('Show_selected_object_name', '1')
+        #     else:
+        #         self.hash_map.put('Show_selected_object_name', '-1')
+        #
+        #     if self.hash_map.get('barcode_info'):
+        #         self.hash_map.put('Show_barcode_info', '1')
+        #     else:
+        #         self.hash_map.put('Show_barcode_info', '-1')
+        #
+        #     self.hash_map.put('Show_selected_cell_name', '1')
+        #
+        #     r = requests.get(get_remains_url,
+        #                      auth=HTTPBasicAuth(http['user'], http['pass']),
+        #                      headers={'Content-Type': 'application/x-www-form-urlencoded; charset=utf-8'},
+        #                      params=params)
+        #
+        #     json_response = json.loads(r.text.encode("utf-8"))
+        #
+        #     values = 0
+        #     for element in json_response:
+        #         if element["id_property"]:
+        #             values += 1
+        #
+        #     if values == 0:
+        #         goods_custom_table['customtable']['layout']['Elements'].pop(3)
+        #         tbody_layout['Elements'].pop(3)
+        #
+        #     if self.hash_map.get('selected_good_id'):
+        #         goods_custom_table['customtable']['layout']['Elements'].pop(1)
+        #         tbody_layout['Elements'].pop(1)
+        #
+        #     goods_custom_table['customtable']['layout']['Elements'].pop(0)
+        #     tbody_layout['Elements'].pop(0)
+        #
+        #     goods_custom_table["customtable"]["tabledata"] = [{}]
+        #
+        #     i = 0
+        #     for element in json_response:
+        #
+        #         c = {"key": str(i), "item": get_name_by_id("RS_goods", element["id_good"]),
+        #              "quantity": element['qtty'], '_layout': tbody_layout,
+        #              'cell': get_name_by_id("RS_cells", element["id_cell"])}
+        #
+        #         if element["id_property"] is None:
+        #             c['properties'] = ''
+        #         else:
+        #             c['properties'] = get_name_by_field("RS_properties", 'id', element["id_property"])
+        #         if self.hash_map.get('property_id'):
+        #             if element["id_property"] == self.hash_map.get('property_id'):
+        #                 goods_custom_table["customtable"]["tabledata"].append(c)
+        #                 i += 1
+        #         else:
+        #             goods_custom_table["customtable"]["tabledata"].append(c)
+        #             i += 1
+        #
+        # else:
+        #
+        #     if self.hash_map.get('selected_good_id') or self.hash_map.get('selected_warehouse_id'):
+        #
+        #         get_remains_url = http['url'] + '/simple_accounting/good_balances/warehouses?'
+        #
+        #         params = {'android_id': http['android_id']}
+        #
+        #         goods_custom_table = ui_form_data2.goods_custom_table_wh
+        #
+        #         tbody_layout = ui_form_data2.tbody_remains_layout_wh
+        #
+        #         if self.hash_map.get('selected_good_id'):
+        #             params['id_good'] = self.hash_map.get('selected_good_id')
+        #             self.hash_map.put('selected_object_name',
+        #                               self.hash_map.get('object_name') + ", " + self.hash_map.get('good_code'))
+        #             self.hash_map.put('Show_selected_object_name', '1')
+        #         else:
+        #             self.hash_map.put('Show_selected_object_name', '-1')
+        #
+        #         if self.hash_map.get('selected_warehouse_id'):
+        #             params['id_warehouse'] = self.hash_map.get('selected_warehouse_id')
+        #             self.hash_map.put('selected_wh_name', self.hash_map.get('wh_select'))
+        #             self.hash_map.put('Show_selected_wh_name', '1')
+        #         else:
+        #             self.hash_map.put('Show_selected_wh_name', '-1')
+        #
+        #         if self.hash_map.get('barcode_info'):
+        #             self.hash_map.put('Show_barcode_info', '1')
+        #         else:
+        #             self.hash_map.put('Show_barcode_info', '-1')
+        #
+        #         self.hash_map.put('Show_selected_cell_name', '-1')
+        #
+        #         r = requests.get(get_remains_url,
+        #                          auth=HTTPBasicAuth(http['user'], http['pass']),
+        #                          headers={'Content-Type': 'application/x-www-form-urlencoded; charset=utf-8'},
+        #                          params=params)
+        #
+        #         json_response = json.loads(r.text.encode("utf-8"))
+        #
+        #         values = 0
+        #         for element in json_response:
+        #             if element["id_property"]:
+        #                 values += 1
+        #
+        #         if values == 0:
+        #             goods_custom_table['customtable']['layout']['Elements'].pop(3)
+        #             tbody_layout['Elements'].pop(3)
+        #
+        #         if self.hash_map.get('selected_good_id'):
+        #             goods_custom_table['customtable']['layout']['Elements'].pop(1)
+        #             tbody_layout['Elements'].pop(1)
+        #
+        #         if self.hash_map.get('selected_warehouse_id'):
+        #             goods_custom_table['customtable']['layout']['Elements'].pop(0)
+        #             tbody_layout['Elements'].pop(0)
+        #
+        #         goods_custom_table["customtable"]["tabledata"] = [{}]
+        #
+        #         i = 0
+        #
+        #         for element in json_response:
+        #
+        #             c = {"key": str(i), "item": get_name_by_id("RS_goods", element["id_good"]),
+        #                  "quantity": element['qtty'], '_layout': tbody_layout,
+        #                  'warehouse': get_name_by_id("RS_warehouses", element["id_warehouse"])}
+        #
+        #             if element["id_property"] is None:
+        #                 c['properties'] = ''
+        #             else:
+        #                 c['properties'] = get_name_by_field("RS_properties", 'id', element["id_property"])
+        #             if self.hash_map.get('property_id'):
+        #                 if element["id_property"] == self.hash_map.get('property_id'):
+        #                     goods_custom_table["customtable"]["tabledata"].append(c)
+        #                     i += 1
+        #             else:
+        #                 goods_custom_table["customtable"]["tabledata"].append(c)
+        #                 i += 1
+        #
+        # self.hash_map.put('barcode', '')
+        #
+        # if len(goods_custom_table["customtable"]["tabledata"]) < 2:
+        #     self.hash_map.put('error_msg', "Товар не найден")
+        #     self.hash_map.put('Show_error_msg', '1')
+        #
+        # self.hash_map.put("goods_custom_table", json.dumps(goods_custom_table))
+        #
+        # self.hash_map.put("ShowScreen", "Таблица остатков")
+
+    def validate_input(self):
+        if self.hash_map.get('item_art_input'):
+            self._process_input_item_art(self.hash_map.get('item_art_input'))
+        if self.hash_map.get('cell_input'):
+            self._process_input_cell(self.hash_map.get('cell_input'))
+        if not (self.hash_map.get('item_art_input') or self.hash_map.get('cell_input') or self.hash_map.get('wh_select')
+                or self.hash_map.get('selected_cell_id')):
+            self.hash_map.put('goods_custom_table', '')
+            self.hash_map.put('object_name', '')
+            self.hash_map.put('cell_name', '')
+            self.hash_map.put('error_msg', "Должен быть выбран склад, товар или ячейка")
+
+    def _process_input_item_art(self, item_art_input):
+        if not self.hash_map.get('return_to_item_card'):
+            item_values_result = self.service.get_values_by_field(table_name='RS_goods', field='art',
+                                                                  field_value=item_art_input)
+            if item_values_result:
+                self.hash_map.put('object_name', item_values_result[0]['name'])
+                self.hash_map.put('selected_good_id', item_values_result[0]['id'])
+                self.hash_map.put('good_code', item_values_result[0]['code'])
+                self.hash_map.put('error_msg', "")
+                # self.hash_map.put('item_art_input', self.hash_map.get('item_art_input'))
+            else:
+                self.hash_map.put('error_msg', " Товар с артикулом " + "'" + item_art_input + "'" + " не найден")
+
+    def _process_input_cell(self, cell_input):
+        cell_values_result = self.service.get_values_by_field(table_name='RS_cells', field='name',
+                                                              field_value=cell_input)
+        if len(cell_values_result) > 0:
+            self.hash_map.put('selected_cell_id', cell_values_result[0]['id'])
+            self.hash_map.put('cell_name', cell_input)
+
+        else:
+            if self.hash_map.get('error_msg'):
+                self.hash_map.put('error_msg', self.hash_map.get('error_msg') + "\n" + " Ячейка c именем " + "'" +
+                                  cell_input + "'" + " не найдена")
+            else:
+                self.hash_map.put('error_msg', " Ячейка c именем " + "'" + cell_input + "'" + " не найдена")
+
+    @staticmethod
+    def _reset_balances_tables():
+        hashMap.put('wh_select', '')
+        hashMap.put('good_art_input', '')
+        hashMap.put('cell_input', '')
+        hashMap.put('cell_name', '')
+        hashMap.put('object_name', '')
+        hashMap.put('error_msg', '')
+        hashMap.put('goods_custom_table', '')
+        hashMap.put('barcode', '')
+        hashMap.put('selected_cell_id', '')
+        hashMap.put('good_code', '')
+        hashMap.put('selected_object_name', '')
+        hashMap.put('selected_wh_name', '')
+        hashMap.put('selected_warehouse_id', '')
+        hashMap.put('barcode_info', '')
+
+    def _set_visibility_on_start(self, elements):
+        for v in elements:
+            name = f'Show_{v}'
+            self.hash_map[name] = '1' if self.hash_map[v] else '-1'
+
+
+# ^^^^^^^^^^^^^^^^^^^^^ GoodsBalances ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 
 # ==================== Settings =============================
@@ -3546,6 +3852,7 @@ class ScreensFactory:
         FontSizeSettingsScreen,
         BarcodeTestScreen,
         SoundSettings,
+        GoodsBalancesItemCard
     ]
 
     @staticmethod

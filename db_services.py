@@ -75,6 +75,7 @@ class TimerService(DbService):
 
         return loaded_documents
 
+
 class BarcodeService(DbService):
     def __init__(self):
         super().__init__()
@@ -94,7 +95,6 @@ class BarcodeService(DbService):
             WHERE id_doc = ? AND barcode = ?
         '''
         return self.provider.sql_query(q, ','.join([doc_id, barcode]))
-
 
 
 class DocService:
@@ -688,6 +688,7 @@ class AdrDocService(DocService):
 
         return {'result': True, 'error': ''}
 
+
 class FlowDocService(DocService):
 
     def __init__(self, doc_id=''):
@@ -765,13 +766,11 @@ class FlowDocService(DocService):
         return result
 
 
-class GoodsService:
+class GoodsService(DbService):
     def __init__(self, item_id=''):
+        super().__init__()
         self.item_id = item_id
-
-    def get_type_name_by_id(self, id):
-        query_text = f"SELECT name FROM RS_types_goods WHERE id ='{id}'"
-        return self._get_query_result(query_text, return_dict=True)
+        self.provider = SqlQueryProvider(table_name="RS_goods", sql_class=sqlClass())
 
     def get_goods_list_data(self, goods_type='', item_id='') -> list:
         query_text = f"""
@@ -801,20 +800,19 @@ class GoodsService:
                 '''
 
         if goods_type:
-            args = (goods_type,)
+            args = goods_type
         elif item_id:
-            args = (item_id,)
+            args = item_id
         else:
             args = None
 
-        # args = (goods_type,) if goods_type else None
-
-        result = self._get_query_result(query_text, args, return_dict=True)
+        result = self._sql_query(query_text, args)
         return result
 
     def get_all_goods_types_data(self):
-        query_text_all_types = 'SELECT id,name FROM RS_types_goods'
-        return self._get_query_result(query_text_all_types, return_dict=True)
+        query_text = 'SELECT id,name FROM RS_types_goods'
+        self.provider.table_name = 'RS_types_goods'
+        return self._sql_query(query_text, '')
 
     def get_values_from_barcode(self, identify_field: str, identify_value: str) -> list:
         query_text = f"""
@@ -837,15 +835,11 @@ class GoodsService:
                     WHERE {identify_field} = '{identify_value}'
                     """
 
-        return self._get_query_result(query_text, return_dict=True)
+        return self._sql_query(query_text, '')
 
-    def get_name_by_field(self, table_name, field, field_value):
-        query_text = f"SELECT name FROM {table_name} WHERE {field} = '{field_value}'"
-        return self._get_query_result(query_text, return_dict=True)[0]['name']
-
-    @staticmethod
-    def _get_query_result(query_text, args=None, return_dict=False):
-        return get_query_result(query_text, args=args, return_dict=return_dict)
+    def get_values_by_field(self, table_name, field, field_value):
+        self.provider.table_name = table_name
+        return self.provider.select({field: field_value})
 
 
 class DbCreator:

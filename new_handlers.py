@@ -262,6 +262,21 @@ def good_card_on_input(hash_map):
 
 # ^^^^^^^^^^^^^^^^^ Goods ^^^^^^^^^^^^^^^^^
 
+# ==================== GoodsBalances =============================
+
+@HashMap()
+def remains_on_start(hash_map):
+    screen: ui_models.GoodsBalancesItemCard = create_screen(hash_map)
+    screen.on_start()
+
+@HashMap()
+def remains_on_input(hash_map):
+    screen = ui_models.GoodsBalancesItemCard(hash_map, rs_settings)
+    screen.on_input()
+
+# ^^^^^^^^^^^^^^^^^^^^^ GoodsBalances ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+
 
 # =============== Settings =================
 
