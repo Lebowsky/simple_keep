@@ -1,14 +1,15 @@
 from bs4 import BeautifulSoup
 import barcode
 from barcode.writer import ImageWriter
-from jinja2 import Environment, FileSystemLoader, select_autoescape
+from jinja2 import Environment, FileSystemLoader, select_autoescape, PackageLoader
 import base64
 from io import BytesIO
 
 class HTMLDocument:
 
-    def __init__(self, template_path):
-        self.template_path = template_path
+    def __init__(self, template_file, template_directory):
+        self.template_directory = template_directory
+        self.template_file = template_file
 
 
     def generate_barcode(self, data):
@@ -18,11 +19,9 @@ class HTMLDocument:
         ean.write(barcode_image)
         return base64.b64encode(barcode_image.getvalue()).decode()
 
-
     def create_html(self, parameters):
-
         env = Environment(
-            loader=FileSystemLoader(self.template_dir),
+            loader=FileSystemLoader(self.template_directory),
             autoescape=select_autoescape(['html', 'xml']),
             variable_start_string='[',
             variable_end_string=']',

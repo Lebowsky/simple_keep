@@ -84,20 +84,20 @@ class HtmlView(Screen):
     process_name = 'Печать'
 
     def __init__(self, hash_map: HashMap, rs_settings):
-        super.__init__(hash_map, rs_settings)
-        self.params = json.load(self.hash_map.get('print_parameters'))
+        super().__init__(hash_map, rs_settings)
+        self.params = json.loads(self.hash_map.get('print_parameters'))
 
 
     def on_start(self,):
-        params = json.load(self.hash_map.get('print_parameters'))
-        if params:
+        #params = json.loads(self.hash_map.get('print_parameters'))
+        if self.params:
             #Если есть конкретный шаблон, ищем его в локальных файлах
-            if params.get('template'):
+            if self.params.get('template'):
                 pass
             else:
-                params['template'] = self.get_template_by_default()
+                self.params['template_folder'], self.params['template']  = self.get_template_by_default()
 
-            self.hash_map.put('html', printing_factory.HTMLDocument(params['template']).create_html(params))
+            self.hash_map.put('html', printing_factory.HTMLDocument(self.params['template'], self.params['template_folder']).create_html(self.params))
             self.hash_map.put("PrintPreview", self.hash_map.get('html'))
         else:
             self.hash_map.finish_process_result()
@@ -109,12 +109,18 @@ class HtmlView(Screen):
         elif self.listener == 'print':
             self.hash_map.put("PrintPreview", self.hash_map.get('html'))
 
+    def on_post_start(self):
+        pass
 
+
+    def show(self, args=None):
+        pass
 
     @staticmethod
     def get_template_by_default():
         file_name  = suClass.get_stored_file("Шаблон.htm")
-        return file_name
+
+        return os.path.split(file_name)
 
     @staticmethod
     def show_screen(hash_map, data_for_printing):
