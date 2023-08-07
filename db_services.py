@@ -876,8 +876,9 @@ class GoodsService:
     def get_values_from_barcode(self, identify_field: str, identify_value: str) -> list:
         query_text = f"""
                     SELECT
-                    RS_barcodes.barcode,
-                    RS_barcodes.id_good,
+                    RS_barcodes.barcode as barcode,
+                    RS_goods.name as name,
+                    RS_barcodes.id_good as id_good,
                     RS_properties.name as property,
                     ifnull(RS_series.name, '') as series,
                     ifnull(RS_units.name, '') as unit
@@ -890,6 +891,8 @@ class GoodsService:
                     ON RS_units.id = RS_barcodes.id_unit
                     LEFT JOIN RS_series
                     ON RS_series.id = RS_barcodes.id_series
+                    LEFT JOIN RS_goods
+                    ON RS_goods.id = RS_barcodes.id_good
                     
                     WHERE {identify_field} = '{identify_value}'
                     """

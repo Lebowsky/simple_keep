@@ -96,9 +96,9 @@ class HtmlView(Screen):
                 pass
             else:
                 self.params['template_folder'], self.params['template']  = self.get_template_by_default()
-
-            self.hash_map.put('html', printing_factory.HTMLDocument(self.params['template'], self.params['template_folder']).create_html(self.params))
-            self.hash_map.put("PrintPreview", self.hash_map.get('html'))
+            html_doc = printing_factory.HTMLDocument(self.params['template'], self.params['template_folder']).create_html(self.params)
+            self.hash_map.put('html', html_doc)
+            self.hash_map.put("PrintPreview", html_doc)
         else:
             self.hash_map.finish_process_result()
 
@@ -106,8 +106,8 @@ class HtmlView(Screen):
         super().on_input()
         if self.listener == 'ON_BACK_PRESSED':
             self.hash_map.finish_process_result()
-        elif self.listener == 'print':
-            self.hash_map.put("PrintPreview", self.hash_map.get('html'))
+        # elif self.listener == 'print':
+        #     self.hash_map.put("PrintPreview", self.hash_map.get('html'))
 
     def on_post_start(self):
         pass
@@ -2137,8 +2137,8 @@ class FlowDocDetailsScreen(DocDetailsScreen):
             jlist = json.loads(self.hash_map.get("doc_barc_flow"))
             current_elem = jlist['customtable']['tabledata'][int(current_str)]
             data_dict = {'barcode': current_elem['barcode'],
-                           'Наименование': current_elem['name'],
-                           'qtty': current_elem['qtty']}
+                           'Номенклатура': current_elem['name'],
+                           'qtty': current_elem['qtty'], 'Характеристика':''}
             HtmlView.show_screen(self.hash_map, data_for_printing = data_dict)
 
         elif listener == "BACK_BUTTON":
@@ -2636,6 +2636,7 @@ class ItemCard(Screen):
         self.service = GoodsService()
 
     def on_start(self):
+        self.hash_map.remove('return_selected_data')
         self.hash_map.put("Show_buttons", "-1")  # Пока спрятали переход к процессам "остатки" и "цены"
         card_data = self.hash_map.get("selected_card_data", from_json=True)
         if not self.hash_map.get('barcode'):
@@ -2649,9 +2650,23 @@ class ItemCard(Screen):
     def on_input(self):
         listener = self.listener
         if listener == "ON_BACK_PRESSED":
-            if self.hash_map.get('barcode_cards'):
+            if self.hash_map.containsKey('barcode_cards'):
                 self.hash_map.put('barcode_cards', '')
             self.hash_map.put("BackScreen", "")
+        elif listener == "CardsClick":
+            current_str = self.hash_map.get("selected_card_position")
+            jlist = json.loads(self.hash_map.get("barcode_cards"))
+            current_elem = jlist['customcards']['cardsdata'][int(current_str)]
+            data_dict = {'barcode': current_elem['barcode'],
+                         'Номенклатура': self.hash_map.get('good_name'),
+                         'Характеристика': current_elem['properties'], 'Валюта': current_elem['unit']}
+
+            template_folder, template = HtmlView.get_template_by_default()
+            html_convert = printing_factory.HTMLDocument(template_file = template, template_directory = template_folder)
+            html_doc = html_convert.create_html(data_dict)
+
+            self.hash_map.put("PrintPreview", html_doc)
+            #HtmlView.show_screen(self.hash_map, data_for_printing=data_dict)
 
     def on_post_start(self):
         selected_good_id = self.hash_map.get("selected_good_id")
@@ -2685,8 +2700,8 @@ class ItemCard(Screen):
         return variants_cards_data
 
     def _get_variants_cards_view(self, cards_data):
-        card_title_text_size = self.rs_settings.get('CardTitleTextSize')
-        card_text_size = self.rs_settings.get('CardTextSize')
+        card_title_text_size = self.rs_settings.get('CardTitleTextSize') if self.rs_settings.get('CardTitleTextSize') else 20
+        card_text_size = self.rs_settings.get('CardTextSize') if self.rs_settings.get('CardTextSize') else 15
 
         variants_cards = widgets.CustomCards(
             widgets.LinearLayout(
