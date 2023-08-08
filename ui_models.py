@@ -120,6 +120,11 @@ class HtmlView(Screen):
             doc_details = self.get_details_data()
             table_data = self._prepare_table_data(doc_details)
             table_view = self._get_doc_table_view(table_data=table_data)
+            self.hash_map['matching_table'] = table_view.to_json()
+            #Создаем список параметров в виде листа, для последующей передачи в форму выбора
+            list_for_choose = ';'.join(key for key in self.params)
+            self.hash_map.put('str_field', list_for_choose)
+
 
         else:
             self.hash_map.finish_process_result()
@@ -128,17 +133,41 @@ class HtmlView(Screen):
     def get_details_data(self):
         html_doc_params = printing_factory.HTMLDocument(self.params['template'],
                                                  self.params['template_folder']).find_template_variables()
-        return_list = list
+        return_list = []
         for elem in html_doc_params:
             return_list.append({'key':elem, 'value':''})
+
+        return return_list
 
 
     def on_input(self):
         super().on_input()
         if self.listener == 'ON_BACK_PRESSED':
             self.hash_map.finish_process_result()
-        # elif self.listener == 'print':
-        #     self.hash_map.put("PrintPreview", self.hash_map.get('html'))
+
+        elif self.listener ==  'btn_cancel':
+            self.hash_map.finish_process_result()
+
+        elif self.listener == 'btn_save':
+            pass
+        elif self.listener == "CardsClick":
+                current_str = self.hash_map.get("selected_card_position")
+                jlist = json.loads(self.hash_map.get("matching_table"))
+                current_elem = jlist['customtable']['tabledata'][int(current_str)]
+                name = str(current_elem['key'])
+                self.hash_map.put("field", name)
+                self.hash_map.put('list_field', str(self.hash_map.get('str_field')))
+                self.hash_map.put('ShowDialog', 'НастройкаСоответствияДиалог')
+                self.hash_map.put("ShowDialogStyle",
+                            json.dumps({"title": name, "yes": "Да", "no": "Нет"}))
+
+        elif self.hash_map.get("event") == "onResultPositive":
+            key_card = self.hash_map.get("selected_card_key")
+
+            jrecord = json.loads(self.hash_map.get("matching_table"))
+            rec = jrecord['customcards']['cardsdata'][int(key_card)]
+            rec['value'] = self.hash_map.get('select_field')
+            self.hash_map.put("matching_table", json.dumps(jrecord, ensure_ascii=False).encode('utf8').decode())
 
     def on_post_start(self):
         pass
@@ -148,7 +177,7 @@ class HtmlView(Screen):
 
     @staticmethod
     def get_template_by_default():
-        file_name = suClass.get_stored_file("Шаблон.htm")
+        file_name = suClass.get_stored_file("Шаблон2.htm")
 
         return os.path.split(file_name)
 
@@ -164,15 +193,15 @@ class HtmlView(Screen):
         row_filter = self.hash_map.get_bool('rows_filter')
 
         for record in details:
-            product_row = {'key': str(record['id']), 'value': str(record['value']),
+            product_row = {'key': str(record['key']), 'value': str(record['value']),
                            '_layout': self._get_doc_table_row_view()}
 
             self._set_background_row_color(product_row)
 
-            if self._added_goods_has_key(product_row['key']):
-                table_data.insert(1, product_row)
-            else:
-                table_data.append(product_row)
+            # if self._added_goods_has_key(product_row['key']):
+            #     table_data.insert(1, product_row)
+            # else:
+            table_data.append(product_row)
 
         return table_data
 
@@ -180,11 +209,11 @@ class HtmlView(Screen):
         table_view = widgets.CustomTable(
             widgets.LinearLayout(
                 self.LinearLayout(
-                    self.TextView('Ключ'),
+                    self.TextView('Ключ', self.rs_settings),
                     weight=3
                 ),
                 self.LinearLayout(
-                    self.TextView('Значение'),
+                    self.TextView('Значение', self.rs_settings),
                     weight=1
                 ),
 
@@ -204,7 +233,7 @@ class HtmlView(Screen):
             widgets.LinearLayout(
                 widgets.LinearLayout(
                     widgets.LinearLayout(
-                        self.TextView('@key'),
+                        self.TextView('@key', self.rs_settings),
 
                         width='match_parent',
                     ),
@@ -234,6 +263,15 @@ class HtmlView(Screen):
 
         return row_view
 
+
+    def _set_background_row_color(self, product_row):
+        background_color = '#FBE9E7' #FBE9E7  "#FFF9C4"
+        value = product_row['value']
+
+        if value:
+            background_color = "#FFFFFF"
+
+        product_row['_layout'].BackgroundColor = background_color
 
 # ^^^^^^^^^^^^^^^^^^^^^ Pritnting screens ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 

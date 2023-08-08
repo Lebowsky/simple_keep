@@ -46,7 +46,7 @@ class HTMLDocument:
             variable_start_string='[',
             variable_end_string=']',
         )
-        template_source = env.loader.get_source(env, self.template_path)[0]
+        template_source = env.loader.get_source(env, self.template_file)[0]
         parsed_content = env.parse(template_source)
 
         return meta.find_undeclared_variables(parsed_content)
