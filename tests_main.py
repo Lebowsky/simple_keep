@@ -36,7 +36,13 @@ rs_default_settings = {
     'sqlite_name': 'SimpleKeep',
     'log_name': 'log.json',
     'timer_is_disabled': False,
-    'allow_fact_input': 'false'
+    'allow_fact_input': 'false',
+    'URL':'http://192.168.1.77/Mark/hs/',
+    'USER' : 'user_1',
+    'PASS' : '111',
+    'DEVICE_MODEL':'Python',
+    'ANDROID_ID':'f0559476b8a26877',
+    'user_name':'Kjuzma'
 }
 
 for k, v in rs_default_settings.items():
@@ -140,6 +146,20 @@ def good_card_on_start(hash_map):
 def html_view_on_input(hash_map):
     main.html_view_on_input(hash_map)
 
+
+def template_list_on_start(hash_map):
+    main.template_list_on_start(hash_map)
+
+
+def template_list_on_input(hash_map):
+    main.template_list_on_input(hash_map)
+
+def file_browser_on_start(hash_map):
+    main.file_browser_on_start(hash_map)
+
+
+def file_browser_on_input(hash_map):
+    main.file_browser_on_input(hash_map)
 
 class hashMap:
     d = {}

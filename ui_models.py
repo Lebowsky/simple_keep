@@ -2,7 +2,9 @@ from abc import ABC, abstractmethod
 import json
 from json.decoder import JSONDecodeError
 import os
-
+from pathlib import Path
+import time
+from datetime import datetime
 import db_services
 import hs_services
 import printing_factory
@@ -16,6 +18,7 @@ from http_exchange import post_changes_to_server
 # from PIL import Image
 import widgets
 import ui_global
+import base64
 
 
 class Screen(ABC):
@@ -76,6 +79,14 @@ class Screen(ABC):
     def put_notification(self, text, title=None):
         self.hash_map.notification(text, title)
 
+
+    @staticmethod
+    def delete_template_settings(rs_settings):
+        for item in ScreensFactory.screens:
+            param_name =  getattr(item, 'process_name') + getattr(item, 'screen_name')
+            if rs_settings.get(param_name):
+                rs_settings.delete(param_name)
+
     class TextView(widgets.TextView):
         def __init__(self, value, rs_settings):
             super().__init__()
@@ -96,46 +107,69 @@ class Screen(ABC):
 
 # ==================== Pritnting screens =============================
 class HtmlView(Screen):
-    import printing_factory
+
     screen_name = 'Результат'
     process_name = 'Печать'
 
     def __init__(self, hash_map: HashMap, rs_settings):
         super().__init__(hash_map, rs_settings)
         self.params = json.loads(self.hash_map.get('print_parameters'))
+        self.param_name_for_settings = self.hash_map['template_settings_name'] #self.hash_map['current_operation_name'] + '/' + self.hash_map['current_screen_name']
 
     def on_start(self, ):
-        # params = json.loads(self.hash_map.get('print_parameters'))
-        if self.params:
-            # Если есть конкретный шаблон, ищем его в локальных файлах
-            if self.params.get('template'):
-                pass
-            else:
-                self.params['template_folder'], self.params['template'] = self.get_template_by_default()
-            html_doc = printing_factory.HTMLDocument(self.params['template'],
-                                                     self.params['template_folder']).create_html(self.params)
-            self.hash_map.put('html', html_doc)
-            # self.hash_map.put("PrintPreview", html_doc)
 
-            doc_details = self.get_details_data()
-            table_data = self._prepare_table_data(doc_details)
-            table_view = self._get_doc_table_view(table_data=table_data)
-            self.hash_map['matching_table'] = table_view.to_json()
-            #Создаем список параметров в виде листа, для последующей передачи в форму выбора
-            list_for_choose = ';'.join(key for key in self.params)
-            self.hash_map.put('str_field', list_for_choose)
+        json_table = self.hash_map.get('matching_table')
+        if json_table:
+            return
 
-
+        # Если есть конкретный шаблон, ищем его в локальных файлах
+        if self.params.get('template'):
+            pass
         else:
-            self.hash_map.finish_process_result()
+            self.params['template_folder'], self.params['template'] = self.get_template_by_default(rs_settings= self.rs_settings)
+        template_directory = self.params['template_folder']
+        template_file = self.params['template']
+        #self.hash_map.toast(f'Путь:{template_directory}  Файл:{template_file}')
+
+        html_doc = printing_factory.HTMLDocument(self.params['template'],
+                                                 self.params['template_folder']).get_template()
+        self.hash_map.put('html', html_doc)
+        #
+        doc_details = self.get_details_data()
+        table_data = self._prepare_table_data(doc_details)
+        table_view = self._get_doc_table_view(table_data=table_data)
+        self.hash_map['matching_table'] = table_view.to_json()
 
 
-    def get_details_data(self):
+        #Создаем список параметров в виде листа, для последующей передачи в форму выбора
+
+        list_fc = list(self.params.keys())
+        list_fc.insert(0,'-пустое значение-')
+
+        list_for_choose = ';'.join(list_fc)
+        self.hash_map.put('str_field', list_for_choose)
+
+        #self.hash_map.finish_process_result()
+
+
+    def get_details_data(self, matching_table=None):
+        #Распарсим шаблон и вытащим переменные
+        if matching_table:
+            return matching_table
         html_doc_params = printing_factory.HTMLDocument(self.params['template'],
                                                  self.params['template_folder']).find_template_variables()
+
+        #Загрузим, настройки соответствия и если их нет то подставим пустые значения
+        json_text = self.rs_settings.get(self.param_name_for_settings)
+        if json_text:
+            saved_template_params = json.loads(json_text)
+            dict_lookup = {d['key']: d['value'] for d in saved_template_params}
+        else:
+            dict_lookup = {}
         return_list = []
         for elem in html_doc_params:
-            return_list.append({'key':elem, 'value':''})
+            value = dict_lookup.get(elem, '-пустое значение-')
+            return_list.append({'key':elem, 'value':value})
 
         return return_list
 
@@ -143,14 +177,27 @@ class HtmlView(Screen):
     def on_input(self):
         super().on_input()
         if self.listener == 'ON_BACK_PRESSED':
+            self.hash_map.remove('matching_table')
             self.hash_map.finish_process_result()
 
         elif self.listener ==  'btn_cancel':
+            self.hash_map.remove('matching_table')
             self.hash_map.finish_process_result()
 
         elif self.listener == 'btn_save':
-            pass
-        elif self.listener == "CardsClick":
+            jlist = json.loads(self.hash_map.get("matching_table"))
+            current_table = jlist['customtable']['tabledata']
+            current_table.__delitem__(0)
+            for el in current_table:
+                if el.get('key'):
+                    el.__delitem__('_layout')
+            current_table_json = json.dumps(current_table)
+
+            self.rs_settings.put(self.param_name_for_settings, current_table_json, False)  #current_table_json
+            self.hash_map.remove('matching_table')
+            self.hash_map.finish_process_result()
+
+        elif self.listener == "TableClick" or self.listener =='CardsClick':
                 current_str = self.hash_map.get("selected_card_position")
                 jlist = json.loads(self.hash_map.get("matching_table"))
                 current_elem = jlist['customtable']['tabledata'][int(current_str)]
@@ -161,12 +208,15 @@ class HtmlView(Screen):
                 self.hash_map.put("ShowDialogStyle",
                             json.dumps({"title": name, "yes": "Да", "no": "Нет"}))
 
-        elif self.hash_map.get("event") == "onResultPositive":
-            key_card = self.hash_map.get("selected_card_key")
+        elif self.hash_map.get("event") == 'onResultPositive':
+            key_card = int(self.hash_map.get('selected_card_position'))
 
             jrecord = json.loads(self.hash_map.get("matching_table"))
-            rec = jrecord['customcards']['cardsdata'][int(key_card)]
+            rec = jrecord['customtable']['tabledata'][key_card]
+            # for elem in rec:
+            #     if elem.get('key') == key_card:
             rec['value'] = self.hash_map.get('select_field')
+            #self._set_background_row_color(rec)
             self.hash_map.put("matching_table", json.dumps(jrecord, ensure_ascii=False).encode('utf8').decode())
 
     def on_post_start(self):
@@ -176,17 +226,16 @@ class HtmlView(Screen):
         pass
 
     @staticmethod
-    def get_template_by_default():
-        file_name = suClass.get_stored_file("Шаблон2.htm")
+    def get_template_by_default(rs_settings):
+        file_params = rs_settings.get('current_template')
+        if file_params:
+            file_name = json.loads(file_params)['full_patch']
+        else:
+
+            file_name = suClass.get_stored_file("Шаблон2")
+        # hash_map.toast(file_name)
 
         return os.path.split(file_name)
-
-    @staticmethod
-    def show_screen(hash_map, data_for_printing):
-        if data_for_printing:
-            hash_map.put('print_parameters', json.dumps(data_for_printing))
-            # if self.params:
-            hash_map.show_process_result('Печать', 'Результат')
 
     def _prepare_table_data(self, details):
         table_data = [{}]
@@ -273,9 +322,359 @@ class HtmlView(Screen):
 
         product_row['_layout'].BackgroundColor = background_color
 
+    @staticmethod
+    def show_screen(hash_map, data_for_printing):
+        if data_for_printing:
+            hash_map.put('print_parameters', json.dumps(data_for_printing))
+            # if self.params:
+            hash_map.show_process_result('Печать', 'Результат')
+
+    @staticmethod
+    def print_from_any_screen(hash_map, rs_settings, data_for_printing):
+        if not data_for_printing:
+            return
+            #hash_map.put('print_parameters', json.dumps(data_for_printing))
+        else:
+            param_name_for_settings = hash_map['current_operation_name']  + hash_map[
+                'current_screen_name']
+
+            str_table_view = rs_settings.get(param_name_for_settings)
+            if str_table_view:  #Нашли настройки для вызвавшего экрана
+                params_match = json.loads(str_table_view)
+                data_for_printing = HtmlView.replase_params_names(data_for_printing, params_match)
+                template_directory, template_file  = HtmlView.get_template_by_default(rs_settings)
+                #hash_map.toast(f'Путь:{template_directory}  Файл:{template_file}')
+                htmlresult = printing_factory.HTMLDocument(template_file, template_directory).create_html(data_for_printing)
+                # self.params['template'],self.params['template_folder']
+
+                hash_map.put("PrintPreview", htmlresult)
+
+            else:  #Вызываем этот экан средствами симпла, для настройки параметров
+                hash_map.put('print_parameters', json.dumps(data_for_printing))
+                hash_map['template_settings_name'] = param_name_for_settings
+                hash_map.show_process_result('Печать', 'Результат')
+
+    @staticmethod
+    def replase_params_names(data_for_printing, params_match):
+        new_data = {}
+
+        for match in params_match:
+            if match['value'] in data_for_printing.keys():
+                new_key = match['key']
+                new_value = data_for_printing[match['value']]
+                new_data[new_key] = new_value
+        return new_data
+
+
+class TemplatesList(Screen):
+    screen_name = 'Список шаблонов'
+    process_name = 'Печать'
+    def __init__(self,hash_map: HashMap, rs_settings):
+        super().__init__(hash_map, rs_settings)
+
+        self.hs_service = HsService(self.get_http_settings())
+
+
+    def on_start(self):
+        current_template_js = self.rs_settings.get('current_template')
+        if current_template_js:
+            current_template = json.loads(current_template_js) if current_template_js else None
+            if current_template:
+                self.hash_map.put('current_template', current_template.get('name') or '')
+            else:
+                self.hash_map.put('current_template','-не определено-')
+        else:
+            self.hash_map.put('current_template', '-не определено-')
+
+        target_dir = suClass.get_temp_dir()
+        list_data = self.get_all_files_from_patch(target_dir)
+
+        doc_cards = self._get_doc_cards_view(list_data)
+        self.hash_map['templates_cards'] = doc_cards.to_json()
+
+
+    def on_input(self):
+        if self.listener == 'ON_BACK_PRESSED':
+            self.hash_map.finish_process_result()
+        elif self.listener == 'btn_get_http_templates':
+            self.get_from_server_write_on_disc()
+        elif self.hash_map.get('onClick')== 'btn_get_http_templates':
+            self.get_from_server_write_on_disc()
+            self.hash_map.put('onClick','')
+        elif self.listener == 'LayoutAction':
+            self._layout_action()
+
+
+    def on_post_start(self):
+        pass
+
+
+    def show(self):
+        pass
+
+
+    def _get_doc_cards_view(self, table_data):
+
+        card_title_text_size = self.rs_settings.get('CardTitleTextSize')
+        card_date_text_size = self.rs_settings.get('CardDateTextSize')
+
+        doc_cards = widgets.CustomCards(
+            widgets.LinearLayout(
+
+                widgets.LinearLayout(
+                    widgets.TextView(
+                        Value='@file_name',
+                        TextBold=True,
+                        TextSize=card_title_text_size
+                    ),
+                    widgets.PopupMenuButton(
+                        Value='Задать по умолчанию',
+                        Variable="set_by_default",
+                        gravity_horizontal='center',
+                        weight=1
+                    ),
+
+                    orientation="horizontal"
+                ),
+                widgets.LinearLayout(
+                    widgets.TextView(
+                        Value='@file_size',
+                        TextSize=card_date_text_size
+                    ),
+                    widgets.TextView(
+                        Value='@creation_time',
+                        TextSize=card_date_text_size
+                    )
+                ),
+
+                width="match_parent"
+
+
+            ),
+            options=widgets.Options().options,
+            cardsdata=table_data
+        )
+
+        return doc_cards
+
+    def get_from_server_write_on_disc(self):
+        data_list = self.hs_service.get_templates()
+        output_folder = suClass.get_temp_dir()
+        #self.hash_map.notification(output_folder,'Путь',True)
+        # Create the output folder if it doesn't exist
+        if not os.path.exists(output_folder):
+            os.makedirs(output_folder)
+
+        for data_dict in data_list:
+            file_name = data_dict['name'] + '.htm'
+            file_path = os.path.join(output_folder, file_name)
+
+            # Decode the BASE64 encoded HTML data
+            html_data = base64.b64decode(data_dict['html']).decode('utf-8')
+
+            # Write the HTML data to the file
+            try:
+                with open(file_path, 'w', encoding='utf-8') as file:
+                    file.write(html_data)
+            except:
+                raise f'Ошибка сохранения файла {file_path}'
+        #     print(f'Saved {file_name}')
+        #
+        # print('All files saved.')
+
+
+    @staticmethod
+    def get_all_files_from_patch(folder_path, mask=''):
+
+        html_files_info = []
+
+        # Walk through the folder and its subdirectories
+        for root, dirs, files in os.walk(folder_path):
+            for file in files:
+                if file.lower().endswith('.htm'): #and mask in file:
+                    file_path = os.path.join(root, file)
+                    file_size_bytes = os.path.getsize(file_path)
+                    file_size_kb = file_size_bytes / 1024  # Convert bytes to kilobytes
+                    creation_time = datetime.fromtimestamp(os.path.getctime(file_path))
+                    formatted_creation_time = creation_time.strftime('%Y-%m-%d %H:%M:%S')  #Format datetime for user eyes ))
+
+                    file_info = {
+                        'full_patch': file_path,
+                        'file_name': file,
+                        'file_size': f'{file_size_kb:.2f} KB',  # Format file size with 2 decimal places
+                        'creation_time': formatted_creation_time
+                    }
+                    html_files_info.append(file_info)
+
+        #print(html_files_info)
+        return html_files_info
+
+
+    def _layout_action(self):
+        if self.hash_map.get('layout_listener') == 'Задать по умолчанию':
+            selected_card = json.loads(self.hash_map.get('card_data'))
+            if selected_card and isinstance(selected_card, dict):
+                file_parameters = {'name':selected_card.get('file_name'), 'full_patch':selected_card.get('full_patch')}
+                self.rs_settings.put('current_template',json.dumps(file_parameters),False)
+
+                self.hash_map.put('current_template', selected_card.get('file_name'))
+
+                self.delete_template_settings(self.rs_settings)
+
+
+class SimpleFileBrowser(Screen):
+    screen_name = 'Список файлов'
+    process_name = 'Проводник'
+    def __init__(self,hash_map: HashMap, rs_settings):
+        super().__init__(hash_map, rs_settings)
+        self.hs_service = hs_services.DebugService(ip_host = '192.168.1.77')
+
+
+    def on_start(self):
+        if not self.hash_map.get('current_dir'):
+            self.hash_map['current_dir'] = suClass.get_temp_dir()
+        target_dir = self.hash_map.get('current_dir')
+        list_data = self.get_all_files_from_patch(target_dir)
+
+        doc_cards = self._get_doc_cards_view(list_data)
+        self.hash_map['templates_cards'] = doc_cards.to_json()
+
+
+    def on_input(self):
+        current_directory = Path(self.hash_map.get('current_dir'))
+        if self.listener == 'ON_BACK_PRESSED':
+            self.hash_map.finish_process()
+
+        elif self.listener == 'btn_get_up':
+            current_directory = current_directory.parent
+            self.hash_map['current_dir'] = current_directory
+            self.on_start()
+            self.hash_map.refresh_screen()
+        elif self.listener =='CardsClick':
+            current_str = self.hash_map.get("selected_card_position")
+            jlist = json.loads(self.hash_map.get("templates_cards"))
+            current_elem = jlist['customcards']['cardsdata'][int(current_str)]
+            if current_elem['item_type'] == 'Folder':
+                self.hash_map['current_dir'] = current_directory / current_elem['file_name']
+                self.hash_map.refresh_screen()
+
+
+        elif self.listener == 'LayoutAction':
+            self._layout_action()
+
+
+
+
+    def on_post_start(self):
+        pass
+
+
+    def show(self):
+        pass
+
+
+    def _get_doc_cards_view(self, table_data):
+
+        card_title_text_size = self.rs_settings.get('CardTitleTextSize')
+        card_date_text_size = self.rs_settings.get('CardDateTextSize')
+
+        doc_cards = widgets.CustomCards(
+            widgets.LinearLayout(
+
+                widgets.LinearLayout(
+                    widgets.TextView(
+                        Value='@item_type',
+                        TextBold=True,
+                        TextSize=card_title_text_size
+                    ),
+                    widgets.TextView(
+                        Value='@file_name',
+                        TextBold=True,
+                        TextSize=card_title_text_size
+                    ),
+                    widgets.PopupMenuButton(
+                        Value='Передать на ББ',
+                        Variable="sent",
+                        gravity_horizontal='center',
+                        weight=1
+                    ),
+
+                    orientation="horizontal"
+                ),
+                widgets.LinearLayout(
+                    widgets.TextView(
+                        Value='@file_size',
+                        TextSize=card_date_text_size
+                    ),
+                    widgets.TextView(
+                        Value='@creation_time',
+                        TextSize=card_date_text_size
+                    )
+                ),
+
+                width="match_parent"
+            ),
+            options=widgets.Options().options,
+            cardsdata=table_data
+        )
+
+        return doc_cards
+
+    @staticmethod
+    def get_all_files_from_patch(directory):
+
+        files_info = []
+        # Walk through the folder and its subdirectories
+        directory_path = Path(directory)
+        items =  [item for item in directory_path.iterdir()]
+
+        for item in items:
+            file_path = item.name
+            item_type = "File" if item.is_file() else "Folder"
+
+            file_size_kb = item.stat().st_size / 1024  # Convert bytes to kilobytes
+            creation_time = item.stat().st_ctime
+            formatted_creation_time = time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(int(creation_time))) #Format datetime for user eyes ))
+
+            file_info = {
+                'item_type':item_type,
+                'full_patch': file_path,
+                'file_name': file_path,
+                'file_size': f'{file_size_kb:.2f} KB',  # Format file size with 2 decimal places
+                'creation_time': formatted_creation_time
+            }
+            files_info.append(file_info)
+
+        #print(html_files_info)
+        return files_info
+
+
+    def _layout_action(self):
+        if self.hash_map.get('layout_listener') == 'Передать на ББ':
+            selected_card = json.loads(self.hash_map.get('card_data'))
+            if selected_card and isinstance(selected_card, dict):
+                file = Path(selected_card['full_patch'])
+                if file.is_file():
+                    self._copy_file(file)
+
+    def _copy_file(self, file):
+        ip_host = '192.168.1.77'
+
+
+        with open(file.name, 'rb') as f:
+            res = self.hs_service(ip_host).export_file(file.name, f)
+
+            if res['status_code'] == 200:
+                self.hash_map.toast(f'Файл {file.name} успешно выгружен')
+            else:
+                self.hash_map.toast('Ошибка соединения')
+
+
 # ^^^^^^^^^^^^^^^^^^^^^ Pritnting screens ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 # ==================== Tiles =============================
+
+
 
 class Tiles(Screen):
     def on_start(self):
@@ -2276,7 +2675,7 @@ class FlowDocDetailsScreen(DocDetailsScreen):
             data_dict = {'barcode': current_elem['barcode'],
                          'Номенклатура': current_elem['name'],
                          'qtty': current_elem['qtty'], 'Характеристика': ''}
-            HtmlView.show_screen(self.hash_map, data_for_printing=data_dict)
+            HtmlView.print_from_any_screen(self.hash_map, self.rs_settings, data_for_printing=data_dict)
 
         elif listener == "BACK_BUTTON":
             self.hash_map.finish_process()
@@ -2799,11 +3198,13 @@ class ItemCard(Screen):
                          'Номенклатура': self.hash_map.get('good_name'),
                          'Характеристика': current_elem['properties'], 'Валюта': current_elem['unit']}
 
-            template_folder, template = HtmlView.get_template_by_default()
-            html_convert = printing_factory.HTMLDocument(template_file=template, template_directory=template_folder)
-            html_doc = html_convert.create_html(data_dict)
+            HtmlView.print_from_any_screen(self.hash_map, self.rs_settings, data_for_printing=data_dict)
 
-            self.hash_map.put("PrintPreview", html_doc)
+            # template_folder, template = HtmlView.get_template_by_default()
+            # html_convert = printing_factory.HTMLDocument(template_file=template, template_directory=template_folder)
+            # html_doc = html_convert.create_html(data_dict)
+
+            #self.hash_map.put("PrintPreview", html_doc)
             # HtmlView.show_screen(self.hash_map, data_for_printing=data_dict)
 
     def on_post_start(self):
@@ -2935,6 +3336,7 @@ class SettingsScreen(Screen):
             'btn_err_log': lambda: self._show_screen('Ошибки'),
             'btn_upload_docs': self._upload_docs,
             'btn_timer': self._load_docs,
+            'btn_delete_template_settings':self.delete_template_settings(self.rs_settings),
             'ON_BACK_PRESSED': lambda: self.hash_map.put('FinishProcess', ''),
         }
         if self.listener in listeners:
@@ -2993,6 +3395,9 @@ class SettingsScreen(Screen):
     def _check_http_settings(self) -> bool:
         http = self._get_http_settings()
         return all([http.get('url'), http.get('user'), http.get('pass')])
+
+
+
 
 
 class FontSizeSettingsScreen(Screen):
@@ -3482,6 +3887,7 @@ class DebugSettingsScreen(Screen):
             'btn_copy_base': self._copy_base,
             'btn_unload_log': self._unload_log,
             'btn_local_files': self._local_files,
+            'btn_templates': self.open_templates_screen,
             'ON_BACK_PRESSED': self._on_back_pressed
         }
         if self.listener in listeners:
@@ -3560,6 +3966,9 @@ class DebugSettingsScreen(Screen):
         ip_host = self.hash_map['ip_host']
         self.rs_settings.put('debug_host_ip', ip_host, True)
         self.hash_map.put('FinishProcess', '')
+
+    def open_templates_screen(self):
+        self.hash_map.show_process_result('Печать', 'Список шаблонов')
 
 
 # ^^^^^^^^^^^^^^^^^^^^^ Debug settings ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -3745,6 +4154,7 @@ class MainEvents:
 
 class ScreensFactory:
     screens = [HtmlView,
+               TemplatesList,
                AdrDocsListScreen,
                AdrDocDetailsScreen,
                FlowTilesScreen,

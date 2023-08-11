@@ -349,4 +349,27 @@ def html_view_on_input(hash_map):
     screen = ui_models.HtmlView(hash_map, rs_settings)
     screen.on_input()
 
+
+@HashMap()
+def template_list_on_start(hash_map):
+    screen: ui_models.TemplatesList = ui_models.TemplatesList(hash_map, rs_settings)
+    screen.on_start()
+
+
+@HashMap()
+def template_list_on_input(hash_map):
+    screen: ui_models.TemplatesList = ui_models.TemplatesList(hash_map, rs_settings)
+    screen.on_input()
+
 # ^^^^^^^^^^^^^^^^^ Html ^^^^^^^^^^^^^^^^^
+
+@HashMap()
+def file_browser_on_start(hash_map):
+    screen: ui_models.SimpleFileBrowser = ui_models.SimpleFileBrowser(hash_map, rs_settings)
+    screen.on_start()
+
+
+@HashMap()
+def file_browser_on_input(hash_map):
+    screen: ui_models.SimpleFileBrowser = ui_models.SimpleFileBrowser(hash_map, rs_settings)
+    screen.on_input()

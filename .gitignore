@@ -17,7 +17,7 @@ ru.travelfood.simple_ui.py
 android
 pre_commit
 *.sqlite
-Database_copy.py
+TestData/Database_copy.py
 /Fill_data_for_test.py
 /FromAdrDetails.py
 /FromAdrList.py

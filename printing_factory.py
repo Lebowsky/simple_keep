@@ -4,6 +4,7 @@ from barcode.writer import ImageWriter
 from jinja2 import Environment, FileSystemLoader, select_autoescape, meta
 import base64
 from io import BytesIO
+import os
 
 
 class HTMLDocument:
@@ -48,5 +49,15 @@ class HTMLDocument:
         )
         template_source = env.loader.get_source(env, self.template_file)[0]
         parsed_content = env.parse(template_source)
+        params = meta.find_undeclared_variables(parsed_content)
+        if not 'barcode' in params:
+            params.add('barcode')
+        return params
 
-        return meta.find_undeclared_variables(parsed_content)
+
+    def get_template(self):
+
+        with open(self.template_directory +'/'+ self.template_file, "r", encoding="utf-8") as file:
+           html_body  = file.read()
+
+        return html_body
