@@ -243,6 +243,8 @@ class RsDoc(Rs_doc):
         result = super().find_barcode_in_table(search_value, func_compared)
         if result:
             return result[0]
+        else:
+            return {}
 
     def find_barcode_in_mark_table(self, search_value: str, func_compared='=?'):
         pass

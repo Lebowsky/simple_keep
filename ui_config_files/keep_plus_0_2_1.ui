@@ -2522,7 +2522,7 @@
                                                         "Variable": "",
                                                         "height": "wrap_content",
                                                         "width": "match_parent",
-                                                        "weight": 0,
+                                                        "weight": "0",
                                                         "TextBold": false,
                                                         "TextItalic": false,
                                                         "type": "TextView"
@@ -3930,7 +3930,7 @@
                                         "Variable": "event_cards",
                                         "height": "wrap_content",
                                         "width": "match_parent",
-                                        "weight": 0,
+                                        "weight": "0",
                                         "TextBold": false,
                                         "TextItalic": false,
                                         "type": "CardsLayout"

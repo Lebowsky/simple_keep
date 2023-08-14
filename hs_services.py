@@ -114,11 +114,48 @@ class HsService:
         self.http_answer = self._create_http_answer(answer)
         return answer
 
-    def get_balances_goods(self, warehouses=False, cells=False):
-        pass
+    def get_balances_goods(self, id_warehouse=False, id_cell=False, id_good=False, **kwargs):
+        self._method = requests.get
+        params = {}
+        if id_good:
+            params['id_good'] = id_good
+        if id_cell:
+            self._hs = 'good_balances/cells'
+            params['id_cell'] = id_cell
+        else:
+            self._hs = 'good_balances/warehouses'
+            if id_warehouse:
+                params['id_warehouse'] = id_warehouse
+        self.params = params
+        answer = self._send_request(kwargs)
 
-    def get_prices_goods(self):
-        pass
+        if answer['status_code'] == 200:
+            json_data = json.loads(answer.get('text'))
+            answer['data'] = json_data
+
+        self.http_answer = self._create_http_answer(answer)
+        return self.http_answer
+
+    def get_prices_goods(self, id_good, id_property=False, id_unit=False, id_price_type=False, **kwargs):
+        self._method = requests.get
+        self._hs = 'good_prices'
+        params = {'id_good': id_good}
+        if id_property:
+            params['id_property'] = id_property
+        if id_unit:
+            params['id_unit'] = id_unit
+        if id_price_type:
+            params['id_price_type'] = id_price_type
+
+        self.params = params
+        answer = self._send_request(kwargs)
+
+        if answer['status_code'] == 200:
+            json_data = json.loads(answer.get('text'))
+            answer['data'] = json_data
+
+        self.http_answer = self._create_http_answer(answer)
+        return self.http_answer
 
     def send_documents(self, data, **kwargs) -> dict:
         if not data:
