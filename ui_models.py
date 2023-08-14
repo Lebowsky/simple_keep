@@ -585,17 +585,19 @@ class SimpleFileBrowser(Screen):
                     widgets.TextView(
                         Value='@picture',
                         TextBold=False,
-                        TextSize=card_title_text_size
+                        TextSize=card_title_text_size,
+                        weight=1
                     ),
                     widgets.TextView(
                         Value='@file_name',
                         TextBold=True,
-                        TextSize=card_title_text_size
+                        TextSize=card_title_text_size,
+                        weight=3
                     ),
                     widgets.PopupMenuButton(
                         Value='Передать на ББ',
                         Variable="sent",
-                        gravity_horizontal='center',
+                        gravity_horizontal='right',
                         weight=1
                     ),
 
