@@ -592,6 +592,18 @@ class DocService:
             return None
         return self.form_data_for_request(res_docs, res_goods, False)
 
+    def get_count_mark_codes(self, id_doc):
+        q = '''
+            SELECT DISTINCT COUNT(id) as col_str 
+            FROM RS_docs_barcodes WHERE id_doc = ? AND is_plan = 1
+        '''
+        res = self._sql_query(
+            q=q,
+            params=id_doc,
+        )
+
+        return res[0]['col_str']
+
     @staticmethod
     def update_uploaded_docs_status(doc_in_str):
         qtext = f'UPDATE RS_docs SET sent = 1  WHERE id_doc in ({doc_in_str}) '
@@ -718,7 +730,6 @@ class FlowDocService(DocService):
         self.debug = False
         self.provider = SqlQueryProvider(self.docs_table_name, sql_class=sqlClass())
 
-
     def get_doc_view_data(self, doc_type='', doc_status='') -> list:
         fields = [
             f'{self.docs_table_name}.id_doc',
@@ -781,6 +792,28 @@ class FlowDocService(DocService):
 
         result = self._get_query_result(query_text, args_tuple, return_dict=True)
         return result
+
+    def get_flow_table_data(self):
+        query_text = '''WITH temp_q as (SELECT
+                        RS_barc_flow.barcode,
+                        RS_barcodes.id_good as id_good,
+                        RS_barcodes.id_property as id_property,
+                        1 as qtty
+
+                        FROM RS_barc_flow
+                        LEFT JOIN RS_barcodes
+                            ON RS_barcodes.barcode = RS_barc_flow.barcode
+                        WHERE RS_barc_flow.id_doc = ?)
+
+                        SELECT temp_q.barcode, temp_q.id_good, temp_q.id_property,
+                        RS_goods.name as name, 
+                        sum(qtty) as qtty
+                        FROM temp_q
+                        LEFT JOIN RS_goods
+                          ON RS_goods.id = temp_q.id_good
+                        GROUP BY temp_q.barcode'''
+
+        return self._get_query_result(query_text, (self.doc_id,), True)
 
 
 class GoodsService(DbService):

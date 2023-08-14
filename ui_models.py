@@ -2193,18 +2193,6 @@ class FlowDocDetailsScreen(DocDetailsScreen):
         table_data = self._prepare_table_data(doc_details)
         table_view = self._get_doc_table_view(table_data=table_data)
 
-        if results:
-            # self.hash_map.put('id_doc', str(results[0]['id_doc']))
-            for record in results:
-                pic = '#f00c'
-
-                product_row = {
-                    'key': str(record['barcode']),
-                    'barcode': str(record['barcode']),
-
-                }
-
-                doc_detail_list['customcards']['cardsdata'].append(product_row)
         if doc_details:
             # hashMap.put('id_doc', str(results[0]['id_doc']))
 
@@ -2667,24 +2655,22 @@ class ItemCard(Screen):
                 self.hash_map.put('barcode_cards', '')
             self.hash_map.put("BackScreen", "")
         if self.hash_map.get('listener') == 'to_prices':
-            self.hash_map.put('input_good_id', self.hash_map.get('selected_good_id'))
-            self.hash_map.put('input_good_art', self.hash_map.get('good_art'))
-            self.hash_map.put('prices_object_name', f'{self.hash_map.get("good_name")}, '
-                                                    f'{self.hash_map.get("good_code")}')
-            self.hash_map.put("return_to_item_card", "true")
-            self.hash_map.put('property_id', self.hash_map.get('property_id'))
-            self.hash_map.put('ShowProcessResult', 'Цены|Проверка цен')
-            self.hash_map.put("noRefresh", '')
+            dict_data = {'input_good_id': self.hash_map.get('selected_good_id'),
+                         'input_good_art': self.hash_map.get('good_art'),
+                         'prices_object_name': f'{self.hash_map.get("good_name")}, {self.hash_map.get("good_code")}',
+                         "return_to_item_card": "true", 'property_id': self.hash_map.get('property_id'),
+                         'object_name': self.hash_map.get('good_name'),
+                         'ShowProcessResult': 'Цены|Проверка цен', "noRefresh": ''}
+            self.hash_map.put_data(dict_data)
+
         if self.hash_map.get('listener') == 'to_balances':
-            self.hash_map.put("return_to_item_card", "true")
-            self.hash_map.put('input_item_id', self.hash_map.get('selected_good_id'))
-            self.hash_map.put('item_art_input', self.hash_map.get('good_art'))
-            self.hash_map.put('selected_object_name',
-                              f'{self.hash_map.get("good_name")}, {self.hash_map.get("good_code")}')
-            self.hash_map.put('object_name', self.hash_map.get('good_name'))
-            self.hash_map.put('property_id', self.hash_map.get('property_id'))
-            # self.hash_map.put("noRefresh", '')
-            self.hash_map.put('ShowProcessResult', 'Остатки|Проверить остатки')
+            dict_data = {'input_item_id': self.hash_map.get('selected_good_id'),
+                         'item_art_input': self.hash_map.get('good_art'),
+                         'selected_object_name': f'{self.hash_map.get("good_name")}, {self.hash_map.get("good_code")}',
+                         'object_name': self.hash_map.get('good_name'),
+                         "return_to_item_card": "true", 'property_id': self.hash_map.get('property_id'),
+                         'ShowProcessResult': 'Остатки|Проверка цен', "noRefresh": ''}
+            self.hash_map.put_data(dict_data)
         if listener == "CardsClick":
             pass
 
@@ -2850,8 +2836,6 @@ class GoodsBalancesItemCard(Screen):
                 self.hash_map.put('input_item_id', item_values_result[0]['id'])
                 if item_values_result[0]['id'] != self.hash_map.get('selected_good_id'):
                     self.hash_map.put('selected_object_name', '')
-                    # self.hash_map.put('selected_object_name', f'{item_values_result[0]["name"]}, '
-                    #                                           f'{item_values_result[0]["code"]}')
                 self.hash_map.put('good_code', item_values_result[0]['code'])
                 self.hash_map.put('error_msg', "")
                 self.hash_map.put('item_art_input', self.hash_map.get('item_art_input'))
@@ -2916,19 +2900,11 @@ class GoodsBalancesItemCard(Screen):
             self._get_balances()
 
     def _reset_balances_tables(self):
-        self.hash_map.put('wh_select', '')
-        self.hash_map.put('input_item_id', '')
-        self.hash_map.put('cell_input', '')
-        self.hash_map.put('cell_name', '')
-        self.hash_map.put('object_name', '')
-        self.hash_map.put('error_msg', '')
-        self.hash_map.put('balances_table', '')
-        self.hash_map.put('barcode', '')
-        self.hash_map.put('selected_cell_id', '')
-        self.hash_map.put('property_id', '')
-        self.hash_map.put('selected_object_name', '')
-        self.hash_map.put('selected_warehouse_id', '')
-        self.hash_map.put('barcode_info', '')
+        vars_list = ['wh_select', 'input_item_id', 'cell_input', 'cell_name', 'object_name', 'error_msg',
+                     'balances_table', 'barcode', 'selected_cell_id', 'property_id', 'selected_object_name',
+                     'selected_warehouse_id', 'barcode_info']
+        dict_data = {var: "" for var in vars_list}
+        self.hash_map.put_data(dict_data)
 
     def _set_visibility_on_start(self, elements):
         for v in elements:
@@ -3271,21 +3247,12 @@ class GoodsPricesItemCard(GoodsBalancesItemCard):
             self._get_prices()
 
     def _reset_prices_tables(self):
-        self.hash_map.put('input_good_art', '')
-        self.hash_map.put('prices_object_name', '')
-        self.hash_map.put('selected_price_type_id', '')
-        self.hash_map.put('selected_price_type_name', '')
-        self.hash_map.put('price_type_select', '')
-        self.hash_map.put('selected_property_id', '')
-        self.hash_map.put('selected_property_name', '')
-        self.hash_map.put("property_select", '')
-        self.hash_map.put('selected_unit_id', "")
-        self.hash_map.put('selected_unit_name', '')
-        self.hash_map.put("unit_select", "")
-        self.hash_map.put('prices_custom_table', '')
-        self.hash_map.put('input_good_id', '')
-        self.hash_map.put('barcode', '')
-        self.hash_map.put('barcode_info', '')
+        vars_list = ['input_good_art', 'prices_object_name', 'selected_price_type_id', 'selected_price_type_name',
+                     'price_type_select', 'selected_property_id', 'selected_property_name', 'property_select',
+                     'selected_unit_id', 'selected_unit_name', 'unit_select', 'prices_custom_table', 'input_good_id',
+                     'barcode', 'barcode_info', 'prices_table']
+        dict_data = {var: "" for var in vars_list}
+        self.hash_map.put_data(dict_data)
 
     def _set_visibility_on_start(self, elements):
         for v in elements:
