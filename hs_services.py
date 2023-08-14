@@ -21,6 +21,22 @@ class HsService:
         self.headers = {'Content-Type': 'application/x-www-form-urlencoded; charset=utf-8'}
         self.http_answer: Optional[HsService.HttpAnswer] = None
 
+    def get_templates(self, **kwargs):
+        self._hs = 'label_templates'
+        self._method = requests.get
+        answer = self._send_request(kwargs)
+        if answer['status_code'] == 200:
+
+            answer['data'] = json.loads(answer['text'])
+            #return json_data
+        elif answer['status_code'] == 401:
+            print(answer)
+            answer['error_pool'] = answer['reason']
+        else:
+            answer['error_pool'] = answer.get('text')
+
+        return answer
+
     def get_data(self, **kwargs) -> dict:
         self._hs = 'data'
         self._method = requests.get
@@ -80,7 +96,6 @@ class HsService:
         self.http_answer = self._create_http_answer(answer)
 
         return self.http_answer
-
 
     def reset_exchange(self, **kwargs):
         self._hs = 'reset_exchange'
@@ -203,7 +218,6 @@ class HsService:
 
                 answer_data['error_text'] = error_text
 
-
         return self.HttpAnswer(**answer_data)
 
     @dataclass
@@ -217,7 +231,7 @@ class HsService:
         error: bool = False
 
 
-class DebugService:
+class DebugService():
     def __init__(self, ip_host, port=2444):
         self.ip_host = ip_host
         self.port = port
@@ -228,6 +242,10 @@ class DebugService:
     def export_database(self, file):
         self._hs = 'post'
         return self._send_request({'files': {'Rightscan': file}})
+
+    def export_file(self, file_name, file):
+        self._hs = 'post'
+        return self._send_request({'files': {file_name: file}})
 
     def export_log(self, data):
         self._hs = 'unload_log'

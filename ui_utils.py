@@ -33,6 +33,18 @@ class HashMap:
     def finish_process(self):
         self.hash_map.put('FinishProcess', '')
 
+    def finish_process_result(self):
+        self.hash_map.put('FinishProcessResult', '')
+
+    def show_process_result(self, process, screen):
+        if process and screen:
+            self.hash_map.put('ShowProcessResult', f'{process}|{screen}')
+
+
+    def set_result_listener(self, listener):
+        if listener and isinstance(listener, str):
+            self.hash_map.put('SetResultListener', listener)
+
     def toast(self, text, add_to_log=False):
         self.hash_map.put('toast', str(text))
         if add_to_log:

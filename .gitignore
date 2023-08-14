@@ -1,5 +1,6 @@
 /java.py
 /OldModules
+/New_features
 _tests
 venv
 .idea
@@ -16,7 +17,7 @@ ru.travelfood.simple_ui.py
 android
 pre_commit
 *.sqlite
-Database_copy.py
+TestData
 /Fill_data_for_test.py
 /FromAdrDetails.py
 /FromAdrList.py
@@ -25,9 +26,7 @@ Database_copy.py
 /test3.py
 /test4.py
 /test5.py
-/test_http_get_data.py
-/tests_main.py
 /HashMap.json
 /main_local.py
 /rightscan5.db-journal
-/Reklama.html
+
