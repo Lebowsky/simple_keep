@@ -119,7 +119,7 @@ class HtmlView(Screen):
     def on_start(self, ):
 
         json_table = self.hash_map.get('matching_table')
-        if json_table:
+        if json_table is not None:
             return
 
         # Если есть конкретный шаблон, ищем его в локальных файлах
@@ -583,8 +583,8 @@ class SimpleFileBrowser(Screen):
 
                 widgets.LinearLayout(
                     widgets.TextView(
-                        Value='@item_type',
-                        TextBold=True,
+                        Value='@picture',
+                        TextBold=False,
                         TextSize=card_title_text_size
                     ),
                     widgets.TextView(
@@ -635,10 +635,14 @@ class SimpleFileBrowser(Screen):
             file_size_kb = item.stat().st_size / 1024  # Convert bytes to kilobytes
             creation_time = item.stat().st_ctime
             formatted_creation_time = time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(int(creation_time))) #Format datetime for user eyes ))
+            pic = '#f15b' if item.is_file()  else '#f07b'
+            if item.is_symlink():
+                pic = '#f0c1'
 
             file_info = {
+                'picture':pic,
                 'item_type':item_type,
-                'full_patch': file_path,
+                'full_patch': str(directory_path.joinpath(file_path)),
                 'file_name': file_path,
                 'file_size': f'{file_size_kb:.2f} KB',  # Format file size with 2 decimal places
                 'creation_time': formatted_creation_time
@@ -651,6 +655,7 @@ class SimpleFileBrowser(Screen):
 
     def _layout_action(self):
         if self.hash_map.get('layout_listener') == 'Передать на ББ':
+
             selected_card = json.loads(self.hash_map.get('card_data'))
             if selected_card and isinstance(selected_card, dict):
                 file = Path(selected_card['full_patch'])
@@ -661,8 +666,9 @@ class SimpleFileBrowser(Screen):
         ip_host = '192.168.1.77'
 
 
-        with open(file.name, 'rb') as f:
-            res = self.hs_service(ip_host).export_file(file.name, f)
+        with open(file, 'rb') as f:
+            #send_service = self.hs_service(ip_host)
+            res = self.hs_service.export_file(file.name, f)
 
             if res['status_code'] == 200:
                 self.hash_map.toast(f'Файл {file.name} успешно выгружен')
