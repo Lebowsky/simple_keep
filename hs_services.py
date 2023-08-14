@@ -113,12 +113,34 @@ class HsService:
                 params['id_warehouse'] = id_warehouse
         self.params = params
         answer = self._send_request(kwargs)
+
+        if answer['status_code'] == 200:
+            json_data = json.loads(answer.get('text'))
+            answer['data'] = json_data
+
         self.http_answer = self._create_http_answer(answer)
-        return answer
+        return self.http_answer
 
+    def get_prices_goods(self, id_good, id_property=False, id_unit=False, id_price_type=False, **kwargs):
+        self._method = requests.get
+        self._hs = 'good_prices'
+        params = {'id_good': id_good}
+        if id_property:
+            params['id_property'] = id_property
+        if id_unit:
+            params['id_unit'] = id_unit
+        if id_price_type:
+            params['id_price_type'] = id_price_type
 
-    def get_prices_goods(self):
-        pass
+        self.params = params
+        answer = self._send_request(kwargs)
+
+        if answer['status_code'] == 200:
+            json_data = json.loads(answer.get('text'))
+            answer['data'] = json_data
+
+        self.http_answer = self._create_http_answer(answer)
+        return self.http_answer
 
     def send_documents(self, data, **kwargs) -> dict:
         if not data:

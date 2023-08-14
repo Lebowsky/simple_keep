@@ -265,16 +265,100 @@ def good_card_on_input(hash_map):
 # ==================== GoodsBalances =============================
 
 @HashMap()
-def remains_on_start(hash_map):
+def balances_on_start(hash_map):
     screen: ui_models.GoodsBalancesItemCard = create_screen(hash_map)
     screen.on_start()
 
 @HashMap()
-def remains_on_input(hash_map):
+def balances_on_input(hash_map):
     screen = ui_models.GoodsBalancesItemCard(hash_map, rs_settings)
     screen.on_input()
 
+
+@HashMap()
+def wh_select_on_start(hash_map):
+    screen: ui_models.SelectWH = create_screen(hash_map)
+    screen.on_start()
+
+@HashMap()
+def wh_select_on_input(hash_map):
+    screen = ui_models.SelectWH(hash_map, rs_settings)
+    screen.on_input()
+
+
+@HashMap()
+def balances_table_on_start(hash_map):
+    screen: ui_models.BalancesTable = create_screen(hash_map)
+    screen.on_start()
+
+
+@HashMap()
+def balances_table_on_input(hash_map):
+    screen = ui_models.BalancesTable(hash_map, rs_settings)
+    screen.on_input()
+
 # ^^^^^^^^^^^^^^^^^^^^^ GoodsBalances ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+
+# ==================== GoodsPrices =============================
+
+@HashMap()
+def prices_on_start(hash_map):
+    screen: ui_models.GoodsPricesItemCard = create_screen(hash_map)
+    screen.on_start()
+
+@HashMap()
+def prices_on_input(hash_map):
+    screen = ui_models.GoodsPricesItemCard(hash_map, rs_settings)
+    screen.on_input()
+
+
+@HashMap()
+def price_types_on_start(hash_map):
+    screen: ui_models.SelectPriceType = create_screen(hash_map)
+    screen.on_start()
+
+@HashMap()
+def price_types_on_input(hash_map):
+    screen = ui_models.SelectPriceType(hash_map, rs_settings)
+    screen.on_input()
+
+
+@HashMap()
+def properties_on_start(hash_map):
+    screen: ui_models.SelectProperties = create_screen(hash_map)
+    screen.on_start()
+
+@HashMap()
+def properties_on_input(hash_map):
+    screen = ui_models.SelectProperties(hash_map, rs_settings)
+    screen.on_input()
+
+
+@HashMap()
+def units_on_start(hash_map):
+    screen: ui_models.SelectUnit = create_screen(hash_map)
+    screen.on_start()
+
+@HashMap()
+def units_on_input(hash_map):
+    screen = ui_models.SelectUnit(hash_map, rs_settings)
+    screen.on_input()
+
+
+@HashMap()
+def prices_table_on_start(hash_map):
+    screen: ui_models.PricesTable = create_screen(hash_map)
+    screen.on_start()
+
+@HashMap()
+def prices_table_on_input(hash_map):
+    screen = ui_models.PricesTable(hash_map, rs_settings)
+    screen.on_input()
+
+
+
+# ^^^^^^^^^^^^^^^^^^^^^ GoodsPrices ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 
 

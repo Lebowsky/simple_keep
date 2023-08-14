@@ -449,10 +449,9 @@ class DocService:
         res = self._get_query_result(query, return_dict=True)
         return res
 
-
-
-    def get_doc_details_data(self, id_doc) -> list:
-        query = f"""
+    def get_doc_details_data(self, id_doc, first_elem, last_elem, row_filters=None) -> list:
+        select_query = f"""
+            SELECT * FROM (
             SELECT
             RS_docs_table.id,
             RS_docs_table.id_doc,
@@ -470,7 +469,9 @@ class DocService:
             RS_docs_table.qtty_plan,
             RS_docs_table.price,
             RS_price_types.name as price_name,
-            RS_docs_table.qtty_plan -RS_docs_table.qtty as IsDone
+            RS_docs_table.qtty_plan -RS_docs_table.qtty as IsDone,
+            ROW_NUMBER() OVER (ORDER BY last_updated DESC) AS row_num,
+            RS_docs_table.last_updated
             
             FROM RS_docs_table 
 
@@ -484,11 +485,27 @@ class DocService:
             ON RS_units.id = RS_docs_table.id_unit
             LEFT JOIN RS_price_types
             ON RS_price_types.id =RS_docs_table.id_price
-
-            WHERE id_doc = $arg1
-            ORDER BY RS_docs_table.last_updated DESC 
             """
-        res = self._get_query_result(query, (id_doc,), return_dict=True)
+
+        if row_filters:
+            where_query = f"""
+                WHERE id_doc = $arg1
+                AND RS_docs_table.qtty != RS_docs_table.qtty_plan
+                 ) AS combined
+                WHERE row_num BETWEEN 1 AND 1 OR row_num BETWEEN $arg2 AND $arg3 
+                ORDER BY last_updated DESC
+                """
+        else:
+            where_query = f"""
+                WHERE id_doc = $arg1
+                ) AS combined
+                WHERE row_num BETWEEN 1 AND 1 OR row_num BETWEEN $arg2 AND $arg3 
+                ORDER BY last_updated DESC
+                """
+
+        query = select_query + where_query
+
+        res = self._get_query_result(query, (id_doc, first_elem, last_elem), return_dict=True)
         return res
 
     def parse_barcode(self, val):
@@ -840,6 +857,18 @@ class GoodsService(DbService):
     def get_values_by_field(self, table_name, field, field_value):
         self.provider.table_name = table_name
         return self.provider.select({field: field_value})
+
+    def get_query_with_arg_list(self, table_name, value, field, table_string_id):
+        query_text = f"""SELECT ifnull({value}, '-') as {value} FROM {table_name} WHERE {field} in ({table_string_id})"""
+        # self.provider.table_name = table_name
+        # return self._sql_query(query_text, table_name=table_name, params='')
+        return query_text
+
+    def get_select_data(self, table_name):
+        query_text = f'SELECT * FROM {table_name}'
+        self.provider.table_name = table_name
+        return self._sql_query(query_text, '')
+
 
 
 class DbCreator:
