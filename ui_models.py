@@ -1032,8 +1032,10 @@ class DocDetailsScreen(Screen):
 
         if doc_details:
             self.hash_map['table_lines_qtty'] = len(doc_details)
-            have_zero_plan = True
-            have_qtty_plan = sum([item['qtty_plan'] for item in doc_details if item['qtty_plan']]) > 0
+            have_qtty_plan = sum(
+                [self._format_to_float(str(item['qtty_plan'])) for item in doc_details if item['qtty_plan']]) > 0
+            have_zero_plan = not have_qtty_plan
+            have_mark_plan = self._get_have_mark_plan()
 
         self.hash_map['have_qtty_plan'] = have_qtty_plan
         self.hash_map['have_zero_plan'] = have_zero_plan
@@ -1195,8 +1197,7 @@ class DocDetailsScreen(Screen):
             product_row['good_info'] = ''.join(props)
 
             for key in ['qtty', 'd_qtty', 'qtty_plan']:
-                value = record.get(key, 0.0) or 0.0
-
+                value = self._format_to_float(str(record.get(key, 0.0) or 0.0))
                 product_row[key] = str(int(value)) if value.is_integer() else value
 
             product_row['_layout'] = self._get_doc_table_row_view()
@@ -1327,6 +1328,13 @@ class DocDetailsScreen(Screen):
                 self.hash_map.playsound('warning')
             else:
                 self.hash_map.playsound('error')
+
+    def _format_to_float(self, value: str):
+        return float(value.replace(u'\xa0', u'').replace(',', '.') or '0.0')
+
+    def _get_have_mark_plan(self):
+        count = self.service.get_count_mark_codes(id_doc=self.id_doc)
+        return count > 0
 
     class TextView(widgets.TextView):
         def __init__(self, value):
@@ -1685,48 +1693,14 @@ class AdrDocDetailsScreen(DocDetailsScreen):
         self.table_type = ''
         self.service = AdrDocService(self.id_doc, table_type=self.table_type)
 
-    def on_start(self) -> None:
-        super()._on_start()
-
-    def _on_start(self):
-
+    def on_start(self):
         if not self.table_type:
             self.table_type = self._get_table_type_for_screen()
         else:
-            # Выбор табличной части (отбор/размещение)
-            # self._get_table_type_from_screen()
             self.table_type = self._get_table_type_from_name(self.hash_map['table_type'])
-
-        self._set_visibility_on_start()
-        self.hash_map.put('SetTitle', self.hash_map["doc_type"])
-
-        have_qtty_plan = False
-        have_zero_plan = False
-        have_mark_plan = False
         self.service.table_type = self.table_type
-        doc_details = self._get_doc_details_data()
-        table_data = self._prepare_table_data(doc_details)
-        table_view = self._get_doc_table_view(table_data=table_data)
 
-        if self.hash_map.get_bool('highlight'):
-            self.hash_map.put('highlight', False)
-            # self.enable_highlight(table_view.customtable)
-            # self.hash_map.run_event_async('highlight_scanned_item')
-
-        if doc_details:
-            self.hash_map['table_lines_qtty'] = len(doc_details)
-            have_zero_plan = True
-            have_qtty_plan = sum([item['qtty_plan'] for item in doc_details if item['qtty_plan']]) > 0
-
-        self.hash_map['have_qtty_plan'] = have_qtty_plan
-        self.hash_map['have_zero_plan'] = have_zero_plan
-        self.hash_map['have_mark_plan'] = have_mark_plan
-
-        control = self.service.get_doc_value('control', self.id_doc) not in (0, '0', 'false', 'False', None)
-        self.hash_map['control'] = control
-
-        self.hash_map.put("doc_goods_table", table_view.to_json())
-        self.hash_map.put('return_selected_data', '')
+        super()._on_start()
 
     def _get_doc_details_data(self):
         return self.service.get_doc_details_data(self.id_doc, self.current_cell)
@@ -2146,13 +2120,13 @@ class AdrDocDetailsScreen(DocDetailsScreen):
                 cards.customcards['cardsdata'].append(product_row)
 
 
-class FlowDocDetailsScreen(Screen):
+class FlowDocDetailsScreen(DocDetailsScreen):
     screen_name = 'ПотокШтрихкодовДокумента'
     process_name = 'Сбор ШК'
 
     def __init__(self, hash_map: HashMap, rs_settings):
         super().__init__(hash_map, rs_settings)
-        self.service = db_services.FlowDocService()
+        self.service = db_services.FlowDocService(self.id_doc)
 
     def show(self, args=None):
         self.hash_map.show_screen(self.screen_name, args)
@@ -2215,47 +2189,9 @@ class FlowDocDetailsScreen(Screen):
         falseValueList = (0, '0', 'false', 'False', None)
         # Формируем таблицу карточек и запрос к базе
 
-        doc_detail_list = {"customcards": {
-            "options": {
-                "search_enabled": True,
-                "save_position": True
-            },
-            "layout": {
-                "type": "LinearLayout",
-                "orientation": "vertical",
-                "height": "match_parent",
-                "width": "match_parent",
-                "weight": "0",
-                "Elements": [
-                    {
-                        "type": "LinearLayout",
-                        "orientation": "horizontal",
-                        "height": "match_parent",
-                        "width": "match_parent",
-                        "weight": "0",
-                        "Elements": [
-                            {
-                                "type": "TextView",
-                                "TextBold": True,
-                                "show_by_condition": "",
-                                "Value": "@barcode",
-                                "TextSize": self.rs_settings.get('GoodsCardTitleTextSize'),
-                                "NoRefresh": False,
-                                "document_type": "",
-                                "mask": "",
-                                "weight": "1",
-                                "Variable": ""
-                            }
-                        ]
-                    }
-                ]
-            }
-        }
-        }
-
-        doc_detail_list['customcards']['cardsdata'] = []
-        query_text = 'Select * from RS_barc_flow WHere id_doc =?'
-        results = ui_global.get_query_result(query_text, (id_doc,), True)
+        doc_details = self.service.get_flow_table_data()
+        table_data = self._prepare_table_data(doc_details)
+        table_view = self._get_doc_table_view(table_data=table_data)
 
         if results:
             # self.hash_map.put('id_doc', str(results[0]['id_doc']))
@@ -2269,6 +2205,8 @@ class FlowDocDetailsScreen(Screen):
                 }
 
                 doc_detail_list['customcards']['cardsdata'].append(product_row)
+        if doc_details:
+            # hashMap.put('id_doc', str(results[0]['id_doc']))
 
             # Признак, have_qtty_plan ЕстьПланПОКОличеству  -  Истина когда сумма колонки Qtty_plan > 0
             # Признак  have_mark_plan "ЕстьПланКОдовМаркировки – Истина, когда количество строк табл. RS_docs_barcodes с заданным id_doc и is_plan  больше нуля.
@@ -2323,7 +2261,7 @@ class FlowDocDetailsScreen(Screen):
             control = 'False'
 
         self.hash_map.put('control', control)
-        self.hash_map.put("doc_barc_flow", json.dumps(doc_detail_list))
+        self.hash_map.put("doc_barc_flow", table_view.to_json())
 
         if True in (have_qtty_plan, have_zero_plan, have_mark_plan, control):
             self.hash_map.put('toast',
@@ -2332,6 +2270,89 @@ class FlowDocDetailsScreen(Screen):
 
     def on_post_start(self):
         pass
+
+    def _get_doc_table_view(self, table_data):
+        table_view = widgets.CustomTable(
+            widgets.LinearLayout(
+                self.LinearLayout(
+                    self.TextView('Название'),
+                    weight=3
+                ),
+                self.LinearLayout(
+                    self.TextView('План'),
+                    weight=1
+                ),
+                orientation='horizontal',
+                height="match_parent",
+                width="match_parent",
+                BackgroundColor='#FFFFFF'
+            ),
+            options=widgets.Options().options,
+            tabledata=table_data
+        )
+
+        return table_view
+
+    def _get_doc_table_row_view(self):
+        row_view = widgets.LinearLayout(
+            widgets.LinearLayout(
+                widgets.LinearLayout(
+                    widgets.LinearLayout(
+                        self.TextView('@barcode'),
+                        widgets.TextView(
+                            Value='@name',
+                            TextSize=15,
+                            width='match_parent'
+                        ),
+                        width='match_parent',
+                    ),
+                    width='match_parent',
+                    orientation='horizontal',
+                    StrokeWidth=1
+                ),
+                width='match_parent',
+                weight=3,
+                StrokeWidth=1
+            ),
+            widgets.LinearLayout(
+                widgets.TextView(
+                    Value='@qtty',
+                    TextSize=15,
+                    width='match_parent'
+                ),
+                width='match_parent',
+                height='match_parent',
+                weight=1,
+                StrokeWidth=1
+            ),
+            orientation='horizontal',
+            width='match_parent',
+            BackgroundColor='#FFFFFF'
+        )
+
+        return row_view
+
+    def _prepare_table_data(self, doc_details):
+
+        table_data = [{}]
+
+        for record in doc_details:
+
+            product_row = {'key': str(record['barcode']), 'barcode': str(record['barcode']),
+                           'name': record['name'] if record['name'] is not None else '-нет данных-', 'qtty': str(record['qtty']),
+                           '_layout': self._get_doc_table_row_view()}
+
+            product_row['_layout'].BackgroundColor = '#FFFFFF' if record['name'] is not None else "#FBE9E7"
+
+            if self._added_goods_has_key(product_row['key']):
+                table_data.insert(1, product_row)
+            else:
+                table_data.append(product_row)
+
+            #table_data.append(product_row)
+
+        return table_data
+
 
 # ^^^^^^^^^^^^^^^^^^^^^ DocDetails ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
