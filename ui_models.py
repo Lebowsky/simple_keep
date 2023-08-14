@@ -458,19 +458,24 @@ class TemplatesList(Screen):
         return doc_cards
 
     def get_from_server_write_on_disc(self):
-        data_list = self.hs_service.get_templates()
+        answer = self.hs_service.get_templates()
         output_folder = suClass.get_temp_dir()
         #self.hash_map.notification(output_folder,'Путь',True)
         # Create the output folder if it doesn't exist
         if not os.path.exists(output_folder):
             os.makedirs(output_folder)
+        if answer['status_code'] == 200:
+            data_list = answer['data']
+        else:
+            reason = answer['error_pool']
+            raise f'Ошибка соединения с сервером: {reason}'
 
         for data_dict in data_list:
             file_name = data_dict['name'] + '.htm'
             file_path = os.path.join(output_folder, file_name)
 
             # Decode the BASE64 encoded HTML data
-            html_data = base64.b64decode(data_dict['html']).decode('utf-8')
+            html_data = printing_factory.HTMLDocument(file_name, file_path).inject_css_style(base64.b64decode(data_dict['html']).decode('utf-8'))
 
             # Write the HTML data to the file
             try:
@@ -527,7 +532,7 @@ class SimpleFileBrowser(Screen):
     process_name = 'Проводник'
     def __init__(self,hash_map: HashMap, rs_settings):
         super().__init__(hash_map, rs_settings)
-        self.hs_service = hs_services.DebugService(ip_host = '192.168.1.77')
+        self.hs_service = hs_services.DebugService(ip_host = self.hash_map.get('ip_host') )  #'192.168.1.77'
 
 
     def on_start(self):
@@ -552,7 +557,7 @@ class SimpleFileBrowser(Screen):
             self.hash_map.refresh_screen()
         elif self.listener =='CardsClick':
             current_str = self.hash_map.get("selected_card_position")
-            jlist = json.loads(self.hash_map.get("templates_cards"))
+            jlist = self.hash_map.get_json("templates_cards")
             current_elem = jlist['customcards']['cardsdata'][int(current_str)]
             if current_elem['item_type'] == 'Folder':
                 self.hash_map['current_dir'] = current_directory / current_elem['file_name']
@@ -665,7 +670,8 @@ class SimpleFileBrowser(Screen):
                     self._copy_file(file)
 
     def _copy_file(self, file):
-        ip_host = '192.168.1.77'
+        ip_host =  self.hash_map.get('ip_host') #'192.168.1.77'
+
 
 
         with open(file, 'rb') as f:
@@ -3208,12 +3214,6 @@ class ItemCard(Screen):
 
             HtmlView.print_from_any_screen(self.hash_map, self.rs_settings, data_for_printing=data_dict)
 
-            # template_folder, template = HtmlView.get_template_by_default()
-            # html_convert = printing_factory.HTMLDocument(template_file=template, template_directory=template_folder)
-            # html_doc = html_convert.create_html(data_dict)
-
-            #self.hash_map.put("PrintPreview", html_doc)
-            # HtmlView.show_screen(self.hash_map, data_for_printing=data_dict)
 
     def on_post_start(self):
         selected_good_id = self.hash_map.get("selected_good_id")

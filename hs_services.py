@@ -26,13 +26,16 @@ class HsService:
         self._method = requests.get
         answer = self._send_request(kwargs)
         if answer['status_code'] == 200:
-            json_data = json.loads(answer['text'])
-            return json_data
+
+            answer['data'] = json.loads(answer['text'])
+            #return json_data
         elif answer['status_code'] == 401:
             print(answer)
             answer['error_pool'] = answer['reason']
         else:
             answer['error_pool'] = answer.get('text')
+
+        return answer
 
     def get_data(self, **kwargs) -> dict:
         self._hs = 'data'

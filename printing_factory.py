@@ -4,7 +4,6 @@ from barcode.writer import ImageWriter
 from jinja2 import Environment, FileSystemLoader, select_autoescape, meta
 import base64
 from io import BytesIO
-import os
 
 
 class HTMLDocument:
@@ -61,3 +60,29 @@ class HTMLDocument:
            html_body  = file.read()
 
         return html_body
+
+
+    def inject_css_style(self, html):
+        css_style = """
+        <style>
+          .scaled-table {
+            transform: scale({scale_value}); 
+            transform-origin: top left; 
+          }
+        </style>
+        """
+        soup = BeautifulSoup(html, "html.parser")
+
+        body_tag = soup.body
+        if body_tag:
+            body_tag.insert(0, css_style)
+
+        table_tags = soup.find_all("table")
+        for table_tag in table_tags:
+            table_tag["class"] = table_tag.get("class", []) + ["scaled-table"]
+
+        updated_template_content = str(soup)
+        return updated_template_content
+
+
+

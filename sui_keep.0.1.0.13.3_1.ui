@@ -5320,6 +5320,16 @@
                                 "weight": "0",
                                 "Elements": [
                                     {
+                                        "Value": "@ip_host",
+                                        "Variable": "ip_host",
+                                        "height": "wrap_content",
+                                        "width": "match_parent",
+                                        "weight": "1",
+                                        "TextBold": false,
+                                        "TextItalic": false,
+                                        "type": "EditTextText"
+                                    },
+                                    {
                                         "Value": "Вверх",
                                         "Variable": "btn_get_up",
                                         "height": "wrap_content",
