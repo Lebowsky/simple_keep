@@ -5,6 +5,7 @@ import socket
 
 from java import jclass
 from ui_global import Rs_doc, find_barcode_in_barcode_table
+from ui_barcodes import parse_barcode
 from db_services import DocService, BarcodeService
 
 noClass = jclass("ru.travelfood.simple_ui.NoSQL")
@@ -230,6 +231,8 @@ class RsDoc(Rs_doc):
         result = super().find_barcode_in_table(search_value, func_compared)
         if result:
             return result[0]
+        else:
+            return {}
 
     def find_barcode_in_mark_table(self, search_value: str, func_compared='=?'):
         pass
@@ -288,7 +291,7 @@ class BarcodeWorker:
             return row_data[0]
 
     def parse(self, barcode: str) -> dict:
-        return {'SCHEME': 'EAN13', 'BARCODE': barcode, 'GTIN': barcode, 'SERIAL': ''}
+        return parse_barcode(barcode)
 
 
 def get_ip_address():
