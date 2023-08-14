@@ -2,7 +2,7 @@ import unittest
 import json
 import os
 
-from db_services import DocService, DbCreator, TimerService, DbService, SqlQueryProvider
+from db_services import DocService, DbCreator, TimerService, DbService, SqlQueryProvider, GoodsService
 
 
 
@@ -217,3 +217,16 @@ class TestSQLQueryProvider(unittest.TestCase):
 
         assert param_values == [None, '', '', '', '', '', '', '', '', '', None, '773c92ab-fd28-11e4-92f1-0050568b35ac', 'out']
 
+
+# class TestGoodsService(unittest.TestCase):
+#     def setUp(self) -> None:
+#         self.service = GoodsService()
+#         self.http_results_path = './tests_db_services/http_result_data_example'
+#
+#     def test_save_load_data(self):
+#         # TODO create test
+#         pass
+#
+#     def get_data_from_file(self, file_name):
+#         with open(f'{self.http_results_path}/{file_name}', encoding='utf-8') as fp:
+#             return json.load(fp)

@@ -47,6 +47,28 @@ class TestHsService(unittest.TestCase):
         print(res)
 
     @unittest.skip
+    def test_get_balances_goods_id_good_only(self):
+        data = [
+            {
+                "id_good": "f93e113e-c83a-11e2-8026-0015e9b8c48d",
+                "id_property": None,
+                "id_warehouse": "6f87e83f-722c-11df-b336-0011955cba6b",
+                "id_series": None,
+                "qtty": 800
+            },
+            {
+                "id_good": "f93e113e-c83a-11e2-8026-0015e9b8c48d",
+                "id_property": None,
+                "id_warehouse": "a4212b46-730a-11df-b338-0011955cba6b",
+                "id_series": None,
+                "qtty": 600
+            }
+        ]
+
+        res = self.service.get_balances_goods(id_good='f93e113e-c83a-11e2-8026-0015e9b8c48d')
+        print(res)
+
+    @unittest.skip
     def test_get_data(self):
         self.service.reset_exchange()
         self.assertEqual(self.service.http_answer.status_code, 200)
