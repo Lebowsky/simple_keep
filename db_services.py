@@ -24,7 +24,7 @@ class DbService:
         else:
             self.provider.sql_exec_many(q, params)
 
-    def _sql_query(self, q, params: str, table_name=''):
+    def _sql_query(self, q, params: str = '', table_name=''):
         if table_name:
             self.provider.table_name = table_name
         return self.provider.sql_query(q, params)
