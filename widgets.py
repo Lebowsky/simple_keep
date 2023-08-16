@@ -69,10 +69,11 @@ class LinearLayout(Widget):
 
 
 class Options:
-    def __init__(self, search_enabled=True, save_position=True):
+    def __init__(self, search_enabled=True, save_position=True, override_search=False):
         self.options = {
             'search_enabled': search_enabled,
-            'save_position': save_position
+            'save_position': save_position,
+            'override_search': override_search
         }
 
 

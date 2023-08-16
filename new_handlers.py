@@ -286,17 +286,6 @@ def wh_select_on_input(hash_map):
     screen.on_input()
 
 
-@HashMap()
-def balances_table_on_start(hash_map):
-    screen: ui_models.BalancesTable = create_screen(hash_map)
-    screen.on_start()
-
-
-@HashMap()
-def balances_table_on_input(hash_map):
-    screen = ui_models.BalancesTable(hash_map, rs_settings)
-    screen.on_input()
-
 # ^^^^^^^^^^^^^^^^^^^^^ GoodsBalances ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 
@@ -344,18 +333,6 @@ def units_on_start(hash_map):
 def units_on_input(hash_map):
     screen = ui_models.SelectUnit(hash_map, rs_settings)
     screen.on_input()
-
-
-@HashMap()
-def prices_table_on_start(hash_map):
-    screen: ui_models.PricesTable = create_screen(hash_map)
-    screen.on_start()
-
-@HashMap()
-def prices_table_on_input(hash_map):
-    screen = ui_models.PricesTable(hash_map, rs_settings)
-    screen.on_input()
-
 
 
 # ^^^^^^^^^^^^^^^^^^^^^ GoodsPrices ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
