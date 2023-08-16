@@ -1306,9 +1306,6 @@ class DocumentsDocsListScreen(DocsListScreen):
                 self.service.set_doc_value('sent', 1)
                 self.toast('Документ отправлен повторно')
 
-        elif self.listener == "Search":
-            self.toast(self.hash_map.get("SearchString"))
-
     def get_id_doc(self):
         card_data = self.hash_map.get_json("card_data") or {}
         id_doc = card_data.get('key') or self.hash_map['selected_card_key']
@@ -1600,8 +1597,6 @@ class DocDetailsScreen(Screen):
         pass
 
     def on_input(self) -> None:
-
-        # self.toast(self.hash_map.get('SearchString'))
 
         listener = self.listener
 
@@ -4227,6 +4222,7 @@ class SettingsScreen(Screen):
             'btn_err_log': lambda: self._show_screen('Ошибки'),
             'btn_upload_docs': self._upload_docs,
             'btn_timer': self._load_docs,
+            'btn_delete_template_settings': self.delete_template_settings(self.rs_settings),
             'ON_BACK_PRESSED': lambda: self.hash_map.put('FinishProcess', ''),
         }
         if self.listener in listeners:
@@ -4774,6 +4770,7 @@ class DebugSettingsScreen(Screen):
             'btn_copy_base': self._copy_base,
             'btn_unload_log': self._unload_log,
             'btn_local_files': self._local_files,
+            'btn_templates': self.open_templates_screen,
             'ON_BACK_PRESSED': self._on_back_pressed
         }
         if self.listener in listeners:
@@ -4852,6 +4849,9 @@ class DebugSettingsScreen(Screen):
         ip_host = self.hash_map['ip_host']
         self.rs_settings.put('debug_host_ip', ip_host, True)
         self.hash_map.put('FinishProcess', '')
+
+    def open_templates_screen(self):
+        self.hash_map.show_process_result('Печать', 'Список шаблонов')
 
 
 # ^^^^^^^^^^^^^^^^^^^^^ Debug settings ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -5037,6 +5037,8 @@ class MainEvents:
 
 class ScreensFactory:
     screens = [
+        HtmlView,
+        TemplatesList,
         AdrDocsListScreen,
         AdrDocDetailsScreen,
         FlowTilesScreen,
