@@ -75,6 +75,10 @@ class TimerService(DbService):
 
         return loaded_documents
 
+    def get_data_to_send(self):
+        data = DocService().get_data_to_send() + AdrDocService().get_data_to_send()
+        return data
+
 
 class BarcodeService(DbService):
     def __init__(self):
@@ -592,6 +596,59 @@ class DocService:
             return None
         return self.form_data_for_request(res_docs, res_goods, False)
 
+    def get_data_to_send(self):
+        data = []
+
+        q = f'''SELECT id_doc
+                FROM {self.docs_table_name} 
+                WHERE verified = 1  AND (sent = 0 OR sent IS NULL)
+            '''
+        res = self.provider.sql_query(q)
+
+        for row in res:
+            id_doc = row[0]
+
+            doc_data = {
+                'id_doc': id_doc,
+            }
+
+            fields = ['id_doc', 'id_good', 'id_properties', 'id_series', 'id_unit', 'qtty', 'qtty_plan']
+            q = '''
+                SELECT {}
+                FROM RS_docs_table 
+                WHERE id_doc = ? AND (sent = 0 OR sent IS NULL)
+            '''.format(','.join(fields))
+
+            goods = self.provider.sql_query(q, id_doc)
+            doc_data['RS_docs_table'] = [dict(zip(fields, row)) for row in goods]
+
+
+            fields = ['id_doc', 'id_good', 'id_property', 'id_series', 'barcode_from_scanner', 'GTIN', 'Series']
+            q = '''
+                SELECT {}
+                FROM RS_docs_barcodes
+                WHERE id_doc = ?    
+            '''.format(','.join(fields))
+
+            doc_barcodes = self.provider.sql_query(q, id_doc)
+            doc_data['RS_docs_barcodes'] = [dict(zip(fields, row)) for row in doc_barcodes]
+
+
+            fields = ['id_doc', 'barcode']
+            q = '''
+                SELECT {}
+                FROM RS_barc_flow
+                WHERE id_doc = ?    
+            '''.format(','.join(fields))
+
+            doc_barcodes = self.provider.sql_query(q, id_doc)
+            doc_data['RS_barc_flow'] = [dict(zip(fields, row)) for row in doc_barcodes]
+
+            data.append(doc_data)
+
+        return data
+
+
     def get_count_mark_codes(self, id_doc):
         q = '''
             SELECT DISTINCT COUNT(id) as col_str 
@@ -717,6 +774,34 @@ class AdrDocService(DocService):
 
         return {'result': True, 'error': ''}
 
+    def get_data_to_send(self):
+        data = []
+
+        q = f'''SELECT id_doc
+                FROM {self.docs_table_name} 
+                WHERE verified = 1  AND (sent = 0 OR sent IS NULL)
+            '''
+        res = self.provider.sql_query(q)
+
+        for row in res:
+            id_doc = row[0]
+
+            doc_data = {
+                'id_doc': id_doc,
+            }
+
+            fields = ['id_doc', 'id_good', 'id_properties', 'id_series', 'id_unit', 'qtty', 'qtty_plan', 'table_type']
+            q = '''
+                SELECT {}
+                FROM RS_adr_docs_table 
+                WHERE id_doc = ? AND (sent = 0 OR sent IS NULL)
+            '''.format(','.join(fields))
+
+            goods = self.provider.sql_query(q, id_doc)
+            doc_data['RS_adr_docs_table'] = [dict(zip(fields, row)) for row in goods]
+            data.append(doc_data)
+
+        return data
 
 class FlowDocService(DocService):
 
@@ -931,15 +1016,32 @@ class GoodsService(DbService):
         self.provider.table_name = table_name
         return self._sql_query(query_text, '')
 
+class DbCreator(DbService):
+    def __init__(self):
+        super().__init__()
 
-
-class DbCreator:
     def create_tables(self):
         import database_init_queryes
         # Создаем таблицы если их нет
         schema = database_init_queryes.database_shema()
         for el in schema:
             get_query_result(el)
+
+    def drop_all_tables(self):
+        tables = self.get_all_tables()
+
+        for table in tables:
+            self._sql_query(f'DROP TABLE {table}')
+
+
+    def get_all_tables(self):
+        q = '''
+            SELECT name FROM sqlite_master
+            WHERE type='table'
+        '''
+        tables = self._sql_query(q)
+
+        return [table[0] for table in tables if table[0] not in ['sqlite_sequence']]
 
 
 class ErrorService:
@@ -1026,7 +1128,7 @@ class SqlQueryProvider:
             where=where
         )
 
-    def select(self, _filter=None):
+    def select(self, _filter=None) -> list:
         where = None
         params = ''
         if _filter:
