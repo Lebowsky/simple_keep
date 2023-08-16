@@ -1263,136 +1263,6 @@ class DocumentsDocsListScreen(DocsListScreen):
 
     def on_start(self):
         super().on_start()
-        test_table = {"customtable": {
-            "options": {
-                "search_enabled": True,
-                "save_position": True,
-                'override_search': True
-                },
-
-
-            "layout": {
-                "type": "LinearLayout",
-                "orientation": "vertical",
-                "height": "match_parent",
-                "width": "match_parent",
-                "weight": "0",
-                "Elements": [
-                    {
-                        "type": "LinearLayout",
-                        "orientation": "horizontal",
-                        "height": "wrap_content",
-                        "width": "match_parent",
-                        "weight": "0",
-                        "Elements": [
-                            {
-                                "type": "Picture",
-                                "show_by_condition": "",
-                                "Value": "@pic1",
-                                "NoRefresh": False,
-                                "document_type": "",
-                                "mask": "",
-                                "Variable": "",
-                                "TextSize": "16",
-                                "TextColor": "#DB7093",
-                                "TextBold": True,
-                                "TextItalic": False,
-                                "BackgroundColor": "",
-                                "width": "match_parent",
-                                "height": "wrap_content",
-                                "weight": 2
-                            },
-                            {
-                                "type": "LinearLayout",
-                                "orientation": "vertical",
-                                "height": "wrap_content",
-                                "width": "match_parent",
-                                "weight": "1",
-                                "Elements": [
-                                    {
-                                        "type": "TextView",
-                                        "show_by_condition": "",
-                                        "Value": "@string1",
-                                        "NoRefresh": False,
-                                        "document_type": "",
-                                        "mask": "",
-                                        "Variable": ""
-                                    },
-                                    {
-                                        "type": "TextView",
-                                        "show_by_condition": "",
-                                        "Value": "@string2",
-                                        "NoRefresh": False,
-                                        "document_type": "",
-                                        "mask": "",
-                                        "Variable": ""
-                                    },
-                                    {
-                                        "type": "TextView",
-                                        "show_by_condition": "",
-                                        "Value": "@string3",
-                                        "NoRefresh": False,
-                                        "document_type": "",
-                                        "mask": "",
-                                        "Variable": ""
-                                    }
-                                ]
-                            },
-                            {
-                                "type": "TextView",
-                                "show_by_condition": "",
-                                "Value": "@val",
-                                "NoRefresh": False,
-                                "document_type": "",
-                                "mask": "",
-                                "Variable": "",
-                                "TextSize": "16",
-                                "TextColor": "#DB7093",
-                                "TextBold": True,
-                                "TextItalic": False,
-                                "BackgroundColor": "",
-                                "width": "match_parent",
-                                "height": "wrap_content",
-                                "weight": 2
-                            }
-                        ]
-                    },
-                    {
-                        "type": "TextView",
-                        "show_by_condition": "",
-                        "Value": "@descr",
-                        "NoRefresh": False,
-                        "document_type": "",
-                        "mask": "",
-                        "Variable": "",
-                        "TextSize": "-1",
-                        "TextColor": "#6F9393",
-                        "TextBold": False,
-                        "TextItalic": True,
-                        "BackgroundColor": "",
-                        "width": "wrap_content",
-                        "height": "wrap_content",
-                        "weight": 0
-                    }
-                ]
-            }
-
-        }
-        }
-
-        test_table["customtable"]["tabledata"] = []
-        for i in range(0, 2):
-            c = {
-                "key": str(i),
-                "descr": "Pos. " + str(i),
-                "val": " руб.",
-                "string1": "Материнская плата ASUS ROG MAXIMUS Z690 APEX",
-                "string2": "Гнездо процессора LGA 1700",
-                "string3": "Частотная спецификация памяти 4800 МГц"
-            }
-            test_table["customtable"]["tabledata"].append(c)
-
-        self.hash_map.put("test_table", test_table, to_json=True)
 
     def on_input(self):
         super().on_input()
@@ -1771,7 +1641,6 @@ class DocDetailsScreen(Screen):
         doc_details = self._get_doc_details_data()
         table_data = self._prepare_table_data(doc_details)
         table_view = self._get_doc_table_view(table_data=table_data)
-        self.toast(table_view.to_json())
 
         self.hash_map['items_on_page_select'] = '20;40;60'
         if self.hash_map.get_bool('highlight'):
@@ -2875,7 +2744,13 @@ class FlowDocDetailsScreen(DocDetailsScreen):
 
         listener = self.hash_map.get('listener')
         if listener == "CardsClick":
-            pass
+            current_str = self.hash_map.get("selected_card_position")
+            jlist = json.loads(self.hash_map.get("doc_barc_flow"))
+            current_elem = jlist['customtable']['tabledata'][int(current_str)]
+            data_dict = {'barcode': current_elem['barcode'],
+                         'Номенклатура': current_elem['name'],
+                         'qtty': current_elem['qtty'], 'Характеристика': ''}
+            HtmlView.print_from_any_screen(self.hash_map, self.rs_settings, data_for_printing=data_dict)
 
         elif listener == "BACK_BUTTON":
             self.hash_map.finish_process()
@@ -3390,7 +3265,17 @@ class ItemCard(Screen):
             if self.hash_map.get('barcode_cards'):
                 self.hash_map.put('barcode_cards', '')
             self.hash_map.put("BackScreen", "")
-        if self.hash_map.get('listener') == 'to_prices':
+        elif listener == "CardsClick":
+            current_str = self.hash_map.get("selected_card_position")
+            jlist = json.loads(self.hash_map.get("barcode_cards"))
+            current_elem = jlist['customcards']['cardsdata'][int(current_str)]
+            data_dict = {'barcode': current_elem['barcode'],
+                         'Номенклатура': self.hash_map.get('good_name'),
+                         'Характеристика': current_elem['properties'], 'Валюта': current_elem['unit']}
+
+            HtmlView.print_from_any_screen(self.hash_map, self.rs_settings, data_for_printing=data_dict)
+
+        elif self.hash_map.get('listener') == 'to_prices':
             dict_data = {'input_good_id': self.hash_map.get('selected_good_id'),
                          'input_good_art': self.hash_map.get('good_art'),
                          'prices_object_name': f'{self.hash_map.get("good_name")}, {self.hash_map.get("good_code")}',
@@ -3407,8 +3292,7 @@ class ItemCard(Screen):
                          "return_to_item_card": "true", 'property_id': self.hash_map.get('property_id'),
                          'ShowProcessResult': 'Остатки|Проверить остатки', "noRefresh": ''}
             self.hash_map.put_data(dict_data)
-        if listener == "CardsClick":
-            pass
+
 
     def on_post_start(self):
         selected_good_id = self.hash_map.get("selected_good_id")

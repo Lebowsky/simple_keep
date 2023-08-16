@@ -94,27 +94,6 @@
                                 "Value": "",
                                 "Elements": [
                                     {
-                                        "TextSize": "",
-                                        "TextColor": "",
-                                        "TextBold": false,
-                                        "TextItalic": false,
-                                        "BackgroundColor": "",
-                                        "StrokeWidth": "",
-                                        "Padding": "",
-                                        "orientation": "",
-                                        "height": "wrap_content",
-                                        "width": "match_parent",
-                                        "gravity_horizontal": "center",
-                                        "gravity_vertical": "center",
-                                        "weight": "0",
-                                        "height_value": "",
-                                        "width_value": "",
-                                        "type": "TableLayout",
-                                        "Value": "@test_table",
-                                        "Variable": "test_table",
-                                        "style_name": ""
-                                    },
-                                    {
                                         "orientation": "horizontal",
                                         "height": "wrap_content",
                                         "width": "match_parent",
