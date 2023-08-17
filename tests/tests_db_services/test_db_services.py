@@ -92,15 +92,19 @@ class TestTimerService(unittest.TestCase):
         actual = self.service.get_data_to_send()
         self.assertIsInstance(actual, list)
         self.assertEqual(len(actual), 2)
+
         self.assertIsNotNone((actual[0].get('RS_docs_table')))
+        self.assertTrue(actual[0]['RS_docs_table'])
+
         self.assertIsNotNone((actual[0].get('RS_docs_barcodes')))
+        self.assertTrue(actual[0]['RS_docs_barcodes'])
+
         self.assertIsNotNone((actual[0].get('RS_barc_flow')))
+        self.assertTrue(actual[0]['RS_barc_flow'])
 
         self.assertIsNotNone((actual[1].get('RS_adr_docs_table')))
+        self.assertTrue(actual[1]['RS_adr_docs_table'])
 
-
-        # self.assertEqual(self.data_creator.samples[''])
-        # print(self.service.get_data_to_send())
 class TestDbService(unittest.TestCase):
     def setUp(self) -> None:
         pass
