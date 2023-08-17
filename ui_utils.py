@@ -582,7 +582,7 @@ class BarcodeParser:
                     barcode = None
 
                 elif barcode[:4] == '8005':  # Табак, Блок
-                    self.barcode_info.nhrn = barcode[5:11]
+                    self.barcode_info.nhrn = barcode[4:10]
                     barcode = barcode[11:]
 
                 elif barcode[:4] == '3103':  # Молочка с Весом
