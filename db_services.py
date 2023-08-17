@@ -1,4 +1,6 @@
 import json
+from typing import List
+
 from ru.travelfood.simple_ui import SimpleSQLProvider as sqlClass
 from ui_global import get_query_result
 
@@ -606,7 +608,7 @@ class DocService:
         res = self.provider.sql_query(q)
 
         for row in res:
-            id_doc = row[0]
+            id_doc = row['id_doc']
 
             doc_data = {
                 'id_doc': id_doc,
@@ -615,34 +617,34 @@ class DocService:
             fields = ['id_doc', 'id_good', 'id_properties', 'id_series', 'id_unit', 'qtty', 'qtty_plan']
             q = '''
                 SELECT {}
-                FROM RS_docs_table 
+                FROM RS_docs_table
                 WHERE id_doc = ? AND (sent = 0 OR sent IS NULL)
             '''.format(','.join(fields))
 
             goods = self.provider.sql_query(q, id_doc)
-            doc_data['RS_docs_table'] = [dict(zip(fields, row)) for row in goods]
+            doc_data['RS_docs_table'] = goods
 
 
             fields = ['id_doc', 'id_good', 'id_property', 'id_series', 'barcode_from_scanner', 'GTIN', 'Series']
             q = '''
                 SELECT {}
                 FROM RS_docs_barcodes
-                WHERE id_doc = ?    
+                WHERE id_doc = ?
             '''.format(','.join(fields))
 
             doc_barcodes = self.provider.sql_query(q, id_doc)
-            doc_data['RS_docs_barcodes'] = [dict(zip(fields, row)) for row in doc_barcodes]
+            doc_data['RS_docs_barcodes'] = doc_barcodes
 
 
             fields = ['id_doc', 'barcode']
             q = '''
                 SELECT {}
                 FROM RS_barc_flow
-                WHERE id_doc = ?    
+                WHERE id_doc = ?
             '''.format(','.join(fields))
 
-            doc_barcodes = self.provider.sql_query(q, id_doc)
-            doc_data['RS_barc_flow'] = [dict(zip(fields, row)) for row in doc_barcodes]
+            barc_flow = self.provider.sql_query(q, id_doc)
+            doc_data['RS_barc_flow'] = barc_flow
 
             data.append(doc_data)
 
@@ -784,7 +786,7 @@ class AdrDocService(DocService):
         res = self.provider.sql_query(q)
 
         for row in res:
-            id_doc = row[0]
+            id_doc = row['id_doc']
 
             doc_data = {
                 'id_doc': id_doc,
@@ -798,7 +800,7 @@ class AdrDocService(DocService):
             '''.format(','.join(fields))
 
             goods = self.provider.sql_query(q, id_doc)
-            doc_data['RS_adr_docs_table'] = [dict(zip(fields, row)) for row in goods]
+            doc_data['RS_adr_docs_table'] = goods
             data.append(doc_data)
 
         return data
@@ -1036,12 +1038,17 @@ class DbCreator(DbService):
 
     def get_all_tables(self):
         q = '''
-            SELECT name FROM sqlite_master
-            WHERE type='table'
+            SELECT 
+                name 
+            FROM 
+                sqlite_master
+            WHERE 
+                type='table' AND 
+                name NOT LIKE 'sqlite_%'
         '''
         tables = self._sql_query(q)
 
-        return [table[0] for table in tables if table[0] not in ['sqlite_sequence']]
+        return [table['name'] for table in tables]
 
 
 class ErrorService:
@@ -1207,7 +1214,7 @@ class SqlQueryProvider:
         if not self.debug:
             return self.sql.SQLExec(q, params=params)
 
-    def sql_query(self, q, params: str = '') -> list:
+    def sql_query(self, q, params: str = '') -> List[dict]:
         self.sql_text = q
         self.sql_params = params
 
