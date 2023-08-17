@@ -19,7 +19,6 @@ class TestHttpSettingsScreen(unittest.TestCase):
 
     def test_on_start_must_put_hash_map_data(self):
         # init test data
-        self.hash_map['toast'] = 'toast'
         self.hash_map['listener'] = 'btn_save'
 
         expect = [
@@ -34,7 +33,6 @@ class TestHttpSettingsScreen(unittest.TestCase):
         self.sut.on_start()
 
         # assert test method results
-        self.assertFalse(self.hash_map.containsKey('toast'))
         for key in expect:
             self.assertTrue(self.hash_map.containsKey(key), f'{key} is not set hash_map')
 

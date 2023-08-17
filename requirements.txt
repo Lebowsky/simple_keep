@@ -3,6 +3,6 @@ pillow~=9.5.0
 Flask~=2.3.2
 pony~=0.7.16
 tinydb~=4.8.0
-barcode~=1.0.2
+python-barcode~=0.15.1
 beautifulsoup4~=4.12.2
 Jinja2~=3.1.2
