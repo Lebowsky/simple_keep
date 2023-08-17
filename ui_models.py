@@ -9,7 +9,7 @@ import db_services
 import hs_services
 import printing_factory
 from ui_utils import HashMap, RsDoc, BarcodeWorker, get_ip_address
-from db_services import DocService, ErrorService, GoodsService, AdrDocService
+from db_services import DocService, ErrorService, GoodsService, AdrDocService, TimerService
 from hs_services import HsService
 from ru.travelfood.simple_ui import SimpleUtilites as suClass
 
@@ -3282,7 +3282,7 @@ class ItemCard(Screen):
                          'Характеристика': current_elem['properties'], 'Валюта': current_elem['unit']}
 
             HtmlView.print_from_any_screen(self.hash_map, self.rs_settings, data_for_printing=data_dict)
-            
+
         elif self.hash_map.get('listener') == 'to_prices':
             dict_data = {'input_good_id': self.hash_map.get('selected_good_id'),
                          'input_good_art': self.hash_map.get('good_art'),
@@ -4836,7 +4836,8 @@ class Timer:
 
     def timer_on_start(self):
         self.load_docs()
-        self.upload_all_docs()
+        self._upload_data()
+        # self.upload_all_docs()
 
     def put_notification(self, text, title=None):
         self.hash_map.notification(text, title)
@@ -4872,6 +4873,30 @@ class Timer:
 
         except Exception as e:
             self.db_service.write_error_on_log(f'Ошибка загрузки документов: {e}')
+
+    def _upload_data(self):
+        if not self._check_http_settings():
+            return
+
+        service = TimerService()
+        data = service.get_data_to_send()
+
+        if not data:
+            return
+
+        try:
+            answer = self.http_service.send_data(data)
+        except Exception as e:
+            self.db_service.write_error_on_log(f'Ошибка выгрузки документов: {e}')
+            return
+
+        if answer.error:
+            # self.put_notification(title='Ошибка при отправке документов', text=answer.error_text)
+            self.db_service.write_error_on_log(f'Ошибка выгрузки документов: {answer.error_text}')
+        else:
+            docs_list_string = ', '.join([f"'{d['id_doc']}'" for d in data])
+            self.db_service.update_uploaded_docs_status(docs_list_string)
+
 
     def upload_all_docs(self):
         self.db_service = DocService()
