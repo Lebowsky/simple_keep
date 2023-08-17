@@ -2,13 +2,16 @@ import json
 import unittest
 from unittest.mock import MagicMock
 
-from db_services import SqlQueryProvider
+from db_services import SqlQueryProvider, DbCreator
 
 
 class TestSqlQueryProvider(unittest.TestCase):
     def setUp(self) -> None:
         self.sut = SqlQueryProvider()
-        self.sut.debug = True
+        # self.sut.debug = True
+        service = DbCreator()
+        service.drop_all_tables()
+        service.create_tables()
 
     # @unittest.skip
     def test_check_exception_value_error_on_call_public_methods(self):
@@ -130,3 +133,19 @@ class TestSqlQueryProvider(unittest.TestCase):
     def test_select(self):
         # TODO AND create test
         pass
+
+    def test_sql_query(self):
+        self.sut.table_name = 'Error_log'
+        self.sut.create({'log': 'test'})
+
+        q = 'SELECT * FROM Error_log'
+        res = self.sut.sql_query(q)
+
+        self.assertEqual('test', res[0]['log'])
+
+    def sql_exec_many(self):
+        pass
+
+    def test_sql_exec(self):
+        pass
+        # self.sut.sql_exec()

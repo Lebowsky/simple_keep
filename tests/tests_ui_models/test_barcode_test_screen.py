@@ -44,9 +44,9 @@ class TestBarcodeTestScreen(unittest.TestCase):
 
         expect = {
             'fld_1': 'GTIN: 2000000000015',
-            'fld_2': 'SERIAL: ',
-            'fld_3': 'BARCODE: 2000000000015',
-            'fld_4': 'SCHEME: EAN13',
+            'fld_2': 'BARCODE: 2000000000015',
+            'fld_3': 'SCHEME: EAN13',
+            'fld_4': '',
             'fld_5': '',
             'fld_6': '',
             'fld_7': '',

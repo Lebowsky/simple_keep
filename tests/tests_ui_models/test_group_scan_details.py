@@ -18,6 +18,9 @@ class TestGroupScanDocDetailsScreen(unittest.TestCase):
         self.sut = GroupScanDocDetailsScreen(self.hash_map, self.rs_settings)
         self.path_to_test_data = './data_for_tests/http_requests'
 
+    def tearDown(self) -> None:
+        self.sut.queue_service.provider.close()
+
     def test_can_call_communication_and_return_true(self):
         answer = HsService.HttpAnswer(
             error=False,

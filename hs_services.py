@@ -241,7 +241,7 @@ class HsService:
         error: bool = False
 
 
-class DebugService():
+class DebugService:
     def __init__(self, ip_host, port=2444):
         self.ip_host = ip_host
         self.port = port

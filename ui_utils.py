@@ -1,7 +1,10 @@
 import json
+import re
+from dataclasses import dataclass, asdict
 from typing import Callable, Union, List, Dict, Optional
 from functools import wraps
 import socket
+
 
 from java import jclass
 from ui_global import Rs_doc, find_barcode_in_barcode_table
@@ -137,7 +140,7 @@ class HashMap:
         value = str(self.hash_map.get(item)).lower() not in ('0', 'false', 'none')
         return value
 
-    def put(self, key, value: Union[str, List, Dict] = '', to_json=False):
+    def put(self, key, value: Union[str, List, Dict, bool] = '', to_json=False):
         if to_json:
             self.hash_map.put(key, json.dumps(value))
         else:
@@ -294,16 +297,344 @@ class RsDoc(Rs_doc):
 
 
 class BarcodeWorker:
-    def __init__(self):
+    def __init__(self, id_doc='', **kwargs):
+        self.id_doc = id_doc
+        self.control = kwargs.get('control', False)
+        self.have_mark_plan = kwargs.get('have_mark_plan', False)
+        self.have_qtty_plan = kwargs.get('have_qtty_plan', False)
+        self.have_zero_plan = kwargs.get('have_zero_plan', False)
+        self.barcode_info = None
+        self.barcode_data = {}
+        self.document_row = None
         self.db_service = BarcodeService()
+        self.process_result = self.ProcessTheBarcodeResult()
 
-    def get_document_row_by_barcode(self, id_doc, barcode):
-        row_data = self.db_service.get_document_row_by_barcode(id_doc, barcode)
+
+    def process_the_barcode(self, barcode):
+        self.process_result.barcode = barcode
+        self.barcode_info = BarcodeParser(barcode).parse(as_dict=False)
+
+        if self.barcode_info.error:
+            self._set_process_result_info('invalid_barcode')
+            return self.process_result
+
+        if self.barcode_info.scheme == 'GS1':
+            search_value = self.barcode_info.gtin
+        else:
+            search_value = self.barcode_info.barcode
+
+        self.barcode_data = self.get_barcode_data(search_value)
+
+        if self.barcode_data:
+            self.check_barcode_in_document()
+            self.update_document_barcode_data()
+
+        return self.process_result
+
+    def get_barcode_data(self, barcode):
+        barcode_data = self.db_service.get_barcode_data(barcode)
+
+        if barcode_data:
+            return barcode_data
+        else:
+            self._set_process_result_info('not_found')
+
+
+    def check_barcode_in_document(self):
+        if self.process_result.error:
+            return
+
+        if self._use_mark():
+            self._check_mark_in_document()
+
+        self._check_barcode_in_document()
+
+    def update_document_barcode_data(self):
+        if self.process_result.error:
+            return
+
+        if self.document_row_data:
+            self.db_service.update_document_row_data(self.document_row_data)
+        else:
+            self.db_service.add_document_row(self.barcode_data)
+
+
+    def _check_mark_in_document(self):
+        if self.barcode_info.scheme == 'GS1':
+            mark_data = self.db_service.get_mark_data(
+                id_doc=self.id_doc, gtin=self.barcode_info.gtin, series=self.barcode_info.serial
+            )
+            if mark_data:
+                if mark_data['approved'] == '1':
+                    self._set_process_result_info('mark_already_scanned')
+                else:
+                    self.db_service.set_approve_mark(
+                        _id=mark_data['id'],
+                        barcode=self.barcode_info.barcode
+                    )
+            else:
+                if self.have_mark_plan and self.control:
+                    self._set_process_result_info('mark_not_found')
+                else:
+                    self._insert_mark_data()
+        else:
+            self._set_process_result_info('not_valid_barcode')
+
+    def _check_barcode_in_document(self):
+        if self.process_result.error:
+            return
+
+        self.document_row_data = self.get_document_row_by_barcode()
+        if self.document_row_data and self.have_qtty_plan:
+            if self.document_row_data['qtty_plan'] > self.document_row_data['qtty'] + self.barcode_data['ratio']:
+                self._set_process_result_info('quantity_plan_reached')
+
+        elif self.have_zero_plan and self.control:
+            self._set_process_result_info('zero_plan_error')
+
+    def _insert_mark_data(self):
+        self.db_service.insert_mark_data(
+            id_doc=self.id_doc,
+            id_good=self.barcode_data['id_good'],
+            id_property=self.barcode_data['id_property'],
+            id_series=self.barcode_data['id_series'],
+            id_unit=self.barcode_data['id_unit'],
+            barcode_from_scanner=self.barcode_info.barcode,
+            approved='1',
+            gtin=self.barcode_info.gtin,
+            series=self.barcode_info.serial,
+            ratio=1
+        )
+
+    def _use_mark(self):
+        return rs_settings.get('use_mark') == 'true'
+
+    def _set_process_result_info(self, info_key):
+        info_data = {
+            'invalid_barcode': {
+               'error': 'Invalid barcode',
+               'description': 'Неверный штрихкод',
+            },
+            'not_found': {
+                'error': 'Not found',
+                'description': 'Штрихкод не найден в базе',
+            },
+            'mark_not_found': {
+                'error': 'Not found',
+                'description': 'Марка не найдена в документе',
+            },
+            'not_valid_barcode': {
+                'error': 'Not valid barcode',
+                'description': 'Товар подлежит маркировке, отсканирован неверный штрихкод маркировки',
+            },
+            'mark_already_scanned': {
+                'error': 'Already scanned',
+                'description': 'Такая марка уже была отсканирована',
+            },
+            'zero_plan_error': {
+                'error': 'Zero plan error',
+                'description': 'В данный документ нельзя добавить товар не из списка',
+            },
+            'quantity_plan_reached': {
+                'error': 'Quantity plan reached',
+                'description': 'Количество план будет превышено при добавлении {} единиц товара'.format(
+                    str(self.barcode_data.get('ratio', 0))
+                ),
+            }
+        }
+        # {'Result': 'Марка добавлена в документ', 'Error': None,
+        #  'barcode': barcode_info['GTIN'] + barcode_info['SERIAL']}
+
+        if info_data.get(info_key):
+            self.process_result.error = info_data[info_key]['error']
+            self.process_result.description = info_data[info_key]['description']
+
+    def get_document_row_by_barcode(self):
+        row_data = self.db_service.get_document_row_by_barcode(
+            self.id_doc, self.barcode_info.barcode)
         if row_data:
             return row_data[0]
 
-    def parse(self, barcode: str) -> dict:
-        return parse_barcode(barcode)
+    def parse(self, barcode: str):
+        return BarcodeParser(barcode).parse()
+        # return {'SCHEME': 'EAN13', 'BARCODE': barcode, 'GTIN': barcode, 'SERIAL': ''}
+
+    @dataclass
+    class ProcessTheBarcodeResult:
+        error: str = ''
+        description: str = ''
+        barcode: str = ''
+        row_key: str = ''
+
+
+
+class BarcodeParser:
+    def __init__(self, barcode):
+        self.barcode = barcode
+        self.barcode_info = BarcodeParser.BarcodeInfo(barcode=barcode)
+        self.macro_05 = f'[)>{chr(30)}05'
+        self.macro_06 = f'[)>{chr(30)}06'
+        self.gs1_separator = chr(29)
+        self.identifier = ']d2'
+
+    def parse(self, as_dict=True):
+        if self.is_valid_ean13(self.barcode):
+            self.barcode_info.scheme = 'EAN13'
+            self.barcode_info.gtin = self.barcode
+
+        elif len(self.barcode) == 29:
+            self.barcode_info.scheme = 'GS1'
+            self.barcode_info.gtin = self.barcode[0:14]
+            self.barcode_info.serial = self.barcode[14:21]
+            self.barcode_info.mrc = self.barcode[21:25]
+            self.barcode_info.check = self.barcode[25:29]
+
+        elif self.gs1_separator in self.barcode or '<GS>' in self.barcode:
+            self.barcode_info.scheme = 'GS1'
+            self.check_datamatrix(self.barcode)
+
+        else:
+            self.barcode_info.scheme = 'UNKNOWN'
+            self.barcode_info.gtin = self.barcode
+
+        if as_dict:
+            return self.barcode_info.dict()
+        else:
+            return self.barcode_info
+
+    @staticmethod
+    def is_valid_ean13(code):
+        pattern = r'^\d{13}$'
+        if not re.match(pattern, code):
+            return False
+
+        factors = [1, 3] * 6
+        checksum = sum(int(code[i]) * factors[i] for i in range(12))
+        checksum = (10 - (checksum % 10)) % 10
+
+        return checksum == int(code[-1])
+
+
+    def check_datamatrix(self, barcode):
+        barcode = self.clear_identifier(barcode)
+        self.check_gs1_gtin(barcode)
+
+
+    def check_gs1_gtin(self, barcode: str):
+        if self.gs1_separator in barcode:
+            while barcode:
+                if barcode[:2] == '01':
+                    self.barcode_info.gtin = barcode[2:16]
+                    if len(barcode) > 16:
+                        barcode = barcode[16:]
+                    else:
+                        barcode = None
+
+                elif barcode[:3] == chr(29) + '01':
+                    self.barcode_info.gtin = barcode[3:17]
+                    if len(barcode) > 17:
+                        barcode = barcode[17:]
+                    else:
+                        barcode = None
+
+                elif barcode[:2] == '17':
+                    self.barcode_info.expiry = barcode[2:8]
+                    if len(barcode) > 8:
+                        barcode = barcode[8:]
+                    else:
+                        barcode = None
+
+                elif barcode[:2] == '10':
+                    if chr(29) in barcode:
+                        index = barcode.index(chr(29))
+                        self.barcode_info.batch = barcode[2:index]
+                        barcode = barcode[index + 1:]
+                    else:
+                        self.barcode_info.batch = barcode[2:]
+                        barcode = None
+
+                elif barcode[:2] == '21':
+                    if chr(29) in barcode:
+                        index = barcode.index(chr(29))
+                        self.barcode_info.serial = barcode[2:index]
+                        barcode = barcode[index + 1:]
+                    else:
+                        self.barcode_info.serial = barcode[2:]
+                        barcode = None
+
+                elif barcode[:2] == '91':
+                    if chr(29) in barcode:
+                        index = barcode.index(chr(29))
+
+                        self.barcode_info.nhrn = barcode[2:index]
+                        barcode = barcode[index + 1:]
+                    else:
+                        self.barcode_info.nhrn = barcode[2:6]
+                        barcode = None
+
+                elif barcode[:2] == '93':  # Молочка, вода
+                    self.barcode_info.check = barcode[2:6]
+                    barcode = barcode[7:]
+
+                elif barcode[:2] == '92':  # Далее следует код проверки, 44 символа
+                    # if len(barcode[2:])==44:
+                    self.barcode_info.check = barcode[2:]
+                    barcode = None
+
+                elif barcode[:4] == '8005':  # Табак, Блок
+                    self.barcode_info.nhrn = barcode[5:11]
+                    barcode = barcode[11:]
+
+                elif barcode[:4] == '3103':  # Молочка с Весом
+                    self.barcode_info.weight = barcode[4:]
+                    barcode = None
+
+                else:
+                    self.barcode_info.error = 'INVALID BARCODE'
+                    return
+        else:
+            self.barcode_info.error = 'No GS Separator'
+
+        # if ('GTIN' , 'BATCH' , 'EXPIRY' , 'SERIAL') in result.keys():
+        #     if gtin_check(result['GTIN']) == False and expiry_date_check(result['EXPIRY']) == False:
+        #         return {'ERROR': 'INVALID GTIN & EXPIRY DATE', 'BARCODE': result}
+        #     elif expiry_date_check(result['EXPIRY']) == False:
+        #         return {'ERROR': 'INVALID EXPIRY DATE', 'BARCODE': result}
+        #     elif gtin_check(result['GTIN']) == False:
+        #         return {'ERROR': 'INVALID GTIN', 'BARCODE': result}
+        #     else:
+        #         return result
+        # else:
+        #     return {'ERROR': 'INCOMPLETE DATA', 'BARCODE': result}
+
+    def clear_identifier(self, barcode):
+        """
+        Most barcode scanners prepend ']d2' identifier for the GS1 datamatrix.
+        This section removes the identifier.
+        """
+
+        if barcode[:3] == self.identifier:
+            barcode = barcode[3:]
+
+        return barcode
+
+    @dataclass
+    class BarcodeInfo:
+        barcode: str = ''
+        scheme: str = ''
+        serial: str = ''
+        gtin: str = ''
+        error: str = ''
+        mrc: str = ''
+        check: str = ''
+        full_code: str = ''
+        expiry: str = ''
+        batch: str = ''
+        nhrn: str = ''
+        weight: str = ''
+
+        def dict(self):
+            return {k.upper(): str(v) for k, v in asdict(self).items() if v}
 
 
 def get_ip_address():

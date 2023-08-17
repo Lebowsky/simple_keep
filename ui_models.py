@@ -10,6 +10,7 @@ import hs_services
 import printing_factory
 from ui_utils import HashMap, RsDoc, BarcodeWorker, get_ip_address
 from db_services import DocService, ErrorService, GoodsService, AdrDocService, TimerService
+from tiny_db_services import ScanningQueueService, TinyNoSQLProvider
 from hs_services import HsService
 from ru.travelfood.simple_ui import SimpleUtilites as suClass
 
@@ -1592,6 +1593,7 @@ class DocDetailsScreen(Screen):
         self.id_doc = self.hash_map['id_doc']
         self.service = DocService(self.id_doc)
         self.items_on_page = 20
+        self.queue_service = ScanningQueueService()
 
     def on_start(self) -> None:
         pass
@@ -2113,6 +2115,97 @@ class GroupScanDocDetailsScreen(DocDetailsScreen):
                 url=self.hs_service.url)
 
         return not answer.error
+
+    def __get_doc_table_view(self, table_data):
+        table_view = widgets.CustomTable(
+            widgets.LinearLayout(
+                self.LinearLayout(
+                    self.TextView('Название'),
+                    weight=4
+                ),
+                self.LinearLayout(
+                    self.TextView('План'),
+                    weight=2
+                ),
+                self.LinearLayout(
+                    self.TextView('Факт устройства'),
+                    weight=2
+                ),
+                self.LinearLayout(
+                    self.TextView('Общий факт'),
+                    weight=2
+                ),
+                orientation='horizontal',
+                height="match_parent",
+                width="match_parent",
+                BackgroundColor='#FFFFFF'
+            ),
+            options=widgets.Options().options,
+            tabledata=table_data
+        )
+
+        return table_view
+
+    def __get_doc_table_row_view(self):
+        row_view = widgets.LinearLayout(
+            widgets.LinearLayout(
+                widgets.LinearLayout(
+                    widgets.LinearLayout(
+                        self.TextView('@good_name'),
+                        widgets.TextView(
+                            Value='@good_info',
+                            TextSize=15,
+                            width='match_parent'
+                        ),
+                        width='match_parent',
+                    ),
+                    width='match_parent',
+                    orientation='horizontal',
+                    StrokeWidth=1
+                ),
+                width='match_parent',
+                weight=4,
+                StrokeWidth=1
+            ),
+            widgets.LinearLayout(
+                widgets.TextView(
+                    Value='@qtty_plan',
+                    TextSize=15,
+                    width='match_parent',
+                ),
+                width='match_parent',
+                height='match_parent',
+                weight=2,
+                StrokeWidth=1
+            ),
+            widgets.LinearLayout(
+                widgets.TextView(
+                    Value='@d_qtty',
+                    TextSize=15,
+                    width='match_parent',
+                ),
+                width='match_parent',
+                height='match_parent',
+                weight=2,
+                StrokeWidth=1
+            ),
+            widgets.LinearLayout(
+                widgets.TextView(
+                    Value='@qtty',
+                    TextSize=15,
+                    width='match_parent'
+                ),
+                width='match_parent',
+                height='match_parent',
+                weight=2,
+                StrokeWidth=1
+            ),
+            orientation='horizontal',
+            width='match_parent',
+            BackgroundColor='#FFFFFF'
+        )
+
+        return row_view
 
     def scan_error_sound(self):
         super().scan_error_sound()

@@ -3,7 +3,7 @@ from typing import List
 
 from ru.travelfood.simple_ui import SimpleSQLProvider as sqlClass
 from ui_global import get_query_result
-
+from datetime import datetime, timedelta
 
 class DbService:
     def __init__(self):
@@ -18,6 +18,7 @@ class DbService:
             self.provider.create({'log': error_text})
             self.sql_text = self.provider.sql_text
             self.sql_params = self.provider.sql_params
+
     def _sql_exec(self, q, params, table_name=''):
         if table_name:
             self.provider.table_name = table_name
@@ -101,6 +102,43 @@ class BarcodeService(DbService):
             WHERE id_doc = ? AND barcode = ?
         '''
         return self.provider.sql_query(q, ','.join([doc_id, barcode]))
+
+    def get_mark_data(self, id_doc, gtin, series):
+        self.provider.table_name = 'RS_docs_barcodes'
+        res = self.provider.select(
+            {
+                'id_doc': id_doc,
+                'gtin': gtin,
+                'series': series
+            })
+        if res:
+            return res[0]
+
+    def set_approve_mark(self, _id, barcode):
+        self.provider.table_name = 'RS_docs_barcodes'
+        self.provider.update(
+            data={'approved': '1'},
+            _filter = {
+                'id': _id,
+                'barcode_from_scanner': barcode
+            }
+        )
+
+    def insert_mark_data(self, **mark_data):
+        self.provider.table_name = 'RS_docs_barcodes'
+        self.provider.create(mark_data)
+
+    def update_document_row_data(self, data):
+        self.provider.table_name = 'RS_docs_table'
+
+        data['last_updated'] = (datetime.now() - timedelta(hours=user_tmz)).strftime("%Y-%m-%d %H:%M:%S")
+        self.provider.update(data=data, _filter={'id': data['id']})
+
+    def add_document_row(self, data):
+        self.provider.table_name = 'RS_docs_table'
+        self.provider.create(data)
+
+
 
 
 class DocService:
@@ -1063,7 +1101,7 @@ class ErrorService:
 
 
 class SqlQueryProvider:
-    def __init__(self, table_name='', sql_class=None, debug=False):
+    def __init__(self, table_name='', sql_class=sqlClass(), debug=False):
         self.table_name = table_name
         self.sql = sql_class
         self.sql_text = ''
