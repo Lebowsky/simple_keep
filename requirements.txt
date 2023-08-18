@@ -6,3 +6,4 @@ tinydb~=4.8.0
 python-barcode~=0.15.1
 beautifulsoup4~=4.12.2
 Jinja2~=3.1.2
+python-barcode~=0.15.1

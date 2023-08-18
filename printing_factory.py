@@ -31,11 +31,12 @@ class HTMLDocument:
         barcode_image_base64 = self.generate_barcode(parameters['barcode'])
 
         template = env.get_template(self.template_file)
+
         aa = template.render(parameters)
 
         soup = BeautifulSoup(aa, 'html.parser')
         for imgtag in soup.find_all("img"):
-            imgtag['src'] = "data:image/png;base64," + barcode_image_base64
+            imgtag['src'] = "data:image/png; width:auto; height:auto; base64," + barcode_image_base64
 
         return str(soup)
 
@@ -53,36 +54,92 @@ class HTMLDocument:
             params.add('barcode')
         return params
 
-
     def get_template(self):
 
-        with open(self.template_directory +'/'+ self.template_file, "r", encoding="utf-8") as file:
-           html_body  = file.read()
+        with open(self.template_directory + '/' + self.template_file, "r", encoding="utf-8") as file:
+            html_body = file.read()
 
         return html_body
 
+    @staticmethod
+    def inject_css_style(html):
 
-    def inject_css_style(self, html):
-        css_style = """
-        <style>
-          .scaled-table {
-            transform: scale({scale_value}); 
-            transform-origin: top left; 
-          }
-        </style>
-        """
+        css_template2 = '''
+          @page {
+            margin: 1mm; /* Adjust if necessary */
+        }
+        
+        body {
+            margin: 0;
+            padding: 0;
+            background: #ffffff;
+            font-family: Arial;
+            font-size: 8pt;
+            font-style: normal;
+        }
+        
+        .full-template {
+            width: calc(100vw - 2mm);  
+            height: calc(100vh - 2mm);
+            min-width: 40mm;    /* Minimum width */
+            min-height: 40mm;   /* Minimum height */
+            border: 1pt solid black;
+            box-sizing: border-box; /* ensures padding and border are included in the total width and height */
+            page-break-inside: avoid; /* Avoid breaking inside the template */
+        }
+        
+        img {
+            min-width: 20mm;    /* Minimum width for the image */
+            min-height: 20mm;   /* Minimum height for the image */
+            width: 100%;
+            height: 70%;        /* This is to keep the height as per your requirements: 70% of the template */
+            object-fit: cover;
+        }
+        
+        table {
+            width: 100%;
+            height: 100%;
+            table-layout: fixed;
+            border-collapse: collapse;
+            page-break-inside: avoid; /* Avoid breaking inside the table */
+        }
+        
+        td {
+            text-align: center;
+            vertical-align: middle;
+            overflow: hidden;
+        }
+        '''
+
         soup = BeautifulSoup(html, "html.parser")
+        # Добавляем свои стили в документ
+        head_tag = soup.head
+        style_tag = soup.new_tag("style")
+        style_tag.string = css_template2
+        head_tag.append(style_tag)
+        # Запихуем весь документ в контейнер
+        wrapper = soup.new_tag("div")
+        wrapper['class'] = 'full-template'
+        body_children = list(soup.body.children)
+        soup.body.clear()
+        soup.body.append(wrapper)
+        for child in body_children:
+            wrapper.append(child)
 
-        body_tag = soup.body
-        if body_tag:
-            body_tag.insert(0, css_style)
+        # Удаляем пустые ячейки из таблицы, которые так любит 1с
+        for tr in soup.find_all('tr'):
 
-        table_tags = soup.find_all("table")
-        for table_tag in table_tags:
-            table_tag["class"] = table_tag.get("class", []) + ["scaled-table"]
+            for td in tr.find_all('td'):
+                if not td.attrs.get('class'):
+                    td.decompose()
+        # Лишние колонки справа удаляем тоже
+        for col in soup.find_all('col'):
+            if not col.attrs:
+                col.decompose()
 
-        updated_template_content = str(soup)
-        return updated_template_content
+        return str(soup)
 
-
-
+# html_doc = HTMLDocument(template_file='template.html', template_directory='templates')
+# html_text = HTMLDocument.default_html
+# html_doc.inject_css_style(html_text)
+# print(html_text)
