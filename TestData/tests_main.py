@@ -161,6 +161,9 @@ def file_browser_on_start(hash_map):
 def file_browser_on_input(hash_map):
     main.file_browser_on_input(hash_map)
 
+def elem_viev_on_click(hash_mao):
+    main.elem_viev_on_click(hash_mao)
+
 class hashMap:
     d = {}
 

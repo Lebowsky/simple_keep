@@ -232,7 +232,7 @@ class HtmlView(Screen):
             file_name = json.loads(file_params)['full_patch']
         else:
 
-            file_name = suClass.get_stored_file("Шаблон2")
+            file_name = suClass.get_stored_file("Шаблон")
         # hash_map.toast(file_name)
 
         return os.path.split(file_name)
@@ -345,6 +345,9 @@ class HtmlView(Screen):
                 template_directory, template_file  = HtmlView.get_template_by_default(rs_settings)
                 #hash_map.toast(f'Путь:{template_directory}  Файл:{template_file}')
                 htmlresult = printing_factory.HTMLDocument(template_file, template_directory).create_html(data_for_printing)
+                htmlresult = printing_factory.HTMLDocument.inject_css_style(htmlresult)
+                with open(suClass.get_temp_dir() + '//template.html', 'w', encoding='utf-8') as file:
+                    file.write(htmlresult)
                 # self.params['template'],self.params['template_folder']
 
                 hash_map.put("PrintPreview", htmlresult)
@@ -2967,6 +2970,8 @@ class FlowDocDetailsScreen(DocDetailsScreen):
 
 
 class GoodsSelectScreen(Screen):
+    screen_name = 'Товар выбор'
+    process_name = 'Документы'
     def __init__(self, hash_map: HashMap, rs_settings):
         super().__init__(hash_map, rs_settings)
         self.service = DocService()
@@ -3025,6 +3030,14 @@ class GoodsSelectScreen(Screen):
             self._set_delta(reset=True)
             self.hash_map.put('new_qtty', '')
             self.hash_map.show_screen("Документ товары")
+        elif listener == 'btn_print':
+           param_list = {'Дата_док':'Doc_data','Номенклатура':'Good','Артикул':'good_art','Серийный номер':'good_sn','Характеристика':'good_property'
+           ,'Цена':'good_price','ЕдИзм':'good_unit','Ключ':'key','Цена':'price','Валюта':'price_type'}
+           for key in param_list.keys():
+               param_list[key]  = self.hash_map.get(param_list[key])
+
+           param_list['barcode'] = '0000000000000'
+           HtmlView.print_from_any_screen(self.hash_map, self.rs_settings, data_for_printing=param_list)
 
     def on_post_start(self):
         pass
@@ -3486,9 +3499,9 @@ class GoodsBalancesItemCard(Screen):
             else:
                 if self.hash_map.get('error_msg'):
                     self.hash_map.put('error_msg', self.hash_map.get('error_msg') + "\n" + " Ячейка c именем " + "'" +
-                                      cell_input + "'" + " не найдена")
+                                      self.hash_map.get('cell_input') + "'" + " не найдена")
                 else:
-                    self.hash_map.put('error_msg', " Ячейка c именем " + "'" + cell_input + "'" + " не найдена")
+                    self.hash_map.put('error_msg', " Ячейка c именем " + "'" + self.hash_map.get('cell_input') + "'" + " не найдена")
         else:
             self.hash_map.put('selected_cell_id', '')
             self.hash_map.put('cell_name', '')
@@ -4930,6 +4943,8 @@ class MainEvents:
 
     def app_on_start(self):
 
+        self.hash_map.put('StackAddMode', '') # Включает режим объединения переменных hash_map в таймерах
+
         # TODO Обработчики обновления!
         release = self.rs_settings.get('Release') or ''
         toast = 'Готов к работе'
@@ -5002,7 +5017,8 @@ class MainEvents:
 # ^^^^^^^^^^^^^^^^^^^^^ Main events ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 class ScreensFactory:
-    screens = [HtmlView,
+    screens = [GoodsSelectScreen,
+        HtmlView,
         TemplatesList,
         AdrDocsListScreen,
         AdrDocDetailsScreen,
