@@ -2233,6 +2233,20 @@ class GroupScanDocDetailsScreen(DocDetailsScreen):
         if 'urovo' in self.hash_map.get('DEVICE_MODEL').lower():
             suClass.urovo_set_lock_trigger(value)
 
+class GroupScanDocDetailsScreenNew(DocDetailsScreen):
+    def __init__(self, hash_map, rs_settings):
+        super().__init__(hash_map, rs_settings)
+
+    def on_start(self):
+        super()._on_start()
+
+    def on_input(self) -> None:
+        super().on_input()
+        listeners = {
+            # 'barcode': self._barcode_scanned,
+        }
+        if self.listener in listeners:
+            listeners[self.listener]()
 
 class DocumentsDocDetailScreen(DocDetailsScreen):
     screen_name = 'Документ товары'
