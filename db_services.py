@@ -455,9 +455,8 @@ class DocService:
         res = self._get_query_result(query, return_dict=True)
         return res
 
-    def get_doc_details_data(self, id_doc, first_elem, last_elem, row_filters=None) -> list:
+    def get_doc_details_data(self, id_doc, first_elem, items_on_page, row_filters=None, search_string=None) -> list:
         select_query = f"""
-            SELECT * FROM (
             SELECT
             RS_docs_table.id,
             RS_docs_table.id_doc,
@@ -476,7 +475,6 @@ class DocService:
             RS_docs_table.price,
             RS_price_types.name as price_name,
             RS_docs_table.qtty_plan -RS_docs_table.qtty as IsDone,
-            ROW_NUMBER() OVER (ORDER BY last_updated DESC) AS row_num,
             RS_docs_table.last_updated
             
             FROM RS_docs_table 
@@ -493,25 +491,21 @@ class DocService:
             ON RS_price_types.id =RS_docs_table.id_price
             """
 
-        if row_filters:
-            where_query = f"""
-                WHERE id_doc = $arg1
-                AND RS_docs_table.qtty != RS_docs_table.qtty_plan
-                 ) AS combined
-                WHERE row_num BETWEEN 1 AND 1 OR row_num BETWEEN $arg2 AND $arg3 
-                ORDER BY last_updated DESC
-                """
-        else:
-            where_query = f"""
-                WHERE id_doc = $arg1
-                ) AS combined
-                WHERE row_num BETWEEN 1 AND 1 OR row_num BETWEEN $arg2 AND $arg3 
-                ORDER BY last_updated DESC
-                """
+        where = f"""WHERE id_doc = '{str(id_doc)}'"""
+        row_filters_condition = """AND RS_docs_table.qtty != RS_docs_table.qtty_plan""" if row_filters else ''
+        search_string_condition = f"""AND good_name LIKE '%{search_string}%'""" if search_string else ''
 
-        query = select_query + where_query
+        where_query = f"""
+        {where}
+        {row_filters_condition}
+        {search_string_condition}
+        """
+        order_by = """ORDER BY last_updated DESC"""
+        limit = f'LIMIT {items_on_page} OFFSET {first_elem}'
 
-        res = self._get_query_result(query, (id_doc, first_elem, last_elem), return_dict=True)
+        query = f"{select_query} {where_query} {order_by} {limit}"
+
+        res = self._sql_query(query, '')
         return res
 
     def parse_barcode(self, val):
