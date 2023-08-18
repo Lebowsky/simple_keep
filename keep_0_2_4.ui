@@ -2,7 +2,7 @@
     "ClientConfiguration": {
         "ConfigurationName": "Simple Учет",
         "ConfigurationDescription": "Простое решение для работы с штрихкодами товаров. Поставляется в комплекте с расширением для 1С. Подробнее про расширение Вы можете узнать по ссылке: https://www.simple-kit.ru/products/simple-uchet/ ",
-        "ConfigurationVersion": "0.2.3",
+        "ConfigurationVersion": "0.2.4",
         "Processes": [
             {
                 "type": "Process",
@@ -234,12 +234,113 @@
                                         ]
                                     },
                                     {
+                                        "type": "LinearLayout",
+                                        "Variable": "pagination_controls",
+                                        "orientation": "horizontal",
+                                        "height": "wrap_content",
+                                        "width": "match_parent",
+                                        "weight": "0",
+                                        "Elements": [
+                                            {
+                                                "Value": "<",
+                                                "Variable": "previous_page",
+                                                "height": "wrap_content",
+                                                "width": "match_parent",
+                                                "weight": "3",
+                                                "TextBold": false,
+                                                "TextItalic": false,
+                                                "TextSize": "21",
+                                                "TextColor": "#000000",
+                                                "type": "Button"
+                                            },
+                                            {
+                                                "type": "LinearLayout",
+                                                "Variable": "",
+                                                "orientation": "horizontal",
+                                                "height": "match_parent",
+                                                "width": "match_parent",
+                                                "weight": "1",
+                                                "Elements": [
+                                                    {
+                                                        "Value": "Страница:",
+                                                        "Variable": "",
+                                                        "height": "match_parent",
+                                                        "width": "wrap_content",
+                                                        "weight": "1",
+                                                        "TextBold": false,
+                                                        "TextItalic": false,
+                                                        "TextSize": "18",
+                                                        "type": "TextView"
+                                                    },
+                                                    {
+                                                        "Value": "@current_page",
+                                                        "Variable": "current_page",
+                                                        "height": "match_parent",
+                                                        "width": "wrap_content",
+                                                        "orientation": "",
+                                                        "weight": "1",
+                                                        "TextBold": false,
+                                                        "TextItalic": false,
+                                                        "TextSize": "18",
+                                                        "TextColor": "",
+                                                        "type": "TextView"
+                                                    },
+                                                    {
+                                                        "Value": "@items_on_page_select",
+                                                        "Variable": "items_on_page_click",
+                                                        "height": "wrap_content",
+                                                        "width": "wrap_content",
+                                                        "orientation": "",
+                                                        "weight": "",
+                                                        "TextBold": false,
+                                                        "TextItalic": false,
+                                                        "TextSize": "16",
+                                                        "TextColor": "#000000",
+                                                        "type": "SpinnerLayout"
+                                                    }
+                                                ],
+                                                "BackgroundColor": "",
+                                                "StrokeWidth": "",
+                                                "Padding": ""
+                                            },
+                                            {
+                                                "Value": ">",
+                                                "Variable": "next_page",
+                                                "height": "wrap_content",
+                                                "width": "match_parent",
+                                                "orientation": "",
+                                                "weight": "3",
+                                                "TextBold": false,
+                                                "TextItalic": false,
+                                                "TextSize": "21",
+                                                "TextColor": "#000000",
+                                                "type": "Button"
+                                            }
+                                        ],
+                                        "BackgroundColor": "",
+                                        "StrokeWidth": "",
+                                        "Padding": ""
+                                    },
+                                    {
                                         "Value": "@doc_goods_table",
                                         "Variable": "doc_goods_table",
                                         "height": "wrap_content",
                                         "width": "match_parent",
                                         "weight": "0",
                                         "type": "TableLayout"
+                                    },
+                                    {
+                                        "Value": "@doc_goods_table",
+                                        "Variable": "doc_goods_table",
+                                        "height": "wrap_content",
+                                        "width": "match_parent",
+                                        "orientation": "",
+                                        "weight": "0",
+                                        "TextBold": false,
+                                        "TextItalic": false,
+                                        "TextSize": "",
+                                        "TextColor": "",
+                                        "type": "CardsLayout"
                                     },
                                     {
                                         "Value": "Выгрузить документ",
@@ -625,7 +726,7 @@
                                                                         "Variable": "blank_1",
                                                                         "height": "wrap_content",
                                                                         "width": "match_parent",
-                                                                        "weight": 0,
+                                                                        "weight": "0",
                                                                         "TextBold": false,
                                                                         "TextItalic": false,
                                                                         "type": "TextView"
@@ -682,7 +783,7 @@
                                                                         "Variable": "blank_2",
                                                                         "height": "wrap_content",
                                                                         "width": "wrap_content",
-                                                                        "weight": 0,
+                                                                        "weight": "0",
                                                                         "TextBold": false,
                                                                         "TextItalic": false,
                                                                         "type": "TextView"
@@ -718,7 +819,7 @@
                                                                         "Variable": "blank_left",
                                                                         "height": "wrap_content",
                                                                         "width": "wrap_content",
-                                                                        "weight": 0,
+                                                                        "weight": "0",
                                                                         "TextBold": false,
                                                                         "TextItalic": false,
                                                                         "type": "TextView"
@@ -775,7 +876,7 @@
                                                                         "Variable": "blank_right",
                                                                         "height": "wrap_content",
                                                                         "width": "wrap_content",
-                                                                        "weight": 0,
+                                                                        "weight": "0",
                                                                         "TextBold": false,
                                                                         "TextItalic": false,
                                                                         "type": "TextView"
@@ -838,7 +939,7 @@
                                                 "Variable": "",
                                                 "height": "wrap_content",
                                                 "width": "match_parent",
-                                                "weight": 0,
+                                                "weight": "0",
                                                 "TextBold": false,
                                                 "TextItalic": false,
                                                 "TextSize": "21",
