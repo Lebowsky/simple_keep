@@ -1757,13 +1757,13 @@ class DocDetailsScreen(Screen):
         return data
 
     def _next_page(self):
-        first_element = int(self.hash_map.get('current_first_element_number')) + self.items_on_page + 1
+        first_element = int(self.hash_map.get('current_first_element_number')) + self.items_on_page
         self.hash_map.put('current_first_element_number', str(first_element))
         current_page = int(self.hash_map.get('current_page')) + 1 or 1
         self.hash_map.put('current_page', str(current_page))
 
     def _previous_page(self):
-        first_element = int(self.hash_map.get('current_first_element_number')) - self.items_on_page - 1
+        first_element = int(self.hash_map.get('current_first_element_number')) - self.items_on_page
         self.hash_map.put('current_first_element_number', str(first_element))
         current_page = int(self.hash_map.get('current_page')) - 1 or 1
         self.hash_map.put('current_page', str(current_page))
