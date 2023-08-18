@@ -3514,7 +3514,7 @@ class GoodsBalancesItemCard(Screen):
             else:
                 if self.hash_map.get('error_msg'):
                     self.hash_map.put('error_msg', self.hash_map.get('error_msg') + "\n" + " Ячейка c именем " + "'" +
-                                      cell_input + "'" + " не найдена")
+                                      self.hash_map.get('cell_input') + "'" + " не найдена")
                 else:
                     self.hash_map.put('error_msg', " Ячейка c именем " + "'" + self.hash_map.get('cell_input') + "'" + " не найдена")
         else:
