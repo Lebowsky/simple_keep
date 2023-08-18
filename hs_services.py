@@ -169,6 +169,15 @@ class HsService:
         self.http_answer = self._create_http_answer(answer)
         return answer
 
+    def send_data(self, data, **kwargs) -> 'HttpAnswer':
+        kwargs['data'] = data if isinstance(data, str) else json.dumps(data)
+        self._hs = 'documents'
+        self._method = requests.post
+
+        answer = self._send_request(kwargs)
+        self.http_answer = self._create_http_answer(answer)
+        return self.http_answer
+
     def _send_request(self, kwargs) -> dict:
         answer = {'empty': True}
         try:
@@ -203,6 +212,7 @@ class HsService:
         if answer_data['status_code'] == 200:
             answer_data['data'] = answer.get('data')
         else:
+            answer_data['error'] = True
             answer_data['error_text'] = answer.get('Error') or answer.get('error')
             if answer_data['status_code'] == 401:
                 answer_data['unauthorized'] = True

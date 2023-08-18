@@ -1,3 +1,4 @@
+from typing import List
 import collections
 import sqlite3
 from sqlite3 import Error
@@ -158,6 +159,22 @@ def bulk_query_replace(query_text: str, args: object = "") -> object:
     conn.close()
     return res
 
+
+def bulk_query(q: str, args: List[tuple]):
+    try:
+        conn = sqlite3.connect(db_path)
+    except sqlite3.Error:
+        raise ValueError('No connection with database')
+
+    cursor = conn.cursor()
+
+    try:
+        cursor.executemany(q, args)
+        conn.commit()
+    except sqlite3.Error as er:
+        raise ValueError(er)
+
+    conn.close()
 
 def get_name_list(str_entty):
     query = "SELECT name FROM " + str_entty
