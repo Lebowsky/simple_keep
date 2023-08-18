@@ -2243,10 +2243,25 @@ class GroupScanDocDetailsScreenNew(DocDetailsScreen):
     def on_input(self) -> None:
         super().on_input()
         listeners = {
-            # 'barcode': self._barcode_scanned,
+            'barcode': self._barcode_scanned,
         }
         if self.listener in listeners:
             listeners[self.listener]()
+
+    def _barcode_scanned(self):
+        pass
+        # process the barcode
+        # save barc queue
+        # run after_scan_processing async http post -> hs.send_document_lines()
+        # hash_map.put('send_document_lines_running', True)
+        # if 200 update barc queue
+        #   update RS_docs_table
+        #   update queue sent status
+        # hash_map.put('send_document_lines_running', False)
+
+    def after_scan_processing(self):
+        pass
+
 
 class DocumentsDocDetailScreen(DocDetailsScreen):
     screen_name = 'Документ товары'
