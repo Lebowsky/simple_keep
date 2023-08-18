@@ -1576,7 +1576,6 @@ class FlowDocScreen(DocsListScreen):
                 self.toast('При очистке данных возникла ошибка.')
                 self.hash_map.error_log(res.get('error'))
 
-        #elif self
         super().on_input()
 
 
@@ -1616,6 +1615,17 @@ class DocDetailsScreen(Screen):
 
         elif listener == 'btn_rows_filter_off':
             self.hash_map.remove('rows_filter')
+            self.hash_map.put('SearchString', '')
+            self.hash_map.refresh_screen()
+
+        elif listener == "Search":
+            self.hash_map.put('current_first_element_number', '0')
+            self.hash_map.put('current_page', '1')
+            # doc_details = self._get_doc_details_data()
+            # table_data = self._prepare_table_data(doc_details)
+            # table_view = self._get_doc_table_view(table_data=table_data)
+            # self.hash_map.put("doc_goods_table", table_view.to_json())
+            self._on_start()
             self.hash_map.refresh_screen()
 
     def on_post_start(self):
@@ -1633,8 +1643,14 @@ class DocDetailsScreen(Screen):
         have_zero_plan = False
         have_mark_plan = False
 
+        last_scanned_details = self._get_doc_details_data(last_scanned=True)
+        last_scanned_data = self._prepare_table_data(last_scanned_details)[1]
         doc_details = self._get_doc_details_data()
         table_data = self._prepare_table_data(doc_details)
+        if last_scanned_data:
+            if self.hash_map.get('current_page') == '1':
+                table_data.pop(1)
+            table_data.insert(1, last_scanned_data)
         table_view = self._get_doc_table_view(table_data=table_data)
 
         self.hash_map['items_on_page_select'] = '20;40;60'
@@ -1725,12 +1741,16 @@ class DocDetailsScreen(Screen):
         self.hash_map.put("Show_fact_qtty_input", '1' if allow_fact_input else '-1')
         self.hash_map.put("Show_fact_qtty_note", '-1' if allow_fact_input else '1')
 
-    def _get_doc_details_data(self):
+    def _get_doc_details_data(self, last_scanned=False):
         self._check_previous_page()
         first_element = int(self.hash_map.get('current_first_element_number'))
         row_filters = self.hash_map.get('rows_filter')
-        data = self.service.get_doc_details_data(self.id_doc, first_element, first_element + self.items_on_page, row_filters)
-        self._check_next_page(len(data))
+        search_string = self.hash_map.get('SearchString') if self.hash_map.get('SearchString') else None
+
+        data = self.service.get_doc_details_data(self.id_doc, 0 if last_scanned else first_element,
+                                                 1 if last_scanned else self.items_on_page, row_filters, search_string)
+        if not last_scanned:
+            self._check_next_page(len(data))
         return data
 
     def _next_page(self):
@@ -1844,7 +1864,6 @@ class DocDetailsScreen(Screen):
             ),
             options=widgets.Options(override_search=True).options,
             tabledata=table_data
-            # cardsdata=table_data
         )
 
         return table_view
