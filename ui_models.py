@@ -2237,6 +2237,8 @@ class GroupScanDocDetailsScreenNew(DocDetailsScreen):
     def __init__(self, hash_map, rs_settings):
         super().__init__(hash_map, rs_settings)
 
+
+
     def on_start(self):
         super()._on_start()
 
@@ -2249,8 +2251,24 @@ class GroupScanDocDetailsScreenNew(DocDetailsScreen):
             listeners[self.listener]()
 
     def _barcode_scanned(self):
-        pass
+        if self.hash_map.get("event") == "onResultPositive":
+            barcode = self.hash_map.get('fld_barcode')
+        else:
+            barcode = self.hash_map.get('barcode_camera')
+
+        if not barcode:
+            return
+
         # process the barcode
+        # barcode_worker = BarcodeWorker(
+        #     self.id_doc, **self._get_barcode_process_params())
+        #
+        # result = barcode_worker.process_the_barcode(barcode)
+        # if result.error:
+        #     self._process_error_scan_barcode(result)
+        #     return
+
+
         # save barc queue
         # run after_scan_processing async http post -> hs.send_document_lines()
         # hash_map.put('send_document_lines_running', True)
@@ -2262,6 +2280,16 @@ class GroupScanDocDetailsScreenNew(DocDetailsScreen):
     def after_scan_processing(self):
         pass
 
+    def _get_barcode_process_params(self):
+        return {
+            'have_qtty_plan': self.hash_map.get_bool('have_qtty_plan'),
+            'have_zero_plan': self.hash_map.get_bool('have_zero_plan'),
+            'have_mark_plan': self.hash_map.get_bool('have_mark_plan'),
+            'control': self.hash_map.get_bool('control')
+        }
+
+    def _process_error_scan_barcode(self, scan_result):
+        self.hash_map.toast(scan_result.description)
 
 class DocumentsDocDetailScreen(DocDetailsScreen):
     screen_name = 'Документ товары'
