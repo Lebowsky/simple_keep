@@ -117,22 +117,24 @@ class HtmlView(Screen):
         self.param_name_for_settings = self.hash_map['template_settings_name'] #self.hash_map['current_operation_name'] + '/' + self.hash_map['current_screen_name']
 
     def on_start(self, ):
-
+        #Не перерисовываем экран если уже сделан
         json_table = self.hash_map.get('matching_table')
         if json_table is not None:
             return
 
-        # Если есть конкретный шаблон, ищем его в локальных файлах
-        if self.params.get('template'):
-            pass
-        else:
-            self.params['template_folder'], self.params['template'] = self.get_template_by_default(rs_settings= self.rs_settings)
-        template_directory = self.params['template_folder']
-        template_file = self.params['template']
-        #self.hash_map.toast(f'Путь:{template_directory}  Файл:{template_file}')
 
-        html_doc = printing_factory.HTMLDocument(self.params['template'],
-                                                 self.params['template_folder']).get_template()
+        # Если установлен шаблон в настройках печати, ищем его в локальных файлах
+        # if self.params.get('template'):
+        #     pass
+        if self.params.get('file_name') and self.params.get('full_path'):
+            pass
+        else: #Файл шаблона не найден, возвращаемся обратно
+            self.hash_map.toast('Не найден файл шаблона')
+            self.hash_map.finish_process_result()
+            return
+            #self.params['template_folder'], self.params['template'] = self.get_template_by_default(rs_settings= self.rs_settings)
+        template_dir, template_file = self.get_template_by_default(self.params)
+        html_doc = printing_factory.HTMLDocument(template_dir, template_file).get_template()
         self.hash_map.put('html', html_doc)
         #
         doc_details = self.get_details_data()
@@ -156,8 +158,8 @@ class HtmlView(Screen):
         #Распарсим шаблон и вытащим переменные
         if matching_table:
             return matching_table
-        html_doc_params = printing_factory.HTMLDocument(self.params['template'],
-                                                 self.params['template_folder']).find_template_variables()
+        template_dir, template_file = self.get_template_by_default(self.params)
+        html_doc_params = printing_factory.HTMLDocument(template_dir, template_file).find_template_variables()
 
         #Загрузим, настройки соответствия и если их нет то подставим пустые значения
         json_text = self.rs_settings.get(self.param_name_for_settings)
@@ -185,13 +187,19 @@ class HtmlView(Screen):
             self.hash_map.finish_process_result()
 
         elif self.listener == 'btn_save':
+
             jlist = json.loads(self.hash_map.get("matching_table"))
             current_table = jlist['customtable']['tabledata']
             current_table.__delitem__(0)
             for el in current_table:
                 if el.get('key'):
                     el.__delitem__('_layout')
-            current_table_json = json.dumps(current_table)
+
+            settings_for_wrote = {'full_path' : self.params.get('full_path'),
+            'file_name' : self.params.get('file_name'),
+            'print_params' : current_table }
+
+            current_table_json = json.dumps(settings_for_wrote)
 
             self.rs_settings.put(self.param_name_for_settings, current_table_json, False)  #current_table_json
             self.hash_map.remove('matching_table')
@@ -226,16 +234,21 @@ class HtmlView(Screen):
         pass
 
     @staticmethod
-    def get_template_by_default(rs_settings):
-        file_params = rs_settings.get('current_template')
-        if file_params:
-            file_name = json.loads(file_params)['full_patch']
+    def get_template_by_default(print_params: dict):
+
+        file_name = ''
+        if 'full_path' not in print_params:
+            raise ValueError("Ключа 'full_path' не найдено в настройках.")
         else:
+            file_name = print_params['full_path']
 
-            file_name = suClass.get_stored_file("Шаблон")
-        # hash_map.toast(file_name)
+        if file_name and os.path.exists(file_name):
+            return os.path.split(file_name)
+        else:
+            return os.path.split(file_name) #DEBUG, must delete
+            raise ValueError(f'Файл шаблона {file_name} не найден')
 
-        return os.path.split(file_name)
+
 
     def _prepare_table_data(self, details):
         table_data = [{}]
@@ -341,13 +354,13 @@ class HtmlView(Screen):
             str_table_view = rs_settings.get(param_name_for_settings)
             if str_table_view:  #Нашли настройки для вызвавшего экрана
                 params_match = json.loads(str_table_view)
-                data_for_printing = HtmlView.replase_params_names(data_for_printing, params_match)
-                template_directory, template_file  = HtmlView.get_template_by_default(rs_settings)
+                data_for_printing = HtmlView.replase_params_names(data_for_printing, params_match.get('print_params'))
+                template_directory, template_file  = HtmlView.get_template_by_default(params_match)
                 #hash_map.toast(f'Путь:{template_directory}  Файл:{template_file}')
-                htmlresult = printing_factory.HTMLDocument(template_file, template_directory).create_html(data_for_printing)
+                htmlresult = printing_factory.HTMLDocument(template_directory, template_file).create_html(data_for_printing)
                 htmlresult = printing_factory.HTMLDocument.inject_css_style(htmlresult)
-                with open(suClass.get_temp_dir() + '//template.html', 'w', encoding='utf-8') as file:
-                    file.write(htmlresult)
+                # with open(suClass.get_temp_dir() + '//template.html', 'w', encoding='utf-8') as file:
+                #     file.write(htmlresult)
                 # self.params['template'],self.params['template_folder']
 
                 hash_map.put("PrintPreview", htmlresult)
@@ -355,7 +368,9 @@ class HtmlView(Screen):
             else:  #Вызываем этот экан средствами симпла, для настройки параметров
                 hash_map.put('print_parameters', json.dumps(data_for_printing))
                 hash_map['template_settings_name'] = param_name_for_settings
-                hash_map.show_process_result('Печать', 'Результат')
+                #hash_map.show_process_result('Печать', 'Результат')
+                hash_map.show_process_result('Печать', 'Список шаблонов')
+
 
     @staticmethod
     def replase_params_names(data_for_printing, params_match):
@@ -372,10 +387,12 @@ class HtmlView(Screen):
 class TemplatesList(Screen):
     screen_name = 'Список шаблонов'
     process_name = 'Печать'
+
     def __init__(self,hash_map: HashMap, rs_settings):
         super().__init__(hash_map, rs_settings)
 
         self.hs_service = HsService(self.get_http_settings())
+        self.print_parameters = json.loads(self.hash_map.get('print_parameters'))
 
 
     def on_start(self):
@@ -507,7 +524,7 @@ class TemplatesList(Screen):
                     formatted_creation_time = creation_time.strftime('%Y-%m-%d %H:%M:%S')  #Format datetime for user eyes ))
 
                     file_info = {
-                        'full_patch': file_path,
+                        'full_path': file_path,
                         'file_name': file,
                         'file_size': f'{file_size_kb:.2f} KB',  # Format file size with 2 decimal places
                         'creation_time': formatted_creation_time
@@ -522,12 +539,15 @@ class TemplatesList(Screen):
         if self.hash_map.get('layout_listener') == 'Задать по умолчанию':
             selected_card = json.loads(self.hash_map.get('card_data'))
             if selected_card and isinstance(selected_card, dict):
-                file_parameters = {'name':selected_card.get('file_name'), 'full_patch':selected_card.get('full_patch')}
-                self.rs_settings.put('current_template',json.dumps(file_parameters),False)
+                self.print_parameters ['file_name'] = selected_card.get('file_name')
+                self.print_parameters['full_path'] = selected_card.get('full_path')
+                self.hash_map.put('print_parameters', json.dumps(self.print_parameters))
+                #self.rs_settings.put('current_template',json.dumps(file_parameters),False)
 
                 self.hash_map.put('current_template', selected_card.get('file_name'))
 
-                self.delete_template_settings(self.rs_settings)
+                #self.delete_template_settings(self.rs_settings)
+                self.hash_map.show_screen('Результат') #.show_process_result('Печать', 'Результат')
 
 
 class SimpleFileBrowser(Screen):
@@ -652,7 +672,7 @@ class SimpleFileBrowser(Screen):
             file_info = {
                 'picture':pic,
                 'item_type':item_type,
-                'full_patch': str(directory_path.joinpath(file_path)),
+                'full_path': str(directory_path.joinpath(file_path)),
                 'file_name': file_path,
                 'file_size': f'{file_size_kb:.2f} KB',  # Format file size with 2 decimal places
                 'creation_time': formatted_creation_time
@@ -668,7 +688,7 @@ class SimpleFileBrowser(Screen):
 
             selected_card = json.loads(self.hash_map.get('card_data'))
             if selected_card and isinstance(selected_card, dict):
-                file = Path(selected_card['full_patch'])
+                file = Path(selected_card['full_path'])
                 if file.is_file():
                     self._copy_file(file)
 

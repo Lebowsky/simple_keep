@@ -4,13 +4,15 @@ from barcode.writer import ImageWriter
 from jinja2 import Environment, FileSystemLoader, select_autoescape, meta
 import base64
 from io import BytesIO
+from pathlib import Path
 
 
 class HTMLDocument:
 
-    def __init__(self, template_file, template_directory):
+    def __init__(self, template_directory, template_file):
         self.template_directory = template_directory
         self.template_file = template_file
+
 
     @staticmethod
     def generate_barcode(data):
@@ -56,7 +58,7 @@ class HTMLDocument:
 
     def get_template(self):
 
-        with open(self.template_directory + '/' + self.template_file, "r", encoding="utf-8") as file:
+        with open(Path(self.template_directory) / self.template_file, "r", encoding="utf-8") as file:
             html_body = file.read()
 
         return html_body
