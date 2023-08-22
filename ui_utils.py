@@ -1,22 +1,24 @@
 import json
 import re
 from dataclasses import dataclass, asdict
-from typing import Callable, Union, List, Dict, Optional
+from typing import Callable, Union, List, Dict
 from functools import wraps
 import socket
-
+from datetime import datetime, timedelta
 
 from java import jclass
 from ui_global import Rs_doc, find_barcode_in_barcode_table
-from ui_barcodes import parse_barcode
 from db_services import DocService, BarcodeService
 
 noClass = jclass("ru.travelfood.simple_ui.NoSQL")
 rs_settings = noClass("rs_settings")
 
 
-# Класс-декоратор для удобной работы с hashMap. Также можно добавить дополнительную логику.
 class HashMap:
+    """
+        Класс-декоратор для удобной работы с hashMap. Также можно добавить дополнительную логику.
+    """
+
     def __init__(self, hash_map=None, debug: bool = False):
         self.hash_map = hash_map
         self.debug_mode = debug
@@ -42,7 +44,6 @@ class HashMap:
     def show_process_result(self, process, screen):
         if process and screen:
             self.hash_map.put('ShowProcessResult', f'{process}|{screen}')
-
 
     def set_result_listener(self, listener):
         if listener and isinstance(listener, str):
@@ -85,7 +86,6 @@ class HashMap:
 
     def run_event_progress(self, method_name):
         self['RunEvent'] = json.dumps(self._get_event(method_name, 'runprogress'))
-
 
     def beep(self, tone=''):
         self.hash_map.put('beep', str(tone))
@@ -303,12 +303,16 @@ class BarcodeWorker:
         self.have_mark_plan = kwargs.get('have_mark_plan', False)
         self.have_qtty_plan = kwargs.get('have_qtty_plan', False)
         self.have_zero_plan = kwargs.get('have_zero_plan', False)
+        self.use_scanning_queue = kwargs.get('use_scanning_queue', False)
         self.barcode_info = None
-        self.barcode_data = {}
         self.document_row = None
         self.db_service = BarcodeService()
         self.process_result = self.ProcessTheBarcodeResult()
-
+        self.user_tmz = 0
+        self.barcode_data = {}
+        self.mark_update_data = {}
+        self.docs_table_update_data = {}
+        self.queue_update_data = {}
 
     def process_the_barcode(self, barcode):
         self.process_result.barcode = barcode
@@ -318,29 +322,23 @@ class BarcodeWorker:
             self._set_process_result_info('invalid_barcode')
             return self.process_result
 
-        if self.barcode_info.scheme == 'GS1':
-            search_value = self.barcode_info.gtin
-        else:
-            search_value = self.barcode_info.barcode
-
-        self.barcode_data = self.get_barcode_data(search_value)
+        self.barcode_data = self._get_barcode_data()
 
         if self.barcode_data:
-            self.check_barcode_in_document()
+            self.check_barcode()
             self.update_document_barcode_data()
 
         return self.process_result
 
-    def get_barcode_data(self, barcode):
-        barcode_data = self.db_service.get_barcode_data(barcode)
+    def _get_barcode_data(self):
+        barcode_data = self.db_service.get_barcode_data(self.barcode_info, self.id_doc)
 
         if barcode_data:
             return barcode_data
         else:
             self._set_process_result_info('not_found')
 
-
-    def check_barcode_in_document(self):
+    def check_barcode(self):
         if self.process_result.error:
             return
 
@@ -349,29 +347,13 @@ class BarcodeWorker:
 
         self._check_barcode_in_document()
 
-    def update_document_barcode_data(self):
-        if self.process_result.error:
-            return
-
-        if self.document_row_data:
-            self.db_service.update_document_row_data(self.document_row_data)
-        else:
-            self.db_service.add_document_row(self.barcode_data)
-
-
     def _check_mark_in_document(self):
         if self.barcode_info.scheme == 'GS1':
-            mark_data = self.db_service.get_mark_data(
-                id_doc=self.id_doc, gtin=self.barcode_info.gtin, series=self.barcode_info.serial
-            )
-            if mark_data:
-                if mark_data['approved'] == '1':
+            if self.barcode_data['mark_id']:
+                if self.barcode_data['approved'] == '1':
                     self._set_process_result_info('mark_already_scanned')
                 else:
-                    self.db_service.set_approve_mark(
-                        _id=mark_data['id'],
-                        barcode=self.barcode_info.barcode
-                    )
+                    self._insert_mark_data()
             else:
                 if self.have_mark_plan and self.control:
                     self._set_process_result_info('mark_not_found')
@@ -384,36 +366,89 @@ class BarcodeWorker:
         if self.process_result.error:
             return
 
-        self.document_row_data = self.get_document_row_by_barcode()
-        if self.document_row_data and self.have_qtty_plan:
-            if self.document_row_data['qtty_plan'] > self.document_row_data['qtty'] + self.barcode_data['ratio']:
+        new_qtty = self.barcode_data['qtty'] + self.barcode_data['ratio']
+        if self.barcode_data['row_key']:
+            if self.have_qtty_plan and self.barcode_data['qtty_plan'] > new_qtty:
                 self._set_process_result_info('quantity_plan_reached')
 
         elif self.have_zero_plan and self.control:
             self._set_process_result_info('zero_plan_error')
 
+        if not self.process_result.error:
+            if self.use_scanning_queue:
+                self._insert_queue_data(new_qtty)
+            else:
+                self._insert_doc_table_data(new_qtty)
+
+
     def _insert_mark_data(self):
-        self.db_service.insert_mark_data(
-            id_doc=self.id_doc,
-            id_good=self.barcode_data['id_good'],
-            id_property=self.barcode_data['id_property'],
-            id_series=self.barcode_data['id_series'],
-            id_unit=self.barcode_data['id_unit'],
-            barcode_from_scanner=self.barcode_info.barcode,
-            approved='1',
-            gtin=self.barcode_info.gtin,
-            series=self.barcode_info.serial,
-            ratio=1
-        )
+        self.mark_update_data = {
+            'id': self.barcode_data['mark_id'],
+            'id_doc': self.id_doc,
+            'id_good': self.barcode_data['id_good'],
+            'id_property': self.barcode_data['id_property'],
+            'id_series': self.barcode_data['id_series'],
+            'id_unit': self.barcode_data['id_unit'],
+            'barcode_from_scanner': self.barcode_info.barcode,
+            'approved': '1',
+            'gtin': self.barcode_info.gtin,
+            'series': self.barcode_info.serial
+        }
+
+    def _insert_doc_table_data(self, qty):
+
+        self.docs_table_update_data = {
+            'id': self.barcode_data['row_key'],
+            'id_doc': self.id_doc,
+            'id_good': self.barcode_data['id_good'],
+            'id_properties': self.barcode_data['id_property'],
+            'id_series': self.barcode_data['id_series'],
+            'id_unit': self.barcode_data['id_unit'],
+            'qtty': qty,
+            'qtty_plan': self.barcode_data['qtty_plan'],
+            'last_updated': (datetime.now() - timedelta(hours=self.user_tmz)).strftime("%Y-%m-%d %H:%M:%S"),
+            'id_cell': '',
+        }
+
+    def _insert_queue_data(self, qty):
+        self.queue_update_data = {
+            "id_doc": self.id_doc,
+            "id_good": self.barcode_data['id_good'],
+            "id_properties": self.barcode_data['id_property'],
+            "id_series": self.barcode_data['id_series'],
+            "id_unit": self.barcode_data['id_unit'],
+            "id_cell": '',
+            "d_qtty": self.barcode_data['ratio'],
+            'row_key': self.barcode_data['row_key'],
+            'sent': False
+        }
+
+    def update_document_barcode_data(self):
+        if self.process_result.error:
+            return
+
+        if self.mark_update_data:
+            pass
+
+        if self.docs_table_update_data:
+            pass
+
+        if self.queue_update_data:
+            pass
+
+        if self._use_mark():
+            self._set_process_result_info('success_mark')
+        else:
+            self._set_process_result_info('success_barcode')
 
     def _use_mark(self):
-        return rs_settings.get('use_mark') == 'true'
+        return rs_settings.get('use_mark') == 'true' and self.barcode_data['use_mark']
 
     def _set_process_result_info(self, info_key):
         info_data = {
             'invalid_barcode': {
-               'error': 'Invalid barcode',
-               'description': 'Неверный штрихкод',
+                'error': 'Invalid barcode',
+                'description': 'Неверный штрихкод',
             },
             'not_found': {
                 'error': 'Not found',
@@ -440,20 +475,21 @@ class BarcodeWorker:
                 'description': 'Количество план будет превышено при добавлении {} единиц товара'.format(
                     str(self.barcode_data.get('ratio', 0))
                 ),
+            },
+            'success_barcode': {
+                'error': '',
+                'description': 'Товар добавлен в документ'
+            },
+            'success_mark': {
+                'error': '',
+                'description': 'Марка добавлена в документ'
             }
         }
-        # {'Result': 'Марка добавлена в документ', 'Error': None,
-        #  'barcode': barcode_info['GTIN'] + barcode_info['SERIAL']}
 
         if info_data.get(info_key):
             self.process_result.error = info_data[info_key]['error']
             self.process_result.description = info_data[info_key]['description']
-
-    def get_document_row_by_barcode(self):
-        row_data = self.db_service.get_document_row_by_barcode(
-            self.id_doc, self.barcode_info.barcode)
-        if row_data:
-            return row_data[0]
+            self.process_result.row_key = self.barcode_data['row_key']
 
     def parse(self, barcode: str):
         return BarcodeParser(barcode).parse()
@@ -465,7 +501,6 @@ class BarcodeWorker:
         description: str = ''
         barcode: str = ''
         row_key: str = ''
-
 
 
 class BarcodeParser:
@@ -514,11 +549,9 @@ class BarcodeParser:
 
         return checksum == int(code[-1])
 
-
     def check_datamatrix(self, barcode):
         barcode = self.clear_identifier(barcode)
         self.check_gs1_gtin(barcode)
-
 
     def check_gs1_gtin(self, barcode: str):
         if self.gs1_separator in barcode:

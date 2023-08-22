@@ -1,6 +1,7 @@
 import unittest
+from unittest.mock import MagicMock
 
-from ui_utils import BarcodeParser
+from ui_utils import BarcodeParser, BarcodeWorker
 from ui_barcodes import parse_barcode
 
 class TestBarcodeParser(unittest.TestCase):
@@ -354,3 +355,36 @@ class TestBarcodeParser(unittest.TestCase):
 
         actual = self.sut(barcode=barcode).parse()
         self.assertEqual(expect, actual)
+
+
+class TestBarcodeWorker(unittest.TestCase):
+    def setUp(self) -> None:
+        pass
+
+    def test_can_add_qty_by_barcode(self):
+        id_doc = '96e94835-f8a0-11ed-a290-8babe363837e'
+        barcode = '2000000025988'
+        barcode_data = {
+            'id_good': 'baf54db7-7029-11e6-accf-0050568b35ac',
+            'id_property': 'c3d2a493-7026-11e6-accf-0050568b35ac',
+            'id_series': 'c3d2a493-7026-11e6-accf-0050568b35ac',
+            'id_unit': 'c3d2a493-7026-11e6-accf-0050568b35ac',
+            'ratio': 10,
+            'approved': '',
+            'mark_id': '',
+            'use_mark': False,
+            'row_key': '1',
+            'qtty': 1,
+            'qtty_plan': 5,
+        }
+
+        sut = BarcodeWorker(id_doc)
+        sut._get_barcode_data = MagicMock(return_value=barcode_data)
+
+        result = sut.process_the_barcode(barcode)
+
+        self.assertFalse(result.error)
+        self.assertTrue(sut.docs_table_update_data)
+        self.assertEqual(sut.docs_table_update_data['qtty'], 11)
+        self.assertFalse(sut.queue_update_data)
+        self.assertFalse(sut.mark_update_data)
