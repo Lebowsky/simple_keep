@@ -360,7 +360,26 @@ class TestBarcodeParser(unittest.TestCase):
 class TestBarcodeWorker(unittest.TestCase):
     def setUp(self) -> None:
         pass
-
+    
+    def test_getting_error_empty_barcode_data(self):
+        pass
+    
+    def test_getting_error_invalid_barcode(self):
+        """ invalid_barcode """
+        pass
+    
+    def test_getting_error_not_found(self):
+        """ not_found """
+        pass
+    
+    def test_getting_error_not_valid_barcode_if_use_mark_but_scan_ean13(self):
+        """ not_valid_barcode """
+        pass
+    
+    def test_getting_error_zero_plan_error_if_have_zero_plan_and_control(self):
+        """ zero_plan_error """
+        pass
+    
     def test_can_add_qty_by_barcode(self):
         id_doc = '96e94835-f8a0-11ed-a290-8babe363837e'
         barcode = '2000000025988'
@@ -388,3 +407,26 @@ class TestBarcodeWorker(unittest.TestCase):
         self.assertEqual(sut.docs_table_update_data['qtty'], 11)
         self.assertFalse(sut.queue_update_data)
         self.assertFalse(sut.mark_update_data)
+
+    def test_can_add_qty_by_barcode_use_queue(self):
+        pass
+    
+    def test_can_add_mark_in_document(self):
+        pass
+    
+    def test_can_set_approved_mark(self):
+        pass
+    
+    def test_cant_add_already_mark(self):
+        """ mark_already_scanned """
+        pass
+
+    def test_cant_add_new_mark_if_have_mark_plan_and_control(self):
+        """ mark_not_found """
+        pass
+
+    def test_cant_add_reached_plan_barcode(self):
+        """ quantity_plan_reached """
+        pass
+
+    
