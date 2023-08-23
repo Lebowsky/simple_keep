@@ -272,7 +272,7 @@ class HtmlView(Screen):
         if file_name and os.path.exists(file_name):
             return os.path.split(file_name)
         else:
-            return os.path.split(file_name) #DEBUG, must delete
+            #return os.path.split(file_name) #DEBUG, must delete
             raise ValueError(f'Файл шаблона {file_name} не найден')
 
 
@@ -520,12 +520,12 @@ class TemplatesList(Screen):
             file_path = os.path.join(output_folder, file_name)
 
             # Decode the BASE64 encoded HTML data
-            html_data = printing_factory.HTMLDocument(file_name, file_path).inject_css_style(base64.b64decode(data_dict['html']).decode('utf-8'))
+            #html_data = printing_factory.HTMLDocument(file_name, file_path).inject_css_style(base64.b64decode(data_dict['html']).decode('utf-8'))
 
             # Write the HTML data to the file
             try:
                 with open(file_path, 'w', encoding='utf-8') as file:
-                    file.write(html_data)
+                    file.write(base64.b64decode(data_dict['html']).decode('utf-8'))
             except:
                 raise f'Ошибка сохранения файла {file_path}'
         #     print(f'Saved {file_name}')
@@ -3124,7 +3124,7 @@ class GoodsSelectScreen(Screen):
     def print_ticket(self, barcode: str = None):
         param_list = {'Дата_док': 'Doc_data', 'Номенклатура': 'Good', 'Артикул': 'good_art',
                       'Серийный номер': 'good_sn', 'Характеристика': 'good_property'
-            , 'Цена': 'good_price', 'ЕдИзм': 'good_unit', 'Ключ': 'key', 'Цена': 'price', 'Валюта': 'price_type'}
+            , 'Цена': 'good_price', 'ЕдИзм': 'good_unit', 'Ключ': 'key', 'Валюта': 'price_type'}
         for key in param_list.keys():
             param_list[key] = self.hash_map.get(param_list[key])
         if barcode:
