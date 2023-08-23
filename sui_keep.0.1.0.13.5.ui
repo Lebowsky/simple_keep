@@ -1333,6 +1333,19 @@
                                         ]
                                     },
                                     {
+                                        "Value": "Печать этикетки",
+                                        "Variable": "btn_print",
+                                        "height": "wrap_content",
+                                        "width": "match_parent",
+                                        "orientation": "",
+                                        "weight": "",
+                                        "TextBold": false,
+                                        "TextItalic": false,
+                                        "TextSize": "",
+                                        "TextColor": "",
+                                        "type": "ProgressButton"
+                                    },
+                                    {
                                         "Value": "@barcode_cards",
                                         "Variable": "barcode_cards",
                                         "height": "wrap_content",
