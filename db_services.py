@@ -536,10 +536,10 @@ class DocService:
         """
         order_by = """ORDER BY last_updated DESC"""
         limit = f'LIMIT {items_on_page} OFFSET {first_elem}'
-
         query = f"{select_query} {where_query} {order_by} {limit}"
 
-        res = self._sql_query(query, '')
+        res = self._get_query_result(query, return_dict=True)
+        # res = self._sql_query(query, '')
         return res
 
     def parse_barcode(self, val):

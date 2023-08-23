@@ -5073,7 +5073,7 @@
                 "ProcessName": "Печать",
                 "PlanFactHeader": "",
                 "DefineOnBackPressed": true,
-                "hidden": false,
+                "hidden": true,
                 "login_screen": false,
                 "SC": false,
                 "Operations": [
@@ -5250,18 +5250,18 @@
                         ],
                         "Handlers": [
                             {
-                                "event": "onInput",
-                                "action": "run",
-                                "type": "python",
-                                "method": "html_view_on_input",
-                                "postExecute": ""
-                            },
-                            {
                                 "event": "onStart",
-                                "listener": "",
                                 "action": "run",
                                 "type": "python",
                                 "method": "html_view_on_start",
+                                "postExecute": ""
+                            },
+                            {
+                                "event": "onInput",
+                                "listener": "",
+                                "action": "run",
+                                "type": "python",
+                                "method": "html_view_on_input",
                                 "postExecute": ""
                             }
                         ],
