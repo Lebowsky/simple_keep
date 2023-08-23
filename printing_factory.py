@@ -17,7 +17,10 @@ class HTMLDocument:
     @staticmethod
     def generate_barcode(data):
         EAN = barcode.get_barcode_class('ean13')
-        ean = EAN(data, writer=ImageWriter())
+        writer = ImageWriter()
+        #writer.set_options({})
+        ean = EAN(data, writer = writer)
+
         barcode_image = BytesIO()
         ean.write(barcode_image)
         return base64.b64encode(barcode_image.getvalue()).decode()
@@ -64,7 +67,13 @@ class HTMLDocument:
         return html_body
 
     @staticmethod
-    def inject_css_style(html):
+    def inject_css_style(html, params):
+
+        picture_width = params.get('picture_width')
+        picture_height = params.get('picture_height')
+        if not (picture_width and picture_height):
+            picture_width = '20'
+            picture_height = '20'
 
         css_template2 = '''
           @page {
@@ -91,10 +100,10 @@ class HTMLDocument:
         }
         
         img {
-            min-width: 20mm;    /* Minimum width for the image */
-            min-height: 20mm;   /* Minimum height for the image */
+            min-width: ''' + picture_width + '''mm;    /* Minimum width for the image */
+            min-height: ''' + picture_height + '''mm;   /* Minimum height for the image */
             width: 100%;
-            height: 70%;        /* This is to keep the height as per your requirements: 70% of the template */
+            height: 100%;        
             object-fit: cover;
         }
         

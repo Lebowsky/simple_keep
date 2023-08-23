@@ -121,6 +121,10 @@ class HtmlView(Screen):
         json_table = self.hash_map.get('matching_table')
         if json_table is not None:
             return
+        if self.hash_map.get('run_screen') == '2':
+            return
+        else:
+            self.hash_map['run_screen'] = '1'
 
 
         # Если установлен шаблон в настройках печати, ищем его в локальных файлах
@@ -132,6 +136,13 @@ class HtmlView(Screen):
             self.hash_map.toast('Не найден файл шаблона')
             self.hash_map.finish_process_result()
             return
+
+        if not (self.params.get('picture_with') and self.params.get('picture_highth')):
+            self.params['picture_highth'] = '20'
+            self.params['picture_with'] = '20'
+            self.hash_map['picture_highth'] = '20'
+            self.hash_map['picture_with'] = '20'
+
             #self.params['template_folder'], self.params['template'] = self.get_template_by_default(rs_settings= self.rs_settings)
         template_dir, template_file = self.get_template_by_default(self.params)
         html_doc = printing_factory.HTMLDocument(template_dir, template_file).get_template()
@@ -180,10 +191,12 @@ class HtmlView(Screen):
         super().on_input()
         if self.listener == 'ON_BACK_PRESSED':
             self.hash_map.remove('matching_table')
+            self.hash_map.put('run_screen', '2')
             self.hash_map.finish_process_result()
 
         elif self.listener ==  'btn_cancel':
             self.hash_map.remove('matching_table')
+            self.hash_map.put('run_screen','2')
             self.hash_map.finish_process_result()
 
         elif self.listener == 'btn_save':
@@ -197,12 +210,15 @@ class HtmlView(Screen):
 
             settings_for_wrote = {'full_path' : self.params.get('full_path'),
             'file_name' : self.params.get('file_name'),
+            'picture_with':self.hash_map.get('picture_with'),
+            'picture_highth': self.hash_map.get('picture_highth'),
             'print_params' : current_table }
 
             current_table_json = json.dumps(settings_for_wrote)
 
             self.rs_settings.put(self.param_name_for_settings, current_table_json, False)  #current_table_json
             self.hash_map.remove('matching_table')
+            self.hash_map.put('run_screen','2')
             self.hash_map.finish_process_result()
 
         elif self.listener == "TableClick" or self.listener =='CardsClick':
@@ -358,7 +374,7 @@ class HtmlView(Screen):
                 template_directory, template_file  = HtmlView.get_template_by_default(params_match)
                 #hash_map.toast(f'Путь:{template_directory}  Файл:{template_file}')
                 htmlresult = printing_factory.HTMLDocument(template_directory, template_file).create_html(data_for_printing)
-                htmlresult = printing_factory.HTMLDocument.inject_css_style(htmlresult)
+                htmlresult = printing_factory.HTMLDocument.inject_css_style(htmlresult, params_match)
                 # with open(suClass.get_temp_dir() + '//template.html', 'w', encoding='utf-8') as file:
                 #     file.write(htmlresult)
                 # self.params['template'],self.params['template_folder']
