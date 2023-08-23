@@ -362,7 +362,13 @@ class TestBarcodeWorker(unittest.TestCase):
         pass
     
     def test_getting_error_empty_barcode_data(self):
-        pass
+        barcode = '2000000025988'
+        id_doc = '96e94835-f8a0-11ed-a290-8babe363837e'
+        sut = BarcodeWorker(id_doc)
+        sut._get_barcode_data = MagicMock(return_value={})
+
+        result = sut.process_the_barcode(barcode)
+        self.assertEqual(result.error, 'Not found')
     
     def test_getting_error_invalid_barcode(self):
         """ invalid_barcode """

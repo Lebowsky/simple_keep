@@ -297,7 +297,7 @@ class RsDoc(Rs_doc):
 
 
 class BarcodeWorker:
-    def __init__(self, id_doc='', **kwargs):
+    def __init__(self, id_doc, **kwargs):
         self.id_doc = id_doc
         self.control = kwargs.get('control', False)
         self.have_mark_plan = kwargs.get('have_mark_plan', False)
@@ -327,16 +327,15 @@ class BarcodeWorker:
         if self.barcode_data:
             self.check_barcode()
             self.update_document_barcode_data()
+        else:
+            self._set_process_result_info('not_found')
 
         return self.process_result
 
     def _get_barcode_data(self):
         barcode_data = self.db_service.get_barcode_data(self.barcode_info, self.id_doc)
+        return barcode_data or {}
 
-        if barcode_data:
-            return barcode_data
-        else:
-            self._set_process_result_info('not_found')
 
     def check_barcode(self):
         if self.process_result.error:
@@ -445,6 +444,8 @@ class BarcodeWorker:
         return rs_settings.get('use_mark') == 'true' and self.barcode_data['use_mark']
 
     def _set_process_result_info(self, info_key):
+        ratio = getattr(self.barcode_data, 'ratio', 0)
+
         info_data = {
             'invalid_barcode': {
                 'error': 'Invalid barcode',
@@ -472,9 +473,7 @@ class BarcodeWorker:
             },
             'quantity_plan_reached': {
                 'error': 'Quantity plan reached',
-                'description': 'Количество план будет превышено при добавлении {} единиц товара'.format(
-                    str(self.barcode_data.get('ratio', 0))
-                ),
+                'description': 'Количество план будет превышено при добавлении {} единиц товара'.format(ratio),
             },
             'success_barcode': {
                 'error': '',
@@ -489,7 +488,7 @@ class BarcodeWorker:
         if info_data.get(info_key):
             self.process_result.error = info_data[info_key]['error']
             self.process_result.description = info_data[info_key]['description']
-            self.process_result.row_key = self.barcode_data['row_key']
+            self.process_result.row_key = self.barcode_data.get('row_key', 0)
 
     def parse(self, barcode: str):
         return BarcodeParser(barcode).parse()
