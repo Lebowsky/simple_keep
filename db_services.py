@@ -2,7 +2,7 @@ import json
 from typing import List
 
 from ru.travelfood.simple_ui import SimpleSQLProvider as sqlClass
-from ui_global import get_query_result
+from ui_global import get_query_result, bulk_query
 
 
 class DbService:
@@ -1093,7 +1093,8 @@ class ErrorService:
 class SqlQueryProvider:
     def __init__(self, table_name='', sql_class=sqlClass(), debug=False):
         self.table_name = table_name
-        self.sql = sql_class
+        # self.sql = sql_class
+        self.sql = self
         self.sql_text = ''
         self.sql_params = None
         self.debug = debug
@@ -1282,4 +1283,29 @@ class SqlQueryProvider:
         new_query = re.sub(r':(\w+)'    , replace_named_param, sql_query)
 
         return new_query, param_values
+
+    # методы ниже добавлены для временного решения проблемы SQLProvider на 9 андроиде
+    def SQLExec(self, q, params):
+        self.sql_text = q
+        self.sql_params = params
+
+        if params:
+            return json.dumps(get_query_result(q, tuple(params.split(','))))
+        else:
+            return json.dumps(get_query_result(q))
+
+    def SQLExecMany(self, q, params):
+        self.sql_text = q
+        self.sql_params = params
+
+        return bulk_query(q, json.loads(params))
+
+    def SQLQuery(self, q, params):
+        self.sql_text = q
+        self.sql_params = params
+
+        if params:
+            return json.dumps(get_query_result(q, tuple(params.split(',')), return_dict=True))
+        else:
+            return json.dumps(get_query_result(q, return_dict=True))
 
