@@ -11,6 +11,7 @@ class TestMainCreateScreen(unittest.TestCase):
     def setUp(self) -> None:
         self.hash_map = HashMap(hash_map=hashMap())
         self.rs_settings = noClass('rs_settings_local')
+        rs_settings.put("path_to_databases", "./", True)
 
     def test_check_create_screen_class_and_save_on_global_variable(self):
         self.hash_map['current_screen_name'] = 'Документ товары'

@@ -10,6 +10,7 @@ import hs_services
 import printing_factory
 from ui_utils import HashMap, RsDoc, BarcodeWorker, get_ip_address
 from db_services import DocService, ErrorService, GoodsService, AdrDocService, TimerService
+from tiny_db_services import ScanningQueueService, TinyNoSQLProvider
 from hs_services import HsService
 from ru.travelfood.simple_ui import SimpleUtilites as suClass
 
@@ -1614,6 +1615,7 @@ class DocDetailsScreen(Screen):
         self.id_doc = self.hash_map['id_doc']
         self.service = DocService(self.id_doc)
         self.items_on_page = 20
+        self.queue_service = ScanningQueueService()
 
     def on_start(self) -> None:
         pass
@@ -2156,6 +2158,97 @@ class GroupScanDocDetailsScreen(DocDetailsScreen):
 
         return not answer.error
 
+    def __get_doc_table_view(self, table_data):
+        table_view = widgets.CustomTable(
+            widgets.LinearLayout(
+                self.LinearLayout(
+                    self.TextView('Название'),
+                    weight=4
+                ),
+                self.LinearLayout(
+                    self.TextView('План'),
+                    weight=2
+                ),
+                self.LinearLayout(
+                    self.TextView('Факт устройства'),
+                    weight=2
+                ),
+                self.LinearLayout(
+                    self.TextView('Общий факт'),
+                    weight=2
+                ),
+                orientation='horizontal',
+                height="match_parent",
+                width="match_parent",
+                BackgroundColor='#FFFFFF'
+            ),
+            options=widgets.Options().options,
+            tabledata=table_data
+        )
+
+        return table_view
+
+    def __get_doc_table_row_view(self):
+        row_view = widgets.LinearLayout(
+            widgets.LinearLayout(
+                widgets.LinearLayout(
+                    widgets.LinearLayout(
+                        self.TextView('@good_name'),
+                        widgets.TextView(
+                            Value='@good_info',
+                            TextSize=15,
+                            width='match_parent'
+                        ),
+                        width='match_parent',
+                    ),
+                    width='match_parent',
+                    orientation='horizontal',
+                    StrokeWidth=1
+                ),
+                width='match_parent',
+                weight=4,
+                StrokeWidth=1
+            ),
+            widgets.LinearLayout(
+                widgets.TextView(
+                    Value='@qtty_plan',
+                    TextSize=15,
+                    width='match_parent',
+                ),
+                width='match_parent',
+                height='match_parent',
+                weight=2,
+                StrokeWidth=1
+            ),
+            widgets.LinearLayout(
+                widgets.TextView(
+                    Value='@d_qtty',
+                    TextSize=15,
+                    width='match_parent',
+                ),
+                width='match_parent',
+                height='match_parent',
+                weight=2,
+                StrokeWidth=1
+            ),
+            widgets.LinearLayout(
+                widgets.TextView(
+                    Value='@qtty',
+                    TextSize=15,
+                    width='match_parent'
+                ),
+                width='match_parent',
+                height='match_parent',
+                weight=2,
+                StrokeWidth=1
+            ),
+            orientation='horizontal',
+            width='match_parent',
+            BackgroundColor='#FFFFFF'
+        )
+
+        return row_view
+
     def scan_error_sound(self):
         super().scan_error_sound()
 
@@ -2163,6 +2256,63 @@ class GroupScanDocDetailsScreen(DocDetailsScreen):
         if 'urovo' in self.hash_map.get('DEVICE_MODEL').lower():
             suClass.urovo_set_lock_trigger(value)
 
+class GroupScanDocDetailsScreenNew(DocDetailsScreen):
+    def __init__(self, hash_map, rs_settings):
+        super().__init__(hash_map, rs_settings)
+
+
+
+    def on_start(self):
+        super()._on_start()
+
+    def on_input(self) -> None:
+        super().on_input()
+        listeners = {
+            'barcode': self._barcode_scanned,
+        }
+        if self.listener in listeners:
+            listeners[self.listener]()
+
+    def _barcode_scanned(self):
+        if self.hash_map.get("event") == "onResultPositive":
+            barcode = self.hash_map.get('fld_barcode')
+        else:
+            barcode = self.hash_map.get('barcode_camera')
+
+        if not barcode:
+            return
+
+        # process the barcode
+        # barcode_worker = BarcodeWorker(
+        #     self.id_doc, **self._get_barcode_process_params())
+        #
+        # result = barcode_worker.process_the_barcode(barcode)
+        # if result.error:
+        #     self._process_error_scan_barcode(result)
+        #     return
+
+
+        # save barc queue
+        # run after_scan_processing async http post -> hs.send_document_lines()
+        # hash_map.put('send_document_lines_running', True)
+        # if 200 update barc queue
+        #   update RS_docs_table
+        #   update queue sent status
+        # hash_map.put('send_document_lines_running', False)
+
+    def after_scan_processing(self):
+        pass
+
+    def _get_barcode_process_params(self):
+        return {
+            'have_qtty_plan': self.hash_map.get_bool('have_qtty_plan'),
+            'have_zero_plan': self.hash_map.get_bool('have_zero_plan'),
+            'have_mark_plan': self.hash_map.get_bool('have_mark_plan'),
+            'control': self.hash_map.get_bool('control')
+        }
+
+    def _process_error_scan_barcode(self, scan_result):
+        self.hash_map.toast(scan_result.description)
 
 class DocumentsDocDetailScreen(DocDetailsScreen):
     screen_name = 'Документ товары'

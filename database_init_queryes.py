@@ -243,6 +243,7 @@ def database_shema():
         id_unit       TEXT     NOT NULL
                                REFERENCES RS_units (id),
         qtty          REAL,
+        d_qtty        REAL,  
         qtty_plan     REAL,
         price         REAL,
         id_price      TEXT     REFERENCES RS_price_types (id),

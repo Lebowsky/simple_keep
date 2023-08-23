@@ -2,7 +2,7 @@ import json
 from typing import List
 
 from ru.travelfood.simple_ui import SimpleSQLProvider as sqlClass
-from ui_global import get_query_result
+from ui_global import get_query_result, bulk_query
 
 
 class DbService:
@@ -18,6 +18,7 @@ class DbService:
             self.provider.create({'log': error_text})
             self.sql_text = self.provider.sql_text
             self.sql_params = self.provider.sql_params
+
     def _sql_exec(self, q, params, table_name=''):
         if table_name:
             self.provider.table_name = table_name
@@ -87,20 +88,53 @@ class BarcodeService(DbService):
         super().__init__()
         self.provider = SqlQueryProvider(table_name='Rs_barcodes', sql_class=sqlClass())
 
-    def get_barcode_data(self, barcode):
-        return self.provider.select({'barcode': barcode})
+    def get_barcode_data(self, barcode_info, id_doc):
+        if barcode_info.scheme == 'GS1':
+            search_value = barcode_info.gtin
+        else:
+            search_value = barcode_info.barcode
 
-    def get_document_row_by_barcode(self, doc_id, barcode):
         q = '''
-            SELECT t.*
-            FROM RS_barcodes as b
-            JOIN RS_docs_table as t
-                ON b.id_good = t.id_good 
-                    AND b.id_property = t.id_properties 
-                    AND b.id_unit = t.id_unit
-            WHERE id_doc = ? AND barcode = ?
-        '''
-        return self.provider.sql_query(q, ','.join([doc_id, barcode]))
+            SELECT 
+                barcodes.id_good AS id_good, 
+                barcodes.id_property AS id_property,
+                barcodes.id_series AS id_series,
+                barcodes.id_unit AS id_unit,
+                barcodes.ratio AS ratio,
+                IFNULL(doc_barcodes.approved, 0) AS approved,
+                IFNULL(doc_barcodes.id, 0) AS mark_id,
+                IFNULL(goods.use_mark, false) AS use_mark,
+                IFNULL(doc_table.id, '') AS row_key,
+                IFNULL(doc_table.qtty, 0.0) AS qtty,
+                IFNULL(doc_table.qtty_plan, 0.0) AS qtty_plan
+                
+            FROM RS_barcodes AS barcodes
+            LEFT JOIN 
+                    (SELECT 
+                        goods.id AS id_goods, 
+                        types_goods.use_mark 
+                        
+                    FROM  RS_goods AS goods
+                    JOIN RS_types_goods AS types_goods ON goods.type_good = types_goods.id) AS goods
+                ON barcodes.id_good = goods.id_goods
+            
+            LEFT JOIN RS_docs_table AS doc_table 
+                ON barcodes.id_good = doc_table.id_good
+                     AND barcodes.id_property = doc_table.id_properties
+                     AND barcodes.id_unit = doc_table.id_unit
+                     AND doc_table.id_doc = {}
+                     
+            LEFT JOIN RS_docs_barcodes as doc_barcodes
+                ON doc_barcodes.id_doc = {}
+                    AND doc_barcodes.GTIN = {}
+                    AND doc_barcodes.Series = {}
+                
+            WHERE barcodes.barcode = {}'''.format(
+            id_doc, id_doc, barcode_info.GTIN, barcode_info.Series, search_value)
+
+        result = self.provider.sql_query(q)
+        if result:
+            return result[0]
 
 
 class DocService:
@@ -1057,9 +1091,10 @@ class ErrorService:
 
 
 class SqlQueryProvider:
-    def __init__(self, table_name='', sql_class=None, debug=False):
+    def __init__(self, table_name='', sql_class=sqlClass(), debug=False):
         self.table_name = table_name
-        self.sql = sql_class
+        # self.sql = sql_class
+        self.sql = self
         self.sql_text = ''
         self.sql_params = None
         self.debug = debug
@@ -1248,4 +1283,29 @@ class SqlQueryProvider:
         new_query = re.sub(r':(\w+)'    , replace_named_param, sql_query)
 
         return new_query, param_values
+
+    # методы ниже добавлены для временного решения проблемы SQLProvider на 9 андроиде
+    def SQLExec(self, q, params):
+        self.sql_text = q
+        self.sql_params = params
+
+        if params:
+            return json.dumps(get_query_result(q, tuple(params.split(','))))
+        else:
+            return json.dumps(get_query_result(q))
+
+    def SQLExecMany(self, q, params):
+        self.sql_text = q
+        self.sql_params = params
+
+        return bulk_query(q, json.loads(params))
+
+    def SQLQuery(self, q, params):
+        self.sql_text = q
+        self.sql_params = params
+
+        if params:
+            return json.dumps(get_query_result(q, tuple(params.split(',')), return_dict=True))
+        else:
+            return json.dumps(get_query_result(q, return_dict=True))
 

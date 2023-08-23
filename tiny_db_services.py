@@ -81,12 +81,25 @@ class ScanningQueueService:
         data = self.provider.search(id_doc=id_doc)
 
         for row in data:
-            result[row['row_key']] = row['qtty']
+            result[row['row_key']] = row['qtty']## NOT WORK
 
         return result
 
     def save_scanned_row_data(self, data, sent=False):
-        # id_doc, row_key, qtty
+        # id_doc, row_id, qtty
         data['sent'] = sent
         self.provider.insert(data=data)
         return self.provider.count(id_doc=data['id_doc'])
+
+    def get_scanned_row_qtty(self, id_doc, row_id):
+        data = self.provider.search(id_doc=id_doc, row_id=row_id)
+        return sum([row['qtty'] for row in data])
+
+    def get_send_document_lines(self, id_doc) -> list:
+        data = self.provider.search(id_doc=id_doc, sent=False)
+        return data
+
+    def update_sent_lines(self, data: list, sent=True):
+        for row in data:
+            row['sent'] = sent
+            self.provider.update(data=row, id_doc=row['id_doc'], row_id=row['row_id'])
