@@ -1690,13 +1690,14 @@ class DocDetailsScreen(Screen):
         have_mark_plan = False
 
         last_scanned_details = self._get_doc_details_data(last_scanned=True)
-        last_scanned_data = self._prepare_table_data(last_scanned_details)[1]
+        last_scanned_data = self._prepare_table_data(last_scanned_details)
+        last_scanned_item = last_scanned_data[1] if len(last_scanned_data) >= 2 else None
         doc_details = self._get_doc_details_data()
         table_data = self._prepare_table_data(doc_details)
-        if last_scanned_data:
+        if table_data and last_scanned_item:
             if self.hash_map.get('current_page') == '1':
                 table_data.pop(1)
-            table_data.insert(1, last_scanned_data)
+            table_data.insert(1, last_scanned_item)
         table_view = self._get_doc_table_view(table_data=table_data)
 
         self.hash_map['items_on_page_select'] = '20;40;60'
