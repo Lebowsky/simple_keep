@@ -5135,9 +5135,9 @@ class Timer:
             # service.save_load_data(data)
             self.db_service.update_data_from_json(docs_data['data'])
 
-            # if new_documents:
-            #     notify_text = self._get_notify_text(new_documents)
-            #     self.put_notification(text=notify_text, title="Загружены документы:")
+            if new_documents:
+                notify_text = self._get_notify_text(new_documents)
+                self.put_notification(text=notify_text, title="Загружены документы:")
 
         except Exception as e:
             self.db_service.write_error_on_log(f'Ошибка загрузки документов: {e}')
@@ -5295,53 +5295,6 @@ class MainEvents:
 
 
 # ^^^^^^^^^^^^^^^^^^^^^ Main events ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-class DbTest(Screen):
-
-
-    def __init__(self, hash_map, rs_settings):
-        super().__init__(hash_map, rs_settings)
-        self.service = DocService()
-
-    def on_start(self):
-        pass
-
-    def on_input(self):
-        if self.listener == "create_test_table":
-            new_table_schema = '''
-                CREATE TABLE IF NOT EXISTS Test_table (
-                id       TEXT NOT NULL
-                              PRIMARY KEY,
-                name     TEXT NOT NULL
-                )
-                '''
-            ui_global.get_query_result(new_table_schema)
-
-            for i in range(0, 30):
-                query = f"""INSERT INTO Test_table (id, name) VALUES ('{str(i)}', '{str(i)}')"""
-                ui_global.get_query_result(query)
-
-            self.hash_map.put('test_table_name', f"Test_table / Элементов: {str(i)}")
-
-        elif self.listener == "sql_prov_select":
-            query = "SELECT * FROM Test_table ORDER BY id LIMIT 25 OFFSET 0"
-            result = self.service._sql_query(query, '')
-            self.hash_map.put('sql_prov_query_text', f'{query}/ Результат: {result}')
-
-        elif self.listener == 'sqlite_3_select':
-            query = "SELECT * FROM Test_table ORDER BY id LIMIT 25 OFFSET 0"
-            result = self.service._get_query_result(query, return_dict=True)
-            self.hash_map.put('sqlite_3_query_text', f'{query}/ Результат: {result}')
-
-        elif self.listener == 'delete_table':
-            query = """DROP TABLE Test_table"""
-            ui_global.get_query_result(query)
-    def on_post_start(self):
-        pass
-
-    def show(self, args=None):
-        pass
-
 
 class ScreensFactory:
     screens = [GoodsSelectScreen,
