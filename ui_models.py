@@ -1639,7 +1639,7 @@ class DocDetailsScreen(Screen):
         self.rs_settings = rs_settings
         self.id_doc = self.hash_map['id_doc']
         self.service = DocService(self.id_doc)
-        self.items_on_page = 20
+        self.items_on_page = 2
         self.queue_service = ScanningQueueService()
 
     def on_start(self) -> None:
@@ -1700,7 +1700,7 @@ class DocDetailsScreen(Screen):
             table_data.insert(1, last_scanned_item)
         table_view = self._get_doc_table_view(table_data=table_data)
 
-        self.hash_map['items_on_page_select'] = '20;40;60'
+        self.hash_map['items_on_page_select'] = '2;10;20;40;60'
         if self.hash_map.get_bool('highlight'):
             self.hash_map.put('highlight', False)
             # self.enable_highlight(table_view.customtable)
@@ -2525,8 +2525,17 @@ class AdrDocDetailsScreen(DocDetailsScreen):
 
         super()._on_start()
 
-    def _get_doc_details_data(self):
-        return self.service.get_doc_details_data(self.id_doc, self.current_cell)
+    def _get_doc_details_data(self, last_scanned=False):
+        super()._check_previous_page()
+        first_element = int(self.hash_map.get('current_first_element_number'))
+        search_string = self.hash_map.get('SearchString') if self.hash_map.get('SearchString') else None
+        data = self.service.get_doc_details_data(id_doc=self.id_doc, curCell=self.current_cell,
+                                                 first_elem=0 if last_scanned else first_element,
+                                                 items_on_page=1 if last_scanned else self.items_on_page,
+                                                 search_string=search_string)
+        if not last_scanned:
+            super()._check_next_page(len(data))
+        return data
 
     def on_input(self) -> None:
         super().on_input()
@@ -2808,7 +2817,7 @@ class AdrDocDetailsScreen(DocDetailsScreen):
                 BackgroundColor='#FFFFFF'
             ),
 
-            options=widgets.Options().options,
+            options=widgets.Options(override_search=True).options,
             tabledata=table_data
         )
 
