@@ -1639,7 +1639,7 @@ class DocDetailsScreen(Screen):
         self.rs_settings = rs_settings
         self.id_doc = self.hash_map['id_doc']
         self.service = DocService(self.id_doc)
-        self.items_on_page = 2
+        self.items_on_page = 10
         self.queue_service = ScanningQueueService()
 
     def on_start(self) -> None:
@@ -1700,7 +1700,7 @@ class DocDetailsScreen(Screen):
             table_data.insert(1, last_scanned_item)
         table_view = self._get_doc_table_view(table_data=table_data)
 
-        self.hash_map['items_on_page_select'] = '2;10;20;40;60'
+        self.hash_map['items_on_page_select'] = '10;20;40;60'
         if self.hash_map.get_bool('highlight'):
             self.hash_map.put('highlight', False)
             # self.enable_highlight(table_view.customtable)
