@@ -1671,10 +1671,6 @@ class DocDetailsScreen(Screen):
         elif listener == "Search":
             self.hash_map.put('current_first_element_number', '0')
             self.hash_map.put('current_page', '1')
-            # doc_details = self._get_doc_details_data()
-            # table_data = self._prepare_table_data(doc_details)
-            # table_view = self._get_doc_table_view(table_data=table_data)
-            # self.hash_map.put("doc_goods_table", table_view.to_json())
             self._on_start()
             self.hash_map.refresh_screen()
 
@@ -1713,7 +1709,8 @@ class DocDetailsScreen(Screen):
             self.hash_map['table_lines_qtty'] = len(doc_details)
             have_qtty_plan = sum(
                 [self._format_to_float(str(item['qtty_plan'])) for item in doc_details if item['qtty_plan']]) > 0
-            have_zero_plan = not have_qtty_plan
+            # have_zero_plan = not have_qtty_plan
+            have_zero_plan = True
             have_mark_plan = self._get_have_mark_plan()
 
         self.hash_map['have_qtty_plan'] = have_qtty_plan
@@ -1741,6 +1738,7 @@ class DocDetailsScreen(Screen):
         have_zero_plan = self.hash_map.get_bool('have_zero_plan')
         have_mark_plan = self.hash_map.get_bool('have_mark_plan')
         control = self.hash_map.get_bool('control')
+        # self.toast(have_zero_plan)
 
         res = doc.process_the_barcode(
             barcode,
@@ -1749,6 +1747,8 @@ class DocDetailsScreen(Screen):
             control,
             have_mark_plan,
             use_mark_setting=self.rs_settings.get('use_mark'))
+
+        # self.toast(res['Error'])
 
         if res is None:
             self.hash_map.put('scanned_barcode', barcode)
@@ -4470,7 +4470,8 @@ class SettingsScreen(Screen):
     def _upload_docs(self):
         if self._check_http_settings():
             timer = Timer(self.hash_map, self.rs_settings)
-            timer.upload_all_docs()
+            # timer.upload_all_docs()
+            timer._upload_data()
         else:
             self.toast('Не заданы настройки соединения')
 
@@ -5130,13 +5131,13 @@ class Timer:
                 return
 
             service = db_services.TimerService()
-            new_documents = service.get_new_load_docs(data)
+            # new_documents = service.get_new_load_docs(data)
             # service.save_load_data(data)
             self.db_service.update_data_from_json(docs_data['data'])
 
-            if new_documents:
-                notify_text = self._get_notify_text(new_documents)
-                self.put_notification(text=notify_text, title="Загружены документы:")
+            # if new_documents:
+            #     notify_text = self._get_notify_text(new_documents)
+            #     self.put_notification(text=notify_text, title="Загружены документы:")
 
         except Exception as e:
             self.db_service.write_error_on_log(f'Ошибка загрузки документов: {e}')
@@ -5295,6 +5296,53 @@ class MainEvents:
 
 # ^^^^^^^^^^^^^^^^^^^^^ Main events ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+class DbTest(Screen):
+
+
+    def __init__(self, hash_map, rs_settings):
+        super().__init__(hash_map, rs_settings)
+        self.service = DocService()
+
+    def on_start(self):
+        pass
+
+    def on_input(self):
+        if self.listener == "create_test_table":
+            new_table_schema = '''
+                CREATE TABLE IF NOT EXISTS Test_table (
+                id       TEXT NOT NULL
+                              PRIMARY KEY,
+                name     TEXT NOT NULL
+                )
+                '''
+            ui_global.get_query_result(new_table_schema)
+
+            for i in range(0, 30):
+                query = f"""INSERT INTO Test_table (id, name) VALUES ('{str(i)}', '{str(i)}')"""
+                ui_global.get_query_result(query)
+
+            self.hash_map.put('test_table_name', f"Test_table / Элементов: {str(i)}")
+
+        elif self.listener == "sql_prov_select":
+            query = "SELECT * FROM Test_table ORDER BY id LIMIT 25 OFFSET 0"
+            result = self.service._sql_query(query, '')
+            self.hash_map.put('sql_prov_query_text', f'{query}/ Результат: {result}')
+
+        elif self.listener == 'sqlite_3_select':
+            query = "SELECT * FROM Test_table ORDER BY id LIMIT 25 OFFSET 0"
+            result = self.service._get_query_result(query, return_dict=True)
+            self.hash_map.put('sqlite_3_query_text', f'{query}/ Результат: {result}')
+
+        elif self.listener == 'delete_table':
+            query = """DROP TABLE Test_table"""
+            ui_global.get_query_result(query)
+    def on_post_start(self):
+        pass
+
+    def show(self, args=None):
+        pass
+
+
 class ScreensFactory:
     screens = [GoodsSelectScreen,
         HtmlView,
@@ -5364,3 +5412,5 @@ class MockScreen(Screen):
 
     def show(self, args=None):
         pass
+
+
