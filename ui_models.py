@@ -1671,10 +1671,6 @@ class DocDetailsScreen(Screen):
         elif listener == "Search":
             self.hash_map.put('current_first_element_number', '0')
             self.hash_map.put('current_page', '1')
-            # doc_details = self._get_doc_details_data()
-            # table_data = self._prepare_table_data(doc_details)
-            # table_view = self._get_doc_table_view(table_data=table_data)
-            # self.hash_map.put("doc_goods_table", table_view.to_json())
             self._on_start()
             self.hash_map.refresh_screen()
 
@@ -1713,7 +1709,8 @@ class DocDetailsScreen(Screen):
             self.hash_map['table_lines_qtty'] = len(doc_details)
             have_qtty_plan = sum(
                 [self._format_to_float(str(item['qtty_plan'])) for item in doc_details if item['qtty_plan']]) > 0
-            have_zero_plan = not have_qtty_plan
+            # have_zero_plan = not have_qtty_plan
+            have_zero_plan = True
             have_mark_plan = self._get_have_mark_plan()
 
         self.hash_map['have_qtty_plan'] = have_qtty_plan
@@ -1741,6 +1738,7 @@ class DocDetailsScreen(Screen):
         have_zero_plan = self.hash_map.get_bool('have_zero_plan')
         have_mark_plan = self.hash_map.get_bool('have_mark_plan')
         control = self.hash_map.get_bool('control')
+        # self.toast(have_zero_plan)
 
         res = doc.process_the_barcode(
             barcode,
@@ -1749,6 +1747,8 @@ class DocDetailsScreen(Screen):
             control,
             have_mark_plan,
             use_mark_setting=self.rs_settings.get('use_mark'))
+
+        # self.toast(res['Error'])
 
         if res is None:
             self.hash_map.put('scanned_barcode', barcode)
@@ -4470,7 +4470,8 @@ class SettingsScreen(Screen):
     def _upload_docs(self):
         if self._check_http_settings():
             timer = Timer(self.hash_map, self.rs_settings)
-            timer.upload_all_docs()
+            # timer.upload_all_docs()
+            timer._upload_data()
         else:
             self.toast('Не заданы настройки соединения')
 
@@ -5130,7 +5131,7 @@ class Timer:
                 return
 
             service = db_services.TimerService()
-            new_documents = service.get_new_load_docs(data)
+            # new_documents = service.get_new_load_docs(data)
             # service.save_load_data(data)
             self.db_service.update_data_from_json(docs_data['data'])
 
@@ -5364,3 +5365,5 @@ class MockScreen(Screen):
 
     def show(self, args=None):
         pass
+
+

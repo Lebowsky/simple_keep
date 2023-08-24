@@ -367,7 +367,7 @@ class BarcodeWorker:
 
         new_qtty = self.barcode_data['qtty'] + self.barcode_data['ratio']
         if self.barcode_data['row_key']:
-            if self.have_qtty_plan and self.barcode_data['qtty_plan'] > new_qtty:
+            if self.have_qtty_plan and self.barcode_data['qtty_plan'] < new_qtty:
                 self._set_process_result_info('quantity_plan_reached')
 
         elif self.have_zero_plan and self.control:
