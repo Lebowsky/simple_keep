@@ -568,18 +568,22 @@ class TemplatesList(Screen):
 
 
     def _layout_action(self):
-        if self.hash_map.get('layout_listener') == 'Задать по умолчанию' or self.listener == 'CardsClick':
+        selected_card = None
+        if self.hash_map.get('layout_listener') == 'Задать по умолчанию' :
             selected_card = json.loads(self.hash_map.get('card_data'))
-            if selected_card and isinstance(selected_card, dict):
-                self.print_parameters ['file_name'] = selected_card.get('file_name')
-                self.print_parameters['full_path'] = selected_card.get('full_path')
-                self.hash_map.put('print_parameters', json.dumps(self.print_parameters))
-                #self.rs_settings.put('current_template',json.dumps(file_parameters),False)
+        elif self.listener == 'CardsClick':
+            selected_card = json.loads(self.hash_map.get('selected_card_data'))
+        
+        if selected_card and isinstance(selected_card, dict):
+            self.print_parameters ['file_name'] = selected_card.get('file_name')
+            self.print_parameters['full_path'] = selected_card.get('full_path')
+            self.hash_map.put('print_parameters', json.dumps(self.print_parameters))
+            #self.rs_settings.put('current_template',json.dumps(file_parameters),False)
 
-                self.hash_map.put('current_template', selected_card.get('file_name'))
+            self.hash_map.put('current_template', selected_card.get('file_name'))
 
-                #self.delete_template_settings(self.rs_settings)
-                self.hash_map.show_screen('Результат') #.show_process_result('Печать', 'Результат')
+            #self.delete_template_settings(self.rs_settings)
+            self.hash_map.show_screen('Результат') #.show_process_result('Печать', 'Результат')
 
 
 class SimpleFileBrowser(Screen):
