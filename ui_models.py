@@ -449,6 +449,8 @@ class TemplatesList(Screen):
             self.hash_map.put('onClick','')
         elif self.listener == 'LayoutAction':
             self._layout_action()
+        elif self.listener == 'CardsClick':
+            self._layout_action()
 
 
     def on_post_start(self):
@@ -473,12 +475,7 @@ class TemplatesList(Screen):
                         TextBold=True,
                         TextSize=card_title_text_size
                     ),
-                    widgets.PopupMenuButton(
-                        Value='Задать по умолчанию',
-                        Variable="set_by_default",
-                        gravity_horizontal='center',
-                        weight=1
-                    ),
+
 
                     orientation="horizontal"
                 ),
@@ -503,6 +500,15 @@ class TemplatesList(Screen):
 
         return doc_cards
 
+    @staticmethod
+    def correct_filename(filename):
+
+        illegal_chars = ['<', '>', ':', '"',"'", '/', '\\', '|', '?', '*', "<", ">", '\x00']
+        for char in illegal_chars:
+            filename = filename.replace(char, '')
+        return filename
+
+
     def get_from_server_write_on_disc(self):
         answer = self.hs_service.get_templates()
         output_folder = suClass.get_temp_dir()
@@ -517,7 +523,7 @@ class TemplatesList(Screen):
             raise f'Ошибка соединения с сервером: {reason}'
 
         for data_dict in data_list:
-            file_name = data_dict['name'] + '.htm'
+            file_name = self.correct_filename(data_dict['name']) + '.htm'
             file_path = os.path.join(output_folder, file_name)
 
             # Decode the BASE64 encoded HTML data
@@ -562,18 +568,22 @@ class TemplatesList(Screen):
 
 
     def _layout_action(self):
-        if self.hash_map.get('layout_listener') == 'Задать по умолчанию':
+        selected_card = None
+        if self.hash_map.get('layout_listener') == 'Задать по умолчанию' :
             selected_card = json.loads(self.hash_map.get('card_data'))
-            if selected_card and isinstance(selected_card, dict):
-                self.print_parameters ['file_name'] = selected_card.get('file_name')
-                self.print_parameters['full_path'] = selected_card.get('full_path')
-                self.hash_map.put('print_parameters', json.dumps(self.print_parameters))
-                #self.rs_settings.put('current_template',json.dumps(file_parameters),False)
+        elif self.listener == 'CardsClick':
+            selected_card = json.loads(self.hash_map.get('selected_card_data'))
+        
+        if selected_card and isinstance(selected_card, dict):
+            self.print_parameters ['file_name'] = selected_card.get('file_name')
+            self.print_parameters['full_path'] = selected_card.get('full_path')
+            self.hash_map.put('print_parameters', json.dumps(self.print_parameters))
+            #self.rs_settings.put('current_template',json.dumps(file_parameters),False)
 
-                self.hash_map.put('current_template', selected_card.get('file_name'))
+            self.hash_map.put('current_template', selected_card.get('file_name'))
 
-                #self.delete_template_settings(self.rs_settings)
-                self.hash_map.show_screen('Результат') #.show_process_result('Печать', 'Результат')
+            #self.delete_template_settings(self.rs_settings)
+            self.hash_map.show_screen('Результат') #.show_process_result('Печать', 'Результат')
 
 
 class SimpleFileBrowser(Screen):
@@ -5141,8 +5151,8 @@ class Timer:
                 return
 
             service = db_services.TimerService()
-            # new_documents = service.get_new_load_docs(data)
-            # service.save_load_data(data)
+            new_documents = service.get_new_load_docs(data)
+            service.save_load_data(data)
             self.db_service.update_data_from_json(docs_data['data'])
 
             if new_documents:
