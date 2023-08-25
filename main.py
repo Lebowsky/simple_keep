@@ -67,16 +67,6 @@ def barcode_error_screen_listener(hashMap, _files=None, _data=None):
         hashMap.put("ShowScreen", "Документ товары")
     return hashMap
 
-def plan_excess_error_screen_listener(hashMap, _files=None, _data=None):
-    if hashMap.get('listener') == 'ON_BACK_PRESSED':
-        # suClass.urovo_set_lock_trigger(False)
-        hashMap.put("ShowScreen", "Документ товары")
-    elif hashMap.get('listener') == 'btn_continue_scan':
-        # suClass.urovo_set_lock_trigger(False)
-        hashMap.put("ShowScreen", "Документ товары")
-    return hashMap
-
-
 
 
 # =============== Universal cards =================
@@ -227,82 +217,6 @@ class UniversalCard:
 # ^^^^^^^^^^^^^^^^^ Universal cards ^^^^^^^^^^^^^^^^^
 
 
-# =============== Settings =================
-
-def file_list_on_start(hashMap, _files=None, _data=None):
-    tx = ''
-
-    # traverse root directory, and list directories as dirs and files as files
-    for root, dirs, files in os.walk("."):
-        path = root.split(os.sep)
-        print((len(path) - 1) * '---', os.path.basename(root))
-        for file in files:
-            print(len(path) * '---', file)
-
-    hashMap.put('files_list', tx)
-    return hashMap
-
-
-
-
-
-@HashMap()
-def http_settings_on_click_(hashMap,  _files=None, _data=None):
-    listener = hashMap.get('listener')
-    if listener == 'btn_save':
-        if not all([hashMap.get('url'), hashMap.get('user'), hashMap.get('pass')]):
-            hashMap.put("toast", "Не указаны настройки HTTP подключения к серверу")
-        rs_settings.put('URL', hashMap.get('url'), True)
-        rs_settings.put('USER', hashMap.get('user'), True)
-        rs_settings.put('PASS', hashMap.get('pass'), True)
-        rs_settings.put('user_name', hashMap.get('user_name'), True)
-        hashMap.put('ShowScreen', 'Настройки и обмен')
-    elif listener == 'btn_cancel':
-        hashMap.put('ShowScreen', 'Настройки и обмен')
-    elif listener == 'ON_BACK_PRESSED':
-        hashMap.put('ShowScreen', 'Настройки и обмен')
-    elif listener == 'barcode':
-        barcode = hashMap.get('barcode_camera2')
-        try:
-            barc_struct = json.loads(barcode)
-
-            rs_settings.put('URL', barc_struct.get('url'), True)
-            rs_settings.put('USER', barc_struct.get('user'), True)
-            rs_settings.put('PASS', barc_struct.get('pass'), True)
-            rs_settings.put('user_name', barc_struct.get('user_name'), True)
-
-            hashMap.put('url', ui_form_data.ModernField(hint='url', default_text=barc_struct.get('url')).to_json())
-            hashMap.put('user', ui_form_data.ModernField(hint='user', default_text=barc_struct.get('user')).to_json())
-            hashMap.put('pass', ui_form_data.ModernField(hint='pass', default_text=barc_struct.get('pass')).to_json())
-            hashMap.put('user_name', ui_form_data.ModernField(hint='user_name', default_text=barc_struct.get('user_name')).to_json())
-        except:
-            hashMap.put('toast', 'неверный формат QR-кода')
-    elif listener == 'btn_test_connection':
-        #/communication_test
-        http = get_http_settings(hashMap)
-        if not all([http.get('url'), http.get('user'), http.get('pass')]):
-            hashMap.put("toast", "Не указаны настройки HTTP подключения к серверу")
-            return hashMap
-        else:
-            r = requests.get(http['url'] + '/simple_accounting/communication_test?android_id=' + http['android_id'], auth=HTTPBasicAuth(http['user'], http['pass']),
-                 headers={'Content-Type': 'application/x-www-form-urlencoded; charset=utf-8'},
-                 params={'user_name': http['user_name'], 'device_model': http['device_model']})
-            if r.status_code == 200:
-                hashMap.put('btn_test_connection', 'Соединение установлено')
-                hashMap.put('toast', 'Соединение установлено')
-            elif r.status_code == 403:
-                hashMap.put('btn_test_connection', 'Тест соединения')
-                hashMap.put("toast", "Запрос на авторизацию принят")
-            else:
-                hashMap.put('btn_test_connection', 'Тест соединения')
-                hashMap.put('toast', 'Не удалось установить соединение')
-
-    return hashMap
-
-
-# ^^^^^^^^^^^^^^^^^ Settings ^^^^^^^^^^^^^^^^^
-
-
 # =============== Debug =================
 
 @HashMap()
@@ -316,24 +230,7 @@ def debug_listener(hash_map, _files=None, _data=None):
     screen: ui_models.DebugSettingsScreen = create_screen(hash_map)
     screen.on_input()
 
-
-def test_screen_input(hashMap,  _files=None, _data=None):
-    if hashMap.get('listener') == 'btn_ok' or 'ON_BACK_PRESSED':
-        hashMap.put('FinishProcess','')
-    return hashMap
 # ^^^^^^^^^^^^^^^^^ Debug ^^^^^^^^^^^^^^^^^
-
-
-def get_http_settings(hashMap):
-    http_settings = {
-    'url' : rs_settings.get("URL"),
-    'user' : rs_settings.get('USER'),
-    'pass' : rs_settings.get('PASS'),
-    'device_model' : hashMap.get('DEVICE_MODEL'),
-    'android_id':hashMap.get('ANDROID_ID'),
-    'user_name': rs_settings.get('user_name')}
-    return http_settings
-
 
 # Добавлен параметр "no_label"
 def get_table_cards(table_name: str, filter_fields=list(), filter_value='', exclude_list=list(), no_label=False, struct_view:list = list()):
