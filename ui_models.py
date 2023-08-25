@@ -3668,8 +3668,7 @@ class GoodsBalancesItemCard(Screen):
                 self.hash_map.put("FinishProcessResult", "")
             else:
                 self.hash_map.put("FinishProcess", "")
-        elif listener == 'test_btn':
-            self._get_balances()
+
         elif listener == 'show_filters':
             self.hash_map.put("Show_get_balances_controls", "1")
             self.hash_map.put("Show_show_filters", "-1")
@@ -4079,7 +4078,8 @@ class GoodsPricesItemCard(GoodsBalancesItemCard):
                 self.hash_map.put('error_msg', "")
                 self.hash_map.put('item_art_input', self.hash_map.get('item_art_input'))
             else:
-                self.hash_map.put('error_msg', " Товар с артикулом " + "'" + item_art_input + "'" + " не найден")
+                if item_art_input != '—' and self.hash_map.get('return_to_item_card'):
+                    self.hash_map.put('error_msg', " Товар с артикулом " + "'" + item_art_input + "'" + " не найден")
         else:
             self.hash_map.put('input_good_id', '')
             self.hash_map.put('prices_object_name', '')
