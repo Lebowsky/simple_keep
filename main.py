@@ -49,65 +49,6 @@ def highlight_scanned_item(hash_map: HashMap):
     screen.disable_highlight()
 
 
-
-def remove_added_good_highlight(hashMap, good_id=None, property_id=None):
-    if hashMap.get("added_goods"):
-        id_doc = hashMap.get('id_doc')
-        added_goods_dict = json.loads(hashMap.get("added_goods"))
-        if id_doc in added_goods_dict.keys():
-            if good_id in added_goods_dict[id_doc][0]:
-                added_goods_dict[id_doc][0].remove(good_id)
-            """if property_id in added_goods_dict[good_id][1]:
-                added_goods_dict[good_id][1].remove(property_id)"""
-            hashMap.put("added_goods", str(added_goods_dict).replace("'", '"'))
-            if len(added_goods_dict[id_doc][0]) == 0:
-                del added_goods_dict[id_doc]
-    return hashMap
-
-
-def get_current_elem_doc_goods(hashMap, current_str):
-
-    if hashMap.get('view') == "cards":
-        jlist = json.loads(hashMap.get("doc_goods_cards"))
-        cards_data = jlist['customcards']['cardsdata']
-    else:
-        jlist = json.loads(hashMap.get("doc_goods_table"))
-        cards_data = jlist['customtable']['tabledata']
-    for element in cards_data:
-        if "key" in element:
-            if element["key"] == hashMap.get("selected_card_key"):
-                current_elem = element
-    return current_elem
-
-
-def doc_barcodes_on_start(hashMap, _files=None, _data=None):
-    doc_detail_list = ui_form_data.get_barcode_card(rs_settings)
-    query_text = ui_form_data.get_barcode_query()
-    id_doc = hashMap.get('id_doc')
-    results = ui_global.get_query_result(query_text, (id_doc,))
-
-    for record in results:
-        product_row = {
-            'key': str(record[0]),
-            'barcode_value': str(record[3]),
-            'ratio':str(record[6]),
-            'approved': str(record[4])
-
-        }
-
-        doc_detail_list['customcards']['cardsdata'].append(product_row)
-
-    hashMap.put("barc_cards", json.dumps(doc_detail_list))
-
-    return hashMap
-
-
-def doc_barcodes_listener(hashMap, _files=None, _data=None):
-    if hashMap.get('listener') == 'ON_BACK_PRESSED':
-        hashMap.put("ShowScreen", "Документ товары")
-    return hashMap
-
-
 def delete_barcode_screen_start(hashMap, _files=None, _data=None):
     # Находим ID документа
     barcode_data = json.loads(hashMap.get('barcode'))['barcode']
