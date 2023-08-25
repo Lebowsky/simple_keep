@@ -1391,14 +1391,8 @@ class AdrDocsListScreen(DocsListScreen):
             screen = AdrDocDetailsScreen(self.hash_map, self.rs_settings)
             screen.show(args=args)
 
-            # adr_list_screen.screen_values = self._get_selected_card_put_data(self) # {'doc_n': '', 'doc_date': '', 'warehouse': ''}
-            # adr_list_screen.show({'id_doc': self.hash_map['selected_card_key']})
-
         elif self.listener == "doc_adr_type_click":
             self.hash_map['doc_type_click'] = self.hash_map['doc_adr_type_click']
-
-        elif self.listener == "btn_add_doc":
-            self.hash_map.show_screen('Новый документ')
 
         elif self.listener == 'ON_BACK_PRESSED':
             self.hash_map.finish_process()
