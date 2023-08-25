@@ -214,25 +214,6 @@ class UniversalCard:
         return json.dumps(json_structure, indent=4)
 
 
-# ^^^^^^^^^^^^^^^^^ Universal cards ^^^^^^^^^^^^^^^^^
-
-
-# =============== Debug =================
-
-@HashMap()
-def debug_on_start(hash_map: HashMap):
-    screen: ui_models.DebugSettingsScreen = create_screen(hash_map)
-    screen.on_start()
-
-
-@HashMap()
-def debug_listener(hash_map, _files=None, _data=None):
-    screen: ui_models.DebugSettingsScreen = create_screen(hash_map)
-    screen.on_input()
-
-# ^^^^^^^^^^^^^^^^^ Debug ^^^^^^^^^^^^^^^^^
-
-# Добавлен параметр "no_label"
 def get_table_cards(table_name: str, filter_fields=list(), filter_value='', exclude_list=list(), no_label=False, struct_view:list = list()):
     # Получим список полей таблицы
     # table_name = 'RS_goods'
@@ -308,6 +289,4 @@ def get_table_cards(table_name: str, filter_fields=list(), filter_value='', excl
 
     return json.dumps(cards)
 
-@HashMap()
-def debug_barcode_error_screen_listener(hash_map: HashMap):
-    hash_map.show_screen(listener='Ошибка превышения плана', title='Количество план в документе превышено')
+# ^^^^^^^^^^^^^^^^^ Universal cards ^^^^^^^^^^^^^^^^^

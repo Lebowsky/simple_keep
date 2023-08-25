@@ -476,3 +476,19 @@ def file_browser_on_start(hash_map):
 def file_browser_on_input(hash_map):
     screen: ui_models.SimpleFileBrowser = ui_models.SimpleFileBrowser(hash_map, rs_settings)
     screen.on_input()
+
+
+# =============== Debug =================
+
+@HashMap()
+def debug_on_start(hash_map: HashMap):
+    screen: ui_models.DebugSettingsScreen = create_screen(hash_map)
+    screen.on_start()
+
+
+@HashMap()
+def debug_listener(hash_map, _files=None, _data=None):
+    screen: ui_models.DebugSettingsScreen = create_screen(hash_map)
+    screen.on_input()
+
+# ^^^^^^^^^^^^^^^^^ Debug ^^^^^^^^^^^^^^^^^
