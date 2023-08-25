@@ -136,6 +136,26 @@ class BarcodeService(DbService):
         if result:
             return result[0]
 
+    def get_barcode_from_doc_table(self, id_doc_table: str) -> str:
+        q = '''
+        SELECT barcode
+          FROM RS_barcodes 
+        LEFT JOIN   RS_docs_table ON 
+        RS_docs_table.id_good = RS_barcodes.id_good AND 
+        RS_docs_table.id_properties = RS_barcodes.id_property AND 
+        RS_docs_table.id_unit = RS_barcodes.id_unit  
+        
+        WHERE RS_docs_table.id = ?
+        
+        LIMIT 1 '''
+
+        result = self.provider.sql_query(q, id_doc_table)
+        if result:
+            return result[0]['barcode']
+        else:
+            return '0000000000011'
+
+
 
 class DocService:
     def __init__(self, doc_id=''):
