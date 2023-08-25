@@ -1333,19 +1333,6 @@
                                         ]
                                     },
                                     {
-                                        "Value": "Печать этикетки",
-                                        "Variable": "btn_print",
-                                        "height": "wrap_content",
-                                        "width": "match_parent",
-                                        "orientation": "",
-                                        "weight": "",
-                                        "TextBold": false,
-                                        "TextItalic": false,
-                                        "TextSize": "",
-                                        "TextColor": "",
-                                        "type": "ProgressButton"
-                                    },
-                                    {
                                         "Value": "@barcode_cards",
                                         "Variable": "barcode_cards",
                                         "height": "wrap_content",
@@ -1354,6 +1341,12 @@
                                         "type": "CardsLayout"
                                     }
                                 ]
+                            },
+                            {
+                                "type": "MenuItem",
+                                "Value": "Печать",
+                                "Variable": "btn_print",
+                                "style_name": ""
                             }
                         ],
                         "Handlers": [
@@ -6800,6 +6793,10 @@
             },
             {
                 "PyFileKey": "printing_factory",
+                "PyFileData": ""
+            },
+            {
+                "PyFileKey": "tiny_db_services",
                 "PyFileData": ""
             }
         ],
