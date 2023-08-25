@@ -119,19 +119,7 @@ class HtmlView(Screen):
         self.hash_map.put('noRefresh','')
 
     def on_start(self, ):
-        #Не перерисовываем экран если уже сделан
-        # json_table = self.hash_map.get('matching_table')
-        # if json_table is not None:
-        #     return
-        # if self.hash_map.get('run_screen') == '2':
-        #     return
-        # else:
-        #     self.hash_map['run_screen'] = '1'
-
-
         # Если установлен шаблон в настройках печати, ищем его в локальных файлах
-        # if self.params.get('template'):
-        #     pass
         if self.params.get('file_name') and self.params.get('full_path'):
             pass
         else: #Файл шаблона не найден, возвращаемся обратно
@@ -450,7 +438,22 @@ class TemplatesList(Screen):
         elif self.listener == 'LayoutAction':
             self._layout_action()
         elif self.listener == 'CardsClick':
-            self._layout_action()
+
+            #selected_card = json.loads(self.hash_map.get('selected_card_data'))
+            current_str = self.hash_map.get("selected_card_position")
+            jlist = json.loads(self.hash_map.get("templates_cards"))
+            selected_card = jlist['customcards']['cardsdata'][int(current_str)]
+
+            if selected_card and isinstance(selected_card, dict):
+                self.print_parameters['file_name'] = selected_card.get('file_name')
+                self.print_parameters['full_path'] = selected_card.get('full_path')
+                self.hash_map.put('print_parameters', json.dumps(self.print_parameters))
+                # self.rs_settings.put('current_template',json.dumps(file_parameters),False)
+
+                self.hash_map.put('current_template', selected_card.get('file_name'))
+
+                # self.delete_template_settings(self.rs_settings)
+                self.hash_map.show_screen('Результат')  # .show_process_result('Печать', 'Результат')
 
 
     def on_post_start(self):
@@ -571,19 +574,18 @@ class TemplatesList(Screen):
         selected_card = None
         if self.hash_map.get('layout_listener') == 'Задать по умолчанию' :
             selected_card = json.loads(self.hash_map.get('card_data'))
-        elif self.listener == 'CardsClick':
-            selected_card = json.loads(self.hash_map.get('selected_card_data'))
-        
-        if selected_card and isinstance(selected_card, dict):
-            self.print_parameters ['file_name'] = selected_card.get('file_name')
-            self.print_parameters['full_path'] = selected_card.get('full_path')
-            self.hash_map.put('print_parameters', json.dumps(self.print_parameters))
-            #self.rs_settings.put('current_template',json.dumps(file_parameters),False)
 
-            self.hash_map.put('current_template', selected_card.get('file_name'))
+            if selected_card and isinstance(selected_card, dict):
 
-            #self.delete_template_settings(self.rs_settings)
-            self.hash_map.show_screen('Результат') #.show_process_result('Печать', 'Результат')
+                self.print_parameters ['file_name'] = selected_card.get('file_name')
+                self.print_parameters['full_path'] = selected_card.get('full_path')
+                self.hash_map.put('print_parameters', json.dumps(self.print_parameters))
+                #self.rs_settings.put('current_template',json.dumps(file_parameters),False)
+
+                self.hash_map.put('current_template', selected_card.get('file_name'))
+
+                #self.delete_template_settings(self.rs_settings)
+                self.hash_map.show_screen('Результат') #.show_process_result('Печать', 'Результат')
 
 
 class SimpleFileBrowser(Screen):
@@ -3286,7 +3288,11 @@ class GoodsSelectScreen(Screen):
         new_qtty = str(int(self.hash_map.get('qtty')) + delta)
         self.hash_map.put('new_qtty', new_qtty)
 
-    def print_ticket(self, barcode: str = None):
+    def print_ticket(self):
+        #Получим первый баркод документа
+
+        barcode = db_services.BarcodeService().get_barcode_from_doc_table(self.hash_map.get('key'))
+
         param_list = {'Дата_док': 'Doc_data', 'Номенклатура': 'Good', 'Артикул': 'good_art',
                       'Серийный номер': 'good_sn', 'Характеристика': 'good_property'
             , 'Цена': 'good_price', 'ЕдИзм': 'good_unit', 'Ключ': 'key', 'Валюта': 'price_type'}

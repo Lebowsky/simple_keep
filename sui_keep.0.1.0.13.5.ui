@@ -6695,6 +6695,32 @@
                         "onlineOnInput": false
                     }
                 ]
+            },
+            {
+                "type": "Process",
+                "ProcessName": "Серии",
+                "PlanFactHeader": "",
+                "DefineOnBackPressed": false,
+                "hidden": true,
+                "login_screen": false,
+                "SC": false,
+                "Operations": [
+                    {
+                        "type": "Operation",
+                        "Name": "Выбор серии",
+                        "Timer": false,
+                        "hideBottomBarScreen": true,
+                        "noScroll": false,
+                        "handleKeyUp": false,
+                        "noConfirmation": true,
+                        "hideToolBarScreen": false,
+                        "Elements": [],
+                        "Handlers": [],
+                        "onlineOnStart": false,
+                        "onlineOnAfterStart": false,
+                        "onlineOnInput": false
+                    }
+                ]
             }
         ],
         "ConfigurationSettings": {
