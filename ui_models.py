@@ -1705,9 +1705,7 @@ class DocDetailsScreen(Screen):
         doc_details = self._get_doc_details_data()
         table_data = self._prepare_table_data(doc_details)
         if table_data and last_scanned_item:
-            if self.hash_map.get('current_page') == '1':
-                table_data.pop(1)
-            table_data.insert(1, last_scanned_item)
+            table_data[1] = last_scanned_item
         table_view = self._get_doc_table_view(table_data=table_data)
 
         self.hash_map['items_on_page_select'] = '10;20;40;60'
@@ -2021,6 +2019,7 @@ class DocDetailsScreen(Screen):
                 self.hash_map.playsound('warning')
             else:
                 self.hash_map.playsound('error')
+        self.hash_map.refresh_screen()
 
     def _format_to_float(self, value: str):
         return float(value.replace(u'\xa0', u'').replace(',', '.') or '0.0')
@@ -2147,11 +2146,7 @@ class GroupScanDocDetailsScreen(DocDetailsScreen):
             if answer and answer.get('Error') is not None:
                 self.hash_map.error_log(answer.get('Error'))
 
-            doc_details = self._get_doc_details_data()
-            table_data = self._prepare_table_data(doc_details)
-            table_view = self._get_doc_table_view(table_data=table_data)
-            self.hash_map.put("doc_goods_table", table_view.to_json())
-            self.hash_map.refresh_screen()
+            self.on_start()
 
     def _post_goods_to_server(self):
         res = self.service.get_last_edited_goods(to_json=False)
@@ -3531,7 +3526,7 @@ class ItemCard(Screen):
             dict_data = {'input_good_id': self.hash_map.get('selected_good_id'),
                          'input_good_art': self.hash_map.get('good_art'),
                          'prices_object_name': f'{self.hash_map.get("good_name")}, {self.hash_map.get("good_code")}',
-                         "return_to_item_card": "true", 'property_id': self.hash_map.get('property_id'),
+                         "return_to_item_card": "true",
                          'object_name': self.hash_map.get('good_name'),
                          'ShowProcessResult': 'Цены|Проверка цен', "noRefresh": ''}
             self.hash_map.put_data(dict_data)
@@ -3541,7 +3536,7 @@ class ItemCard(Screen):
                          'item_art_input': self.hash_map.get('good_art'),
                          'selected_object_name': f'{self.hash_map.get("good_name")}, {self.hash_map.get("good_code")}',
                          'object_name': self.hash_map.get('good_name'),
-                         "return_to_item_card": "true", 'property_id': self.hash_map.get('property_id'),
+                         "return_to_item_card": "true",
                          'ShowProcessResult': 'Остатки|Проверить остатки', "noRefresh": ''}
             self.hash_map.put_data(dict_data)
 
@@ -3688,7 +3683,6 @@ class GoodsBalancesItemCard(Screen):
     def _get_balances(self):
         self.validate_input()
         raw_balances_data = self._get_balances_data()
-        # self.toast(raw_balances_data)
         balances_data = self._prepare_table_data(raw_balances_data)
         balances_table = self._get_balances_table_view(balances_data)
         self.hash_map.put('balances_table', balances_table.to_json())
@@ -3877,12 +3871,16 @@ class GoodsBalancesItemCard(Screen):
                             width='match_parent'
                         ),
                         width='match_parent',
+                        height='match_parent'
+
                     ),
                     width='match_parent',
+                    height='match_parent',
                     orientation='horizontal',
                     StrokeWidth=1
                 ),
                 width='match_parent',
+                height='match_parent',
                 weight=1,
                 StrokeWidth=1
             ),
@@ -3893,7 +3891,7 @@ class GoodsBalancesItemCard(Screen):
                     width='match_parent',
                 ),
                 width='match_parent',
-                height='match_parent',
+                height='wrap_content',
                 weight=1,
                 StrokeWidth=1
             ),
