@@ -133,11 +133,15 @@ class HtmlView(Screen):
             self.hash_map['picture_highth'] = '20'
             self.hash_map['picture_with'] = '20'
 
+        #Список допустимых видов штрихкода
+        barcode_types = ['ean13', 'ean8', 'ean8-guard',  'ean13-guard', 'ean', 'gtin', 'ean14', 'jan', 'upc', 'upca', 'isbn', 'isbn13',
+         'gs1', 'isbn10', 'issn', 'code39', 'pzn', 'code128', 'itf', 'gs1_128', 'codabar', 'nw-7']
+        self.hash_map.put('barcode_types', ';'.join(barcode_types))
             #self.params['template_folder'], self.params['template'] = self.get_template_by_default(rs_settings= self.rs_settings)
         template_dir, template_file = self.get_template_by_default(self.params)
         html_doc = printing_factory.HTMLDocument(template_dir, template_file).get_template()
         self.hash_map.put('html', html_doc)
-        #
+
         doc_details = self.get_details_data()
         print_parameters = self.hash_map.get('print_parameters')
         if print_parameters:
@@ -211,6 +215,7 @@ class HtmlView(Screen):
             'file_name' : self.params.get('file_name'),
             'picture_with':self.hash_map.get('picture_with'),
             'picture_highth': self.hash_map.get('picture_highth'),
+            'barcode_type' : self.hash_map.get('barcode_type_click'),
             'print_params' : current_table }
 
             current_table_json = json.dumps(settings_for_wrote)
@@ -242,6 +247,8 @@ class HtmlView(Screen):
             #self._set_background_row_color(rec)
             self.hash_map.put("matching_table", json.dumps(jrecord, ensure_ascii=False).encode('utf8').decode())
             self.hash_map.refresh_screen()
+
+
 
     def on_post_start(self):
         pass
@@ -371,7 +378,7 @@ class HtmlView(Screen):
                 data_for_printing = HtmlView.replase_params_names(data_for_printing, params_match.get('print_params'))
                 template_directory, template_file  = HtmlView.get_template_by_default(params_match)
                 #hash_map.toast(f'Путь:{template_directory}  Файл:{template_file}')
-                htmlresult = printing_factory.HTMLDocument(template_directory, template_file).create_html(data_for_printing)
+                htmlresult = printing_factory.HTMLDocument(template_directory, template_file).create_html(data_for_printing, params_match.get('barcode_type'))
                 htmlresult = printing_factory.HTMLDocument.inject_css_style(htmlresult, params_match)
                 # with open(suClass.get_temp_dir() + '//template.html', 'w', encoding='utf-8') as file:
                 #     file.write(htmlresult)

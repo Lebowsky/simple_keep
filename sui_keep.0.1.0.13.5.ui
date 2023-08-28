@@ -6336,19 +6336,6 @@
                                         "type": "ProgressButton"
                                     },
                                     {
-                                        "Value": "@current_template",
-                                        "Variable": "current_template",
-                                        "height": "wrap_content",
-                                        "width": "match_parent",
-                                        "orientation": "",
-                                        "weight": "",
-                                        "TextBold": false,
-                                        "TextItalic": false,
-                                        "TextSize": "",
-                                        "TextColor": "",
-                                        "type": "TextView"
-                                    },
-                                    {
                                         "Value": "@templates_cards",
                                         "Variable": "templates_cards",
                                         "height": "wrap_content",
@@ -6508,6 +6495,42 @@
                                                 "TextSize": "",
                                                 "TextColor": "",
                                                 "type": "EditTextNumeric"
+                                            }
+                                        ],
+                                        "BackgroundColor": "",
+                                        "StrokeWidth": "",
+                                        "Padding": ""
+                                    },
+                                    {
+                                        "type": "LinearLayout",
+                                        "Variable": "",
+                                        "orientation": "horizontal",
+                                        "height": "wrap_content",
+                                        "width": "match_parent",
+                                        "weight": "1",
+                                        "Elements": [
+                                            {
+                                                "Value": "Тип штрихкода:",
+                                                "Variable": "",
+                                                "height": "wrap_content",
+                                                "width": "wrap_content",
+                                                "weight": "2",
+                                                "TextBold": false,
+                                                "TextItalic": false,
+                                                "type": "TextView"
+                                            },
+                                            {
+                                                "Value": "@barcode_types",
+                                                "Variable": "barcode_type_click",
+                                                "height": "wrap_content",
+                                                "width": "wrap_content",
+                                                "orientation": "",
+                                                "weight": "1",
+                                                "TextBold": false,
+                                                "TextItalic": false,
+                                                "TextSize": "",
+                                                "TextColor": "",
+                                                "type": "SpinnerLayout"
                                             }
                                         ],
                                         "BackgroundColor": "",

@@ -15,8 +15,8 @@ class HTMLDocument:
 
 
     @staticmethod
-    def generate_barcode(data):
-        EAN = barcode.get_barcode_class('ean13')
+    def generate_barcode(data, type='ean13'):
+        EAN = barcode.get_barcode_class(type)
         writer = ImageWriter()
         #writer.set_options({})
         ean = EAN(data, writer = writer)
@@ -25,7 +25,7 @@ class HTMLDocument:
         ean.write(barcode_image)
         return base64.b64encode(barcode_image.getvalue()).decode()
 
-    def create_html(self, parameters):
+    def create_html(self, parameters, barcode_type='ean13'):
         env = Environment(
             loader=FileSystemLoader(self.template_directory),
             autoescape=select_autoescape(['html', 'xml']),
@@ -33,7 +33,7 @@ class HTMLDocument:
             variable_end_string=']',
         )
 
-        barcode_image_base64 = self.generate_barcode(parameters['barcode'])
+        barcode_image_base64 = self.generate_barcode(parameters['barcode'], barcode_type)
 
         template = env.get_template(self.template_file)
 
