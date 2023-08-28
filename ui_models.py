@@ -2286,8 +2286,9 @@ class GroupScanDocDetailsScreen(DocDetailsScreen):
 class GroupScanDocDetailsScreenNew(DocDetailsScreen):
     def __init__(self, hash_map, rs_settings):
         super().__init__(hash_map, rs_settings)
-
-
+        self.hs_service = hs_services.HsService(self.get_http_settings())
+        self.db_service = db_services.BarcodeService()
+        self.queue_service = tiny_db_services.ScanningQueueService()
 
     def on_start(self):
         super()._on_start()
@@ -2309,6 +2310,23 @@ class GroupScanDocDetailsScreenNew(DocDetailsScreen):
         if not barcode:
             return
 
+        barcode_worker = BarcodeWorker(id_doc=self.id_doc, **self._get_barcode_process_params(), use_scanning_queue=True)
+        # print(barcode_worker)
+        result = barcode_worker.process_the_barcode(barcode)
+        if result.error:
+            self._process_error_scan_barcode(result)
+            return result.error
+
+        send_data = self.queue_service.get_send_document_lines(self.id_doc)
+        return send_data
+        # http_result = self.hs_service.send_document_lines(self.id_doc, send_data)
+        # hash_map.put('send_document_lines_running', True)
+        # if http_result.status_code == 200:
+        #     # barcode_worker.update_document_barcode_data()
+        #     # barcode_worker.
+        # hash_map.put('send_document_lines_running', False)
+
+
         # process the barcode
         # barcode_worker = BarcodeWorker(
         #     self.id_doc, **self._get_barcode_process_params())
@@ -2319,7 +2337,6 @@ class GroupScanDocDetailsScreenNew(DocDetailsScreen):
         #     return
 
 
-        # save barc queue
         # run after_scan_processing async http post -> hs.send_document_lines()
         # hash_map.put('send_document_lines_running', True)
         # if 200 update barc queue
@@ -3755,7 +3772,10 @@ class GoodsBalancesItemCard(Screen):
                 item_data = self.service.get_values_by_field(table_name="RS_goods", field='id', field_value=item_id)
                 if item_data[0]:
                     self.hash_map.put('input_item_id', item_id)
-                    self.hash_map.put('item_art_input', item_data[0]['art'])
+                    if item_data[0]['art']:
+                        self.hash_map.put('item_art_input', item_data[0]['art'])
+                    else:
+                        self.hash_map.put('item_art_input', '—')
                     self.hash_map.put('selected_object_name', f'{item_data[0]["name"]},  {item_data[0]["code"]}')
                     self.hash_map.put('error_msg', "")
 
@@ -4108,7 +4128,10 @@ class GoodsPricesItemCard(GoodsBalancesItemCard):
                 item_data = self.service.get_values_by_field(table_name="RS_goods", field='id', field_value=item_id)
                 if item_data[0]:
                     self.hash_map.put('input_good_id', item_id)
-                    self.hash_map.put('input_good_art', item_data[0]['art'])
+                    if item_data[0]['art']:
+                        self.hash_map.put('input_good_art', item_data[0]['art'])
+                    else:
+                        self.hash_map.put('input_good_art', '—')
                     self.hash_map.put('prices_object_name', item_data[0]['name'])
                     self.hash_map.put('error_msg', "")
 
