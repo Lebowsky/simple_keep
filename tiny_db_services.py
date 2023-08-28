@@ -85,7 +85,7 @@ class ScanningQueueService:
 
         return result
 
-    def save_scanned_row_data(self, data, sent=False):
+    def save_scanned_row_data(self, data, sent=False):  #TODO в тесты Олег
         # id_doc, row_id, qtty
         data['sent'] = sent
         self.provider.insert(data=data)

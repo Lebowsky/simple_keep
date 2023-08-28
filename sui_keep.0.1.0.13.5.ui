@@ -1341,6 +1341,12 @@
                                         "type": "CardsLayout"
                                     }
                                 ]
+                            },
+                            {
+                                "type": "MenuItem",
+                                "Value": "Печать",
+                                "Variable": "btn_print",
+                                "style_name": ""
                             }
                         ],
                         "Handlers": [
@@ -2301,7 +2307,7 @@
                                 "weight": "0",
                                 "Elements": [
                                     {
-                                        "Value": "Вы открываете документ для групповой работы. В этом режиме данные передаются в 1С при каждом сканировании, а ввод количества вручную недоступен. Хотите продолжить?",
+                                        "Value": "Вы открываете документ в режиме групповой работы. Работает только онлайн.",
                                         "Variable": "",
                                         "height": "wrap_content",
                                         "width": "wrap_content",
@@ -5530,6 +5536,19 @@
                                         "width": "match_parent",
                                         "weight": "0",
                                         "type": "ProgressButton"
+                                    },
+                                    {
+                                        "Value": "Удалить настройки этикеток",
+                                        "Variable": "btn_delete_template_settings",
+                                        "height": "wrap_content",
+                                        "width": "wrap_content",
+                                        "orientation": "",
+                                        "weight": "",
+                                        "TextBold": false,
+                                        "TextItalic": false,
+                                        "TextSize": "",
+                                        "TextColor": "",
+                                        "type": "ProgressButton"
                                     }
                                 ]
                             }
@@ -6284,7 +6303,7 @@
                 "ProcessName": "Печать",
                 "PlanFactHeader": "",
                 "DefineOnBackPressed": true,
-                "hidden": false,
+                "hidden": true,
                 "login_screen": false,
                 "SC": false,
                 "Operations": [
@@ -6419,6 +6438,81 @@
                                         "TextSize": "",
                                         "TextColor": "",
                                         "type": "TableLayout"
+                                    },
+                                    {
+                                        "Value": "Размер штрихкода",
+                                        "Variable": "",
+                                        "height": "wrap_content",
+                                        "width": "match_parent",
+                                        "orientation": "",
+                                        "weight": "1",
+                                        "TextBold": false,
+                                        "TextItalic": false,
+                                        "TextSize": "",
+                                        "TextColor": "",
+                                        "type": "TextView"
+                                    },
+                                    {
+                                        "type": "LinearLayout",
+                                        "Variable": "",
+                                        "orientation": "horizontal",
+                                        "height": "wrap_content",
+                                        "width": "match_parent",
+                                        "weight": "1",
+                                        "Elements": [
+                                            {
+                                                "Value": "Ширина",
+                                                "Variable": "",
+                                                "height": "wrap_content",
+                                                "width": "wrap_content",
+                                                "weight": "0",
+                                                "TextBold": false,
+                                                "TextItalic": false,
+                                                "type": "TextView"
+                                            },
+                                            {
+                                                "Value": "@picture_with",
+                                                "Variable": "picture_with",
+                                                "height": "wrap_content",
+                                                "width": "wrap_content",
+                                                "orientation": "",
+                                                "weight": "",
+                                                "TextBold": false,
+                                                "TextItalic": false,
+                                                "TextSize": "",
+                                                "TextColor": "",
+                                                "type": "EditTextNumeric"
+                                            },
+                                            {
+                                                "Value": "Высота",
+                                                "Variable": "",
+                                                "height": "wrap_content",
+                                                "width": "wrap_content",
+                                                "orientation": "",
+                                                "weight": "",
+                                                "TextBold": false,
+                                                "TextItalic": false,
+                                                "TextSize": "",
+                                                "TextColor": "",
+                                                "type": "TextView"
+                                            },
+                                            {
+                                                "Value": "@picture_highth",
+                                                "Variable": "picture_highth",
+                                                "height": "wrap_content",
+                                                "width": "wrap_content",
+                                                "orientation": "",
+                                                "weight": "",
+                                                "TextBold": false,
+                                                "TextItalic": false,
+                                                "TextSize": "",
+                                                "TextColor": "",
+                                                "type": "EditTextNumeric"
+                                            }
+                                        ],
+                                        "BackgroundColor": "",
+                                        "StrokeWidth": "",
+                                        "Padding": ""
                                     },
                                     {
                                         "type": "LinearLayout",
@@ -6601,6 +6695,32 @@
                         "onlineOnInput": false
                     }
                 ]
+            },
+            {
+                "type": "Process",
+                "ProcessName": "Серии",
+                "PlanFactHeader": "",
+                "DefineOnBackPressed": false,
+                "hidden": true,
+                "login_screen": false,
+                "SC": false,
+                "Operations": [
+                    {
+                        "type": "Operation",
+                        "Name": "Выбор серии",
+                        "Timer": false,
+                        "hideBottomBarScreen": true,
+                        "noScroll": false,
+                        "handleKeyUp": false,
+                        "noConfirmation": true,
+                        "hideToolBarScreen": false,
+                        "Elements": [],
+                        "Handlers": [],
+                        "onlineOnStart": false,
+                        "onlineOnAfterStart": false,
+                        "onlineOnInput": false
+                    }
+                ]
             }
         ],
         "ConfigurationSettings": {
@@ -6699,6 +6819,10 @@
             },
             {
                 "PyFileKey": "printing_factory",
+                "PyFileData": ""
+            },
+            {
+                "PyFileKey": "tiny_db_services",
                 "PyFileData": ""
             }
         ],

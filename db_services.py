@@ -136,6 +136,29 @@ class BarcodeService(DbService):
         if result:
             return result[0]
 
+    def get_barcode_from_doc_table(self, id_doc_table: str) -> str:
+        q = '''
+        SELECT barcode
+          FROM RS_barcodes 
+        LEFT JOIN   RS_docs_table ON 
+        RS_docs_table.id_good = RS_barcodes.id_good AND 
+        RS_docs_table.id_properties = RS_barcodes.id_property AND 
+        RS_docs_table.id_unit = RS_barcodes.id_unit  
+        
+        WHERE RS_docs_table.id = ?
+        
+        LIMIT 1 '''
+
+        result = self.provider.sql_query(q, id_doc_table)
+        if result:
+            return result[0]['barcode']
+        else:
+            return '0000000000011'
+
+
+    def update_table(self, id_doc, docs_table_update_data):
+        pass
+
 
 class DocService:
     def __init__(self, doc_id=''):
@@ -742,8 +765,9 @@ class AdrDocService(DocService):
     def get_current_cell(self):
         pass
 
-    def get_doc_details_data(self, id_doc='', curCell='') -> list:
-        query_text = '''SELECT
+    def get_doc_details_data(self, first_elem, items_on_page, row_filters=None, search_string=None, id_doc='',
+                             curCell='', ) -> list:
+        select_query = '''SELECT
             RS_adr_docs_table.id,
             RS_adr_docs_table.id_doc,
             RS_adr_docs_table.id_good,
@@ -775,17 +799,22 @@ class AdrDocService(DocService):
             ON RS_units.id=RS_adr_docs_table.id_unit
             LEFT JOIN RS_cells
             ON RS_cells.id=RS_adr_docs_table.id_cell
-
-            WHERE id_doc = :id_doc and table_type = :table_type
-            
             '''
 
-        if curCell:
-            query_text = query_text + '''
-             and (id_cell=:current_cell OR id_cell="" OR id_cell is Null)
-            '''
+        basic_where = f"""WHERE id_doc = :id_doc and table_type = :table_type"""
 
-        query_text = query_text + ' ORDER BY RS_cells.name, RS_adr_docs_table.last_updated DESC'
+        cur_cell_condition = '''and (id_cell=:current_cell OR id_cell="" OR id_cell is Null)''' if curCell else ''
+        search_string_condition = f"""AND good_name LIKE '%{search_string}%'""" if search_string else ''
+
+        where_full = f"""
+                {basic_where}
+                {cur_cell_condition}
+                {search_string_condition}
+        """
+
+        order_by = f"""ORDER BY RS_cells.name, RS_adr_docs_table.last_updated DESC"""
+        limit = f'LIMIT {items_on_page} OFFSET {first_elem}'
+        query_text = f"{select_query} {where_full} {order_by} {limit}"
         # self.table_type = 'out'  #****** ОТЛАДОЧНОЕ
         params_dict = {'id_doc': id_doc, 'NullValue': None, 'EmptyString': '', 'table_type': self.table_type}
         if curCell:
