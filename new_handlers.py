@@ -161,7 +161,34 @@ def doc_details_listener(hash_map: HashMap):
     screen = create_screen(hash_map)
     screen.on_input()
 
+@HashMap()
+def doc_details_before_process_barcode(hash_map):
+    """ Обработчик для синхронного запроса и обновления данных после сканирования и перед обработкой ШК"""
 
+    screen = ui_models.GroupScanDocDetailsScreen(hash_map, rs_settings)
+    screen.before_process_barcode()
+
+@HashMap()
+def doc_run_post_barcode_scanned(hash_map):
+    """ Отправка данных после обработки ШК"""
+
+    screen = ui_models.GroupScanDocDetailsScreen(hash_map, rs_settings)
+    screen.hash_map.remove('toast')
+    screen.post_barcode_scanned()
+
+@HashMap()
+def doc_scan_error_sound(hash_map):
+    """ Звуковые сигналы ошибок сканирования"""
+
+    screen = ui_models.GroupScanDocDetailsScreen(hash_map, rs_settings)
+    screen.scan_error_sound()
+
+@HashMap()
+def highlight_scanned_item(hash_map: HashMap):
+    """ Обработчик для отмены раскраски отсканированного товара """
+
+    screen = ui_models.DocDetailsScreen(hash_map, rs_settings)
+    screen.disable_highlight()
 
 @HashMap()
 def adr_docs_on_start(hash_map: HashMap):
@@ -449,3 +476,19 @@ def file_browser_on_start(hash_map):
 def file_browser_on_input(hash_map):
     screen: ui_models.SimpleFileBrowser = ui_models.SimpleFileBrowser(hash_map, rs_settings)
     screen.on_input()
+
+
+# =============== Debug =================
+
+@HashMap()
+def debug_on_start(hash_map: HashMap):
+    screen: ui_models.DebugSettingsScreen = create_screen(hash_map)
+    screen.on_start()
+
+
+@HashMap()
+def debug_listener(hash_map, _files=None, _data=None):
+    screen: ui_models.DebugSettingsScreen = create_screen(hash_map)
+    screen.on_input()
+
+# ^^^^^^^^^^^^^^^^^ Debug ^^^^^^^^^^^^^^^^^
