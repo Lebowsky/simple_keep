@@ -311,10 +311,11 @@ class Rs_doc():
             current_time_utc_0 = (datetime.now() - timedelta(hours=user_tmz)).strftime("%Y-%m-%d %H:%M:%S")
             get_query_result(qtext, (qtty, current_time_utc_0, el['id']))
         else:  # Такой строки нет, надо добавить
-            qtext = 'REPLACE INTO RS_docs_table(id_doc, id_good, id_properties,id_series, id_unit, qtty, price, id_price, is_plan, sent) VALUES (?,?,?,?,?,?,?,?,?,?)'
+            current_time_utc_0 = (datetime.now() - timedelta(hours=user_tmz)).strftime("%Y-%m-%d %H:%M:%S")
+            qtext = 'REPLACE INTO RS_docs_table(id_doc, id_good, id_properties,id_series, id_unit, qtty, price, id_price, is_plan, sent, last_updated) VALUES (?,?,?,?,?,?,?,?,?,?,?)'
             get_query_result(qtext, (
                 self.id_doc, elem_for_add['id_good'], elem_for_add['id_property'], elem_for_add['id_series'],
-                elem_for_add.get('id_unit'), qtty, 0, '', 'False', 0))
+                elem_for_add.get('id_unit'), qtty, 0, '', 'False', 0, current_time_utc_0))
 
         return res
 

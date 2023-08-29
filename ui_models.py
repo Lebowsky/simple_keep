@@ -1087,7 +1087,7 @@ class DocsListScreen(Screen):
         self.hash_map['selected_tile_key'] = ''
 
         list_data = self._get_doc_list_data(doc_type, doc_status)
-
+        self.hash_map['return_selected_data'] = ''
         doc_cards = self._get_doc_cards_view(list_data, self.popup_menu_data)
         self.hash_map['docCards'] = doc_cards.to_json()
 
@@ -1210,15 +1210,8 @@ class DocsListScreen(Screen):
 
         return doc_cards
 
-    def _get_selected_card(self):
-        current_str = self.hash_map.get("selected_card_position")
-        jlist = self.hash_map.get_json("docCards")
-        selected_card = jlist['customcards']['cardsdata'][int(current_str)]
-
-        return selected_card
-
     def _get_selected_card_put_data(self, put_data=None):
-        card_data = self._get_selected_card()
+        card_data = self.hash_map.get("selected_card_data", from_json=True)
 
         put_data = put_data or {}
         put_data['id_doc'] = card_data['key']
@@ -1331,6 +1324,7 @@ class DocumentsDocsListScreen(DocsListScreen):
         if self.listener == "CardsClick":
             id_doc = self.get_id_doc()
             self.hash_map['id_doc'] = id_doc
+            # id_doc = self.hash_map['selected_card_key']
             self.service.doc_id = id_doc
 
             screen_name = 'Документ товары'
@@ -1696,6 +1690,7 @@ class DocDetailsScreen(Screen):
         have_mark_plan = False
 
         last_scanned_details = self._get_doc_details_data(last_scanned=True)
+        self.toast(last_scanned_details)
         last_scanned_data = self._prepare_table_data(last_scanned_details)
         last_scanned_item = last_scanned_data[1] if len(last_scanned_data) >= 2 else None
         doc_details = self._get_doc_details_data()
@@ -1704,7 +1699,7 @@ class DocDetailsScreen(Screen):
             table_data[1] = last_scanned_item
         table_view = self._get_doc_table_view(table_data=table_data)
 
-        self.hash_map['items_on_page_select'] = '10;20;40;60'
+        self.hash_map['items_on_page_select'] = '20;40;60'
         if self.hash_map.get_bool('highlight'):
             self.hash_map.put('highlight', False)
             # self.enable_highlight(table_view.customtable)
@@ -1731,6 +1726,7 @@ class DocDetailsScreen(Screen):
     def _barcode_scanned(self):
         id_doc = self.hash_map.get('id_doc')
         doc = RsDoc(id_doc)
+        self.hash_map.put("SearchString", "")
         if self.hash_map.get("event") == "onResultPositive":
             barcode = self.hash_map.get('fld_barcode')
         else:
@@ -2068,6 +2064,7 @@ class GroupScanDocDetailsScreen(DocDetailsScreen):
             pass
 
         elif listener == 'barcode':
+            self.hash_map.put("SearchString", "")
             self._run_progress_barcode_scanning()
 
         elif self._is_result_positive('ВвестиШтрихкод'):
@@ -2083,6 +2080,7 @@ class GroupScanDocDetailsScreen(DocDetailsScreen):
             self.hash_map.show_dialog('ВвестиШтрихкод')
 
         elif listener in ['ON_BACK_PRESSED', 'BACK_BUTTON']:
+            self.hash_map.put("SearchString", "")
             self.hash_map.put("ShowScreen", "Документы")
 
     def _run_progress_barcode_scanning(self):
@@ -2283,6 +2281,7 @@ class GroupScanDocDetailsScreen(DocDetailsScreen):
         if 'urovo' in self.hash_map.get('DEVICE_MODEL').lower():
             suClass.urovo_set_lock_trigger(value)
 
+
 class GroupScanDocDetailsScreenNew(DocDetailsScreen):
     def __init__(self, hash_map, rs_settings):
         super().__init__(hash_map, rs_settings)
@@ -2357,6 +2356,7 @@ class GroupScanDocDetailsScreenNew(DocDetailsScreen):
 
     def _process_error_scan_barcode(self, scan_result):
         self.hash_map.toast(scan_result.description)
+
 
 class DocumentsDocDetailScreen(DocDetailsScreen):
     screen_name = 'Документ товары'
@@ -2456,12 +2456,14 @@ class DocumentsDocDetailScreen(DocDetailsScreen):
             self.hash_map.show_dialog('ВвестиШтрихкод')
 
         elif listener in ['ON_BACK_PRESSED', 'BACK_BUTTON']:
+            self.hash_map.put("SearchString", "")
             self.hash_map.put("ShowScreen", "Документы")
 
         elif self._is_result_positive('confirm_verified'):
             id_doc = self.hash_map['id_doc']
             doc = RsDoc(id_doc)
             doc.mark_verified(1)
+            self.hash_map.put("SearchString", "")
             self.hash_map.show_screen("Документы")
 
         elif listener == 'btn_doc_mark_verified':
@@ -2563,12 +2565,14 @@ class AdrDocDetailsScreen(DocDetailsScreen):
             self._fill_one_string_screen()
             # self.hash_map.show_screen("Товар выбор") ---*** Экран в функции _fill_one_string_screen
         elif listener == "BACK_BUTTON":
+            self.hash_map.put("SearchString", "")
             self.hash_map.show_screen("Документы")
         elif listener == "btn_barcodes":
 
             self.hash_map.put("ShowDialog", "ВвестиШтрихкод")
 
         elif listener == 'barcode' or self.hash_map.get("event") == "onResultPositive":
+            self.hash_map.put("SearchString", "")
             current_cell = self.hash_map.get('current_cell')
 
             doc = ui_global.Rs_adr_doc
@@ -2629,9 +2633,11 @@ class AdrDocDetailsScreen(DocDetailsScreen):
             doc = ui_global.Rs_adr_doc
             doc.id_doc = self.hash_map.get('id_doc')
             doc.mark_verified(doc, 1)
+            self.hash_map.put("SearchString", "")
             self.hash_map.show_screen("Документы")
 
         elif listener == 'ON_BACK_PRESSED':
+            self.hash_map.put("SearchString", "")
             if self.hash_map.get('current_cell_id'):
                 self.hash_map.remove('current_cell')
                 self.hash_map.remove('current_cell_id')
@@ -2993,12 +2999,14 @@ class FlowDocDetailsScreen(DocDetailsScreen):
             HtmlView.print_from_any_screen(self.hash_map, self.rs_settings, data_for_printing=data_dict)
 
         elif listener == "BACK_BUTTON":
+            self.hash_map.put("SearchString", "")
             self.hash_map.finish_process()
 
         elif listener == 'btn_barcodes':
             self.hash_map.show_dialog('ВвестиШтрихкод')
 
         elif listener == 'barcode' or self.hash_map.get("event") == "onResultPositive":
+            self.hash_map.put("SearchString", "")
             doc = ui_global.Rs_doc
             doc.id_doc = self.hash_map.get('id_doc')
             if self.hash_map.get("event") == "onResultPositive":
@@ -3019,8 +3027,6 @@ class FlowDocDetailsScreen(DocDetailsScreen):
                 doc.mark_verified(1)
 
                 self.hash_map.show_screen("Документы")
-
-
 
         elif listener == 'btn_doc_mark_verified':
             self.hash_map.show_dialog('confirm_verified', 'Завершить документ?', ['Да', 'Нет'])
@@ -3203,7 +3209,8 @@ class GoodsSelectScreen(Screen):
     process_name = 'Документы'
     def __init__(self, hash_map: HashMap, rs_settings):
         super().__init__(hash_map, rs_settings)
-        self.service = DocService()
+        self.id_doc = self.hash_map['id_doc']
+        self.service = DocService(self.id_doc)
 
     def on_start(self):
         # Режим работы с мультимедиа и файлами по ссылкам (флаг mm_local)
@@ -3228,7 +3235,17 @@ class GoodsSelectScreen(Screen):
                 self._set_delta(0)
 
         elif listener == "btn_ok":
+
             if int(self.hash_map.get('new_qtty')) >= 0:
+
+                control = self.hash_map.get_bool('control')
+                if control:
+                    if int(self.hash_map.get('new_qtty')) > int(self.hash_map.get('qtty_plan')):
+                        self.toast('Количество план в документе превышено')
+                        self.hash_map.playsound('error')
+                        self._set_delta(reset=True)
+                        return
+
                 current_elem = self.hash_map.get_json('selected_card_data')
                 qtty = self.hash_map['new_qtty']
                 price = self.hash_map.get('price') or 0
@@ -3246,6 +3263,7 @@ class GoodsSelectScreen(Screen):
                 self._set_delta(reset=True)
                 self.hash_map.put('new_qtty', '')
                 self.hash_map.show_screen("Документ товары")
+
             else:
                 self.hash_map.toast('Итоговое количество меньше 0')
                 self.hash_map.playsound('error')
@@ -3289,6 +3307,7 @@ class GoodsSelectScreen(Screen):
         """Создаем (обнуляем) поле ввода"""
         if reset:
             delta_field = widgets.ModernField(default_text='', input_type=3)
+            self.hash_map.put('new_qtty', self.hash_map.get('qtty'))
         else:
             delta = int(self.hash_map.get('delta')) + value if self.hash_map.get('delta') else value
             delta_field = widgets.ModernField(default_text=delta, input_type=3)
