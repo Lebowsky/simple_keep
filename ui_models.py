@@ -4670,7 +4670,7 @@ class BarcodeTestScreen(Screen):
         if not barcode:
             return
 
-        barcode_parser = BarcodeWorker()
+        barcode_parser = BarcodeWorker(id_doc='')
         result = barcode_parser.parse(barcode)
         fields_count = 7
 
