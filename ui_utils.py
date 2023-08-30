@@ -333,8 +333,12 @@ class BarcodeWorker:
         return self.process_result
 
     def _get_barcode_data(self):
-        barcode_data = self.db_service.get_barcode_data(self.barcode_info, self.id_doc)
-        return barcode_data or {}
+        try:
+            barcode_data = self.db_service.get_barcode_data(self.barcode_info, self.id_doc)
+            return barcode_data or {}
+        except:
+            self._set_process_result_info('invalid_barcode')
+            return self.process_result
 
 
     def check_barcode(self):
@@ -376,6 +380,7 @@ class BarcodeWorker:
         if not self.process_result.error:
             if self.use_scanning_queue:
                 self._insert_queue_data(new_qtty)
+                self._insert_doc_table_data(new_qtty)
             else:
                 self._insert_doc_table_data(new_qtty)
 
@@ -403,6 +408,7 @@ class BarcodeWorker:
             'id_properties': self.barcode_data['id_property'],
             'id_series': self.barcode_data['id_series'],
             'id_unit': self.barcode_data['id_unit'],
+            'd_qtty': qty,
             'qtty': qty,
             'qtty_plan': self.barcode_data['qtty_plan'],
             'last_updated': (datetime.now() - timedelta(hours=self.user_tmz)).strftime("%Y-%m-%d %H:%M:%S"),
@@ -428,12 +434,13 @@ class BarcodeWorker:
 
         if self.mark_update_data:
             pass
+            # self.db_service.update_table(table_name="RS_docs_barcodes", docs_table_update_data=self.mark_update_data)
 
         if self.docs_table_update_data:
-            pass
+            self.db_service.update_table(table_name="RS_docs_table", docs_table_update_data=self.docs_table_update_data)
 
         if self.queue_update_data:
-            pass
+            self.db_service.insert_no_sql(self.queue_update_data)
 
         if self._use_mark():
             self._set_process_result_info('success_mark')

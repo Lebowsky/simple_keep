@@ -3,6 +3,7 @@ from typing import List
 
 from ru.travelfood.simple_ui import SimpleSQLProvider as sqlClass
 from ui_global import get_query_result, bulk_query
+from tiny_db_services import TinyNoSQLProvider, ScanningQueueService
 
 
 class DbService:
@@ -155,9 +156,15 @@ class BarcodeService(DbService):
         else:
             return '0000000000011'
 
+    @staticmethod
+    def update_table(table_name, docs_table_update_data):
+        provider = SqlQueryProvider(table_name=table_name)
+        provider.replace(docs_table_update_data)
 
-    def update_table(self, id_doc, docs_table_update_data):
-        pass
+    @staticmethod
+    def insert_no_sql(queue_update_data):
+        provider = ScanningQueueService()
+        provider.save_scanned_row_data(queue_update_data)
 
 
 class DocService:
@@ -985,6 +992,7 @@ class FlowDocService(DocService):
                       '''
         return self._get_query_result(query_text, (self.doc_id, barcode), True)
 
+
 class GoodsService(DbService):
     def __init__(self, item_id=''):
         super().__init__()
@@ -1074,6 +1082,7 @@ class GoodsService(DbService):
         query_text = f'SELECT * FROM {table_name}'
         self.provider.table_name = table_name
         return self._sql_query(query_text, '')
+
 
 class DbCreator(DbService):
     def __init__(self):
