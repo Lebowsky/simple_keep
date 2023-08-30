@@ -1,7 +1,7 @@
 import json
 import re
 from dataclasses import dataclass, asdict
-from typing import Callable, Union, List, Dict
+from typing import Callable, Union, List, Dict, Literal
 from functools import wraps
 import socket
 from datetime import datetime, timedelta
@@ -166,6 +166,29 @@ class HashMap:
 
     def to_json(self):
         return json.dumps(self.export(), indent=4, ensure_ascii=False).encode('utf8').decode()
+
+    def add_to_cv_list(
+            self,
+            element: Union[str, dict],
+            cv_list: Literal['green_list', 'yellow_list', 'red_list', 'gray_list',
+                             'hidden_list', 'object_info_list', 'stop_listener_list']
+    ) -> None:
+        """ Добавляет в cv-список элемент, или создает новый список с этим элементом.
+            object_info_list - Информация об объекте. [{'object': value, 'info': value}]
+            stop_listener_list - Блокирует выполние обработчиков для объектов в списке
+        """
+
+        if cv_list == 'object_info_list':
+            lst = self.get(cv_list, from_json=True) or []
+            if element not in lst:
+                lst.append(element)
+                self.put(cv_list, json.dumps(lst, ensure_ascii=False))
+        else:
+            lst = self.get(cv_list)
+            lst = lst.split(';') if lst else []
+            if element not in lst:
+                lst.append(element)
+                self.put(cv_list, ';'.join(lst))
 
     def show_screen(self, name, data=None):
         self.put('ShowScreen', name)
