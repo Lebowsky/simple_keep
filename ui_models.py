@@ -84,8 +84,8 @@ class Screen(ABC):
     @staticmethod
     def delete_template_settings(rs_settings):
         for item in ScreensFactory.screens:
-            param_name =  getattr(item, 'process_name') + getattr(item, 'screen_name')
-            if rs_settings.get(param_name):
+            param_name =  getattr(item, 'printing_template_name', '')
+            if param_name and rs_settings.get(param_name):
                 rs_settings.delete(param_name)
 
     class TextView(widgets.TextView):
@@ -357,15 +357,11 @@ class HtmlView(Screen):
             hash_map.show_process_result('Печать', 'Результат')
 
     @staticmethod
-    def print_from_any_screen(hash_map, rs_settings, data_for_printing):
+    def print_from_any_screen(hash_map, rs_settings, template_name, data_for_printing):
         if not data_for_printing:
             return
-            #hash_map.put('print_parameters', json.dumps(data_for_printing))
         else:
-            param_name_for_settings = hash_map['current_operation_name']  + hash_map[
-                'current_screen_name']
-
-            str_table_view = rs_settings.get(param_name_for_settings)
+            str_table_view = rs_settings.get(template_name)
             if str_table_view:  #Нашли настройки для вызвавшего экрана
                 params_match = json.loads(str_table_view)
                 data_for_printing = HtmlView.replase_params_names(data_for_printing, params_match.get('print_params'))
@@ -381,7 +377,7 @@ class HtmlView(Screen):
 
             else:  #Вызываем этот экан средствами симпла, для настройки параметров
                 hash_map.put('print_parameters', json.dumps(data_for_printing))
-                hash_map['template_settings_name'] = param_name_for_settings
+                hash_map['template_settings_name'] = template_name
                 #hash_map.show_process_result('Печать', 'Результат')
                 hash_map.show_process_result('Печать', 'Список шаблонов')
 
@@ -2973,6 +2969,7 @@ class AdrDocDetailsScreen(DocDetailsScreen):
 class FlowDocDetailsScreen(DocDetailsScreen):
     screen_name = 'ПотокШтрихкодовДокумента'
     process_name = 'Сбор ШК'
+    printing_template_name = 'flow_doc_details_screen'
 
     def __init__(self, hash_map: HashMap, rs_settings):
         super().__init__(hash_map, rs_settings)
@@ -2995,7 +2992,12 @@ class FlowDocDetailsScreen(DocDetailsScreen):
             data_dict = {'barcode': current_elem['barcode'],
                          'Номенклатура': current_elem['name'],
                          'qtty': current_elem['qtty'], 'Характеристика': ''}
-            HtmlView.print_from_any_screen(self.hash_map, self.rs_settings, data_for_printing=data_dict)
+
+            HtmlView.print_from_any_screen(
+                self.hash_map,
+                self.rs_settings,
+                self.printing_template_name,
+                data_for_printing=data_dict)
 
         elif listener == "BACK_BUTTON":
             self.hash_map.put("SearchString", "")
@@ -3206,6 +3208,7 @@ class FlowDocDetailsScreen(DocDetailsScreen):
 class GoodsSelectScreen(Screen):
     screen_name = 'Товар выбор'
     process_name = 'Документы'
+    printing_template_name = 'goods_select_screen'
     def __init__(self, hash_map: HashMap, rs_settings):
         super().__init__(hash_map, rs_settings)
         self.id_doc = self.hash_map['id_doc']
@@ -3331,7 +3334,11 @@ class GoodsSelectScreen(Screen):
             param_list['barcode'] = barcode
         else:
             param_list['barcode'] = '0000000000000'
-        HtmlView.print_from_any_screen(self.hash_map, self.rs_settings, data_for_printing=param_list)
+        HtmlView.print_from_any_screen(
+            self.hash_map,
+            self.rs_settings,
+            self.printing_template_name,
+            data_for_printing=param_list)
 
 class AdrGoodsSelectScreen(GoodsSelectScreen):
     def __init__(self, hash_map: HashMap, rs_settings):
@@ -3523,7 +3530,7 @@ class SelectGoodsType(Screen):
 class ItemCard(Screen):
     screen_name = 'Карточка товара'
     process_name = 'Товары'
-
+    printing_template_name = 'item_card'
     def __init__(self, hash_map, rs_settings):
         super().__init__(hash_map, rs_settings)
         self.service = GoodsService()
@@ -3547,15 +3554,9 @@ class ItemCard(Screen):
             if self.hash_map.get('barcode_cards'):
                 self.hash_map.put('barcode_cards', '')
             self.hash_map.put("BackScreen", "")
-        elif listener == "CardsClick":
-            current_str = self.hash_map.get("selected_card_position")
-            jlist = json.loads(self.hash_map.get("barcode_cards"))
-            current_elem = jlist['customcards']['cardsdata'][int(current_str)]
-            data_dict = {'barcode': current_elem['barcode'],
-                         'Номенклатура': self.hash_map.get('good_name'),
-                         'Характеристика': current_elem['properties'], 'Валюта': current_elem['unit']}
 
-            HtmlView.print_from_any_screen(self.hash_map, self.rs_settings, data_for_printing=data_dict)
+        elif listener in ['CardsClick', 'btn_print']:
+            self._print_ticket()
             
         elif self.hash_map.get('listener') == 'to_prices':
             dict_data = {'input_good_id': self.hash_map.get('selected_good_id'),
@@ -3664,6 +3665,31 @@ class ItemCard(Screen):
         )
         return variants_cards
 
+    def _print_ticket(self):
+        current_card = self._get_selected_card_data()
+
+        data_dict = {
+            'barcode': current_card.get('barcode', '0000000000000'),
+            'Номенклатура': self.hash_map.get('good_name'),
+            'Характеристика': current_card.get('properties', ''),
+            'Упаковка': current_card.get('unit', '')
+        }
+
+        HtmlView.print_from_any_screen(
+            self.hash_map,
+            self.rs_settings,
+            self.printing_template_name,
+            data_for_printing=data_dict)
+
+    def _get_selected_card_data(self) -> dict:
+        result = {}
+        card_key = self.hash_map.get('selected_card_key')
+        cards = self.hash_map.get_json("barcode_cards")
+
+        if card_key and cards:
+            result = cards['customcards']['cardsdata'][int(card_key)]
+
+        return result
 
 # ^^^^^^^^^^^^^^^^^^^^^ Goods(Process) ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
