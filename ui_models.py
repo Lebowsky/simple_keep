@@ -1690,7 +1690,6 @@ class DocDetailsScreen(Screen):
         have_mark_plan = False
 
         last_scanned_details = self._get_doc_details_data(last_scanned=True)
-        self.toast(last_scanned_details)
         last_scanned_data = self._prepare_table_data(last_scanned_details)
         last_scanned_item = last_scanned_data[1] if len(last_scanned_data) >= 2 else None
         doc_details = self._get_doc_details_data()
@@ -3282,7 +3281,7 @@ class GoodsSelectScreen(Screen):
 
         elif listener == "CardsClick":
             current_elem = self.hash_map.get_json('selected_card_data')
-            self.print_ticket(barcode=current_elem['barcode'])
+            self.print_ticket()
 
 
     def on_post_start(self):

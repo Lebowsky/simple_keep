@@ -433,10 +433,8 @@ class BarcodeWorker:
             return
 
         if self.mark_update_data:
-            update_data = self.docs_table_update_data
-            update_data['id_property'] = update_data.pop('id_properties')
-            self.db_service.update_table(table_name="RS_docs_barcodes",
-                                         docs_table_update_data=update_data)
+            pass
+            # self.db_service.update_table(table_name="RS_docs_barcodes", docs_table_update_data=self.mark_update_data)
 
         if self.docs_table_update_data:
             self.db_service.update_table(table_name="RS_docs_table", docs_table_update_data=self.docs_table_update_data)
