@@ -1,4 +1,3 @@
-import math
 from abc import ABC, abstractmethod
 import json
 from json.decoder import JSONDecodeError
@@ -1827,7 +1826,7 @@ class DocDetailsScreen(Screen):
 
     def _check_next_page(self, elems_count):
         if elems_count < self.items_on_page:
-            if not self.hash_map.get('current_first_element_number'):
+            if not self.hash_map.containsKey('current_first_element_number'):
                 self.hash_map.put('current_first_element_number', '0')
             self.hash_map.put("Show_next_page", "0")
         else:
@@ -1842,7 +1841,7 @@ class DocDetailsScreen(Screen):
         value = self.hash_map.get('items_on_page_click')
         self.items_on_page = int(value)
         new_page = int(self.hash_map.get('current_first_element_number'))//self.items_on_page + 1
-        self.hash_map.put('current_page', str(new_page))
+        self.hash_map.put('current_page', new_page)
         new_current_first = self.items_on_page * (new_page - 1)
         self.hash_map.put('current_first_element_number', str(new_current_first))
 
@@ -3752,7 +3751,8 @@ class GoodsBalancesItemCard(Screen):
         pass
 
     def _get_balances(self):
-        self.validate_input()
+        if not (self.hash_map.get('return_to_item_card') and self.hash_map.get('input_item_id')):
+            self.validate_input()
         raw_balances_data = self._get_balances_data()
         balances_data = self._prepare_table_data(raw_balances_data)
         balances_table = self._get_balances_table_view(balances_data)
@@ -3760,6 +3760,7 @@ class GoodsBalancesItemCard(Screen):
         self.hash_map.put("Show_get_balances_controls", "-1")
         self.hash_map.put("Show_show_filters", "1")
         self.hash_map.put("property_id", '')
+        # self.hash_map.remove('input_item_id')
 
     def validate_input(self):
         self._process_input_item_art()
