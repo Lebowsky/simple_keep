@@ -1,6 +1,6 @@
 import unittest
 from tinydb import TinyDB
-from tiny_db_services import TinyNoSQLProvider
+from tiny_db_services import TinyNoSQLProvider, ScanningQueueService
 
 
 class TestTinyNoSQLProvider(unittest.TestCase):
@@ -108,3 +108,57 @@ class TestTinyNoSQLProvider(unittest.TestCase):
 
         self.assertEqual(self.provider.count(test_data='test_data'), 2)
 
+
+class TestScanningQueueService(unittest.TestCase):
+
+    def setUp(self) -> None:
+        self.provider = TinyNoSQLProvider(table_name='test_table', db_path='./')
+        self.provider.drop_table('test_table')
+
+    def tearDown(self) -> None:
+        self.provider.close()
+
+    def test_must_save_scanned_row_data(self):
+        initial_data = [
+            {'id_doc': '123', 'row_id': 5, 'test_data': 'test_data'},
+            {'id_doc': '123', 'row_id': 6, 'test_data': 'test_data'}
+        ]
+
+        row_data = {
+            'id_doc': '123', 'row_id': 7, 'test_data': 'test_data'
+        }
+
+        self.provider.insert_multiple(initial_data)
+        sut = ScanningQueueService(provider=self.provider)
+        sut.save_scanned_row_data(row_data)
+        self.assertTrue(sut.provider.count(id_doc='123'), 3)
+
+    def test_get_scanned_row_qtty(self):
+        initial_data = [
+            {'id_doc': '123', 'row_id': 6, 'qtty': 3},
+            {'id_doc': '123', 'row_id': 6, 'qtty': 4},
+            {'id_doc': '123', 'row_id': 6, 'qtty': -1}
+        ]
+
+        self.provider.insert_multiple(initial_data)
+        sut = ScanningQueueService(provider=self.provider)
+        result = sut.get_scanned_row_qtty(id_doc='123', row_id=6)
+        self.assertEqual(result, 6)
+
+    def test_get_send_document_lines(self):
+        from tests.data_for_tests.nosql.initial_data import initial_data
+        expect = [
+            {
+                "id_doc": '123',
+                "id_good": 'id_good_value',
+                "id_properties": 'id_property_value',
+                "id_series": 'id_series_value',
+                "d_qtty": 3,
+                'row_key': '1',
+                'sent': False
+            }
+        ]
+        self.provider.insert_multiple(initial_data)
+        sut = ScanningQueueService(provider=self.provider)
+        result = sut.get_send_document_lines(id_doc='123')
+        self.assertEqual(expect, result)

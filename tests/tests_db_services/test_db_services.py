@@ -105,6 +105,7 @@ class TestTimerService(unittest.TestCase):
         self.assertIsNotNone((actual[1].get('RS_adr_docs_table')))
         self.assertTrue(actual[1]['RS_adr_docs_table'])
 
+
 class TestDbService(unittest.TestCase):
     def setUp(self) -> None:
         pass
@@ -239,6 +240,7 @@ class TestSQLQueryProvider(unittest.TestCase):
         assert param_values == [None, '', '', '', '', '', '', '', '', '', None, '773c92ab-fd28-11e4-92f1-0050568b35ac',
                                 'out']
 
+
 class DataCreator:
     def __init__(self):
         self.samples = {
@@ -307,3 +309,4 @@ class DataCreator:
                 ','.join(self.samples[arg].values())
             )
             get_query_result(q)
+
