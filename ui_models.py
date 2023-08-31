@@ -5524,7 +5524,8 @@ class ScreensFactory:
         GoodItemBarcodeRegister,
         DocGoodSelectProperties,
         ItemGoodSelectProperties,
-
+        DocGoodSelectUnit,
+        ItemGoodSelectUnit,
     ]
 
     @staticmethod

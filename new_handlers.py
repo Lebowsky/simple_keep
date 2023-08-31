@@ -298,7 +298,7 @@ def barcode_register_item_on_input(hash_map):
 
 @HashMap()
 def barcode_register_item_on_start(hash_map):
-    screen = ui_models.GoodItemBarcodeRegister(hash_map, rs_settings)
+    screen: ui_models.GoodItemBarcodeRegister = create_screen(hash_map)
     screen.on_start()
 
 @HashMap()
@@ -313,7 +313,7 @@ def item_properties_on_input(hash_map):
 
 @HashMap()
 def item_units_on_start(hash_map):
-    screen = ui_models.ItemGoodSelectUnit(hash_map, rs_settings)
+    screen: ui_models.ItemGoodSelectUnit = create_screen(hash_map)
     screen.on_start()
 
 @HashMap()
