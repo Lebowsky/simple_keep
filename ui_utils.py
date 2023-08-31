@@ -1,7 +1,7 @@
 import json
 import re
 from dataclasses import dataclass, asdict
-from typing import Callable, Union, List, Dict
+from typing import Callable, Union, List, Dict, Literal
 from functools import wraps
 import socket
 from datetime import datetime, timedelta
@@ -166,6 +166,29 @@ class HashMap:
 
     def to_json(self):
         return json.dumps(self.export(), indent=4, ensure_ascii=False).encode('utf8').decode()
+
+    def add_to_cv_list(
+            self,
+            element: Union[str, dict],
+            cv_list: Literal['green_list', 'yellow_list', 'red_list', 'gray_list',
+                             'hidden_list', 'object_info_list', 'stop_listener_list']
+    ) -> None:
+        """ Добавляет в cv-список элемент, или создает новый список с этим элементом.
+            object_info_list - Информация об объекте. [{'object': value, 'info': value}]
+            stop_listener_list - Блокирует выполние обработчиков для объектов в списке
+        """
+
+        if cv_list == 'object_info_list':
+            lst = self.get(cv_list, from_json=True) or []
+            if element not in lst:
+                lst.append(element)
+                self.put(cv_list, json.dumps(lst, ensure_ascii=False))
+        else:
+            lst = self.get(cv_list)
+            lst = lst.split(';') if lst else []
+            if element not in lst:
+                lst.append(element)
+                self.put(cv_list, ';'.join(lst))
 
     def show_screen(self, name, data=None):
         self.put('ShowScreen', name)
@@ -333,8 +356,12 @@ class BarcodeWorker:
         return self.process_result
 
     def _get_barcode_data(self):
-        barcode_data = self.db_service.get_barcode_data(self.barcode_info, self.id_doc)
-        return barcode_data or {}
+        try:
+            barcode_data = self.db_service.get_barcode_data(self.barcode_info, self.id_doc)
+            return barcode_data or {}
+        except:
+            self._set_process_result_info('invalid_barcode')
+            return self.process_result
 
 
     def check_barcode(self):
@@ -367,7 +394,7 @@ class BarcodeWorker:
 
         new_qtty = self.barcode_data['qtty'] + self.barcode_data['ratio']
         if self.barcode_data['row_key']:
-            if self.have_qtty_plan and self.barcode_data['qtty_plan'] > new_qtty:
+            if self.have_qtty_plan and self.barcode_data['qtty_plan'] < new_qtty:
                 self._set_process_result_info('quantity_plan_reached')
 
         elif self.have_zero_plan and self.control:
@@ -376,6 +403,7 @@ class BarcodeWorker:
         if not self.process_result.error:
             if self.use_scanning_queue:
                 self._insert_queue_data(new_qtty)
+                self._insert_doc_table_data(new_qtty)
             else:
                 self._insert_doc_table_data(new_qtty)
 
@@ -403,6 +431,7 @@ class BarcodeWorker:
             'id_properties': self.barcode_data['id_property'],
             'id_series': self.barcode_data['id_series'],
             'id_unit': self.barcode_data['id_unit'],
+            'd_qtty': qty,
             'qtty': qty,
             'qtty_plan': self.barcode_data['qtty_plan'],
             'last_updated': (datetime.now() - timedelta(hours=self.user_tmz)).strftime("%Y-%m-%d %H:%M:%S"),
@@ -428,12 +457,13 @@ class BarcodeWorker:
 
         if self.mark_update_data:
             pass
+            # self.db_service.update_table(table_name="RS_docs_barcodes", docs_table_update_data=self.mark_update_data)
 
         if self.docs_table_update_data:
-            pass
+            self.db_service.update_table(table_name="RS_docs_table", docs_table_update_data=self.docs_table_update_data)
 
         if self.queue_update_data:
-            pass
+            self.db_service.insert_no_sql(self.queue_update_data)
 
         if self._use_mark():
             self._set_process_result_info('success_mark')

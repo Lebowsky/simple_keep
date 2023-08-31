@@ -10,7 +10,6 @@ noClass = jclass("ru.travelfood.simple_ui.NoSQL")
 rs_settings = noClass("rs_settings")
 
 
-
 class TinyNoSQLProvider:
     def __init__(self, table_name, base_name='SimpleKeep', db_path=''):
         self.table_name = table_name
@@ -71,10 +70,11 @@ class TinyNoSQLProvider:
         conditions = [(self.query[key] == value) for key, value in cond.items()]
         return reduce(lambda a, b: a & b, conditions)
 
+
 class ScanningQueueService:
-    def __init__(self):
+    def __init__(self, provider=None):
         self.table_name = 'scanning_queue'
-        self.provider = TinyNoSQLProvider(table_name=self.table_name)
+        self.provider = provider or TinyNoSQLProvider(table_name=self.table_name)
 
     def get_doc_scanning_queue(self, id_doc) -> dict:
         result = {}
@@ -85,7 +85,7 @@ class ScanningQueueService:
 
         return result
 
-    def save_scanned_row_data(self, data, sent=False):
+    def save_scanned_row_data(self, data, sent=False):  #TODO в тесты Олег
         # id_doc, row_id, qtty
         data['sent'] = sent
         self.provider.insert(data=data)
@@ -93,7 +93,7 @@ class ScanningQueueService:
 
     def get_scanned_row_qtty(self, id_doc, row_id):
         data = self.provider.search(id_doc=id_doc, row_id=row_id)
-        return sum([row['qtty'] for row in data])
+        return sum([row['qtty'] for row in data])  # or 'd_qtty'
 
     def get_send_document_lines(self, id_doc) -> list:
         data = self.provider.search(id_doc=id_doc, sent=False)

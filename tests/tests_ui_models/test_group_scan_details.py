@@ -2,11 +2,12 @@ import json
 import unittest
 from unittest.mock import MagicMock
 
-from ui_models import GroupScanDocDetailsScreen
+from ui_models import GroupScanDocDetailsScreen, GroupScanDocDetailsScreenNew
 from ui_utils import HashMap
 from main import noClass
 from hs_services import HsService
 from db_services import DocService
+from ui_utils import BarcodeWorker
 
 from data_for_tests.utils_for_tests import hashMap
 
@@ -157,3 +158,27 @@ class TestGroupScanDocDetailsScreen(unittest.TestCase):
     def get_test_data(self, file_name):
         with open(f'{self.path_to_test_data}/{file_name}', encoding='utf-8') as fp:
             return json.load(fp)
+
+
+class TestGroupScanDocDetailsScreenNew(unittest.TestCase):
+    def setUp(self) -> None:
+        self.hash_map = HashMap(hash_map=hashMap())
+        self.rs_settings = noClass('rs_settings_local')
+        self.rs_settings.put("path_to_databases", "./", True)
+        self.sut = GroupScanDocDetailsScreenNew(self.hash_map, self.rs_settings)
+        self.path_to_test_data = './data_for_tests/http_requests'
+        self.barcode_worker: BarcodeWorker
+
+    def tearDown(self) -> None:
+        self.sut.queue_service.provider.close()
+
+    def test_get_barcode(self):
+        from tests.data_for_tests.nosql.initial_data import barcode_data
+
+        self.hash_map.put('barcode_camera', '00000046198488X?io+qCABm8wAYa')
+        self.hash_map.put('have_mark_plan', False)
+
+        BarcodeWorker._get_barcode_data = MagicMock(return_value=barcode_data)
+
+        result = self.sut._barcode_scanned()
+

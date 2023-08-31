@@ -3,6 +3,7 @@ from typing import List
 
 from ru.travelfood.simple_ui import SimpleSQLProvider as sqlClass
 from ui_global import get_query_result, bulk_query
+from tiny_db_services import TinyNoSQLProvider, ScanningQueueService
 
 
 class DbService:
@@ -138,6 +139,35 @@ class BarcodeService(DbService):
         result = self.provider.sql_query(q)
         if result:
             return result[0]
+
+    def get_barcode_from_doc_table(self, id_doc_table: str) -> str:
+        q = '''
+        SELECT barcode
+          FROM RS_barcodes 
+        LEFT JOIN   RS_docs_table ON 
+        RS_docs_table.id_good = RS_barcodes.id_good AND 
+        RS_docs_table.id_properties = RS_barcodes.id_property AND 
+        RS_docs_table.id_unit = RS_barcodes.id_unit  
+        
+        WHERE RS_docs_table.id = ?
+        
+        LIMIT 1 '''
+
+        result = self.provider.sql_query(q, id_doc_table)
+        if result:
+            return result[0]['barcode']
+        else:
+            return '0000000000011'
+
+    @staticmethod
+    def update_table(table_name, docs_table_update_data):
+        provider = SqlQueryProvider(table_name=table_name)
+        provider.replace(docs_table_update_data)
+
+    @staticmethod
+    def insert_no_sql(queue_update_data):
+        provider = ScanningQueueService()
+        provider.save_scanned_row_data(queue_update_data)
 
 
 class DocService:
@@ -309,6 +339,14 @@ class DocService:
             qlist.append(query)
 
         return qlist
+
+    def get_all_articles_in_document(self) -> str:
+        query = ('SELECT DISTINCT RS_goods.art as art'
+                 ' FROM RS_docs_table'
+                 ' LEFT JOIN RS_goods ON RS_docs_table.id_good = RS_goods.id'
+                 ' WHERE RS_docs_table.id_doc = ?')
+        goods = self.provider.sql_query(query, self.doc_id)
+        return ';'.join(good['art'] for good in goods)
 
     @staticmethod
     def _get_query_result(query_text, args=None, return_dict=False):
@@ -491,6 +529,44 @@ class DocService:
         '''
         res = self._get_query_result(query, return_dict=True)
         return res
+
+    def get_goods_list_with_doc_data(self, articles_list: List[str]) -> List[dict]:
+        qs = ','.join('?' for _ in articles_list)
+        query = f"""
+            SELECT
+            RS_goods.id as id_good,
+            RS_goods.code as code,
+            RS_goods.name as name,
+            RS_goods.art as art,
+            RS_goods.description as description,
+            RS_docs_table.id_unit as id_unit,
+            RS_units.name as unit_name,
+            RS_types_goods.name as type_good,
+            RS_docs_table.id as doc_table_id,
+            RS_docs_table.qtty_plan as qtty_plan,
+            RS_docs_table.qtty as qtty,
+            RS_docs_table.id_properties as id_property,
+            RS_properties.name as property_name,
+            RS_docs_table.id_series as id_series,
+            RS_series.name as series_name,
+            RS_docs_table.price as price,
+            RS_price_types.name as price_name
+            
+            FROM RS_docs_table
+            LEFT JOIN RS_goods ON RS_docs_table.id_good = RS_goods.id
+            LEFT JOIN RS_types_goods ON RS_types_goods.id = RS_goods.type_good
+            LEFT JOIN RS_units ON RS_units.id = RS_goods.unit
+            LEFT JOIN RS_properties ON RS_goods.id = RS_properties.id_owner
+            LEFT JOIN RS_series ON RS_series.id = RS_docs_table.id_series
+            LEFT JOIN RS_price_types ON RS_price_types.id = RS_docs_table.id_price
+            WHERE RS_docs_table.id_doc = ? AND art IN ({qs})
+            """
+
+        goods = self.provider.sql_query(
+            query,
+            f'{self.doc_id},{",".join(articles_list)}'
+        )
+        return goods
 
     def get_doc_details_data(self, id_doc, first_elem, items_on_page, row_filters=None, search_string=None) -> list:
         select_query = f"""
@@ -745,8 +821,9 @@ class AdrDocService(DocService):
     def get_current_cell(self):
         pass
 
-    def get_doc_details_data(self, id_doc='', curCell='') -> list:
-        query_text = '''SELECT
+    def get_doc_details_data(self, first_elem, items_on_page, row_filters=None, search_string=None, id_doc='',
+                             curCell='', ) -> list:
+        select_query = '''SELECT
             RS_adr_docs_table.id,
             RS_adr_docs_table.id_doc,
             RS_adr_docs_table.id_good,
@@ -778,17 +855,22 @@ class AdrDocService(DocService):
             ON RS_units.id=RS_adr_docs_table.id_unit
             LEFT JOIN RS_cells
             ON RS_cells.id=RS_adr_docs_table.id_cell
-
-            WHERE id_doc = :id_doc and table_type = :table_type
-            
             '''
 
-        if curCell:
-            query_text = query_text + '''
-             and (id_cell=:current_cell OR id_cell="" OR id_cell is Null)
-            '''
+        basic_where = f"""WHERE id_doc = :id_doc and table_type = :table_type"""
 
-        query_text = query_text + ' ORDER BY RS_cells.name, RS_adr_docs_table.last_updated DESC'
+        cur_cell_condition = '''and (id_cell=:current_cell OR id_cell="" OR id_cell is Null)''' if curCell else ''
+        search_string_condition = f"""AND good_name LIKE '%{search_string}%'""" if search_string else ''
+
+        where_full = f"""
+                {basic_where}
+                {cur_cell_condition}
+                {search_string_condition}
+        """
+
+        order_by = f"""ORDER BY RS_cells.name, RS_adr_docs_table.last_updated DESC"""
+        limit = f'LIMIT {items_on_page} OFFSET {first_elem}'
+        query_text = f"{select_query} {where_full} {order_by} {limit}"
         # self.table_type = 'out'  #****** ОТЛАДОЧНОЕ
         params_dict = {'id_doc': id_doc, 'NullValue': None, 'EmptyString': '', 'table_type': self.table_type}
         if curCell:
@@ -959,6 +1041,7 @@ class FlowDocService(DocService):
                       '''
         return self._get_query_result(query_text, (self.doc_id, barcode), True)
 
+
 class GoodsService(DbService):
     def __init__(self, item_id=''):
         super().__init__()
@@ -1048,6 +1131,7 @@ class GoodsService(DbService):
         query_text = f'SELECT * FROM {table_name}'
         self.provider.table_name = table_name
         return self._sql_query(query_text, '')
+
 
 class DbCreator(DbService):
     def __init__(self):
