@@ -6083,6 +6083,8 @@ class MainEvents:
         # toast = (f'Обновляемся с {release} на {current_release}')
 
         self._create_tables()
+        if self.rs_settings.get('delete_old_docs') is True:
+            self._delete_old_docs()
 
         if current_release is None:
             toast = 'Не удалось определить версию конфигурации'
@@ -6123,7 +6125,8 @@ class MainEvents:
             'sqlite_name': 'SimpleKeep',
             'log_name': 'log.json',
             'timer_is_disabled': False,
-            'allow_fact_input': False
+            'allow_fact_input': False,
+            'delete_old_docs': True
         }
 
         if os.path.exists('//data/data/ru.travelfood.simple_ui/databases/'):  # локально
@@ -6148,6 +6151,8 @@ class MainEvents:
         service = db_services.DbCreator()
         service.create_tables()
 
+    def _delete_old_docs(self):
+        self.hash_map.notification('!@##@!')
 
 # ^^^^^^^^^^^^^^^^^^^^^ Main events ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 

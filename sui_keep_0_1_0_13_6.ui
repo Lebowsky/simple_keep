@@ -6980,7 +6980,7 @@
             "handler_auth": "",
             "dictionaries": ""
         },
-        "ConfigurationTags": "",
+        "ConfigurationTags": "Py,off-line",
         "FaceRecognitionURL": "",
         "ForegroundService": false,
         "StopForegroundServiceOnExit": false,
@@ -7116,6 +7116,14 @@
                 "method": "beep",
                 "postExecute": "",
                 "alias": ""
+            },
+            {
+                "alias": "",
+                "event": "",
+                "action": "",
+                "type": "",
+                "method": "",
+                "postExecute": ""
             }
         ]
     }
