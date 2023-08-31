@@ -125,6 +125,58 @@ def r0_1_0_12_3(hash_map):
         return_value = {'result':False, 'details':f'Ошибка в запросе: {qtext}'}
 
 
+def r0_1_0_13_7(hash_map):
+
+    q = '''
+    PRAGMA foreign_keys = 0;
+
+    CREATE
+    TABLE
+    sqlitestudio_temp_table
+    AS
+    SELECT * FROM RS_docs_table;
+
+    DROP TABLE RS_docs_table;
+    
+    CREATE TABLE RS_docs_table(
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    id_doc TEXT NOT NULL REFERENCES RS_docs(id_doc)
+    ON DELETE CASCADE ON UPDATE SET DEFAULT,
+    id_good TEXT NOT NULL REFERENCES RS_goods(id),
+    id_properties TEXT REFERENCES RS_properties(id),
+    id_series TEXT REFERENCES RS_series(id),
+    id_unit TEXT NOT NULL REFERENCES RS_units(id),
+    qtty REAL, 
+    qtty_plan REAL,
+    price REAL,
+    id_price TEXT REFERENCES  RS_price_types(id),
+    sent INTEGER,
+    last_updated DATETIME DEFAULT CURRENT_TIMESTAMP,
+    is_plan TEXT DEFAULT True,
+    id_cell TEXT REFERENCES RS_cells(id),
+    use_series    INT      NOT NULL
+                           DEFAULT (0)
+    );
+
+    INSERT INTO RS_docs_table(
+        id, id_doc, id_good, id_properties, id_series, id_unit, qtty,
+        qtty_plan, price, id_price, sent, last_updated, is_plan, id_cell
+    )
+    SELECT
+    id, id_doc, id_good, id_properties, id_series, id_unit, qtty, qtty_plan,
+    price, id_price, sent, last_updated, is_plan, id_cell FROM sqlitestudio_temp_table;
+    
+    DROP TABLE sqlitestudio_temp_table;
+    
+    PRAGMA foreign_keys = 1;
+
+    '''
+    try:
+        r = db_services.SqlQueryProvider()
+        r.sql_exec(q,'')
+        return_value = {'result':True}
+    except:
+        return_value = {'result':False, 'details':f'Ошибка в запросе: {q}'}
 
 
 # if __name__ == "__main__":

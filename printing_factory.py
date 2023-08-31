@@ -1,6 +1,7 @@
 from bs4 import BeautifulSoup
 import barcode
 from barcode.writer import ImageWriter
+import qrcode
 from jinja2 import Environment, FileSystemLoader, select_autoescape, meta
 import base64
 from io import BytesIO
@@ -25,6 +26,18 @@ class HTMLDocument:
         ean.write(barcode_image)
         return base64.b64encode(barcode_image.getvalue()).decode()
 
+
+    def generate_qr_code(self, barcode):
+        qr = qrcode.QRCode(version=1, box_size=10, border=5)
+        qr.add_data(barcode)
+        qr.make(fit=True)
+        img = qr.make_image(fill_color="black", back_color="white")
+
+        buffered = BytesIO()
+        img.save(buffered, format="PNG")
+
+        return base64.b64encode(buffered.getvalue()).decode()
+
     def create_html(self, parameters, barcode_type='ean13'):
         env = Environment(
             loader=FileSystemLoader(self.template_directory),
@@ -32,8 +45,11 @@ class HTMLDocument:
             variable_start_string='[',
             variable_end_string=']',
         )
+        if barcode_type == 'qr-code':
+            barcode_image_base64 = self.generate_qr_code(parameters['barcode'])
+        else:
 
-        barcode_image_base64 = self.generate_barcode(parameters['barcode'], barcode_type)
+            barcode_image_base64 = self.generate_barcode(parameters['barcode'], barcode_type)
 
         template = env.get_template(self.template_file)
 
