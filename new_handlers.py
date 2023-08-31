@@ -118,6 +118,25 @@ def barcode_flow_listener(hash_map:HashMap):
     screen.on_input()
 
 
+@HashMap()
+def article_cv_on_object_detected(hash_map: HashMap):
+    """Процесс: Распознавание артикулов. Шаг: Новый шаг ActiveCV."""
+    screen: ui_models.ActiveCVArticleRecognition = ui_models.ActiveCVArticleRecognition(hash_map, rs_settings)
+    screen.on_object_detected()
+
+
+@HashMap()
+def select_good_article_on_input(hash_map: HashMap):
+    """Процесс: Документы. Экран: ВыборТовараАртикул."""
+    screen: ui_models.GoodsSelectArticle = ui_models.GoodsSelectArticle(hash_map, rs_settings)
+    screen.on_input()
+
+
+@HashMap()
+def select_good_article_on_start(hash_map: HashMap):
+    """Процесс: Документы. Экран: ВыборТовараАртикул."""
+    screen: ui_models.GoodsSelectArticle = ui_models.GoodsSelectArticle(hash_map, rs_settings)
+    screen.on_start()
 
 @HashMap()
 def docs_tiles_on_start(hash_map: HashMap):

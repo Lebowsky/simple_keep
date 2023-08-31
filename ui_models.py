@@ -5,6 +5,8 @@ import os
 from pathlib import Path
 import time
 from datetime import datetime
+from typing import Dict, List, Optional
+
 import db_services
 import hs_services
 import printing_factory
@@ -2442,6 +2444,29 @@ class DocumentsDocDetailScreen(DocDetailsScreen):
             self.hash_map.put('scan_error', res['Error'])
             super().scan_error_sound()
 
+        elif listener == 'btn_goods_ocr':
+            self.hash_map.delete('finded_articles')
+            self.hash_map.put('art_info', 'Найденные артикулы: ')
+            list_art = self.service.get_all_articles_in_document()
+            self.hash_map.put('list_art', list_art)
+            self.hash_map.put('RunCV', 'Распознавание артикулов')
+
+        elif listener == 'ActiveCV':
+            if self.hash_map.containsKey('button_manage_articles'):
+                finded_articles = self.hash_map.get('finded_articles')
+
+                if finded_articles is None:
+                    self.hash_map.toast('Артикулы не найдены')
+                else:
+                    title = 'Выберите товар'
+                    allowed_fact_input = self.rs_settings.get('allow_fact_input')
+                    if allowed_fact_input:
+                        title += ' и укажите количество'
+                    self.hash_map.put('title_select_good_article', title)
+                    self.hash_map.show_screen('ВыборТовараАртикул')
+
+            self.hash_map.delete('button_manage_articles')
+
         elif listener == 'btn_barcodes':
             self.hash_map.show_dialog('ВвестиШтрихкод')
 
@@ -3233,22 +3258,38 @@ class GoodsSelectScreen(Screen):
                 self._set_delta(0)
 
         elif listener == "btn_ok":
+            if int(self.hash_map.get('new_qtty')) < 0:
+                self.hash_map.toast('Итоговое количество меньше 0')
+                self.hash_map.playsound('error')
+                self._set_delta(reset=True)
+                return
+            control = self.hash_map.get_bool('control')
+            if control:
+                if int(self.hash_map.get('new_qtty')) > int(
+                        self.hash_map.get('qtty_plan')):
+                    self.toast('Количество план в документе превышено')
+                    self.hash_map.playsound('error')
+                    self._set_delta(reset=True)
+                    return
+            current_elem = self.hash_map.get_json('selected_card_data')
+            qtty = self.hash_map['new_qtty']
+            price = self.hash_map.get('price') or 0
 
-            if int(self.hash_map.get('new_qtty')) >= 0:
+            if self.hash_map.get('parent_screen') == 'ВыборТовараАртикул':
+                if int(qtty) == int(current_elem['qtty']):
+                    self.hash_map.show_screen("ВыборТовараАртикул")
+                    return
+                finded_goods_cards = self.hash_map.get('finded_goods_cards', from_json=True)
+                cardsdata = finded_goods_cards['customcards']['cardsdata']
 
-                control = self.hash_map.get_bool('control')
-                if control:
-                    if int(self.hash_map.get('new_qtty')) > int(self.hash_map.get('qtty_plan')):
-                        self.toast('Количество план в документе превышено')
-                        self.hash_map.playsound('error')
-                        self._set_delta(reset=True)
-                        return
+                card_data = next(elem for elem in cardsdata
+                                 if elem['key'] == current_elem['key'])
+                card_data['qtty'] = float(qtty)
+                self.hash_map.put('finded_goods_cards', finded_goods_cards, to_json=True)
+                self.hash_map.show_screen("ВыборТовараАртикул")
 
-                current_elem = self.hash_map.get_json('selected_card_data')
-                qtty = self.hash_map['new_qtty']
-                price = self.hash_map.get('price') or 0
-
-                if qtty != current_elem['qtty']:
+            else:
+                if int(qtty) != int(current_elem['qtty']):
                     update_data = {
                         'sent': 0,
                         'qtty': float(qtty) if qtty else 0,
@@ -3257,15 +3298,9 @@ class GoodsSelectScreen(Screen):
                     row_id = int(current_elem['key'])
                     self.service.update_doc_table_row(data=update_data, row_id=row_id)
                     self.service.set_doc_status_to_upload(self.hash_map.get('id_doc'))
-
-                self._set_delta(reset=True)
-                self.hash_map.put('new_qtty', '')
-                self.hash_map.show_screen("Документ товары")
-
-            else:
-                self.hash_map.toast('Итоговое количество меньше 0')
-                self.hash_map.playsound('error')
-                self._set_delta(reset=True)
+                    self.hash_map.show_screen("Документ товары")
+            self._set_delta(reset=True)
+            self.hash_map.put('new_qtty', '')
 
         elif 'ops' in listener:
             """Префикс кнопок +/-, значение в названиях кнопок"""
@@ -3274,7 +3309,7 @@ class GoodsSelectScreen(Screen):
         elif listener in ["btn_cancel", 'BACK_BUTTON', 'ON_BACK_PRESSED']:
             self._set_delta(reset=True)
             self.hash_map.put('new_qtty', '')
-            self.hash_map.show_screen("Документ товары")
+            self.hash_map.put('BackScreen')
         elif listener == 'btn_print':
             self.print_ticket()
 
@@ -3341,6 +3376,198 @@ class AdrGoodsSelectScreen(GoodsSelectScreen):
         super().__init__(hash_map, rs_settings)
         self.service = AdrDocService()
 
+
+class GoodsSelectArticle(Screen):
+    screen_name = 'ВыборТовараАртикул'
+    process_name = 'Документы'
+
+    def __init__(self, hash_map: HashMap, rs_settings):
+        super().__init__(hash_map, rs_settings)
+        self.id_doc = self.hash_map['id_doc']
+        self.service = DocService(self.id_doc)
+
+    def on_input(self):
+        listener = self.listener
+        if listener == 'CardsClick':
+            if not self.rs_settings.get('allow_fact_input'):
+                current_elem = self.hash_map.get('selected_card_data', from_json=True)
+                self._update_doc_table_row(current_elem, current_elem['qtty'] + 1.0)
+                self.hash_map.delete('finded_goods_cards')
+                self.hash_map.show_screen('Документ товары')
+                return
+            current_element = json.loads(self.hash_map.get('selected_card_data'))
+            selected_card_position = self.hash_map["selected_card_position"]
+            table_lines_qtty = self.hash_map['table_lines_qtty']
+            put_data = {
+                'Doc_data': f'{self.hash_map["doc_type"]} № {self.hash_map["doc_n"]} от {self.hash_map["doc_date"]}',
+                'Good': current_element['name'],
+                'good_art': current_element['art'],
+                'good_sn': current_element['series_name'],
+                'good_property': current_element['property_name'],
+                'good_price': current_element['price'],
+                'good_unit': current_element['units_name'],
+                'good_str': f'{selected_card_position} / {table_lines_qtty}',
+                'qtty_plan': current_element['qtty_plan'],
+                'good_plan': current_element['qtty_plan'],
+                'key': current_element['key'],
+                'price': current_element['price'],
+                'price_type': current_element['price_name'],
+                'qtty': current_element['qtty'] if current_element['qtty'] and float(current_element['qtty']) != 0 else '',
+            }
+            self.hash_map.put_data(put_data)
+            self.hash_map.show_screen("Товар выбор")
+
+        elif listener == 'ON_BACK_PRESSED':
+            self.hash_map.delete('finded_goods_cards')
+            self.hash_map.show_screen("Документ товары")
+
+        elif listener == 'update_docs_table_article':
+            finded_goods_cards = self.hash_map.get('finded_goods_cards', from_json=True)
+            cardsdata = finded_goods_cards['customcards']['cardsdata']
+
+            for card_data in cardsdata:
+                self._update_doc_table_row(card_data)
+            self.hash_map.delete('finded_goods_cards')
+            self.hash_map.show_screen('Документ товары')
+
+    def on_start(self):
+        if not self.hash_map['finded_goods_cards']:
+            articles = self.hash_map['finded_articles']
+            if not articles:
+                raise Exception('GoodsSelectArticle on_start. Не переданы артикулы')
+            goods = self.service.get_goods_list_with_doc_data(articles.split(';'))
+            self.hash_map.put('selected_goods', json.dumps(goods))
+            cards_data = self._get_goods_list_data(goods)
+            goods_cards = self._get_goods_cards_view(cards_data)
+            self.hash_map['finded_goods_cards'] = goods_cards.to_json()
+
+
+    def on_post_start(self):
+        pass
+
+    def show(self, args=None):
+        pass
+
+    def _get_goods_cards_view(self, cards_data: List[Dict]) -> widgets.CustomCards:
+        card_title_text_size = str(self.rs_settings.get('CardTitleTextSize'))
+        card_text_size = str(self.rs_settings.get('CardTextSize'))
+
+        v_layout_1 = widgets.LinearLayout(
+                widgets.TextView(
+                    Value='@name',
+                    width='match_parent',
+                    gravity_horizontal='left',
+                    TextSize=card_title_text_size,
+                    TextColor='#7A005C'
+                ),
+                widgets.TextView(
+                    Value='@code',
+                    TextSize=card_text_size,
+                ),
+                widgets.TextView(
+                    Value='@art',
+                    TextSize=card_text_size,
+                ),
+                widgets.TextView(
+                    Value='@unit',
+                    TextSize=card_text_size,
+                ),
+                widgets.TextView(
+                    Value='@type_good',
+                    TextSize=card_text_size,
+                ),
+                widgets.TextView(
+                    Value='@property_name',
+                    TextSize=card_text_size,
+                ),
+                orientation='vertical',
+                width='match_parent',
+                StrokeWidth=1,
+                weight=2
+            )
+        v_layout_2 = widgets.LinearLayout(
+                widgets.TextView(
+                    Value='План:',
+                    TextSize=card_text_size,
+                    height='match_parent',
+                    weight=1,
+                ),
+                widgets.TextView(
+                    Value='Факт:',
+                    TextSize=card_text_size,
+                    height='match_parent',
+                    weight=1,
+                ),
+
+                orientation='vertical',
+                width='match_parent',
+                height='match_parent',
+                StrokeWidth=1,
+                weight=1
+            )
+        v_layout_3 = widgets.LinearLayout(
+                widgets.TextView(
+                    Value='@qtty_plan',
+                    TextSize=card_text_size,
+                    height='match_parent',
+                    weight=1,
+                ),
+                widgets.TextView(
+                    Value='@qtty',
+                    TextSize=card_text_size,
+                    height='match_parent',
+                    weight=1,
+                ),
+                orientation='vertical',
+                width='match_parent',
+                height='match_parent',
+                StrokeWidth=1,
+                weight=1
+            )
+        h_layout = widgets.LinearLayout(
+                v_layout_1, v_layout_2, v_layout_3,
+                orientation='horizontal',
+                width='match_parent'
+            )
+        goods_cards = widgets.CustomCards(
+            h_layout,
+            options=widgets.Options().options,
+            cardsdata=cards_data
+        )
+        return goods_cards
+
+    def _get_goods_list_data(self, goods_list: List[Dict]) -> List[Dict]:
+        cards_data = []
+
+        for record in goods_list:
+            single_card_data = {
+                'key': record['doc_table_id'],
+                'code': record.get('code', '—'),
+                'name': record['name'],
+                'art': record.get('art', '—'),
+                'description': record.get('description', '—'),
+                'unit': record.get('id_unit', '—'),
+                'units_name': record['unit_name'],
+                'type_good': record.get('type_good', '—'),
+                'qtty_plan': record['qtty_plan'],
+                'qtty': record['qtty'],
+                'property_name': record['property_name'],
+                'series_name': record['series_name'],
+                'price': record['price'],
+                'price_name': record['price_name'],
+            }
+            cards_data.append(single_card_data)
+
+        return cards_data
+
+    def _update_doc_table_row(self, data: Dict, qtty: Optional[float] = None):
+        update_data = {
+            'sent': 0,
+            'qtty': qtty or float(data['qtty']),
+        }
+        row_id = int(data['key'])
+        self.service.update_doc_table_row(data=update_data, row_id=row_id)
+        self.service.set_doc_status_to_upload(self.hash_map.get('id_doc'))
 
 # ^^^^^^^^^^^^^^^^^^^^^ Goods select ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -5379,6 +5606,52 @@ class DebugSettingsScreen(Screen):
 
 # ^^^^^^^^^^^^^^^^^^^^^ Debug settings ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+# ==================== ActiveCV =============================
+
+class ActiveCVArticleRecognition(Screen):
+    screen_name = 'Новый шаг ActiveCV'
+    process_name = 'Распознавание артикулов'
+
+    def __init__(self, hash_map: HashMap, rs_settings):
+        super().__init__(hash_map, rs_settings)
+        self.id_doc = self.hash_map['id_doc']
+        self.service = DocService(self.id_doc)
+
+    def on_start(self):
+        pass
+
+    def on_input(self):
+        pass
+
+    def on_object_detected(self):
+        self.hash_map.beep()
+        current_object = self.hash_map.get('current_object')
+        self.hash_map.add_to_cv_list(current_object, 'finded_articles')
+        good_name = self.get_good_info(current_object)
+        self.hash_map.add_to_cv_list(
+            {'object': str(current_object),
+             'info': f'Товар: <big>{good_name}</big>'},
+            'object_info_list')
+        self.hash_map.add_to_cv_list(current_object, 'yellow_list')
+
+        self.hash_map.put(
+            'art_info','Найденные артикулы: ' + self.hash_map.get('finded_articles'))
+
+    def on_post_start(self):
+        pass
+
+    def show(self, args=None):
+        pass
+
+    def get_good_info(self, article: str) -> str:
+        query = ('SELECT RS_goods.name as name'
+                 ' FROM RS_docs_table'
+                 ' LEFT JOIN RS_goods ON RS_docs_table.id_good = RS_goods.id'
+                 ' WHERE RS_docs_table.id_doc = ? AND RS_goods.art = ?')
+        goods = self.service.provider.sql_query(query, f'{self.id_doc},{article}')
+        return goods[0]['name'] if goods else 'Не найдено'
+
+# ^^^^^^^^^^^^^^^^^^^^^ ActiveCV ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 # ==================== Timer =============================
 

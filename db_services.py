@@ -340,6 +340,14 @@ class DocService:
 
         return qlist
 
+    def get_all_articles_in_document(self) -> str:
+        query = ('SELECT DISTINCT RS_goods.art as art'
+                 ' FROM RS_docs_table'
+                 ' LEFT JOIN RS_goods ON RS_docs_table.id_good = RS_goods.id'
+                 ' WHERE RS_docs_table.id_doc = ?')
+        goods = self.provider.sql_query(query, self.doc_id)
+        return ';'.join(good['art'] for good in goods)
+
     @staticmethod
     def _get_query_result(query_text, args=None, return_dict=False):
         return get_query_result(query_text, args=args, return_dict=return_dict)
@@ -521,6 +529,44 @@ class DocService:
         '''
         res = self._get_query_result(query, return_dict=True)
         return res
+
+    def get_goods_list_with_doc_data(self, articles_list: List[str]) -> List[dict]:
+        qs = ','.join('?' for _ in articles_list)
+        query = f"""
+            SELECT
+            RS_goods.id as id_good,
+            RS_goods.code as code,
+            RS_goods.name as name,
+            RS_goods.art as art,
+            RS_goods.description as description,
+            RS_docs_table.id_unit as id_unit,
+            RS_units.name as unit_name,
+            RS_types_goods.name as type_good,
+            RS_docs_table.id as doc_table_id,
+            RS_docs_table.qtty_plan as qtty_plan,
+            RS_docs_table.qtty as qtty,
+            RS_docs_table.id_properties as id_property,
+            RS_properties.name as property_name,
+            RS_docs_table.id_series as id_series,
+            RS_series.name as series_name,
+            RS_docs_table.price as price,
+            RS_price_types.name as price_name
+            
+            FROM RS_docs_table
+            LEFT JOIN RS_goods ON RS_docs_table.id_good = RS_goods.id
+            LEFT JOIN RS_types_goods ON RS_types_goods.id = RS_goods.type_good
+            LEFT JOIN RS_units ON RS_units.id = RS_goods.unit
+            LEFT JOIN RS_properties ON RS_goods.id = RS_properties.id_owner
+            LEFT JOIN RS_series ON RS_series.id = RS_docs_table.id_series
+            LEFT JOIN RS_price_types ON RS_price_types.id = RS_docs_table.id_price
+            WHERE RS_docs_table.id_doc = ? AND art IN ({qs})
+            """
+
+        goods = self.provider.sql_query(
+            query,
+            f'{self.doc_id},{",".join(articles_list)}'
+        )
+        return goods
 
     def get_doc_details_data(self, id_doc, first_elem, items_on_page, row_filters=None, search_string=None) -> list:
         select_query = f"""
