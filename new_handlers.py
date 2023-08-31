@@ -212,6 +212,38 @@ def adr_elem_viev_on_click(hash_map):
     screen = ui_models.AdrGoodsSelectScreen(hash_map, rs_settings)
     screen.on_input()
 
+@HashMap()
+def barcode_register_doc_on_click(hash_map):
+    screen = ui_models.GoodBarcodeRegister(hash_map, rs_settings)
+    screen.on_input()
+
+@HashMap()
+def barcode_register_doc_on_start(hash_map):
+    screen = ui_models.GoodBarcodeRegister(hash_map, rs_settings)
+    screen.on_start()
+
+@HashMap()
+def doc_properties_on_start(hash_map):
+    screen: ui_models.DocGoodSelectProperties = create_screen(hash_map)
+    screen.on_start()
+
+@HashMap()
+def doc_properties_on_input(hash_map):
+    screen = ui_models.DocGoodSelectProperties(hash_map, rs_settings)
+    screen.on_input()
+
+@HashMap()
+def doc_units_on_start(hash_map):
+    screen = ui_models.DocGoodSelectUnit(hash_map, rs_settings)
+    screen.on_start()
+
+@HashMap()
+def doc_units_on_input(hash_map):
+    screen = ui_models.DocGoodSelectUnit(hash_map, rs_settings)
+    screen.on_input()
+
+    
+
 # ^^^^^^^^^^^^^^^^^ Documents ^^^^^^^^^^^^^^^^^
 
 # =============== Goods =================
@@ -259,7 +291,35 @@ def good_card_on_input(hash_map):
     screen: ui_models.ItemCard = create_screen(hash_map)
     screen.on_input()
 
+@HashMap()
+def barcode_register_item_on_input(hash_map):
+    screen = ui_models.GoodItemBarcodeRegister(hash_map, rs_settings)
+    screen.on_input()
 
+@HashMap()
+def barcode_register_item_on_start(hash_map):
+    screen = ui_models.GoodItemBarcodeRegister(hash_map, rs_settings)
+    screen.on_start()
+
+@HashMap()
+def item_properties_on_start(hash_map):
+    screen: ui_models.ItemGoodSelectProperties = create_screen(hash_map)
+    screen.on_start()
+
+@HashMap()
+def item_properties_on_input(hash_map):
+    screen = ui_models.ItemGoodSelectProperties(hash_map, rs_settings)
+    screen.on_input()
+
+@HashMap()
+def item_units_on_start(hash_map):
+    screen = ui_models.ItemGoodSelectUnit(hash_map, rs_settings)
+    screen.on_start()
+
+@HashMap()
+def item_units_on_input(hash_map):
+    screen = ui_models.ItemGoodSelectUnit(hash_map, rs_settings)
+    screen.on_input()
 # ^^^^^^^^^^^^^^^^^ Goods ^^^^^^^^^^^^^^^^^
 
 # ==================== GoodsBalances =============================
