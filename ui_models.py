@@ -3384,6 +3384,15 @@ class GoodsListScreen(Screen):
         if listener == "CardsClick":
             self.hash_map.put('selected_good_id', self.hash_map.get("selected_card_key"))
             self.hash_map.put('barcode', '')
+            # self.hash_map.toast(.keys())
+            card_data = self.hash_map.get_json('selected_card_data')
+            self.hash_map.put("selected_good_id", card_data['key'])
+            self.hash_map.put("good_name", card_data['name'])
+            self.hash_map.put("good_art", card_data['art'])
+            self.hash_map.put("good_code", card_data['code'])
+            self.hash_map.put("good_descr", card_data['description'] if card_data['description'] else "—")
+            self.hash_map.put("good_type", card_data['type_good'])
+
             self.hash_map.show_screen("Карточка товара")
         elif listener == "select_goods_type":
             self.hash_map.show_screen("Выбор категории товаров")
@@ -3551,46 +3560,18 @@ class ItemCard(Screen):
         self.service = GoodsService()
 
     def on_start(self):
-
-        # self.hash_map.put("Show_buttons", "-1")  # Пока спрятали переход к процессам "остатки" и "цены"
-        self.hash_map.remove('return_selected_data')
-        card_data = self.hash_map.get("selected_card_data", from_json=True)
-        if not self.hash_map.get('barcode'):
-            self.hash_map.put("selected_good_id", card_data['key'])
-            self.hash_map.put("good_name", card_data['name'])
-            self.hash_map.put("good_art", card_data['art'])
-            self.hash_map.put("good_code", card_data['code'])
-            self.hash_map.put("good_descr", card_data['description'] if card_data['description'] else "—")
-            self.hash_map.put("good_type", card_data['type_good'])
+        pass
 
     def on_input(self):
-        listener = self.listener
-        if listener == "ON_BACK_PRESSED":
-            if self.hash_map.get('barcode_cards'):
-                self.hash_map.put('barcode_cards', '')
-            self.hash_map.put("BackScreen", "")
-
-        elif listener in ['CardsClick', 'btn_print']:
-            self._print_ticket()
-            
-        elif self.hash_map.get('listener') == 'to_prices':
-            dict_data = {'input_good_id': self.hash_map.get('selected_good_id'),
-                         'input_good_art': self.hash_map.get('good_art'),
-                         'prices_object_name': f'{self.hash_map.get("good_name")}, {self.hash_map.get("good_code")}',
-                         "return_to_item_card": "true",
-                         'object_name': self.hash_map.get('good_name'),
-                         'ShowProcessResult': 'Цены|Проверка цен', "noRefresh": ''}
-            self.hash_map.put_data(dict_data)
-
-        if self.hash_map.get('listener') == 'to_balances':
-            dict_data = {'input_item_id': self.hash_map.get('selected_good_id'),
-                         'item_art_input': self.hash_map.get('good_art'),
-                         'selected_object_name': f'{self.hash_map.get("good_name")}, {self.hash_map.get("good_code")}',
-                         'object_name': self.hash_map.get('good_name'),
-                         "return_to_item_card": "true",
-                         'ShowProcessResult': 'Остатки|Проверить остатки', "noRefresh": ''}
-            self.hash_map.put_data(dict_data)
-
+        listeners = {
+            'ON_BACK_PRESSED': self._back_screen,
+            'CardsClick': self._print_ticket,
+            'btn_print': self._print_ticket,
+            'to_prices': self._to_prices,
+            'to_balances': self._to_balances,
+        }
+        if self.listener in listeners:
+            listeners[self.listener]()
 
     def on_post_start(self):
         selected_good_id = self.hash_map.get("selected_good_id")
@@ -3610,6 +3591,31 @@ class ItemCard(Screen):
 
     def show(self, args=None):
         pass
+
+    def _back_screen(self):
+        if self.hash_map.get('barcode_cards'):
+            self.hash_map.put('barcode_cards', '')
+        self.hash_map.put("BackScreen", "")
+
+    def _to_balances(self):
+        process_name = 'Остатки|Проверить остатки'
+        self._show_process_result(process_name)
+
+    def _to_prices(self):
+        process_name = 'Цены|Проверка цен'
+        self._show_process_result(process_name)
+
+    def _show_process_result(self, process_name):
+        put_data = {
+            'input_good_id': self.hash_map.get('selected_good_id'),
+            'input_good_art': self.hash_map.get('good_art'),
+            'prices_object_name': f'{self.hash_map.get("good_name")}, {self.hash_map.get("good_code")}',
+            "return_to_item_card": "true",
+            'object_name': self.hash_map.get('good_name'),
+            'ShowProcessResult': process_name,
+            "noRefresh": ''
+        }
+        self.hash_map.put_data(put_data)
 
     @staticmethod
     def _get_variants_cards_data(goods_barcode):
@@ -3705,6 +3711,18 @@ class ItemCard(Screen):
             result = cards['customcards']['cardsdata'][int(card_key)]
 
         return result
+
+class ItemCardOfflineScreen(ItemCard):
+
+    def _to_prices(self):
+        self.hash_map.show_dialog('prices_not_available_modal', title='В этом продукте запрос цен недоступен')
+
+    def _to_balances(self):
+        self.hash_map.show_dialog('balances_not_available_modal', title='В этом продукте запрос остатков недоступен')
+
+    def _print_ticket(self):
+        self.hash_map.show_dialog('print_ticket_not_available_modal', title='В этом продукте печать недоступна')
+
 
 # ^^^^^^^^^^^^^^^^^^^^^ Goods(Process) ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 

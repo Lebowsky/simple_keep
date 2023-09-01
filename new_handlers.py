@@ -291,6 +291,10 @@ def good_card_on_input(hash_map):
     screen: ui_models.ItemCard = create_screen(hash_map)
     screen.on_input()
 
+@HashMap()
+def offline_good_card_on_input(hash_map):
+    screen = ui_models.ItemCardOfflineScreen(hash_map, rs_settings)
+    screen.on_input()
 
 # ^^^^^^^^^^^^^^^^^ Goods ^^^^^^^^^^^^^^^^^
 

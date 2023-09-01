@@ -1757,7 +1757,7 @@
                                                 "height": "wrap_content",
                                                 "width": "match_parent",
                                                 "weight": "1",
-                                                "type": "ProgressButton"
+                                                "type": "Button"
                                             },
                                             {
                                                 "Value": "",
@@ -1769,11 +1769,16 @@
                                             },
                                             {
                                                 "Value": "Остатки",
-                                                "Variable": "to_remains",
+                                                "Variable": "to_balances",
                                                 "height": "wrap_content",
                                                 "width": "match_parent",
+                                                "orientation": "",
                                                 "weight": "1",
-                                                "type": "ProgressButton"
+                                                "TextBold": false,
+                                                "TextItalic": false,
+                                                "TextSize": "",
+                                                "TextColor": "",
+                                                "type": "Button"
                                             }
                                         ]
                                     },
@@ -1923,6 +1928,11 @@
                                         "type": "TextView"
                                     }
                                 ]
+                            },
+                            {
+                                "type": "MenuItem",
+                                "Value": "Печать",
+                                "Variable": "btn_print"
                             }
                         ],
                         "Handlers": [
@@ -1935,9 +1945,10 @@
                             },
                             {
                                 "event": "onInput",
+                                "listener": "",
                                 "action": "run",
                                 "type": "python",
-                                "method": "good_card_on_input",
+                                "method": "offline_good_card_on_input",
                                 "postExecute": ""
                             },
                             {
