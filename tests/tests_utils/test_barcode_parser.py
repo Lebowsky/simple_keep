@@ -364,16 +364,10 @@ class TestBarcodeParser(unittest.TestCase):
 
 class TestBarcodeWorker(unittest.TestCase):
     def setUp(self) -> None:
-        id_doc = '96e94835-f8a0-11ed-a290-8babe363837e'
-        barcode = '00000046198488X?io+qCABm8wAYa'
-        barcode_data = {}
+        rs_settings.put("path_to_databases", "./", True)
 
-        sut = BarcodeWorker(id_doc)
-        sut.db_service.get_barcode_data = MagicMock(return_value=barcode_data)
-
-        result = sut.process_the_barcode(barcode)
-
-        self.assertTrue(result.error, 'Not found')
+    def tearDown(self) -> None:
+        pass
 
     def test_getting_error_empty_barcode_data(self):
         barcode = '2000000025988'
