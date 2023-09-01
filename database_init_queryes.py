@@ -110,7 +110,7 @@ def database_shema():
     ''')
 
     #Индексы RS_series
-    Rs.append('''CREATE INDEX Series_name ON RS_series (
+    Rs.append('''CREATE INDEX IF NOT EXISTS  Series_name ON RS_series (
     name ASC )
     ''')
 
@@ -254,7 +254,8 @@ def database_shema():
         sent          INTEGER,
         last_updated  DATETIME DEFAULT CURRENT_TIMESTAMP,
         is_plan       TEXT DEFAULT "True",
-        id_cell          TEXT     REFERENCES RS_cells (id) 
+        id_cell          TEXT     REFERENCES RS_cells (id),
+        use_series      INTEGER DEFAULT 0 
     )
     ''')
 
