@@ -3357,6 +3357,9 @@ class AdrGoodsSelectScreen(GoodsSelectScreen):
         super().__init__(hash_map, rs_settings)
         self.service = AdrDocService()
 
+class GoodsSelectOfflineScreen(GoodsSelectScreen):
+    def print_ticket(self):
+        self.hash_map.show_dialog('print_ticket_not_available_modal', title='В этом продукте печать недоступна')
 
 # ^^^^^^^^^^^^^^^^^^^^^ Goods select ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 

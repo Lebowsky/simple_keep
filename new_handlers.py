@@ -227,6 +227,11 @@ def elem_viev_on_click(hash_map):
     screen = ui_models.GoodsSelectScreen(hash_map, rs_settings)
     screen.on_input()
 
+@HashMap()
+def offline_elem_view_on_click(hash_map):
+    screen = ui_models.GoodsSelectOfflineScreen(hash_map, rs_settings)
+    screen.on_input()
+
 
 @HashMap()
 def adr_elem_viev_on_start(hash_map):
