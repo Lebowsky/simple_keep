@@ -11,8 +11,8 @@ import db_services
 import hs_services
 import printing_factory
 from ui_utils import HashMap, RsDoc, BarcodeWorker, get_ip_address
-from db_services import DocService, ErrorService, GoodsService, AdrDocService, TimerService
-from tiny_db_services import ScanningQueueService
+from db_services import DocService, ErrorService, GoodsService, BarcodeService, AdrDocService, TimerService
+from tiny_db_services import ScanningQueueService, TinyNoSQLProvider
 from hs_services import HsService
 from ru.travelfood.simple_ui import SimpleUtilites as suClass
 
@@ -2402,6 +2402,7 @@ class DocumentsDocDetailScreen(DocDetailsScreen):
             put_data = {
                 'Doc_data': title,
                 'Good': current_elem['good_name'],
+                'id_good': current_elem['id_good'], 
                 'good_art': current_elem['art'],
                 'good_sn': current_elem['series_name'],
                 'good_property': current_elem['properties_name'],
@@ -3325,14 +3326,16 @@ class GoodsSelectScreen(Screen):
         elif listener in ["btn_cancel", 'BACK_BUTTON', 'ON_BACK_PRESSED']:
             self._set_delta(reset=True)
             self.hash_map.put('new_qtty', '')
-            self.hash_map.put('BackScreen')
+            # self.hash_map.put("BackScreen", "") это мешает вернуться на экран "Товары список" из экрана "Карточка товара" в случае если мы перешли на него с экрана ТоварШтрихкоды
+            self.hash_map.show_screen("Документ товары") # переделал чтобы переходил на ТоварыСписок а не на Регистрацию штрихкода
         elif listener == 'btn_print':
             self.print_ticket()
 
         elif listener == "CardsClick":
             current_elem = self.hash_map.get_json('selected_card_data')
             self.print_ticket()
-
+        elif listener == 'btn_doc_good_barcode':
+            self.hash_map.show_screen("ТоварШтрихкоды")
 
     def on_post_start(self):
         pass
@@ -3392,7 +3395,117 @@ class AdrGoodsSelectScreen(GoodsSelectScreen):
         super().__init__(hash_map, rs_settings)
         self.service = AdrDocService()
 
+class GoodBarcodeRegister(Screen):
+    screen_name = 'ТоварШтрихкоды'
+    process_name = 'Документы'
 
+    def __init__(self, hash_map: HashMap, rs_settings):
+        super().__init__(hash_map, rs_settings)
+        self.service = BarcodeService()
+        self.goods_service = GoodsService()
+    
+    def on_post_start(self):
+        pass
+
+    def show(self, args=None):
+        pass
+
+    def on_start(self):
+
+        good_name = self.hash_map.get("Good")
+        self.hash_map.put("good_name_barcode", good_name)
+    
+    def on_input(self):
+
+        listener = self.listener
+
+        if listener in ['BACK_BUTTON', 'ON_BACK_PRESSED']:
+            self.hash_map.remove("scanned_barcode") 
+            self.hash_map['property_select'] = ''
+            self.hash_map['unit_select'] = ''
+            self.hash_map.show_screen("Товар выбор")
+        elif listener == 'property_select':
+            self.hash_map.show_screen('Выбор характеристик')
+        elif listener == 'unit_select':
+            self.hash_map.show_screen('Выбор упаковки')
+        elif listener == 'btn_ok':
+            scanned_barcode = self.hash_map.get("scanned_barcode")
+            if scanned_barcode is None:
+                self.hash_map.toast("Поле штрихкод не заполнено. Отсканируйте штрихкод!")
+            else:
+                barcode_data = {
+                    "id_good" : self.hash_map.get("id_good"),
+                    "barcode" : scanned_barcode,
+                    "id_property" :self.hash_map.get('selected_property_id'),
+                    "id_unit" : self.hash_map.get('selected_unit_id'),
+                }
+                check_barcode = self.goods_service.get_values_from_barcode("barcode", scanned_barcode)
+                if check_barcode:
+                    query_good = self.goods_service.get_values_by_field("RS_goods", "id", check_barcode[0]['id_good'])
+                    self.hash_map.put("ShowDialog", "Такой штрихкод уже есть")
+                    self.hash_map.put("good_name_msg", query_good[0]['name']) 
+                    self.hash_map.put("property_msg", check_barcode[0]['property'])
+                    self.hash_map.put("unit_msg", check_barcode[0]['unit'])
+                else:
+                    result = self.service.add_barcode(barcode_data)
+                    if result is None:              
+                        self.hash_map.toast("Успешно добавлено.")
+                        self.hash_map.show_screen("Товар выбор") 
+                    else:
+                        print("Возникла ошибка при добавлении в БД:", result)
+        elif self._is_result_positive('Такой штрихкод уже есть'):
+            self.hash_map.remove("scanned_barcode")        
+    
+class GoodItemBarcodeRegister(GoodBarcodeRegister):
+    screen_name = 'ТоварШтрихкоды'
+    process_name = 'Товары'
+    
+    def on_start(self):
+
+        good_name = self.hash_map.get('good_name')
+        self.hash_map.put("good_name_barcode", good_name)
+    
+    def on_input(self):
+
+        listener = self.listener
+
+        if listener in ['BACK_BUTTON', 'ON_BACK_PRESSED']:
+            self.hash_map.remove("scanned_barcode") 
+            self.hash_map['property_select'] = ''
+            self.hash_map['unit_select'] = ''
+            self.hash_map.show_screen("Карточка товара")
+        elif listener == 'property_select':
+            self.hash_map.show_screen('Выбор характеристик')
+        elif listener == 'unit_select':
+            self.hash_map.show_screen('Выбор упаковки')
+        elif listener == 'btn_ok':
+            scanned_barcode = self.hash_map.get("scanned_barcode")
+            if scanned_barcode is None:
+                self.hash_map.toast("Поле штрихкод не заполнено. Отсканируйте штрихкод!")
+            else:
+                barcode_data = {
+                    "id_good" : self.hash_map.get("selected_good_id"),
+                    "barcode" : scanned_barcode,
+                    "id_property" :self.hash_map.get('selected_property_id'),
+                    "id_unit" : self.hash_map.get('selected_unit_id'),
+                }
+                check_barcode = self.goods_service.get_values_from_barcode("barcode", scanned_barcode)
+                if check_barcode:
+                    query_good = self.goods_service.get_values_by_field("RS_goods", "id", check_barcode[0]['id_good'])
+                    self.hash_map.put("ShowDialog", "Такой штрихкод уже есть")
+                    self.hash_map.put("good_name_msg", query_good[0]['name']) 
+                    self.hash_map.put("property_msg", check_barcode[0]['property'])
+                    self.hash_map.put("unit_msg", check_barcode[0]['unit'])   
+                else:
+                    result = self.service.add_barcode(barcode_data)
+                    if result is None:              
+                        self.hash_map.toast("Успешно добавлено.")
+                        self.hash_map.show_screen("Карточка товара") 
+                    else:
+                        print("Возникла ошибка при добавлении в БД:", result)
+        elif self._is_result_positive('Такой штрихкод уже есть'):
+            self.hash_map.remove("scanned_barcode")
+            
 class GoodsSelectArticle(Screen):
     screen_name = 'ВыборТовараАртикул'
     process_name = 'Документы'
@@ -3792,11 +3905,20 @@ class ItemCard(Screen):
         if listener == "ON_BACK_PRESSED":
             if self.hash_map.get('barcode_cards'):
                 self.hash_map.put('barcode_cards', '')
-            self.hash_map.put("BackScreen", "")
+            # self.hash_map.put("BackScreen", "") это мешает вернуться на экран "Товары список" из экрана "Карточка товара"
+            self.hash_map.show_screen("Товары список") # переделал чтобы переходил на ТоварыСписок а не на Регистрацию штрихкода
+        elif listener == "CardsClick":
+            current_str = self.hash_map.get("selected_card_position")
+            jlist = json.loads(self.hash_map.get("barcode_cards"))
+            current_elem = jlist['customcards']['cardsdata'][int(current_str)]
+            data_dict = {'barcode': current_elem['barcode'],
+                         'Номенклатура': self.hash_map.get('good_name'),
+                         'Характеристика': current_elem['properties'], 'Валюта': current_elem['unit']}
 
         elif listener in ['CardsClick', 'btn_print']:
             self._print_ticket()
-            
+        elif listener == "btn_item_good_barcode":
+            self.hash_map.show_screen("ТоварШтрихкоды")
         elif self.hash_map.get('listener') == 'to_prices':
             dict_data = {'input_good_id': self.hash_map.get('selected_good_id'),
                          'input_good_art': self.hash_map.get('good_art'),
@@ -4669,6 +4791,43 @@ class SelectProperties(GoodsPricesItemCard):
             self.hash_map['selected_property_name'] = ''
             self.hash_map.show_screen('Проверка цен')
 
+class DocGoodSelectProperties(SelectProperties):
+    screen_name = 'Выбор характеристик'
+    process_name = 'Документы'
+    
+    def _get_data(self):
+        table_name = "RS_properties"
+        raw_data = self.service.get_select_data(table_name)
+        cards_data = []
+        for element in raw_data:
+            card_data = {
+                'key': element['id'],
+                'name': element['name']
+            }
+            cards_data.append(card_data)
+        return cards_data 
+
+    def on_input(self):
+        listener = self.listener
+
+        if listener == "CardsClick":
+            selected_property_id = self.hash_map.get("selected_card_key")
+            selected_property_name = self.service.get_values_by_field(table_name='RS_properties', field='id',
+                                                                      field_value=selected_property_id)[0]['name']
+            self.hash_map.put('selected_property_id', selected_property_id)
+            self.hash_map['property_select'] = selected_property_name
+            self.hash_map['selected_property_name'] = selected_property_name
+            self.hash_map.show_screen('ТоварШтрихкоды')
+
+        elif listener == "ON_BACK_PRESSED" or 'back_to_prices':
+            self.hash_map['selected_property_id'] = ''
+            self.hash_map['property_select'] = ''
+            self.hash_map['selected_property_name'] = ''
+            self.hash_map.show_screen('ТоварШтрихкоды')   
+
+class ItemGoodSelectProperties(DocGoodSelectProperties):
+    screen_name = 'Выбор характеристик'
+    process_name = 'Товары'
 
 class SelectUnit(GoodsPricesItemCard):
     screen_name = 'Выбор упаковки'
@@ -4740,6 +4899,49 @@ class SelectUnit(GoodsPricesItemCard):
 
             self.hash_map.show_screen('Проверка цен')
 
+class DocGoodSelectUnit(SelectUnit):
+    screen_name = 'Выбор упаковки'
+    process_name = 'Документы'
+
+    def _get_data(self):
+            table_name = "RS_units"
+            raw_data = self.service.get_select_data(table_name)
+            cards_data = []
+            for element in raw_data:
+                card_data = {
+                    'key': element['id'],
+                    'name': element['name']
+                }
+                cards_data.append(card_data)
+            return cards_data
+    
+    def on_start(self):
+        cards_data = self._get_data()
+        properties_cards = self._get_cards(cards_data)
+        self.hash_map.put('unit_cards', properties_cards.to_json())
+
+    def on_input(self):
+        listener = self.listener
+
+        if listener == "CardsClick":
+            selected_unit_id = self.hash_map.get("selected_card_key")
+            selected_unit_name = self.service.get_values_by_field(table_name='RS_units', field='id',
+                                                                  field_value=selected_unit_id)[0]['name']
+            self.hash_map.put('selected_unit_id', selected_unit_id)
+            self.hash_map['unit_select'] = selected_unit_name
+            self.hash_map.put('selected_unit_name', selected_unit_name)
+            self.hash_map.show_screen('ТоварШтрихкоды')
+
+        elif listener == "ON_BACK_PRESSED" or 'back_to_barcode_register':
+            self.hash_map['selected_unit_id'] = ''
+            self.hash_map['unit_select'] = ''
+            self.hash_map.put('selected_unit_name', '')
+            self.hash_map.show_screen('ТоварШтрихкоды')
+         
+
+class ItemGoodSelectUnit(DocGoodSelectUnit):
+    screen_name = 'Выбор упаковки'
+    process_name = 'Товары'
 
 # ^^^^^^^^^^^^^^^^^^^^^ GoodsPrices ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -5699,8 +5901,12 @@ class ScreensFactory:
         SelectPriceType,
         SelectProperties,
         SelectUnit,
-
-
+        GoodBarcodeRegister,
+        GoodItemBarcodeRegister,
+        DocGoodSelectProperties,
+        ItemGoodSelectProperties,
+        DocGoodSelectUnit,
+        ItemGoodSelectUnit,
     ]
 
     @staticmethod

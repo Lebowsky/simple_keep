@@ -89,6 +89,9 @@ class BarcodeService(DbService):
         super().__init__()
         self.provider = SqlQueryProvider(table_name='Rs_barcodes', sql_class=sqlClass())
 
+    def add_barcode(self, barcode_data):
+        self.provider.create(barcode_data)
+
     def get_barcode_data(self, barcode_info, id_doc):
         if barcode_info.scheme == 'GS1':
             search_value = barcode_info.gtin
