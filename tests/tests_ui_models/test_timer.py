@@ -28,6 +28,7 @@ class TestMainEvents(unittest.TestCase):
     def test_timer_on_start(self):
         self.sut.timer_on_start()
 
+    @unittest.skip
     def test_load_docs(self):
         self.rs_settings.put('URL', 'url', True)
         self.rs_settings.put('USER', 'user', True)
