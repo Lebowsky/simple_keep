@@ -3317,6 +3317,9 @@ class GoodsSelectScreen(Screen):
             current_elem = self.hash_map.get_json('selected_card_data')
             self.print_ticket()
 
+        elif listener == 'btn_series_show':
+            pass
+
     def on_post_start(self):
         pass
 
