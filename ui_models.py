@@ -1635,7 +1635,7 @@ class DocDetailsScreen(Screen):
         self.rs_settings = rs_settings
         self.id_doc = self.hash_map['id_doc']
         self.service = DocService(self.id_doc)
-        self.items_on_page = 10
+        self.items_on_page = 20
         self.queue_service = ScanningQueueService()
 
     def on_start(self) -> None:
@@ -1691,6 +1691,9 @@ class DocDetailsScreen(Screen):
         doc_details = self._get_doc_details_data()
         table_data = self._prepare_table_data(doc_details)
         if table_data and last_scanned_item:
+            table_data.insert(1, last_scanned_item)
+            if self.hash_map.get('current_page') == '1':
+                table_data.pop(1)
             table_data[1] = last_scanned_item
         table_view = self._get_doc_table_view(table_data=table_data)
 
@@ -1823,7 +1826,8 @@ class DocDetailsScreen(Screen):
 
     def _check_next_page(self, elems_count):
         if elems_count < self.items_on_page:
-            self.hash_map.put('current_first_element_number', '0')
+            if not self.hash_map.containsKey('current_first_element_number'):
+                self.hash_map.put('current_first_element_number', '0')
             self.hash_map.put("Show_next_page", "0")
         else:
             self.hash_map.put("Show_next_page", "1")
@@ -1836,6 +1840,10 @@ class DocDetailsScreen(Screen):
     def _set_items_on_page(self):
         value = self.hash_map.get('items_on_page_click')
         self.items_on_page = int(value)
+        new_page = int(self.hash_map.get('current_first_element_number'))//self.items_on_page + 1
+        self.hash_map.put('current_page', new_page)
+        new_current_first = self.items_on_page * (new_page - 1)
+        self.hash_map.put('current_first_element_number', str(new_current_first))
 
     def _prepare_table_data(self, doc_details):
         table_data = [{}]
@@ -2453,6 +2461,8 @@ class DocumentsDocDetailScreen(DocDetailsScreen):
             self.hash_map.show_dialog('ВвестиШтрихкод')
 
         elif listener in ['ON_BACK_PRESSED', 'BACK_BUTTON']:
+            self.hash_map.put('current_first_element_number', '0')
+            self.hash_map.put('items_on_page_click', '')
             self.hash_map.put("SearchString", "")
             self.hash_map.put("ShowScreen", "Документы")
 
@@ -3743,7 +3753,8 @@ class GoodsBalancesItemCard(Screen):
         pass
 
     def _get_balances(self):
-        self.validate_input()
+        if not (self.hash_map.get('return_to_item_card') and self.hash_map.get('input_item_id')):
+            self.validate_input()
         raw_balances_data = self._get_balances_data()
         balances_data = self._prepare_table_data(raw_balances_data)
         balances_table = self._get_balances_table_view(balances_data)
@@ -3751,6 +3762,7 @@ class GoodsBalancesItemCard(Screen):
         self.hash_map.put("Show_get_balances_controls", "-1")
         self.hash_map.put("Show_show_filters", "1")
         self.hash_map.put("property_id", '')
+        # self.hash_map.remove('input_item_id')
 
     def validate_input(self):
         self._process_input_item_art()
