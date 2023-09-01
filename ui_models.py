@@ -3314,7 +3314,8 @@ class GoodsSelectScreen(Screen):
         elif listener in ["btn_cancel", 'BACK_BUTTON', 'ON_BACK_PRESSED']:
             self._set_delta(reset=True)
             self.hash_map.put('new_qtty', '')
-            self.hash_map.put('BackScreen')
+            # self.hash_map.put("BackScreen", "") это мешает вернуться на экран "Товары список" из экрана "Карточка товара" в случае если мы перешли на него с экрана ТоварШтрихкоды
+            self.hash_map.show_screen("Документ товары") # переделал чтобы переходил на ТоварыСписок а не на Регистрацию штрихкода
         elif listener == 'btn_print':
             self.print_ticket()
 
