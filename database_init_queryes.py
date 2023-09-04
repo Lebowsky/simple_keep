@@ -109,6 +109,10 @@ def database_shema():
     )
     ''')
 
+    #Индексы RS_series
+    Rs.append('''CREATE INDEX IF NOT EXISTS  Series_name ON RS_series (
+    name ASC )
+    ''')
 
     # Штрихкоды RS_barcodes
     Rs.append( '''
@@ -250,7 +254,8 @@ def database_shema():
         sent          INTEGER,
         last_updated  DATETIME DEFAULT CURRENT_TIMESTAMP,
         is_plan       TEXT DEFAULT "True",
-        id_cell          TEXT     REFERENCES RS_cells (id) 
+        id_cell          TEXT     REFERENCES RS_cells (id),
+        use_series      INTEGER DEFAULT 0 
     )
     ''')
 
@@ -342,10 +347,28 @@ def database_shema():
     ''')
 
     Rs.append('''
-    CREATE INDEX  IF NOT EXISTS cell_name ON RS_cells (
+    CREATE INDEX  IF NOT EXISTS cell_barcode ON RS_cells (
     barcode
     )
     ''')
+
+    Rs.append('''
+    CREATE TABLE IF NOT EXISTS RS_docs_series (
+    id              INTEGER  NOT NULL
+                             PRIMARY KEY AUTOINCREMENT,
+    id_doc          TEXT     NOT NULL
+                             REFERENCES RS_docs (id_doc),
+    id_good         TEXT     NOT NULL
+                             REFERENCES RS_goods (id),
+    id_series       TEXT     REFERENCES RS_series (id),
+    id_warehouse    TEXT     REFERENCES RS_warehouses (id),
+    qtty            REAL,
+    name            TEXT     NOT NULL,
+    best_before     DATETIME,
+    number          TEXT     NOT NULL,
+    production_date DATETIME
+    )''')
+
 
 
 # RS_constants + RS_classifier_units + RS_types_goods
