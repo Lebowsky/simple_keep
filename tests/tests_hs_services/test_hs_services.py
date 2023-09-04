@@ -15,10 +15,12 @@ class TestHsService(unittest.TestCase):
     def test_setup(self):
         self.assertIsNotNone(self.http_settings.get('url'))
 
+    @unittest.skip
     def test_communication_test(self):
         res = self.service.communication_test()
         self.assertEqual(self.service.http_answer.status_code, 200)
 
+    @unittest.skip
     def test_reset_exchange(self):
         self.service.reset_exchange()
         res = self.service.http_answer

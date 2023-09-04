@@ -10,7 +10,7 @@ import hs_services
 import printing_factory
 from ui_utils import HashMap, RsDoc, BarcodeWorker, get_ip_address
 from db_services import DocService, ErrorService, GoodsService, AdrDocService, TimerService
-from tiny_db_services import ScanningQueueService, TinyNoSQLProvider
+from tiny_db_services import ScanningQueueService
 from hs_services import HsService
 from ru.travelfood.simple_ui import SimpleUtilites as suClass
 
@@ -2133,7 +2133,9 @@ class GroupScanDocDetailsScreen(DocDetailsScreen):
             self.set_scanner_lock(False)
 
     def post_barcode_scanned(self):
-        if self.hash_map.get_bool('barcode_scanned'):
+        # fix problem corrupt hash_map in timer
+        # if self.hash_map.get_bool('barcode_scanned'):
+        if True:
             answer = None
             try:
                 answer = self._post_goods_to_server()
@@ -2290,7 +2292,7 @@ class GroupScanDocDetailsScreenNew(DocDetailsScreen):
         super().__init__(hash_map, rs_settings)
         self.hs_service = hs_services.HsService(self.get_http_settings())
         self.db_service = db_services.BarcodeService()
-        self.queue_service = tiny_db_services.ScanningQueueService()
+        self.queue_service = ScanningQueueService()
 
     def on_start(self):
         super()._on_start()
