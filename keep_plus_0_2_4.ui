@@ -4290,8 +4290,8 @@
                                         "type": "TextView"
                                     },
                                     {
-                                        "Value": "@barcode_info",
-                                        "Variable": "barcode_info",
+                                        "Value": "@item_barcode",
+                                        "Variable": "item_barcode",
                                         "height": "wrap_content",
                                         "width": "match_parent",
                                         "orientation": "",
@@ -4309,6 +4309,8 @@
                                         "width": "match_parent",
                                         "orientation": "",
                                         "weight": "0",
+                                        "TextBold": false,
+                                        "TextItalic": false,
                                         "TextSize": "16",
                                         "TextColor": "#008000",
                                         "type": "TextView"
@@ -4320,6 +4322,8 @@
                                         "width": "match_parent",
                                         "orientation": "",
                                         "weight": "0",
+                                        "TextBold": false,
+                                        "TextItalic": false,
                                         "TextSize": "16",
                                         "TextColor": "#ff0000",
                                         "type": "TextView"
@@ -4490,6 +4494,42 @@
                                 "postExecute": ""
                             }
                         ],
+                        "onlineOnStart": false,
+                        "onlineOnAfterStart": false,
+                        "onlineOnInput": false
+                    },
+                    {
+                        "type": "Operation",
+                        "Name": "Выберите вариант товара:",
+                        "Timer": false,
+                        "hideBottomBarScreen": false,
+                        "noScroll": false,
+                        "handleKeyUp": false,
+                        "noConfirmation": false,
+                        "hideToolBarScreen": false,
+                        "Elements": [
+                            {
+                                "type": "LinearLayout",
+                                "Variable": "",
+                                "orientation": "vertical",
+                                "height": "wrap_content",
+                                "width": "match_parent",
+                                "weight": "0",
+                                "Elements": [
+                                    {
+                                        "Value": "@item_variants",
+                                        "Variable": "item_variants",
+                                        "height": "wrap_content",
+                                        "width": "match_parent",
+                                        "weight": "0",
+                                        "TextBold": false,
+                                        "TextItalic": false,
+                                        "type": "CardsLayout"
+                                    }
+                                ]
+                            }
+                        ],
+                        "Handlers": [],
                         "onlineOnStart": false,
                         "onlineOnAfterStart": false,
                         "onlineOnInput": false
