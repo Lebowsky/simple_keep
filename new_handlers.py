@@ -49,7 +49,9 @@ def app_on_start(hash_map: HashMap):
 @HashMap()
 def timer_update(hash_map: HashMap):
     """ Обработчик для фонового обмена """
-
+    screen = create_screen(hash_map)
+    if screen and not screen.can_launch_timer():
+        return
     timer = ui_models.Timer(hash_map, rs_settings)
     timer.timer_on_start()
 
@@ -246,6 +248,11 @@ def elem_viev_on_click(hash_map):
     screen = ui_models.GoodsSelectScreen(hash_map, rs_settings)
     screen.on_input()
 
+@HashMap()
+def offline_elem_view_on_click(hash_map):
+    screen = ui_models.GoodsSelectOfflineScreen(hash_map, rs_settings)
+    screen.on_input()
+
 
 @HashMap()
 def adr_elem_viev_on_start(hash_map):
@@ -288,7 +295,7 @@ def doc_units_on_input(hash_map):
     screen = ui_models.DocGoodSelectUnit(hash_map, rs_settings)
     screen.on_input()
 
-    
+
 
 # ^^^^^^^^^^^^^^^^^ Documents ^^^^^^^^^^^^^^^^^
 
@@ -335,6 +342,11 @@ def good_card_post_start(hash_map):
 @HashMap()
 def good_card_on_input(hash_map):
     screen: ui_models.ItemCard = create_screen(hash_map)
+    screen.on_input()
+
+@HashMap()
+def offline_good_card_on_input(hash_map):
+    screen = ui_models.ItemCardOfflineScreen(hash_map, rs_settings)
     screen.on_input()
 
 @HashMap()

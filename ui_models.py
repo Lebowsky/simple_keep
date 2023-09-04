@@ -90,6 +90,9 @@ class Screen(ABC):
             if param_name and rs_settings.get(param_name):
                 rs_settings.delete(param_name)
 
+    def can_launch_timer(self):
+        return True
+
     class TextView(widgets.TextView):
         def __init__(self, value, rs_settings):
             super().__init__()
@@ -1302,6 +1305,8 @@ class GroupScanDocsListScreen(DocsListScreen):
 
             screen.show(args=self._get_selected_card_put_data())
 
+    def can_launch_timer(self):
+        return False
 
 class DocumentsDocsListScreen(DocsListScreen):
     screen_name = 'Документы'
@@ -2135,9 +2140,7 @@ class GroupScanDocDetailsScreen(DocDetailsScreen):
             self.set_scanner_lock(False)
 
     def post_barcode_scanned(self):
-        # fix problem corrupt hash_map in timer
-        # if self.hash_map.get_bool('barcode_scanned'):
-        if True:
+        if self.hash_map.get_bool('barcode_scanned'):
             answer = None
             try:
                 answer = self._post_goods_to_server()
@@ -2288,6 +2291,8 @@ class GroupScanDocDetailsScreen(DocDetailsScreen):
         if 'urovo' in self.hash_map.get('DEVICE_MODEL').lower():
             suClass.urovo_set_lock_trigger(value)
 
+    def can_launch_timer(self):
+        return False
 
 class GroupScanDocDetailsScreenNew(DocDetailsScreen):
     def __init__(self, hash_map, rs_settings):
@@ -3326,8 +3331,7 @@ class GoodsSelectScreen(Screen):
         elif listener in ["btn_cancel", 'BACK_BUTTON', 'ON_BACK_PRESSED']:
             self._set_delta(reset=True)
             self.hash_map.put('new_qtty', '')
-            # self.hash_map.put("BackScreen", "") это мешает вернуться на экран "Товары список" из экрана "Карточка товара" в случае если мы перешли на него с экрана ТоварШтрихкоды
-            self.hash_map.show_screen("Документ товары") # переделал чтобы переходил на ТоварыСписок а не на Регистрацию штрихкода
+            self.hash_map.show_screen("Документ товары")
         elif listener == 'btn_print':
             self.print_ticket()
 
@@ -3697,6 +3701,10 @@ class GoodsSelectArticle(Screen):
         row_id = int(data['key'])
         self.service.update_doc_table_row(data=update_data, row_id=row_id)
         self.service.set_doc_status_to_upload(self.hash_map.get('id_doc'))
+        
+class GoodsSelectOfflineScreen(GoodsSelectScreen):
+    def print_ticket(self):
+        self.hash_map.show_dialog('print_ticket_not_available_modal', title='В этом продукте печать недоступна')
 
 # ^^^^^^^^^^^^^^^^^^^^^ Goods select ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -3721,6 +3729,15 @@ class GoodsListScreen(Screen):
         if listener == "CardsClick":
             self.hash_map.put('selected_good_id', self.hash_map.get("selected_card_key"))
             self.hash_map.put('barcode', '')
+            # self.hash_map.toast(.keys())
+            card_data = self.hash_map.get_json('selected_card_data')
+            self.hash_map.put("selected_good_id", card_data['key'])
+            self.hash_map.put("good_name", card_data['name'])
+            self.hash_map.put("good_art", card_data['art'])
+            self.hash_map.put("good_code", card_data['code'])
+            self.hash_map.put("good_descr", card_data['description'] if card_data['description'] else "—")
+            self.hash_map.put("good_type", card_data['type_good'])
+
             self.hash_map.show_screen("Карточка товара")
         elif listener == "select_goods_type":
             self.hash_map.show_screen("Выбор категории товаров")
@@ -3888,55 +3905,19 @@ class ItemCard(Screen):
         self.service = GoodsService()
 
     def on_start(self):
-
-        # self.hash_map.put("Show_buttons", "-1")  # Пока спрятали переход к процессам "остатки" и "цены"
-        self.hash_map.remove('return_selected_data')
-        card_data = self.hash_map.get("selected_card_data", from_json=True)
-        if not self.hash_map.get('barcode'):
-            self.hash_map.put("selected_good_id", card_data['key'])
-            self.hash_map.put("good_name", card_data['name'])
-            self.hash_map.put("good_art", card_data['art'])
-            self.hash_map.put("good_code", card_data['code'])
-            self.hash_map.put("good_descr", card_data['description'] if card_data['description'] else "—")
-            self.hash_map.put("good_type", card_data['type_good'])
+        pass
 
     def on_input(self):
-        listener = self.listener
-        if listener == "ON_BACK_PRESSED":
-            if self.hash_map.get('barcode_cards'):
-                self.hash_map.put('barcode_cards', '')
-            # self.hash_map.put("BackScreen", "") это мешает вернуться на экран "Товары список" из экрана "Карточка товара"
-            self.hash_map.show_screen("Товары список") # переделал чтобы переходил на ТоварыСписок а не на Регистрацию штрихкода
-        elif listener == "CardsClick":
-            current_str = self.hash_map.get("selected_card_position")
-            jlist = json.loads(self.hash_map.get("barcode_cards"))
-            current_elem = jlist['customcards']['cardsdata'][int(current_str)]
-            data_dict = {'barcode': current_elem['barcode'],
-                         'Номенклатура': self.hash_map.get('good_name'),
-                         'Характеристика': current_elem['properties'], 'Валюта': current_elem['unit']}
-
-        elif listener in ['CardsClick', 'btn_print']:
-            self._print_ticket()
-        elif listener == "btn_item_good_barcode":
-            self.hash_map.show_screen("ТоварШтрихкоды")
-        elif self.hash_map.get('listener') == 'to_prices':
-            dict_data = {'input_good_id': self.hash_map.get('selected_good_id'),
-                         'input_good_art': self.hash_map.get('good_art'),
-                         'prices_object_name': f'{self.hash_map.get("good_name")}, {self.hash_map.get("good_code")}',
-                         "return_to_item_card": "true",
-                         'object_name': self.hash_map.get('good_name'),
-                         'ShowProcessResult': 'Цены|Проверка цен', "noRefresh": ''}
-            self.hash_map.put_data(dict_data)
-
-        if self.hash_map.get('listener') == 'to_balances':
-            dict_data = {'input_item_id': self.hash_map.get('selected_good_id'),
-                         'item_art_input': self.hash_map.get('good_art'),
-                         'selected_object_name': f'{self.hash_map.get("good_name")}, {self.hash_map.get("good_code")}',
-                         'object_name': self.hash_map.get('good_name'),
-                         "return_to_item_card": "true",
-                         'ShowProcessResult': 'Остатки|Проверить остатки', "noRefresh": ''}
-            self.hash_map.put_data(dict_data)
-
+        listeners = {
+            'ON_BACK_PRESSED': self._back_screen,
+            'CardsClick': self._print_ticket,
+            'btn_print': self._print_ticket,
+            'to_prices': self._to_prices,
+            'to_balances': self._to_balances,
+            'btn_item_good_barcode': lambda : self.hash_map.show_screen("ТоварШтрихкоды")
+        }
+        if self.listener in listeners:
+            listeners[self.listener]()
 
     def on_post_start(self):
         selected_good_id = self.hash_map.get("selected_good_id")
@@ -3956,6 +3937,31 @@ class ItemCard(Screen):
 
     def show(self, args=None):
         pass
+
+    def _back_screen(self):
+        if self.hash_map.get('barcode_cards'):
+            self.hash_map.put('barcode_cards', '')
+        self.hash_map.show_screen("Товары список")
+
+    def _to_balances(self):
+        process_name = 'Остатки|Проверить остатки'
+        self._show_process_result(process_name)
+
+    def _to_prices(self):
+        process_name = 'Цены|Проверка цен'
+        self._show_process_result(process_name)
+
+    def _show_process_result(self, process_name):
+        put_data = {
+            'input_good_id': self.hash_map.get('selected_good_id'),
+            'input_good_art': self.hash_map.get('good_art'),
+            'prices_object_name': f'{self.hash_map.get("good_name")}, {self.hash_map.get("good_code")}',
+            "return_to_item_card": "true",
+            'object_name': self.hash_map.get('good_name'),
+            'ShowProcessResult': process_name,
+            "noRefresh": ''
+        }
+        self.hash_map.put_data(put_data)
 
     @staticmethod
     def _get_variants_cards_data(goods_barcode):
@@ -4051,6 +4057,18 @@ class ItemCard(Screen):
             result = cards['customcards']['cardsdata'][int(card_key)]
 
         return result
+
+class ItemCardOfflineScreen(ItemCard):
+
+    def _to_prices(self):
+        self.hash_map.show_dialog('prices_not_available_modal', title='В этом продукте запрос цен недоступен')
+
+    def _to_balances(self):
+        self.hash_map.show_dialog('balances_not_available_modal', title='В этом продукте запрос остатков недоступен')
+
+    def _print_ticket(self):
+        self.hash_map.show_dialog('print_ticket_not_available_modal', title='В этом продукте печать недоступна')
+
 
 # ^^^^^^^^^^^^^^^^^^^^^ Goods(Process) ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -4794,7 +4812,7 @@ class SelectProperties(GoodsPricesItemCard):
 class DocGoodSelectProperties(SelectProperties):
     screen_name = 'Выбор характеристик'
     process_name = 'Документы'
-    
+
     def _get_data(self):
         table_name = "RS_properties"
         raw_data = self.service.get_select_data(table_name)
@@ -4805,7 +4823,7 @@ class DocGoodSelectProperties(SelectProperties):
                 'name': element['name']
             }
             cards_data.append(card_data)
-        return cards_data 
+        return cards_data
 
     def on_input(self):
         listener = self.listener
@@ -4823,7 +4841,7 @@ class DocGoodSelectProperties(SelectProperties):
             self.hash_map['selected_property_id'] = ''
             self.hash_map['property_select'] = ''
             self.hash_map['selected_property_name'] = ''
-            self.hash_map.show_screen('ТоварШтрихкоды')   
+            self.hash_map.show_screen('ТоварШтрихкоды')
 
 class ItemGoodSelectProperties(DocGoodSelectProperties):
     screen_name = 'Выбор характеристик'
@@ -4914,7 +4932,7 @@ class DocGoodSelectUnit(SelectUnit):
                 }
                 cards_data.append(card_data)
             return cards_data
-    
+
     def on_start(self):
         cards_data = self._get_data()
         properties_cards = self._get_cards(cards_data)
@@ -4937,7 +4955,7 @@ class DocGoodSelectUnit(SelectUnit):
             self.hash_map['unit_select'] = ''
             self.hash_map.put('selected_unit_name', '')
             self.hash_map.show_screen('ТоварШтрихкоды')
-         
+
 
 class ItemGoodSelectUnit(DocGoodSelectUnit):
     screen_name = 'Выбор упаковки'
@@ -5932,6 +5950,9 @@ class ScreensFactory:
 
 
 class MockScreen(Screen):
+    screen_name = 'Mock'
+    process_name = 'Mock'
+
     def on_start(self):
         pass
 
