@@ -49,7 +49,9 @@ def app_on_start(hash_map: HashMap):
 @HashMap()
 def timer_update(hash_map: HashMap):
     """ Обработчик для фонового обмена """
-
+    screen = create_screen(hash_map)
+    if screen and not screen.can_launch_timer():
+        return
     timer = ui_models.Timer(hash_map, rs_settings)
     timer.timer_on_start()
 

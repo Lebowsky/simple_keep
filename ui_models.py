@@ -88,6 +88,9 @@ class Screen(ABC):
             if param_name and rs_settings.get(param_name):
                 rs_settings.delete(param_name)
 
+    def can_launch_timer(self):
+        return True
+
     class TextView(widgets.TextView):
         def __init__(self, value, rs_settings):
             super().__init__()
@@ -1300,6 +1303,8 @@ class GroupScanDocsListScreen(DocsListScreen):
 
             screen.show(args=self._get_selected_card_put_data())
 
+    def can_launch_timer(self):
+        return False
 
 class DocumentsDocsListScreen(DocsListScreen):
     screen_name = 'Документы'
@@ -2133,9 +2138,7 @@ class GroupScanDocDetailsScreen(DocDetailsScreen):
             self.set_scanner_lock(False)
 
     def post_barcode_scanned(self):
-        # fix problem corrupt hash_map in timer
-        # if self.hash_map.get_bool('barcode_scanned'):
-        if True:
+        if self.hash_map.get_bool('barcode_scanned'):
             answer = None
             try:
                 answer = self._post_goods_to_server()
@@ -2286,6 +2289,8 @@ class GroupScanDocDetailsScreen(DocDetailsScreen):
         if 'urovo' in self.hash_map.get('DEVICE_MODEL').lower():
             suClass.urovo_set_lock_trigger(value)
 
+    def can_launch_timer(self):
+        return False
 
 class GroupScanDocDetailsScreenNew(DocDetailsScreen):
     def __init__(self, hash_map, rs_settings):
@@ -5329,7 +5334,6 @@ class Timer:
             for item in new_documents.values()]
         return ", ".join(doc_titles)
 
-
 # ^^^^^^^^^^^^^^^^^^^^^ Timer ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 
@@ -5474,6 +5478,9 @@ class ScreensFactory:
 
 
 class MockScreen(Screen):
+    screen_name = 'Mock'
+    process_name = 'Mock'
+
     def on_start(self):
         pass
 
