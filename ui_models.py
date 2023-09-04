@@ -2555,11 +2555,13 @@ class AdrDocDetailsScreen(DocDetailsScreen):
 
     def _get_doc_details_data(self, last_scanned=False):
         super()._check_previous_page()
+        row_filters = self.hash_map.get('rows_filter')
         first_element = int(self.hash_map.get('current_first_element_number'))
         search_string = self.hash_map.get('SearchString') if self.hash_map.get('SearchString') else None
         data = self.service.get_doc_details_data(id_doc=self.id_doc, curCell=self.current_cell,
                                                  first_elem=0 if last_scanned else first_element,
                                                  items_on_page=1 if last_scanned else self.items_on_page,
+                                                 row_filters=row_filters,
                                                  search_string=search_string)
         if not last_scanned:
             super()._check_next_page(len(data))
@@ -2574,6 +2576,7 @@ class AdrDocDetailsScreen(DocDetailsScreen):
             # self.hash_map.show_screen("Товар выбор") ---*** Экран в функции _fill_one_string_screen
         elif listener == "BACK_BUTTON":
             self.hash_map.put("SearchString", "")
+            self.hash_map.remove('rows_filter')
             self.hash_map.show_screen("Документы")
         elif listener == "btn_barcodes":
 
@@ -2597,6 +2600,7 @@ class AdrDocDetailsScreen(DocDetailsScreen):
                 self.hash_map.put('current_cell', doc_cell['name'])
                 self.hash_map.put('current_cell_id', doc_cell['id'])
                 self.current_cell = doc_cell['id']
+                self.hash_map.put('current_first_element_number', '0')
                 return
 
             if not current_cell and not doc_cell:
@@ -2636,7 +2640,6 @@ class AdrDocDetailsScreen(DocDetailsScreen):
                     self.hash_map.put('toast', res['Descr'])  # + ' '+ res['Barcode']
             else:
                 self.hash_map.put('toast', 'Товар добавлен в документ')
-            self._on_start()
 
                 # ---------------------------------------------------------
         elif listener == 'btn_doc_mark_verified':
