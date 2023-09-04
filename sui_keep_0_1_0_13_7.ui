@@ -403,6 +403,11 @@
                                 "type": "MenuItem",
                                 "Value": "Выгрузить документ",
                                 "Variable": "btn_doc_mark_verified"
+                            },
+                            {
+                                "type": "fab",
+                                "Value": "#f031",
+                                "Variable": "btn_goods_ocr"
                             }
                         ],
                         "Handlers": [
@@ -7127,6 +7132,21 @@
                 "method": "beep",
                 "postExecute": "",
                 "alias": ""
+            }
+        ],
+        "RecognitionTemplates": [
+            {
+                "name": "Артикул",
+                "TypeRecognition": "Text",
+                "NumberRecognition": false,
+                "DateRecognition": false,
+                "PlateNumberRecognition": false,
+                "mesure_qty": "1",
+                "min_freq": "1",
+                "min_length": "3",
+                "max_length": "20",
+                "values_list": "@list_art",
+                "result_var": "good_id"
             }
         ]
     }
