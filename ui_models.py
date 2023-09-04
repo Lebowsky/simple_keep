@@ -2717,7 +2717,7 @@ class AdrDocDetailsScreen(DocDetailsScreen):
             self.table_type = self._get_table_type_from_name(self.hash_map['table_type'])
             self._on_start()
             self.hash_map.refresh_screen()
-
+ 
     # В зависимости от вида документа назначаем для отображения табличную часть по умолчаниюю
     # Например, для документа Отбор это out а для Размещение in
     def _get_table_type_for_screen(self):
@@ -3318,12 +3318,16 @@ class GoodsSelectScreen(Screen):
             self.hash_map.show_screen("Документ товары") # переделал чтобы переходил на ТоварыСписок а не на Регистрацию штрихкода
         elif listener == 'btn_print':
             self.print_ticket()
-
+        elif listener == 'btn_next_good':
+            self._goods_selector("next")  
+        elif listener == 'btn_previous_good':
+            self._goods_selector("previous")
         elif listener == "CardsClick":
             current_elem = self.hash_map.get_json('selected_card_data')
             self.print_ticket()
         elif listener == 'btn_doc_good_barcode':
             self.hash_map.show_screen("ТоварШтрихкоды")
+            
 
     def on_post_start(self):
         pass
@@ -3377,6 +3381,63 @@ class GoodsSelectScreen(Screen):
             self.rs_settings,
             self.printing_template_name,
             data_for_printing=param_list)
+        
+    def _goods_selector(self, action):
+        selected_card_position = int(self.hash_map.get('selected_card_position'))
+        table_lines_qtty = int(self.hash_map['table_lines_qtty'])
+        doc_goods_table = self.hash_map.get_json('doc_goods_table') 	
+        table_data = doc_goods_table['customtable']['tabledata']
+
+        if action == 'next': 
+            if selected_card_position != table_lines_qtty:
+                delta = 1  
+            else:
+                delta = 1-table_lines_qtty
+        elif action == 'previous':
+            if selected_card_position != 1:
+                delta = -1  
+            else:
+                delta = table_lines_qtty - 1
+        
+        current_str = selected_card_position + delta
+        current_elem = table_data[selected_card_position + delta]
+        
+        self.hash_map.put("selected_card_position", current_str)
+        
+        # текущий элемент не найден или это заголовок таблицы
+        if current_elem is None or 'good_name' not in current_elem:
+            return
+
+        title = '{} № {} от {}'.format(self.hash_map['doc_type'], self.hash_map['doc_n'], self.hash_map['doc_date'])
+        put_data = {
+            'Doc_data': title,
+            'Good': current_elem['good_name'],
+            'id_good': current_elem['id_good'], 
+            'good_art': current_elem['art'],
+            'good_sn': current_elem['series_name'],
+            'good_property': current_elem['properties_name'],
+            'good_price': current_elem['price'] if 'price' in current_elem else '',
+            'good_unit': current_elem['units_name'],
+            'good_str': f'{current_str} / {table_lines_qtty}',
+            'qtty_plan': current_elem['qtty_plan'],
+            'good_plan': current_elem['qtty_plan'],
+            'key': current_elem['key'],
+            'price': current_elem['price'] if 'price' in current_elem else '',
+            'price_type': current_elem['price_name'] if 'price_name' in current_elem else '',
+            'qtty': current_elem['qtty'] if current_elem['qtty'] and float(current_elem['qtty']) != 0 else '',
+        }
+
+        self._fill_none_values(
+            put_data,
+            ('good_art', 'good_sn', 'good_property', 'good_price', 'good_plan', 'price', 'price_type'),
+            default='отсутствует')
+
+        self.hash_map.put_data(put_data)  
+
+    def _fill_none_values(self, data, keys, default=''):
+        none_list = [None, 'None']
+        for key in keys:
+            data[key] = default if data[key] in none_list else data[key]
 
 class AdrGoodsSelectScreen(GoodsSelectScreen):
     def __init__(self, hash_map: HashMap, rs_settings):
