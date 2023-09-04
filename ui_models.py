@@ -3607,24 +3607,23 @@ class ItemCard(Screen):
         self.hash_map.put("BackScreen", "")
 
     def _to_balances(self):
-        process_name = 'Остатки|Проверить остатки'
-        self._show_process_result(process_name)
+        dict_data = {'input_item_id': self.hash_map.get('selected_good_id'),
+                     'item_art_input': self.hash_map.get('good_art'),
+                     'selected_object_name': f'{self.hash_map.get("good_name")}, {self.hash_map.get("good_code")}',
+                     'object_name': self.hash_map.get('good_name'),
+                     "return_to_item_card": "true",
+                     'ShowProcessResult': 'Остатки|Проверить остатки', "noRefresh": ''}
+        self.hash_map.put_data(dict_data)
 
     def _to_prices(self):
-        process_name = 'Цены|Проверка цен'
-        self._show_process_result(process_name)
+        dict_data = {'input_good_id': self.hash_map.get('selected_good_id'),
+                     'input_good_art': self.hash_map.get('good_art'),
+                     'prices_object_name': f'{self.hash_map.get("good_name")}, {self.hash_map.get("good_code")}',
+                     "return_to_item_card": "true",
+                     'object_name': self.hash_map.get('good_name'),
+                     'ShowProcessResult': 'Цены|Проверка цен', "noRefresh": ''}
+        self.hash_map.put_data(dict_data)
 
-    def _show_process_result(self, process_name):
-        put_data = {
-            'input_good_id': self.hash_map.get('selected_good_id'),
-            'input_good_art': self.hash_map.get('good_art'),
-            'prices_object_name': f'{self.hash_map.get("good_name")}, {self.hash_map.get("good_code")}',
-            "return_to_item_card": "true",
-            'object_name': self.hash_map.get('good_name'),
-            'ShowProcessResult': process_name,
-            "noRefresh": ''
-        }
-        self.hash_map.put_data(put_data)
 
     @staticmethod
     def _get_variants_cards_data(goods_barcode):
