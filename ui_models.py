@@ -12,7 +12,7 @@ import hs_services
 import printing_factory
 from ui_utils import HashMap, RsDoc, BarcodeWorker, get_ip_address
 from db_services import DocService, ErrorService, GoodsService, BarcodeService, AdrDocService, TimerService
-from tiny_db_services import ScanningQueueService, TinyNoSQLProvider
+from tiny_db_services import ScanningQueueService
 from hs_services import HsService
 from ru.travelfood.simple_ui import SimpleUtilites as suClass
 
@@ -1526,7 +1526,7 @@ class AdrDocsListScreen(DocsListScreen):
     def _doc_delete(self, id_doc):
         result = True
         try:
-            self.service.delete_doc(id_doc)
+            self.service.delete_adr_doc(id_doc)
         except Exception as e:
             self.hash_map.error_log(e.args[0])
             result = False
@@ -5256,6 +5256,7 @@ class SettingsScreen(Screen):
             'btn_http_settings': lambda: self._show_screen('Настройки http соединения'),
             'btn_size': lambda: self._show_screen('Настройки Шрифтов'),
             'btn_sound_settings': lambda: self._show_screen('Настройка звука'),
+            'btn_documents_settings': lambda: self._show_screen('Настройки документов'),
             'btn_test_barcode': lambda: self._show_screen('Тест сканера'),
             'btn_err_log': lambda: self._show_screen('Ошибки'),
             'btn_upload_docs': self._upload_docs,
@@ -5664,6 +5665,63 @@ class SoundSettings(Screen):
         layout_listener = self.hash_map.get('layout_listener')
         current_key = self.hash_map.get_json("card_data")['key']
         self.hash_map.put(f'current_{current_key}_signal', layout_listener)
+
+
+class DocumentsSettings(Screen):
+    screen_name = 'Настройки документов'
+    process_name = 'Параметры'
+
+    def __init__(self, hash_map: HashMap, rs_settings):
+        super().__init__(hash_map, rs_settings)
+
+    def on_start(self):
+        if not self.hash_map.containsKey('doc_settings_on_start'):
+            self.hash_map.put('doc_settings_on_start', 'true')
+            self._init_old_doc_delete_settings()
+
+    def on_input(self):
+        if self.listener == 'save_btn':
+            del_docs_flag = self.hash_map.get('doc_settings_confirm_delete_old_docs')
+            del_docs_flag = True if del_docs_flag == 'true' else False
+            days = int(self.hash_map.get('doc_delete_settings_days'))
+            if del_docs_flag and days == 0:
+                self.hash_map.playsound('error')
+                self.hash_map.toast('Укажите количество дней для настройки'
+                                    ' удаления старых документов')
+                return
+
+            if del_docs_flag:
+                self.rs_settings.put('delete_old_docs', True, True)
+                self.rs_settings.put('doc_delete_settings_days', days, True)
+            else:
+                self.rs_settings.put('delete_old_docs', False, True)
+                self.rs_settings.delete('doc_delete_settings_days')
+
+            self.hash_map.toast('Настройки сохранены')
+            self.hash_map.delete('doc_settings_on_start')
+            self.hash_map.show_screen('Настройки и обмен')
+
+        elif self.listener == 'ON_BACK_PRESSED':
+            self.hash_map.delete('doc_settings_on_start')
+            self.hash_map.show_screen('Настройки и обмен')
+
+    def on_post_start(self):
+        pass
+
+    def show(self, args=None):
+        pass
+
+    def _init_old_doc_delete_settings(self):
+        days_choices = ';'.join([str(i) for i in range(31)])
+        self.hash_map.put('doc_delete_settings_days_list', days_choices)
+
+        current_days_value = self.rs_settings.get('doc_delete_settings_days')
+        init_days = str(current_days_value) if current_days_value is not None else '0'
+        self.hash_map.put('doc_delete_settings_days', init_days)
+
+        flag = self.rs_settings.get('delete_old_docs')
+        init_flag = str(flag).lower() if flag is not None else 'false'
+        self.hash_map.put('doc_settings_confirm_delete_old_docs', init_flag)
 
 
 class ErrorLogScreen(Screen):
@@ -6083,8 +6141,6 @@ class MainEvents:
         # toast = (f'Обновляемся с {release} на {current_release}')
 
         self._create_tables()
-        if self.rs_settings.get('delete_old_docs') is True:
-            self._delete_old_docs()
 
         if current_release is None:
             toast = 'Не удалось определить версию конфигурации'
@@ -6101,6 +6157,11 @@ class MainEvents:
             self.hash_map.put('InstallConfiguration', '')
             self.rs_settings.put('Release', current_release, True)
             toast = f'Выполнено обновление на версию {current_release}'
+
+        if self.rs_settings.get('delete_old_docs') is True:
+            deleted_docs = self._delete_old_docs()
+            if deleted_docs:
+                toast += f'\nУдалены документы: {deleted_docs}'
 
         rs_default_settings = {
             'TitleTextSize': 18,
@@ -6126,7 +6187,7 @@ class MainEvents:
             'log_name': 'log.json',
             'timer_is_disabled': False,
             'allow_fact_input': False,
-            'delete_old_docs': True
+            'delete_old_docs': False
         }
 
         if os.path.exists('//data/data/ru.travelfood.simple_ui/databases/'):  # локально
@@ -6152,7 +6213,10 @@ class MainEvents:
         service.create_tables()
 
     def _delete_old_docs(self):
-        self.hash_map.notification('!@##@!')
+        days = self.rs_settings.get('doc_delete_settings_days')
+        service = db_services.DocService()
+        return service.delete_old_docs(days)
+
 
 # ^^^^^^^^^^^^^^^^^^^^^ Main events ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
