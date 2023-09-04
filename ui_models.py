@@ -3122,6 +3122,14 @@ class FlowDocDetailsScreen(DocDetailsScreen):
         elif listener == 'ON_BACK_PRESSED':
             self.hash_map.show_screen("Документы")
 
+        elif listener == 'vision':
+            serial = self.hash_map.get('finded_serial_num')
+            qtext = '''INSERT INTO RS_barc_flow (id_doc, barcode) VALUES (?,?)'''
+            # Серийный номер записывается как штрихкод
+            ui_global.get_query_result(qtext, (self.id_doc, serial))
+            self.service.set_doc_status_to_upload(self.id_doc)
+            self.hash_map.delete('finded_serial_num')
+
     def _barcode_flow_on_start(self):
 
         id_doc = self.hash_map.get('id_doc')
@@ -3631,7 +3639,6 @@ class GoodsSelectArticle(Screen):
             cards_data = self._get_goods_list_data(goods)
             goods_cards = self._get_goods_cards_view(cards_data)
             self.hash_map['finded_goods_cards'] = goods_cards.to_json()
-
 
     def on_post_start(self):
         pass
