@@ -164,6 +164,23 @@ def file_browser_on_input(hash_map):
 def elem_viev_on_click(hash_mao):
     main.elem_viev_on_click(hash_mao)
 
+
+def series_list_on_start(hash_map):
+    main.series_list_on_start(hash_map)
+
+
+def series_list_on_input(hash_map):
+    main.series_list_on_input(hash_map)
+
+
+def series_item_on_start(hash_map):
+    main.series_item_on_start(hash_map)
+
+
+def series_item_on_input(hash_map):
+    main.series_item_on_input(hash_map)
+
+
 class hashMap:
     d = {}
 

@@ -143,7 +143,7 @@ def select_good_article_on_start(hash_map: HashMap):
 @HashMap()
 def docs_tiles_on_start(hash_map: HashMap):
     """Отдельные обработчики плиток для определения процесса hash_map'ом"""
-    screen = ui_models.DocumentsTiles(hash_map, rs_settings)
+    screen: ui_models.DocumentsTiles = ui_models.DocumentsTiles(hash_map, rs_settings)
     screen.on_start()
 
 
@@ -309,7 +309,7 @@ def goods_on_start(hash_map):
 
 @HashMap()
 def goods_on_input(hash_map: HashMap):
-    screen = ui_models.GoodsListScreen(hash_map, rs_settings)
+    screen: ui_models.GoodsListScreen = ui_models.GoodsListScreen(hash_map, rs_settings)
     # screen: ui_models.GoodsListScreen = create_screen(hash_map)
     screen.on_input()
     # hash_map.toast(f'{hash_map.get_current_screen()} {hash_map.get_current_process()}')
@@ -455,7 +455,27 @@ def units_on_input(hash_map):
 
 # ^^^^^^^^^^^^^^^^^^^^^ GoodsPrices ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+@HashMap()
+def series_list_on_start(hash_map):
+    screen: ui_models.SeriesList = ui_models.SeriesList(hash_map, rs_settings)
+    screen.on_start()
 
+@HashMap()
+def series_list_on_input(hash_map):
+    screen = ui_models.SeriesList(hash_map, rs_settings)
+    screen.on_input()
+
+@HashMap()
+def series_item_on_start(hash_map):
+    screen: ui_models.SeriesItem = ui_models.SeriesItem(hash_map, rs_settings)
+    screen.on_start()
+
+@HashMap()
+def series_item_on_input(hash_map):
+    screen: ui_models.SeriesItem = ui_models.SeriesItem(hash_map, rs_settings)
+    screen.on_input()
+
+# ^^^^^^^^^^^^^^^^^^^^^ GoodsPrices ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 # =============== Settings =================
 

@@ -1430,7 +1430,7 @@ def get_plan_good_from_doc():
     return '''
 
     SELECT ifnull(qtty_plan,0) as qtty_plan,
-    ifnull(qtty,0) as qtty, id_good
+    ifnull(qtty,0) as qtty, id_good, use_series
     FROM RS_docs_table
     WHERE 
     id_doc = :idDoc 

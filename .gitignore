@@ -27,3 +27,6 @@ TestData
 /main_local.py
 /rightscan5.db-journal
 
+/tests/test1.py
+/test_http_get_data.py
+/tests_main.py

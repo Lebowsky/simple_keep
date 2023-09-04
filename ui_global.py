@@ -436,6 +436,13 @@ class Rs_doc():
                         return {'Result': f'Количество план будет превышено при добавлении {str(ratio)} единиц товара',
                                 'Error': 'QuantityPlanReached',
                                 'barcode': barcode, 'Descr': f'Количество план будет превышено при добавлении {str(ratio)} единиц товара'}
+            #Товар подлежит учету по сериям
+            if res[0]['use_series'] == '1':
+                return {'Result': 'Данный товар подлежит учету по сериям',
+                        'Error': 'Must_use_series',
+                        'barcode': barcode,
+                        'Descr': f'Товар подлежит серийному учету',
+                        'current_elem': elem}
 
         else: #Товар не найден в документе
             if have_zero_plan and control:
