@@ -2063,6 +2063,7 @@ class GroupScanDocDetailsScreen(DocDetailsScreen):
 
     def on_start(self) -> None:
         super()._on_start()
+        self.hash_map.put('stop_timer_update', 'true')
 
     def on_input(self) -> None:
         super().on_input()
@@ -2090,6 +2091,7 @@ class GroupScanDocDetailsScreen(DocDetailsScreen):
         elif listener in ['ON_BACK_PRESSED', 'BACK_BUTTON']:
             self.hash_map.put("SearchString", "")
             self.hash_map.put("ShowScreen", "Документы")
+            self.hash_map.put('stop_timer_update', 'false')
 
     def _run_progress_barcode_scanning(self):
         self.hash_map.run_event_progress('doc_details_before_process_barcode')
@@ -5283,6 +5285,9 @@ class Timer:
         self.http_service = HsService(self.http_settings)
 
     def timer_on_start(self):
+        if self.hash_map.get_bool('stop_timer_update'):
+            return
+
         self.load_docs()
         self._upload_data()
         # self.upload_all_docs()
