@@ -548,6 +548,18 @@ def sound_settings_listener(hash_map):
     screen.on_input()
 
 
+@HashMap()
+def documents_settings_on_input(hash_map):
+    """Процесс: Параметры. Экран: Настройки документов"""
+    screen = ui_models.DocumentsSettings(hash_map, rs_settings)
+    screen.on_input()
+
+
+@HashMap()
+def documents_settings_on_start(hash_map):
+    """Процесс: Параметры. Экран: Настройки документов"""
+    screen = ui_models.DocumentsSettings(hash_map, rs_settings)
+    screen.on_start()
 # ^^^^^^^^^^^^^^^^^ Settings ^^^^^^^^^^^^^^^^^
 
 # =============== Html =================
