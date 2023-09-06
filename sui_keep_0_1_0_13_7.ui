@@ -1060,20 +1060,17 @@
                             {
                                 "type": "MenuItem",
                                 "Value": "Печать",
-                                "Variable": "btn_print",
-                                "style_name": ""
+                                "Variable": "btn_print"
                             },
                             {
                                 "type": "MenuItem",
                                 "Value": "Ввести штрихкод",
-                                "Variable": "btn_doc_good_barcode",
-                                "style_name": ""
+                                "Variable": "btn_doc_good_barcode"
                             },
                             {
                                 "type": "MenuItem",
                                 "Value": "Серии",
-                                "Variable": "btn_series_show",
-                                "style_name": ""
+                                "Variable": "btn_series_show"
                             }
                         ],
                         "Handlers": [
@@ -3789,8 +3786,9 @@
             {
                 "type": "Process",
                 "ProcessName": "Универсальный справочник",
+                "PlanFactHeader": "",
                 "DefineOnBackPressed": false,
-                "hidden": true,
+                "hidden": false,
                 "login_screen": false,
                 "SC": false,
                 "Operations": [
@@ -4146,14 +4144,12 @@
                             {
                                 "type": "MenuItem",
                                 "Value": "Печать",
-                                "Variable": "btn_print",
-                                "style_name": ""
+                                "Variable": "btn_print"
                             },
                             {
                                 "type": "MenuItem",
                                 "Value": "Добавить штрихкод",
-                                "Variable": "btn_item_good_barcode",
-                                "style_name": ""
+                                "Variable": "btn_item_good_barcode"
                             }
                         ],
                         "Handlers": [
