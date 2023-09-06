@@ -137,7 +137,7 @@ class BarcodeService(DbService):
                     AND doc_barcodes.Series = {}
                 
             WHERE barcodes.barcode = {}'''.format(
-            id_doc, id_doc, barcode_info.GTIN, barcode_info.Series, search_value)
+            id_doc, id_doc, barcode_info.gtin, barcode_info.serial, search_value)
 
         result = self.provider.sql_query(q)
         if result:
