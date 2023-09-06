@@ -11,7 +11,8 @@ import db_services
 import hs_services
 import printing_factory
 from ui_utils import HashMap, RsDoc, BarcodeWorker, get_ip_address
-from db_services import DocService, ErrorService, GoodsService, BarcodeService, AdrDocService, TimerService
+from db_services import (DocService, ErrorService, GoodsService, BarcodeService, AdrDocService, TimerService,
+                         UniversalCardsService)
 from tiny_db_services import ScanningQueueService, TinyNoSQLProvider
 from hs_services import HsService
 from ru.travelfood.simple_ui import SimpleUtilites as suClass
@@ -6150,6 +6151,128 @@ class MainEvents:
 
 
 # ^^^^^^^^^^^^^^^^^^^^^ Main events ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+# ==================== Universal cards =============================
+
+class UniversalCardsScreen(Screen):
+    def __init__(self, hash_map:HashMap, rs_settings):
+        super().__init__(hash_map, rs_settings)
+
+        self.card_text_size = 24
+        self.fields_aliases = self._get_fields_aliases()
+        self.screen_values = {
+            'table_for_select': hash_map['table_for_select'],
+        }
+        self.table_name = self.screen_values['table_for_select']
+        self.table_name = 'RS_goods'
+
+    def on_start(self):
+        filter_value = self.hash_map['SearchString']
+        if filter_value:
+            filter_fields = (self.hash_map['filter_fields'] or '').split(';')
+        else:
+            filter_fields = []
+
+        self.hash_map['cards'] = self._get_table_cards().to_json()
+
+    def on_input(self):
+        pass
+
+    def on_post_start(self):
+        pass
+
+    def show(self, args=None):
+        self._validate_screen_values()
+        self.hash_map.show_screen(self.screen_name, args)
+
+    def _get_table_cards(self):
+        service = UniversalCardsService()
+        fields, views_data = service.get_views_data(self.table_name)
+        return self._get_cards_view(fields, views_data)
+
+    def _get_field_view(self, field, value):
+        aliases = self.fields_aliases.get(field)
+
+        view = widgets.TextView(
+            Value=f'@{value}',
+        )
+        if aliases:
+            view = widgets.TextView(
+                Value=f'@{value}',
+                TextSize=self.rs_settings.get(aliases['TextSize']) or self.card_text_size,
+                TextBold=aliases['TextBold'],
+            )
+        return view
+
+    def _get_card_view(self, fields):
+        card_fields = []
+        for field, link in fields.items():
+            card_fields.append(self._get_field_view(field, link))
+
+        return card_fields
+
+    def _get_cards_view(self, fields, cards_data):
+        card_view = self._get_card_view(fields)
+        cards_view = widgets.CustomCards(
+            widgets.LinearLayout(
+                widgets.LinearLayout(
+                    widgets.LinearLayout(
+                        *card_view,
+                        width='match_parent',
+                        weight=1
+                    ),
+                    height='match_parent',
+                    width='match_parent',
+                    orientation='horizontal'
+                ),
+                height='match_parent',
+                width='match_parent'
+            ),
+            options=widgets.Options(override_search=True).options,
+            cardsdata=cards_data
+        )
+
+        return cards_view
+    def _get_fields_aliases(self):
+        return {
+            'id_good':{'name':'Номенклатура', 'TextSize':'TitleTextSize', "TextBold": True},
+            'type_good': {'name':'Тип номенклатуры', 'TextSize':'CardTextSize', "TextBold": False},
+            'unit':{'name': 'Единица измерения', 'TextSize':'CardTextSize', "TextBold": False},
+            'id_property':{'name': 'Характеристика', 'TextSize':'CardTextSize', "TextBold": False},
+            'id_series': {'name':'Серия', 'TextSize':'CardTextSize', "TextBold": False},
+            'id_unit':{'name': 'Единица измерения', 'TextSize':'CardTextSize', "TextBold": False},
+            'id_countragents':{'name': 'Контрагент', 'TextSize':'CardTextSize', "TextBold": False},
+            'id_warehouse':{'name': 'Склад', 'TextSize':'CardTextSize', "TextBold": False},
+            'id_doc':{'name': 'Номенклатура', 'TextSize':'TitleTextSize', "TextBold": True},
+            'id_cell':{'name': 'Ячейка', 'TextSize':'CardTextSize', "TextBold": False},
+            'id':{'name': 'key', 'TextSize':'CardTextSize', "TextBold": False},
+            'name':{'name': 'Наименование', 'TextSize':'TitleTextSize', "TextBold": True},
+            'code':{'name': 'Код', 'TextSize':'CardTextSize', "TextBold": False},
+            'art':{'name': 'Артикул', 'TextSize':'CardTextSize', "TextBold": False},
+            'description':{'name': 'Описание', 'TextSize':'CardDateTextSize', "TextBold": False},
+            'qtty':{'name': 'Количество', 'TextSize':'CardTextSize', "TextBold": True},
+            'qtty_plan':{'name': 'Количество план', 'TextSize':'CardTextSize', "TextBold": True},
+            'barcode':{'name': 'Штрихкод', 'TextSize':'CardTextSize', "TextBold": False},
+            'full_name':{'name': 'Полное наименование', 'TextSize':'CardTextSize', "TextBold": False},
+            'inn':{'name': 'ИНН', 'TextSize':'TitleTextSize', "TextBold": False},
+            'kpp':{'name': 'КПП', 'TextSize':'TitleTextSize', "TextBold": False},
+            'mark_code':{'name': 'Штрихкод', 'TextSize':'CardTextSize', "TextBold": False},
+            'id_price_types':{'name': 'Тип цены', 'TextSize':'TitleTextSize', "TextBold": False},
+            'price':{'name': 'Цена', 'TextSize':'TitleTextSize', "TextBold": True},
+            'id_owner':{'name': 'Владелец', 'TextSize':'CardTextSize', "TextBold": False},
+            'best_before':{'name': 'Годен до:', 'TextSize':'CardTextSize', "TextBold": False},
+            'number':{'name':'Номер', 'TextSize':'CardTextSize', "TextBold": False},
+            'production_date':{'name':'Дата производства', 'TextSize':'CardTextSize', "TextBold": False},
+            'use_mark':{'name':'Использовать маркировку', 'TextSize':'CardTextSize', "TextBold": False},
+            'nominator':{'name':'Номинатор', 'TextSize':'CardTextSize', "TextBold": True},
+            'denominator':{'name':'Деноминатор', 'TextSize':'CardTextSize', "TextBold": True},
+            'log': {'name': 'Ошибка', 'TextSize': 'CardTextSize', "TextBold": False}
+            }
+
+        return list
+
+
+# ^^^^^^^^^^^^^^^^^^^^^ Universal cards ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 class ScreensFactory:
     screens = [GoodsSelectScreen,
