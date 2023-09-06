@@ -1,5 +1,6 @@
 import json
-from typing import List
+from datetime import datetime, timedelta, timezone
+from typing import List, Literal
 
 from ru.travelfood.simple_ui import SimpleSQLProvider as sqlClass
 from ui_global import get_query_result, bulk_query
@@ -435,15 +436,43 @@ class DocService:
         return result
 
     def delete_doc(self, id_doc):
-        queryes = (f'DELETE FROM {self.docs_table_name} WHERE id_doc = ?',
+        queryes = (
         'DELETE FROM RS_barc_flow WHERE id_doc = ?',
         'DELETE FROM RS_docs_table WHERE id_doc = ?',
-        'DELETE FROM RS_adr_docs_table WHERE id_doc = ?',
-        'DELETE FROM RS_docs_series WHERE id_doc = ?')
-
+        'DELETE FROM RS_docs_series WHERE id_doc = ?',
+        f'DELETE FROM {self.docs_table_name} WHERE id_doc = ?',
+        )
         for query in queryes:
             self._get_query_result(query, (id_doc,))
 
+    def delete_adr_doc(self, id_doc):
+        queryes = (
+        'DELETE FROM RS_adr_docs_table WHERE id_doc = ?',
+        'DELETE FROM RS_adr_docs WHERE id_doc = ?',
+        )
+        for query in queryes:
+            self._get_query_result(query, (id_doc,))
+
+    def delete_old_docs(self, days: int):
+        old_docs_ids = self._find_old_docs(days)
+        old_adr_docs_ids = self._find_old_docs(days, 'RS_adr_docs')
+        for id_doc in old_docs_ids:
+            self.delete_doc(id_doc)
+        for id_doc in old_adr_docs_ids:
+            self.delete_adr_doc(id_doc)
+        return old_docs_ids + old_adr_docs_ids
+
+    def _find_old_docs(
+            self,
+            days: int,
+            table: Literal['RS_docs', 'RS_adr_docs'] = 'RS_docs'
+    ) -> List[str]:
+        """Возвращает список id всех устаревших документов"""
+        query = f'''SELECT id_doc FROM {table} WHERE created_at < ?'''
+        current_datetime = datetime.now(tz=timezone.utc)
+        target_time = current_datetime - timedelta(days=days)
+        docs = self._get_query_result(query, (target_time, ))
+        return [doc[0] for doc in docs]
 
     def get_docs_stat(self):
         query = f'''
@@ -972,7 +1001,8 @@ class SeriesService(DbService):
 
         DocService().set_doc_status_to_upload(self.params.get('id_doc'))
 
-        return  True
+        return True
+
 
 class AdrDocService(DocService):
     def __init__(self, doc_id='', cur_cell='', table_type='in'):
