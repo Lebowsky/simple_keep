@@ -6399,38 +6399,16 @@
                                         "height": "wrap_content",
                                         "width": "match_parent",
                                         "weight": "0",
-                                        "Value": "Укажите сколько будут храниться документы на устройстве.",
+                                        "Value": "Укажите сколько дней документы будут храниться на устройстве.",
                                         "Variable": ""
                                     },
                                     {
-                                        "type": "LinearLayout",
+                                        "type": "EditTextNumeric",
                                         "height": "wrap_content",
                                         "width": "match_parent",
                                         "weight": "0",
-                                        "Value": "",
-                                        "Variable": "",
-                                        "orientation": "horizontal",
-                                        "Elements": [
-                                            {
-                                                "type": "TextView",
-                                                "height": "wrap_content",
-                                                "width": "match_parent",
-                                                "weight": "1",
-                                                "Value": "Дней:",
-                                                "Variable": ""
-                                            },
-                                            {
-                                                "type": "SpinnerLayout",
-                                                "height": "wrap_content",
-                                                "width": "match_parent",
-                                                "weight": "2",
-                                                "Value": "@doc_delete_settings_days_list",
-                                                "Variable": "doc_delete_settings_days"
-                                            }
-                                        ],
-                                        "BackgroundColor": "",
-                                        "StrokeWidth": "",
-                                        "Padding": ""
+                                        "Value": "@doc_delete_settings_days",
+                                        "Variable": "doc_delete_settings_days"
                                     },
                                     {
                                         "type": "CheckBox",
@@ -7220,10 +7198,6 @@
             },
             {
                 "PyFileKey": "new_handlers",
-                "PyFileData": ""
-            },
-            {
-                "PyFileKey": "printing_factory",
                 "PyFileData": ""
             }
         ],

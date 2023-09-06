@@ -5683,19 +5683,22 @@ class DocumentsSettings(Screen):
         if self.listener == 'save_btn':
             del_docs_flag = self.hash_map.get('doc_settings_confirm_delete_old_docs')
             del_docs_flag = True if del_docs_flag == 'true' else False
-            days = int(self.hash_map.get('doc_delete_settings_days'))
-            if del_docs_flag and days == 0:
-                self.hash_map.playsound('error')
-                self.hash_map.toast('Укажите количество дней для настройки'
-                                    ' удаления старых документов')
-                return
-
-            if del_docs_flag:
-                self.rs_settings.put('delete_old_docs', True, True)
-                self.rs_settings.put('doc_delete_settings_days', days, True)
-            else:
+            if not del_docs_flag:
                 self.rs_settings.put('delete_old_docs', False, True)
                 self.rs_settings.delete('doc_delete_settings_days')
+            else:
+                days = self.hash_map.get('doc_delete_settings_days')
+                if not days or days == '0' or not days.isdigit():
+                    self.hash_map.playsound('error')
+                    self.hash_map.toast('Укажите корректное количество дней'
+                                        ' для настройки удаления старых документов')
+                    return
+                if days >= '9999':
+                    self.hash_map.playsound('error')
+                    self.hash_map.toast('Количество дней превышает 9999')
+                    return
+                self.rs_settings.put('delete_old_docs', True, True)
+                self.rs_settings.put('doc_delete_settings_days', days, True)
 
             self.hash_map.toast('Настройки сохранены')
             self.hash_map.delete('doc_settings_on_start')
@@ -5712,11 +5715,8 @@ class DocumentsSettings(Screen):
         pass
 
     def _init_old_doc_delete_settings(self):
-        days_choices = ';'.join([str(i) for i in range(31)])
-        self.hash_map.put('doc_delete_settings_days_list', days_choices)
-
         current_days_value = self.rs_settings.get('doc_delete_settings_days')
-        init_days = str(current_days_value) if current_days_value is not None else '0'
+        init_days = str(current_days_value) if current_days_value is not None else '1'
         self.hash_map.put('doc_delete_settings_days', init_days)
 
         flag = self.rs_settings.get('delete_old_docs')
