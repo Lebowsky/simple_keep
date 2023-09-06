@@ -1343,6 +1343,77 @@ class ErrorService:
     def clear():
         return get_query_result("DELETE FROM Error_log")
 
+class UniversalCardsService(DbService):
+    def __init__(self):
+        super().__init__()
+        self.table_name: str
+        self.filter_fields = []
+        self.filter_value = ''
+        self.exclude_list = []
+        self.no_label = False
+        self.table_names = self._table_names_dict()
+
+    def get_views_data(self, table_name: str):
+        fields = self._get_fields(table_name)
+        fields_links = {}
+        q_fields = []
+        q_joins = []
+        q_conditions = ['true']
+
+        for field in fields:
+            if field in self.exclude_list:
+                continue
+
+            q_fields.append('{}.{} AS {}'.format(
+                table_name, field, 'key' if field == 'id' else field))
+
+            link_table_name = self.table_names.get(field)
+            if link_table_name:
+                q_fields.append(f'{link_table_name}.name as {link_table_name}_name')
+                q_joins.append('LEFT JOIN {} ON {}.id = {}.{}'.format(
+                    link_table_name, link_table_name, table_name, field
+                ))
+
+                fields_links[field] = f'{link_table_name}_name'
+            else:
+                fields_links[field] = 'key' if field == 'id' else field
+
+        if self.filter_value:
+            q_conditions = [f"{table_name}.{field} LIKE '%{self.filter_value}%'" for field in self.filter_fields]
+
+        q = '''SELECT {} 
+                FROM {}
+                {}
+                WHERE {}
+        '''. format(','.join(q_fields), table_name, ' '.join(q_joins), ' OR '.join(q_conditions))
+
+        return fields_links, self._sql_query(q)
+
+    def _get_fields(self, table_name) -> List[str]:
+        """
+        :param table_name:
+        :return list column names:
+        """
+        q = f'PRAGMA table_info({table_name})'
+        res = self._sql_query(q, table_name=table_name)
+
+        return [row['name'] for row in res]
+
+    def _table_names_dict(self):
+        return {
+            'id_good': 'RS_goods',
+            'type_good': 'RS_types_goods',
+            'unit': 'RS_units',
+            'id_property': 'RS_properties',
+            'id_series': 'RS_series',
+            'id_unit': 'RS_units',
+            'id_countragents': 'RS_countragents',
+            'id_warehouse': 'RS_warehouses',
+            'id_doc': 'RS_docs',
+            'id_cell': 'RS_cells',
+            'id_owner': 'RS_goods',
+            'id_price_types': 'RS_price_types'
+        }
 
 class SqlQueryProvider:
     def __init__(self, table_name='', sql_class=sqlClass(), debug=False):
