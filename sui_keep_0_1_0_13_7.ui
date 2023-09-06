@@ -3788,7 +3788,7 @@
                 "ProcessName": "Универсальный справочник",
                 "PlanFactHeader": "",
                 "DefineOnBackPressed": false,
-                "hidden": false,
+                "hidden": true,
                 "login_screen": false,
                 "SC": false,
                 "Operations": [
