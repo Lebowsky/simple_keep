@@ -20,6 +20,9 @@ class Widget(ABC):
             for key, value in kwargs.items():
                 self.__dict__[key] = value
 
+    def __repr__(self):
+        return f'Widget(type={self.type}, Value={self.Value})'
+
     def to_json(self):
         return json.dumps(self, default=lambda x: vars(x), indent=4)
 

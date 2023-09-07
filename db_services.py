@@ -1,5 +1,6 @@
 import json
-from typing import List
+from datetime import datetime, timedelta, timezone
+from typing import List, Literal
 
 from ru.travelfood.simple_ui import SimpleSQLProvider as sqlClass
 from ui_global import get_query_result, bulk_query
@@ -135,7 +136,7 @@ class BarcodeService(DbService):
                     AND doc_barcodes.Series = {}
                 
             WHERE barcodes.barcode = {}'''.format(
-            id_doc, id_doc, barcode_info.GTIN, barcode_info.Series, search_value)
+            id_doc, id_doc, barcode_info.gtin, barcode_info.serial, search_value)
 
         result = self.provider.sql_query(q)
         if result:
@@ -433,14 +434,43 @@ class DocService:
         return result
 
     def delete_doc(self, id_doc):
-        queryes = (f'DELETE FROM {self.docs_table_name} WHERE id_doc = ?',
-                   'DELETE FROM RS_barc_flow WHERE id_doc = ?',
-                   'DELETE FROM RS_docs_table WHERE id_doc = ?',
-                   'DELETE FROM RS_adr_docs_table WHERE id_doc = ?',
-                   'DELETE FROM RS_docs_series WHERE id_doc = ?')
-
+        queryes = (
+        'DELETE FROM RS_barc_flow WHERE id_doc = ?',
+        'DELETE FROM RS_docs_table WHERE id_doc = ?',
+        'DELETE FROM RS_docs_series WHERE id_doc = ?',
+        f'DELETE FROM {self.docs_table_name} WHERE id_doc = ?',
+        )
         for query in queryes:
             self._get_query_result(query, (id_doc,))
+
+    def delete_adr_doc(self, id_doc):
+        queryes = (
+        'DELETE FROM RS_adr_docs_table WHERE id_doc = ?',
+        'DELETE FROM RS_adr_docs WHERE id_doc = ?',
+        )
+        for query in queryes:
+            self._get_query_result(query, (id_doc,))
+
+    def delete_old_docs(self, days: int):
+        old_docs_ids = self._find_old_docs(days)
+        old_adr_docs_ids = self._find_old_docs(days, 'RS_adr_docs')
+        for id_doc in old_docs_ids:
+            self.delete_doc(id_doc)
+        for id_doc in old_adr_docs_ids:
+            self.delete_adr_doc(id_doc)
+        return old_docs_ids + old_adr_docs_ids
+
+    def _find_old_docs(
+            self,
+            days: int,
+            table: Literal['RS_docs', 'RS_adr_docs'] = 'RS_docs'
+    ) -> List[str]:
+        """Возвращает список id всех устаревших документов"""
+        query = f'''SELECT id_doc FROM {table} WHERE created_at < ?'''
+        current_datetime = datetime.now(tz=timezone.utc)
+        target_time = current_datetime - timedelta(days=days)
+        docs = self._get_query_result(query, (target_time, ))
+        return [doc[0] for doc in docs]
 
     def get_docs_stat(self):
         query = f'''
@@ -1043,15 +1073,6 @@ class SeriesService(DbService):
 
         return True
 
-    def get_doc_attributes(self, id_doc):
-        q = '''
-        
-        '''
-
-    def get_str_attributes(self, id):
-        q = ''''''
-
-
 class AdrDocService(DocService):
     def __init__(self, doc_id='', cur_cell='', table_type='in'):
         self.doc_id = doc_id
@@ -1419,6 +1440,77 @@ class ErrorService:
     def clear():
         return get_query_result("DELETE FROM Error_log")
 
+class UniversalCardsService(DbService):
+    def __init__(self):
+        super().__init__()
+        self.table_name: str
+        self.filter_fields = []
+        self.filter_value = ''
+        self.exclude_list = []
+        self.no_label = False
+        self.table_names = self._table_names_dict()
+
+    def get_views_data(self, table_name: str):
+        fields = self._get_fields(table_name)
+        fields_links = {}
+        q_fields = []
+        q_joins = []
+        q_conditions = ['true']
+
+        for field in fields:
+            if field in self.exclude_list:
+                continue
+
+            q_fields.append('{}.{} AS {}'.format(
+                table_name, field, 'key' if field == 'id' else field))
+
+            link_table_name = self.table_names.get(field)
+            if link_table_name:
+                q_fields.append(f'{link_table_name}.name as {link_table_name}_name')
+                q_joins.append('LEFT JOIN {} ON {}.id = {}.{}'.format(
+                    link_table_name, link_table_name, table_name, field
+                ))
+
+                fields_links[field] = f'{link_table_name}_name'
+            else:
+                fields_links[field] = 'key' if field == 'id' else field
+
+        if self.filter_value:
+            q_conditions = [f"{table_name}.{field} LIKE '%{self.filter_value}%'" for field in self.filter_fields]
+
+        q = '''SELECT {} 
+                FROM {}
+                {}
+                WHERE {}
+        '''. format(','.join(q_fields), table_name, ' '.join(q_joins), ' OR '.join(q_conditions))
+
+        return fields_links, self._sql_query(q)
+
+    def _get_fields(self, table_name) -> List[str]:
+        """
+        :param table_name:
+        :return list column names:
+        """
+        q = f'PRAGMA table_info({table_name})'
+        res = self._sql_query(q, table_name=table_name)
+
+        return [row['name'] for row in res]
+
+    def _table_names_dict(self):
+        return {
+            'id_good': 'RS_goods',
+            'type_good': 'RS_types_goods',
+            'unit': 'RS_units',
+            'id_property': 'RS_properties',
+            'id_series': 'RS_series',
+            'id_unit': 'RS_units',
+            'id_countragents': 'RS_countragents',
+            'id_warehouse': 'RS_warehouses',
+            'id_doc': 'RS_docs',
+            'id_cell': 'RS_cells',
+            'id_owner': 'RS_goods',
+            'id_price_types': 'RS_price_types'
+        }
 
 class SqlQueryProvider:
     def __init__(self, table_name='', sql_class=sqlClass(), debug=False):

@@ -1,26 +1,29 @@
-import base64
-import json
-import os
-import time
 from abc import ABC, abstractmethod
-from datetime import datetime
+import json
+import base64
 from json.decoder import JSONDecodeError
+import os
 from pathlib import Path
+import time
+from datetime import datetime
 from typing import Dict, List, Optional
 
 import db_services
 import hs_services
 import printing_factory
-import ui_global
-# from PIL import Image
-import widgets
-from db_services import DocService, ErrorService, GoodsService, BarcodeService, AdrDocService, TimerService
-from hs_services import HsService
-# import http_exchange
-from http_exchange import post_changes_to_server
-from ru.travelfood.simple_ui import SimpleUtilites as suClass
-from tiny_db_services import ScanningQueueService
 from ui_utils import HashMap, RsDoc, BarcodeWorker, get_ip_address
+from db_services import (DocService, ErrorService, GoodsService, BarcodeService, AdrDocService, TimerService,
+                         UniversalCardsService)
+from tiny_db_services import ScanningQueueService, TinyNoSQLProvider
+from hs_services import HsService
+from ru.travelfood.simple_ui import SimpleUtilites as suClass
+
+#import http_exchange
+from http_exchange import post_changes_to_server
+#from PIL import Image
+import widgets
+import ui_global
+import base64
 
 
 class Screen(ABC):
@@ -1525,7 +1528,7 @@ class AdrDocsListScreen(DocsListScreen):
     def _doc_delete(self, id_doc):
         result = True
         try:
-            self.service.delete_doc(id_doc)
+            self.service.delete_adr_doc(id_doc)
         except Exception as e:
             self.hash_map.error_log(e.args[0])
             result = False
@@ -1634,7 +1637,7 @@ class DocDetailsScreen(Screen):
         self.id_doc = self.hash_map['id_doc']
         self.service = DocService(self.id_doc)
         self.items_on_page = 20
-        # self.queue_service = ScanningQueueService()
+        self.queue_service = ScanningQueueService()
 
     def on_start(self) -> None:
         pass
@@ -5310,6 +5313,7 @@ class SettingsScreen(Screen):
             'btn_http_settings': lambda: self._show_screen('Настройки http соединения'),
             'btn_size': lambda: self._show_screen('Настройки Шрифтов'),
             'btn_sound_settings': lambda: self._show_screen('Настройка звука'),
+            'btn_documents_settings': lambda: self._show_screen('Настройки документов'),
             'btn_test_barcode': lambda: self._show_screen('Тест сканера'),
             'btn_err_log': lambda: self._show_screen('Ошибки'),
             'btn_upload_docs': self._upload_docs,
@@ -5718,6 +5722,63 @@ class SoundSettings(Screen):
         layout_listener = self.hash_map.get('layout_listener')
         current_key = self.hash_map.get_json("card_data")['key']
         self.hash_map.put(f'current_{current_key}_signal', layout_listener)
+
+
+class DocumentsSettings(Screen):
+    screen_name = 'Настройки документов'
+    process_name = 'Параметры'
+
+    def __init__(self, hash_map: HashMap, rs_settings):
+        super().__init__(hash_map, rs_settings)
+
+    def on_start(self):
+        if not self.hash_map.containsKey('doc_settings_on_start'):
+            self.hash_map.put('doc_settings_on_start', 'true')
+            self._init_old_doc_delete_settings()
+
+    def on_input(self):
+        if self.listener == 'save_btn':
+            del_docs_flag = self.hash_map.get('doc_settings_confirm_delete_old_docs')
+            del_docs_flag = True if del_docs_flag == 'true' else False
+            if not del_docs_flag:
+                self.rs_settings.put('delete_old_docs', False, True)
+                self.rs_settings.delete('doc_delete_settings_days')
+            else:
+                days = self.hash_map.get('doc_delete_settings_days')
+                if not days or days == '0' or not days.isdigit():
+                    self.hash_map.playsound('error')
+                    self.hash_map.toast('Укажите корректное количество дней'
+                                        ' для настройки удаления старых документов')
+                    return
+                if days >= '9999':
+                    self.hash_map.playsound('error')
+                    self.hash_map.toast('Количество дней превышает 9999')
+                    return
+                self.rs_settings.put('delete_old_docs', True, True)
+                self.rs_settings.put('doc_delete_settings_days', days, True)
+
+            self.hash_map.toast('Настройки сохранены')
+            self.hash_map.delete('doc_settings_on_start')
+            self.hash_map.show_screen('Настройки и обмен')
+
+        elif self.listener == 'ON_BACK_PRESSED':
+            self.hash_map.delete('doc_settings_on_start')
+            self.hash_map.show_screen('Настройки и обмен')
+
+    def on_post_start(self):
+        pass
+
+    def show(self, args=None):
+        pass
+
+    def _init_old_doc_delete_settings(self):
+        current_days_value = self.rs_settings.get('doc_delete_settings_days')
+        init_days = str(current_days_value) if current_days_value is not None else '1'
+        self.hash_map.put('doc_delete_settings_days', init_days)
+
+        flag = self.rs_settings.get('delete_old_docs')
+        init_flag = str(flag).lower() if flag is not None else 'false'
+        self.hash_map.put('doc_settings_confirm_delete_old_docs', init_flag)
 
 
 class ErrorLogScreen(Screen):
@@ -6154,6 +6215,11 @@ class MainEvents:
             self.rs_settings.put('Release', current_release, True)
             toast = f'Выполнено обновление на версию {current_release}'
 
+        if self.rs_settings.get('delete_old_docs') is True:
+            deleted_docs = self._delete_old_docs()
+            if deleted_docs:
+                toast += f'\nУдалены документы: {deleted_docs}'
+
         rs_default_settings = {
             'TitleTextSize': 18,
             'titleDocTypeCardTextSize': 18,
@@ -6177,7 +6243,8 @@ class MainEvents:
             'sqlite_name': 'SimpleKeep',
             'log_name': 'log.json',
             'timer_is_disabled': False,
-            'allow_fact_input': False
+            'allow_fact_input': False,
+            'delete_old_docs': False
         }
 
         if os.path.exists('//data/data/ru.travelfood.simple_ui/databases/'):  # локально
@@ -6202,8 +6269,135 @@ class MainEvents:
         service = db_services.DbCreator()
         service.create_tables()
 
+    def _delete_old_docs(self):
+        days = self.rs_settings.get('doc_delete_settings_days')
+        service = db_services.DocService()
+        return service.delete_old_docs(days)
+
 
 # ^^^^^^^^^^^^^^^^^^^^^ Main events ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+# ==================== Universal cards =============================
+
+class UniversalCardsScreen(Screen):
+    def __init__(self, hash_map:HashMap, rs_settings):
+        super().__init__(hash_map, rs_settings)
+
+        self.card_text_size = 24
+        self.fields_aliases = self._get_fields_aliases()
+        self.screen_values = {
+            'table_for_select': hash_map['table_for_select'],
+        }
+        self.table_name = self.screen_values['table_for_select']
+        self.table_name = 'RS_goods'
+
+    def on_start(self):
+        filter_value = self.hash_map['SearchString']
+        if filter_value:
+            filter_fields = (self.hash_map['filter_fields'] or '').split(';')
+        else:
+            filter_fields = []
+
+        self.hash_map['cards'] = self._get_table_cards().to_json()
+
+    def on_input(self):
+        pass
+
+    def on_post_start(self):
+        pass
+
+    def show(self, args=None):
+        self._validate_screen_values()
+        self.hash_map.show_screen(self.screen_name, args)
+
+    def _get_table_cards(self):
+        service = UniversalCardsService()
+        fields, views_data = service.get_views_data(self.table_name)
+        return self._get_cards_view(fields, views_data)
+
+    def _get_field_view(self, field, value):
+        aliases = self.fields_aliases.get(field)
+
+        view = widgets.TextView(
+            Value=f'@{value}',
+        )
+        if aliases:
+            view = widgets.TextView(
+                Value=f'@{value}',
+                TextSize=self.rs_settings.get(aliases['TextSize']) or self.card_text_size,
+                TextBold=aliases['TextBold'],
+            )
+        return view
+
+    def _get_card_view(self, fields):
+        card_fields = []
+        for field, link in fields.items():
+            card_fields.append(self._get_field_view(field, link))
+
+        return card_fields
+
+    def _get_cards_view(self, fields, cards_data):
+        card_view = self._get_card_view(fields)
+        cards_view = widgets.CustomCards(
+            widgets.LinearLayout(
+                widgets.LinearLayout(
+                    widgets.LinearLayout(
+                        *card_view,
+                        width='match_parent',
+                        weight=1
+                    ),
+                    height='match_parent',
+                    width='match_parent',
+                    orientation='horizontal'
+                ),
+                height='match_parent',
+                width='match_parent'
+            ),
+            options=widgets.Options(override_search=True).options,
+            cardsdata=cards_data
+        )
+
+        return cards_view
+    def _get_fields_aliases(self):
+        return {
+            'id_good':{'name':'Номенклатура', 'TextSize':'TitleTextSize', "TextBold": True},
+            'type_good': {'name':'Тип номенклатуры', 'TextSize':'CardTextSize', "TextBold": False},
+            'unit':{'name': 'Единица измерения', 'TextSize':'CardTextSize', "TextBold": False},
+            'id_property':{'name': 'Характеристика', 'TextSize':'CardTextSize', "TextBold": False},
+            'id_series': {'name':'Серия', 'TextSize':'CardTextSize', "TextBold": False},
+            'id_unit':{'name': 'Единица измерения', 'TextSize':'CardTextSize', "TextBold": False},
+            'id_countragents':{'name': 'Контрагент', 'TextSize':'CardTextSize', "TextBold": False},
+            'id_warehouse':{'name': 'Склад', 'TextSize':'CardTextSize', "TextBold": False},
+            'id_doc':{'name': 'Номенклатура', 'TextSize':'TitleTextSize', "TextBold": True},
+            'id_cell':{'name': 'Ячейка', 'TextSize':'CardTextSize', "TextBold": False},
+            'id':{'name': 'key', 'TextSize':'CardTextSize', "TextBold": False},
+            'name':{'name': 'Наименование', 'TextSize':'TitleTextSize', "TextBold": True},
+            'code':{'name': 'Код', 'TextSize':'CardTextSize', "TextBold": False},
+            'art':{'name': 'Артикул', 'TextSize':'CardTextSize', "TextBold": False},
+            'description':{'name': 'Описание', 'TextSize':'CardDateTextSize', "TextBold": False},
+            'qtty':{'name': 'Количество', 'TextSize':'CardTextSize', "TextBold": True},
+            'qtty_plan':{'name': 'Количество план', 'TextSize':'CardTextSize', "TextBold": True},
+            'barcode':{'name': 'Штрихкод', 'TextSize':'CardTextSize', "TextBold": False},
+            'full_name':{'name': 'Полное наименование', 'TextSize':'CardTextSize', "TextBold": False},
+            'inn':{'name': 'ИНН', 'TextSize':'TitleTextSize', "TextBold": False},
+            'kpp':{'name': 'КПП', 'TextSize':'TitleTextSize', "TextBold": False},
+            'mark_code':{'name': 'Штрихкод', 'TextSize':'CardTextSize', "TextBold": False},
+            'id_price_types':{'name': 'Тип цены', 'TextSize':'TitleTextSize', "TextBold": False},
+            'price':{'name': 'Цена', 'TextSize':'TitleTextSize', "TextBold": True},
+            'id_owner':{'name': 'Владелец', 'TextSize':'CardTextSize', "TextBold": False},
+            'best_before':{'name': 'Годен до:', 'TextSize':'CardTextSize', "TextBold": False},
+            'number':{'name':'Номер', 'TextSize':'CardTextSize', "TextBold": False},
+            'production_date':{'name':'Дата производства', 'TextSize':'CardTextSize', "TextBold": False},
+            'use_mark':{'name':'Использовать маркировку', 'TextSize':'CardTextSize', "TextBold": False},
+            'nominator':{'name':'Номинатор', 'TextSize':'CardTextSize', "TextBold": True},
+            'denominator':{'name':'Деноминатор', 'TextSize':'CardTextSize', "TextBold": True},
+            'log': {'name': 'Ошибка', 'TextSize': 'CardTextSize', "TextBold": False}
+            }
+
+        return list
+
+
+# ^^^^^^^^^^^^^^^^^^^^^ Universal cards ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 class ScreensFactory:
     screens = [GoodsSelectScreen,
