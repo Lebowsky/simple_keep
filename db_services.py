@@ -440,6 +440,7 @@ class DocService:
         'DELETE FROM RS_barc_flow WHERE id_doc = ?',
         'DELETE FROM RS_docs_table WHERE id_doc = ?',
         'DELETE FROM RS_docs_series WHERE id_doc = ?',
+        'DELETE FROM RS_docs_barcodes WHERE id_doc = ?',
         f'DELETE FROM {self.docs_table_name} WHERE id_doc = ?',
         )
         for query in queryes:
@@ -453,7 +454,7 @@ class DocService:
         for query in queryes:
             self._get_query_result(query, (id_doc,))
 
-    def delete_old_docs(self, days: int):
+    def delete_old_docs(self, days: int) -> list:
         old_docs_ids = self._find_old_docs(days)
         old_adr_docs_ids = self._find_old_docs(days, 'RS_adr_docs')
         for id_doc in old_docs_ids:

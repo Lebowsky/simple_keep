@@ -6162,7 +6162,9 @@ class MainEvents:
         if self.rs_settings.get('delete_old_docs') is True:
             deleted_docs = self._delete_old_docs()
             if deleted_docs:
-                toast += f'\nУдалены документы: {deleted_docs}'
+                self.hash_map.notification(
+                    text=f'Удалены документы: ({len(deleted_docs)})',
+                    title='Очистка не актуальных данных')
 
         rs_default_settings = {
             'TitleTextSize': 18,
@@ -6213,8 +6215,8 @@ class MainEvents:
         service = db_services.DbCreator()
         service.create_tables()
 
-    def _delete_old_docs(self):
-        days = self.rs_settings.get('doc_delete_settings_days')
+    def _delete_old_docs(self) -> list:
+        days = int(self.rs_settings.get('doc_delete_settings_days'))
         service = db_services.DocService()
         return service.delete_old_docs(days)
 
