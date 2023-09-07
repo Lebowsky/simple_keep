@@ -3254,12 +3254,19 @@ class GoodsSelectScreen(DocDetailsScreen):
         table_data = self._prepare_table_data(doc_data)
         table_view = self._get_doc_table_view(table_data=table_data)
         self.hash_map.put("doc_data", table_view.to_json())
-
         self.hash_map.put('doc_rows', doc_rows)
-        current_str = self.hash_map.get('selected_card_position')
+
+        #current_str = self.hash_map.get('selected_card_position')
+        #self.hash_map.put('good_str', f'{current_str} / {doc_rows}')
+
+        current_str = int(self.hash_map.get('selected_card_position'))
+        self.hash_map.toast(current_str)
+        current_page = int(self.hash_map.get('current_page'))
+        items_on_page = self.items_on_page # из родительского класса
+        #selected_card_position = int(self.hash_map.get('selected_card_position'))
+        doc_position = (current_page - 1) * items_on_page + current_str
         self.hash_map.put('good_str', f'{current_str} / {doc_rows}')
-        # self.hash_map.put('doc_data', doc_data)
-        # self.hash_map.put('test_view', self.rs_settings)
+        self.hash_map.put('selected_card_position', doc_position)
 
         if not self.hash_map.get('qtty'):
             self.hash_map.put('qtty', '0')
@@ -3342,45 +3349,24 @@ class GoodsSelectScreen(DocDetailsScreen):
         elif listener == 'barcode':
             barcode = self.hash_map.get('barcode_good_select')
             allowed_fact_input = self.rs_settings.get('allow_fact_input')
-            if barcode != '' and allowed_fact_input:
-                id_good = self.hash_map.get('id_good')
-                id_property = self.hash_map.get('id_property')
-                id_unit = self.hash_map.get('id_unit')
-                
-                q = 'SELECT * FROM RS_barcodes WHERE barcode=?'
-                res = self.sql_service.sql_query(q, f'{barcode}') 
 
-                if res:
-                    id_good_br = res[0]['id_good']
-                    id_property_br = res[0]['id_property']
-                    id_unit_br = res[0]['id_unit']
-                    ratio = int(res[0]['ratio'])
-                    
-                    if id_good != id_good_br:
-                        doc_goods_table = self.hash_map.get_json('doc_data') 	
-                        table_data = doc_goods_table['customtable']['tabledata']
-                        for i in range(1, len(table_data)):
-                            if table_data[i]['id_good'] == id_good_br and \
-                                table_data[i]['id_properties'] == id_property_br and \
-                                table_data[i]['id_unit'] == id_unit_br:
-                                self._goods_selector("index", index = i)
-                                self._set_delta(ratio)
-                                id_property = self.hash_map.get('id_property')
-                                id_unit = self.hash_map.get('id_unit')
-                                break
-                    else: 
-                        if id_property == id_property_br and id_unit == id_unit_br:                     
-                            self._set_delta(int(res[0]['ratio']))
-                        else:
-                            self.hash_map.show_dialog(
-                                listener='barcode_not_found',
-                                title='Штрихкод не найден в документе!'
-                    )    
-                else:
-                    self.hash_map.show_dialog(
-                        listener='barcode_not_found',
-                        title='Штрихкод не найден в документе!'
-                    )
+            if not (barcode and allowed_fact_input):
+                self.hash_map.toast('Штрихкод не найден в документе!') # пока тост, модалка очищает дельту
+                # self.hash_map.show_dialog(listener='barcode_not_found', title='Штрихкод не найден в документе!')
+                return
+
+            id_good = self.hash_map.get('id_good')
+            id_property = self.hash_map.get('id_property')
+            id_unit = self.hash_map.get('id_unit')
+
+            query = 'SELECT * FROM RS_barcodes WHERE barcode=?'
+            res = self.sql_service.sql_query(query, barcode)
+
+            if res and self._handle_found_barcode(res, id_good, id_property, id_unit):
+                return
+            
+            self.hash_map.toast('Штрихкод не найден в документе!') # пока тост, модалка очищает дельту
+            #self.hash_map.show_dialog(listener='barcode_not_found', title='Штрихкод не найден в документе!')
                 
         elif listener == "CardsClick":
             current_elem = self.hash_map.get_json('selected_card_data')
@@ -3443,14 +3429,10 @@ class GoodsSelectScreen(DocDetailsScreen):
             data_for_printing=param_list)
         
     def _goods_selector(self, action, index = None):
-        #self.id_doc = self.hash_map['id_doc']
-        #self.service = DocService(self.id_doc)
         selected_card_position = int(self.hash_map.get('selected_card_position'))
         table_lines_qtty = int(self.hash_map.get('doc_rows'))
-        #doc_goods_table = self.hash_map.get_json('doc_goods_table') 
         doc_goods_table = self.hash_map.get_json('doc_data') 	
-        table_data = doc_goods_table['customtable']['tabledata'] # self.hash_map.get_json('doc_data') #
-        #self.hash_map.toast(len(self.hash_map.get('doc_goods_table')))
+        table_data = doc_goods_table['customtable']['tabledata'] 
                 
         if action == 'next': 
             if selected_card_position != table_lines_qtty:
@@ -3504,6 +3486,37 @@ class GoodsSelectScreen(DocDetailsScreen):
         none_list = [None, 'None']
         for key in keys:
             data[key] = default if data[key] in none_list else data[key]
+
+    def _match_record(self, record, id_good, id_property, id_unit):
+        return (record['id_good'] == id_good and
+                record['id_properties'] == id_property and
+                record['id_unit'] == id_unit)
+
+    def _find_matching_good(self, table_data, id_good, id_property, id_unit):
+        for i, record in enumerate(table_data[1:], start=1):
+            if self._match_record(record, id_good, id_property, id_unit):
+                return i
+        return None
+
+    def _handle_found_barcode(self, res, id_good, id_property, id_unit):
+        result = res[0]
+        id_good_br, id_property_br, id_unit_br, ratio = result['id_good'], result['id_property'], result['id_unit'], int(result['ratio'])
+
+        if id_good == id_good_br and id_property == id_property_br and id_unit == id_unit_br:
+            self._set_delta(ratio)
+            return True
+
+        if id_good != id_good_br:
+            doc_goods_table = self.hash_map.get_json('doc_data')
+            table_data = doc_goods_table['customtable']['tabledata']
+            match_index = self._find_matching_good(table_data, id_good_br, id_property_br, id_unit_br)
+            
+            if match_index is not None:
+                self._goods_selector("index", index=match_index)
+                self._set_delta(ratio)
+                return True
+
+        return False
 
 class AdrGoodsSelectScreen(GoodsSelectScreen):
     def __init__(self, hash_map: HashMap, rs_settings):

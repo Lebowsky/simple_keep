@@ -456,19 +456,6 @@
                                         "type": "TextView"
                                     },
                                     {
-                                        "Value": "@test_view",
-                                        "Variable": "",
-                                        "height": "wrap_content",
-                                        "width": "wrap_content",
-                                        "orientation": "",
-                                        "weight": "",
-                                        "TextBold": false,
-                                        "TextItalic": false,
-                                        "TextSize": "",
-                                        "TextColor": "",
-                                        "type": "TextView"
-                                    },
-                                    {
                                         "type": "LinearLayout",
                                         "Variable": "",
                                         "orientation": "vertical",
@@ -2514,66 +2501,16 @@
                                         "type": "TextView"
                                     },
                                     {
-                                        "type": "LinearLayout",
+                                        "Value": "@Good",
                                         "Variable": "",
-                                        "orientation": "",
                                         "height": "wrap_content",
-                                        "width": "match_parent",
+                                        "width": "wrap_content",
                                         "weight": "0",
-                                        "Elements": [
-                                            {
-                                                "Value": "<",
-                                                "Variable": "btn_previous_good",
-                                                "height": "wrap_content",
-                                                "width": "match_parent",
-                                                "weight": "4",
-                                                "TextBold": true,
-                                                "TextItalic": false,
-                                                "TextSize": "21",
-                                                "type": "Button"
-                                            },
-                                            {
-                                                "type": "LinearLayout",
-                                                "Variable": "",
-                                                "orientation": "horizontal",
-                                                "height": "wrap_content",
-                                                "width": "wrap_content",
-                                                "weight": "1",
-                                                "Elements": [
-                                                    {
-                                                        "Value": "@Good",
-                                                        "Variable": "",
-                                                        "height": "wrap_content",
-                                                        "width": "wrap_content",
-                                                        "weight": "0",
-                                                        "TextBold": true,
-                                                        "TextItalic": false,
-                                                        "TextSize": "24",
-                                                        "TextColor": "#7A005C",
-                                                        "type": "TextView"
-                                                    }
-                                                ],
-                                                "BackgroundColor": "",
-                                                "StrokeWidth": "",
-                                                "Padding": ""
-                                            },
-                                            {
-                                                "Value": ">",
-                                                "Variable": "btn_next_good",
-                                                "height": "wrap_content",
-                                                "width": "match_parent",
-                                                "orientation": "",
-                                                "weight": "4",
-                                                "TextBold": true,
-                                                "TextItalic": false,
-                                                "TextSize": "21",
-                                                "TextColor": "",
-                                                "type": "Button"
-                                            }
-                                        ],
-                                        "BackgroundColor": "",
-                                        "StrokeWidth": "",
-                                        "Padding": ""
+                                        "TextBold": true,
+                                        "TextItalic": false,
+                                        "TextSize": "24",
+                                        "TextColor": "#7A005C",
+                                        "type": "TextView"
                                     },
                                     {
                                         "type": "LinearLayout",
@@ -2976,6 +2913,12 @@
                                         "type": "CardsLayout"
                                     }
                                 ]
+                            },
+                            {
+                                "type": "barcode",
+                                "Value": "",
+                                "Variable": "good_barcode",
+                                "style_name": ""
                             }
                         ],
                         "Handlers": [
