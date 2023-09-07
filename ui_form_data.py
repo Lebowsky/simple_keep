@@ -1430,7 +1430,7 @@ def get_plan_good_from_doc():
     return '''
 
     SELECT ifnull(qtty_plan,0) as qtty_plan,
-    ifnull(qtty,0) as qtty, id_good, use_series
+    ifnull(qtty,0) as qtty, id_good, use_series, id
     FROM RS_docs_table
     WHERE 
     id_doc = :idDoc 
@@ -1439,25 +1439,6 @@ def get_plan_good_from_doc():
     AND id_series = :id_series
     --AND id_unit = :id_unit
     '''
-
-
-#      s =    '''
-#    with tmp as (
-#     SELECT ifnull(qtty_plan,0) as qtty_plan,
-#     ifnull(qtty,0) as qtty, id_good
-#     FROM RS_docs_table
-#     WHERE
-#     id_doc = :idDoc
-#     AND id_good = :id_good
-#     AND id_properties = :id_properties
-#  --   AND id_series = :id_series
-#  --   AND id_unit = :id_unit
-#     )
-#
-# Select sum(qtty_plan-qtty) as conformity from tmp
-#
-#
-#     '''
 
 def get_qtty_add_mark_text():
     return '''

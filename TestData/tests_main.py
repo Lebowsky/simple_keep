@@ -32,7 +32,7 @@ rs_default_settings = {
     'path': '',
     'delete_files': 'false',
     'allow_overscan': 'false',
-    'path_to_databases': '//data/data/ru.travelfood.simple_ui/databases',
+    'path_to_databases': '.\TestData',
     'sqlite_name': 'SimpleKeep',
     'log_name': 'log.json',
     'timer_is_disabled': False,

@@ -1,27 +1,26 @@
-from abc import ABC, abstractmethod
+import base64
 import json
-from json.decoder import JSONDecodeError
 import os
-from pathlib import Path
 import time
+from abc import ABC, abstractmethod
 from datetime import datetime
+from json.decoder import JSONDecodeError
+from pathlib import Path
 from typing import Dict, List, Optional
 
 import db_services
 import hs_services
 import printing_factory
-from ui_utils import HashMap, RsDoc, BarcodeWorker, get_ip_address
-from db_services import DocService, ErrorService, GoodsService, BarcodeService, AdrDocService, TimerService
-from tiny_db_services import ScanningQueueService, TinyNoSQLProvider
-from hs_services import HsService
-from ru.travelfood.simple_ui import SimpleUtilites as suClass
-
-#import http_exchange
-from http_exchange import post_changes_to_server
-#from PIL import Image
-import widgets
 import ui_global
-import base64
+# from PIL import Image
+import widgets
+from db_services import DocService, ErrorService, GoodsService, BarcodeService, AdrDocService, TimerService
+from hs_services import HsService
+# import http_exchange
+from http_exchange import post_changes_to_server
+from ru.travelfood.simple_ui import SimpleUtilites as suClass
+from tiny_db_services import ScanningQueueService
+from ui_utils import HashMap, RsDoc, BarcodeWorker, get_ip_address
 
 
 class Screen(ABC):
@@ -211,10 +210,10 @@ class HtmlView(Screen):
 
             jlist = json.loads(self.hash_map.get("matching_table"))
             current_table = jlist['customtable']['tabledata']
-            current_table.__delitem__(0)
+            current_table.pop(0)
             for el in current_table:
                 if el.get('key'):
-                    el.__delitem__('_layout')
+                    el.pop('_layout')
 
             settings_for_wrote = {'full_path' : self.params.get('full_path'),
             'file_name' : self.params.get('file_name'),
@@ -1635,7 +1634,7 @@ class DocDetailsScreen(Screen):
         self.id_doc = self.hash_map['id_doc']
         self.service = DocService(self.id_doc)
         self.items_on_page = 20
-        self.queue_service = ScanningQueueService()
+        # self.queue_service = ScanningQueueService()
 
     def on_start(self) -> None:
         pass
@@ -1763,7 +1762,8 @@ class DocDetailsScreen(Screen):
                     title='Количество план в документе превышено')
 
             elif res['Error'] == 'Must_use_series':
-                self.open_series_screen(id_doc, res['current_elem'])
+                self.open_series_screen(id_doc, res)
+                return res
 
             elif res['Error'] == 'Zero_plan_error':
                 self.hash_map.toast(res['Descr'])
@@ -2030,9 +2030,13 @@ class DocDetailsScreen(Screen):
     def open_series_screen(self, id_doc, current_elem):
         current_elem['id_doc'] = id_doc
         current_elem['warehouse'] = self.hash_map.get('warehouse')
-        params_for_series_screen = json.dumps(current_elem)
+
+        params_for_series_screen = json.dumps(current_elem['current_elem']
+                                              if current_elem.get('current_elem') else current_elem)
         self.hash_map['params_for_series_screen'] = params_for_series_screen
-        self.hash_map.show_process_result(SeriesList.process_name, SeriesList.screen_name)
+        # self.hash_map.show_process_result(SeriesList.process_name, SeriesList.screen_name)
+        self.hash_map['back_screen'] = self.hash_map.get_current_screen()
+        self.hash_map.show_screen(SeriesList.screen_name)
 
     class TextView(widgets.TextView):
         def __init__(self, value):
@@ -2408,6 +2412,7 @@ class DocumentsDocDetailScreen(DocDetailsScreen):
             # ----------- Блок работы с сериями товара. Если строка документа должна хранить серии
             # ВАЖНО! Заменяет экран товара по умолчанию
             if current_elem['use_series'] == '1':
+                current_elem['id'] = current_elem['key']
                 self.open_series_screen(id_doc, current_elem)
                 return
 
@@ -2465,7 +2470,8 @@ class DocumentsDocDetailScreen(DocDetailsScreen):
 
         elif listener == 'barcode' or self._is_result_positive('ВвестиШтрихкод'):
             res = self._barcode_scanned()
-
+            if res.get('Error') and res['Error'] == 'Must_use_series':
+                return
             if res.get('key'):
                 self.service.update_rs_docs_table_sent_status(res.get('key'))
                 self.service.set_doc_status_to_upload(id_doc)
@@ -2654,7 +2660,7 @@ class AdrDocDetailsScreen(DocDetailsScreen):
             # self.service.update_rs_docs_table_sent_status(res.get('key'))
             self.service.set_doc_status_to_upload(self.id_doc)
 
-            if res == None:
+            if res is None:
                 self.hash_map.put('scanned_barcode', barcode)
                 # suClass.urovo_set_lock_trigger(True)
                 self.hash_map.playsound('error')
@@ -3018,6 +3024,19 @@ class AdrDocDetailsScreen(DocDetailsScreen):
                 #            doc_detail_list['customcards']['cardsdata'].append(product_row)
                 cards.customcards['cardsdata'].append(product_row)
 
+    def open_series_screen(self, id_doc, current_elem):
+        current_elem['id_doc'] = id_doc
+        current_elem['warehouse'] = self.hash_map.get('warehouse')
+        current_elem['doc_basic_handler_name'] = 'RS_adr_docs'
+        current_elem['doc_basic_table_name'] = 'RS_adr_docs_table'
+
+        params_for_series_screen = json.dumps(current_elem['current_elem']
+                                              if current_elem.get('current_elem') else current_elem)
+        self.hash_map['params_for_series_screen'] = params_for_series_screen
+        # self.hash_map.show_process_result(SeriesList.process_name, SeriesList.screen_name)
+        self.hash_map['back_screen'] = self.hash_map.get_current_screen()
+        self.hash_map.show_screen(SeriesList.screen_name)
+
 
 class FlowDocDetailsScreen(DocDetailsScreen):
     screen_name = 'ПотокШтрихкодовДокумента'
@@ -3355,7 +3374,9 @@ class GoodsSelectScreen(Screen):
             self.hash_map.show_screen("ТоварШтрихкоды")
 
         elif listener == 'btn_series_show':
-            pass
+            current_elem = self.hash_map.get_json('selected_card_data')
+            self.hash_map['back_screen'] = self.hash_map.get_current_screen()
+            self.open_series_screen('', current_elem)
 
     def on_post_start(self):
         pass
@@ -3410,11 +3431,23 @@ class GoodsSelectScreen(Screen):
             self.printing_template_name,
             data_for_printing=param_list)
 
+    def open_series_screen(self, id_doc, current_elem):
+        current_elem['id'] = current_elem.get('key')
+        current_elem['id_doc'] = id_doc
+        current_elem['warehouse'] = self.hash_map.get('warehouse')
+
+        params_for_series_screen = json.dumps(current_elem['current_elem']
+                                              if current_elem.get('current_elem') else current_elem)
+        self.hash_map['params_for_series_screen'] = params_for_series_screen
+        # self.hash_map.show_process_result(SeriesList.process_name, SeriesList.screen_name)
+        self.hash_map.show_screen(SeriesList.screen_name)
+
 
 class AdrGoodsSelectScreen(GoodsSelectScreen):
     def __init__(self, hash_map: HashMap, rs_settings):
         super().__init__(hash_map, rs_settings)
         self.service = AdrDocService()
+
 
 class GoodBarcodeRegister(Screen):
     screen_name = 'ТоварШтрихкоды'
@@ -5022,23 +5055,37 @@ class ItemGoodSelectUnit(DocGoodSelectUnit):
 class SeriesList(Screen):
     process_name = 'Серии'
     screen_name = 'Выбор серии'
+    doc_basic_table_name = 'RS_docs_table'
+    doc_basic_handler_name = 'RS_docs'
+    id: str = None
 
     def __init__(self, hash_map: HashMap, rs_settings):
         super().__init__(hash_map, rs_settings)
+
+        list_of_params = ['id_doc', 'Doc_data', 'code_art', 'properties_name',
+                          'price', 'units_name', 'good_name', 'qtty_plan', 'qtty']
         str_params = self.hash_map.get('params_for_series_screen')
         if str_params:
             self.params = json.loads(str_params)
-
-
+            self.doc_basic_table_name = self.params['doc_basic_table_name'] if self.params.get(
+                'doc_basic_table_name') else 'RS_docs_table'
+            self.doc_basic_handler_name = self.params['doc_basic_handler_name'] if self.params.get(
+                'doc_basic_handler_name') else 'RS_docs'
         else:
             self.params = {}
+
         self.service = db_services.SeriesService(self.params)
         self.popup_menu_data = 'Удалить;Изменить'
+        res = self.service.get_series_prop_by_id(self.params['id'], self.doc_basic_table_name)
+        self.params.update(res)
 
-        if self.params.get('warehouse'):
-            self.params['id_warehouse'] = self.service.get_item_by_name(self.params['warehouse'], 'RS_warehouses')
+        res = self.service.get_doc_prop_by_id(self.params['id_doc'], self.doc_basic_handler_name)
+        self.params.update(res)
 
     def on_start(self):
+        # Сохраним текущий hash_map чтобы вернуть его при выходе
+        # self.rs_settings.put('_stored_hash_', json.dumps(self.hash_map.export()), True)
+
         for key in self.params.keys():
             self.hash_map[key] = self.params[key]
 
@@ -5057,27 +5104,34 @@ class SeriesList(Screen):
         listener = self.listener
         if listener == "CardsClick":
             self.hash_map.put('current_series_id', self.hash_map.get("selected_card_key"))
-
+            #self.update_hash_map_keys()
             self.hash_map.put('barcode', '')
 
             self.hash_map.show_screen("Заполнение серии", self.params)
         elif listener == "ON_BACK_PRESSED":
             real_qtty = self.service.get_total_qtty()
             self.service.set_total_qtty(real_qtty)
-            self.hash_map.put("FinishProcess", "")
+            # self.hash_map.importing(json.loads(self.rs_settings.get('_stored_hash')))
+            # self.hash_map.put("FinishProcess", "")
+            self.hash_map.show_screen(self.hash_map.get('back_screen'))
         elif listener == 'barcode':
             self._identify_add_barcode_series()
         elif self.listener == 'LayoutAction':
             self._layout_action()
 
+    def update_hash_map_keys(self):
+        params = self.params
+        exclude_keys = ('hash_map', 'screen_values', 'rs_settings')
+        for key in params.keys():
+            if key in exclude_keys:
+                continue
+            self.hash_map[key] = self.params[key]
 
     def on_post_start(self):
         pass
 
     def show(self, args=None):
         pass
-
-
 
     def _get_doc_cards_view(self, table_data):
 
@@ -5188,7 +5242,7 @@ class SeriesItem(SeriesList):
 
 
     def on_start(self):
-        prop_list = self.service.get_series_prop_by_id(self.hash_map.get('current_series_id'))
+        prop_list = self.service.get_series_table_str(self.hash_map.get('current_series_id'))
         for key, value in prop_list.items():
             if value:
                 self.hash_map.put(key, value)
