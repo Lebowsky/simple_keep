@@ -600,6 +600,16 @@ def file_browser_on_input(hash_map):
     screen: ui_models.SimpleFileBrowser = ui_models.SimpleFileBrowser(hash_map, rs_settings)
     screen.on_input()
 
+# =============== UniversalCards =================
+
+@HashMap()
+def universal_cards_on_start(hash_map):
+    screen = ui_models.UniversalCardsScreen(hash_map=hash_map, rs_settings=rs_settings)
+    screen.on_start()
+
+
+# ^^^^^^^^^^^^^^^^^ UniversalCards ^^^^^^^^^^^^^^^^^
+
 
 # =============== Debug =================
 

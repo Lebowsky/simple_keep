@@ -2,7 +2,9 @@ import unittest
 import json
 import os
 
-from db_services import DocService, DbCreator, TimerService, DbService, SqlQueryProvider, GoodsService, get_query_result
+from db_services import DocService, DbCreator, TimerService, DbService, SqlQueryProvider, GoodsService, \
+    get_query_result, BarcodeService
+from ui_utils import BarcodeParser
 
 
 class TestDocService(unittest.TestCase):
@@ -241,6 +243,72 @@ class TestSQLQueryProvider(unittest.TestCase):
                                 'out']
 
 
+class TestBarcodeService(unittest.TestCase):
+    def setUp(self) -> None:
+        self.data_creator = DataCreator()
+
+        service = DbCreator()
+        service.drop_all_tables()
+        service.create_tables()
+
+    def test_must_getting_barcode_data_ean13(self):
+        self.data_creator.insert_data('RS_barcodes')
+        barcode_info = BarcodeParser.BarcodeInfo(
+            barcode='2000000025988',
+            gtin='""',
+            serial='""'
+        )
+        id_doc = '"37c4c709-d22b-11e4-869d-0050568b35ac1"'
+
+        sut = BarcodeService()
+        expect = {
+            'id_good': '37c4c709-d22b-11e4-869d-0050568b35ac1',
+            'id_property': '',
+            'id_series': '',
+            'id_unit': '',
+            'mark_id': 0,
+            'ratio': 1,
+            'approved': 0,
+            'use_mark': 0,
+            'row_key': '',
+            'qtty': 0.0,
+            'qtty_plan': 0.0,
+        }
+
+
+        actual = sut.get_barcode_data(barcode_info, id_doc)
+
+        self.assertEqual(expect, actual)
+
+    def test_must_getting_barcode_data_ean13_and_get_doc_key(self):
+        self.data_creator.insert_data('RS_barcodes', 'RS_docs_table')
+        barcode_info = BarcodeParser.BarcodeInfo(
+            barcode='2000000025988',
+            gtin='""',
+            serial='""'
+        )
+        id_doc = '"37c4c709-d22b-11e4-869d-0050568b35ac1"'
+
+        sut = BarcodeService()
+        expect = {
+            'id_good': '37c4c709-d22b-11e4-869d-0050568b35ac1',
+            'id_property': '',
+            'id_series': '',
+            'id_unit': '',
+            'mark_id': 0,
+            'ratio': 1,
+            'approved': 0,
+            'use_mark': 0,
+            'row_key': 1,
+            'qtty': 1.0,
+            'qtty_plan': 5.0,
+        }
+
+        actual = sut.get_barcode_data(barcode_info, id_doc)
+
+        self.assertEqual(expect, actual)
+
+
 class DataCreator:
     def __init__(self):
         self.samples = {
@@ -298,6 +366,14 @@ class DataCreator:
             'RS_barc_flow': {
                 'id_doc': '"37c4c709-d22b-11e4-869d-0050568b35ac1"',
                 'barcode': '"4680134840398"',
+            },
+            'RS_barcodes': {
+                'barcode': '"2000000025988"',
+                'id_good': '"37c4c709-d22b-11e4-869d-0050568b35ac1"',
+                'id_property': '""',
+                'id_series': '""',
+                'id_unit': '""',
+                'ratio': '1'
             }
         }
 
