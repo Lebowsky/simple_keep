@@ -1,4 +1,3 @@
-/java.py
 /OldModules
 /New_features
 _tests
@@ -6,14 +5,11 @@ venv
 .idea
 *.vscode
 __pycache__
-ru
 test_files
 local_utils
 local_data
 *.db
 sui_main.ui
-rs_settings*.*
-ru.travelfood.simple_ui.py
 android
 pre_commit
 *.sqlite
@@ -26,7 +22,9 @@ TestData
 /HashMap.json
 /main_local.py
 /rightscan5.db-journal
-
 /tests/test1.py
 /test_http_get_data.py
 /tests_main.py
+rs_settings.json
+rs_settings_local.json
+SimpleKeep.json
