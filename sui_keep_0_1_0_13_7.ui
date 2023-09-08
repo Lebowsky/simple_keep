@@ -5721,6 +5721,14 @@
                                         "type": "ProgressButton"
                                     },
                                     {
+                                        "Value": "Настройки документов",
+                                        "Variable": "btn_documents_settings",
+                                        "height": "wrap_content",
+                                        "width": "match_parent",
+                                        "weight": "0",
+                                        "type": "ProgressButton"
+                                    },
+                                    {
                                         "Value": "Тест сканера",
                                         "Variable": "btn_test_barcode",
                                         "height": "wrap_content",
@@ -6343,6 +6351,95 @@
                                 "action": "run",
                                 "type": "python",
                                 "method": "sound_settings_listener",
+                                "postExecute": ""
+                            }
+                        ],
+                        "onlineOnStart": false,
+                        "onlineOnAfterStart": false,
+                        "onlineOnInput": false
+                    },
+                    {
+                        "type": "Operation",
+                        "Name": "Настройки документов",
+                        "Timer": false,
+                        "hideBottomBarScreen": true,
+                        "noScroll": false,
+                        "handleKeyUp": false,
+                        "noConfirmation": true,
+                        "hideToolBarScreen": false,
+                        "Elements": [
+                            {
+                                "type": "LinearLayout",
+                                "Variable": "",
+                                "orientation": "vertical",
+                                "height": "wrap_content",
+                                "width": "match_parent",
+                                "weight": "0",
+                                "Elements": [
+                                    {
+                                        "Value": "Время хранения",
+                                        "Variable": "",
+                                        "height": "wrap_content",
+                                        "width": "match_parent",
+                                        "weight": "0",
+                                        "TextBold": true,
+                                        "TextSize": "25",
+                                        "type": "TextView"
+                                    },
+                                    {
+                                        "Value": "Укажите сколько дней документы будут храниться на устройстве.",
+                                        "Variable": "",
+                                        "height": "wrap_content",
+                                        "width": "match_parent",
+                                        "weight": "0",
+                                        "type": "TextView"
+                                    },
+                                    {
+                                        "Value": "@doc_delete_settings_days",
+                                        "Variable": "doc_delete_settings_days",
+                                        "height": "wrap_content",
+                                        "width": "match_parent",
+                                        "weight": "0",
+                                        "type": "EditTextNumeric"
+                                    },
+                                    {
+                                        "Value": "Удалять устаревшие документы",
+                                        "Variable": "doc_settings_confirm_delete_old_docs",
+                                        "height": "wrap_content",
+                                        "width": "match_parent",
+                                        "weight": "0",
+                                        "type": "CheckBox"
+                                    },
+                                    {
+                                        "Value": "Сохранить и закрыть",
+                                        "Variable": "save_btn",
+                                        "height": "wrap_content",
+                                        "width": "wrap_content",
+                                        "orientation": "",
+                                        "weight": "",
+                                        "TextBold": false,
+                                        "TextItalic": false,
+                                        "TextSize": "",
+                                        "TextColor": "",
+                                        "type": "Button"
+                                    }
+                                ]
+                            }
+                        ],
+                        "Handlers": [
+                            {
+                                "event": "onStart",
+                                "action": "run",
+                                "type": "python",
+                                "method": "documents_settings_on_start",
+                                "postExecute": ""
+                            },
+                            {
+                                "event": "onInput",
+                                "listener": "",
+                                "action": "run",
+                                "type": "python",
+                                "method": "documents_settings_on_input",
                                 "postExecute": ""
                             }
                         ],
