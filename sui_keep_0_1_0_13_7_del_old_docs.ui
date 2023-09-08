@@ -1060,20 +1060,17 @@
                             {
                                 "type": "MenuItem",
                                 "Value": "Печать",
-                                "Variable": "btn_print",
-                                "style_name": ""
+                                "Variable": "btn_print"
                             },
                             {
                                 "type": "MenuItem",
                                 "Value": "Ввести штрихкод",
-                                "Variable": "btn_doc_good_barcode",
-                                "style_name": ""
+                                "Variable": "btn_doc_good_barcode"
                             },
                             {
                                 "type": "MenuItem",
                                 "Value": "Серии",
-                                "Variable": "btn_series_show",
-                                "style_name": ""
+                                "Variable": "btn_series_show"
                             }
                         ],
                         "Handlers": [
@@ -4146,14 +4143,12 @@
                             {
                                 "type": "MenuItem",
                                 "Value": "Печать",
-                                "Variable": "btn_print",
-                                "style_name": ""
+                                "Variable": "btn_print"
                             },
                             {
                                 "type": "MenuItem",
                                 "Value": "Добавить штрихкод",
-                                "Variable": "btn_item_good_barcode",
-                                "style_name": ""
+                                "Variable": "btn_item_good_barcode"
                             }
                         ],
                         "Handlers": [
@@ -5725,12 +5720,12 @@
                                         "type": "ProgressButton"
                                     },
                                     {
-                                        "type": "ProgressButton",
+                                        "Value": "Настройки документов",
+                                        "Variable": "btn_documents_settings",
                                         "height": "wrap_content",
                                         "width": "match_parent",
                                         "weight": "0",
-                                        "Value": "Настройки документов",
-                                        "Variable": "btn_documents_settings"
+                                        "type": "ProgressButton"
                                     },
                                     {
                                         "Value": "Тест сканера",
@@ -5785,10 +5780,7 @@
                                         "TextColor": "",
                                         "type": "ProgressButton"
                                     }
-                                ],
-                                "BackgroundColor": "",
-                                "StrokeWidth": "",
-                                "Padding": ""
+                                ]
                             }
                         ],
                         "Handlers": [
@@ -6384,39 +6376,38 @@
                                 "weight": "0",
                                 "Elements": [
                                     {
-                                        "type": "TextView",
-                                        "height": "wrap_content",
-                                        "width": "match_parent",
-                                        "weight": "0",
                                         "Value": "Время хранения",
                                         "Variable": "",
-                                        "TextSize": "25",
+                                        "height": "wrap_content",
+                                        "width": "match_parent",
+                                        "weight": "0",
                                         "TextBold": true,
-                                        "BackgroundColor": "#a1a1a1"
+                                        "TextSize": "25",
+                                        "type": "TextView"
                                     },
                                     {
-                                        "type": "TextView",
-                                        "height": "wrap_content",
-                                        "width": "match_parent",
-                                        "weight": "0",
                                         "Value": "Укажите сколько дней документы будут храниться на устройстве.",
-                                        "Variable": ""
-                                    },
-                                    {
-                                        "type": "EditTextNumeric",
+                                        "Variable": "",
                                         "height": "wrap_content",
                                         "width": "match_parent",
                                         "weight": "0",
+                                        "type": "TextView"
+                                    },
+                                    {
                                         "Value": "@doc_delete_settings_days",
-                                        "Variable": "doc_delete_settings_days"
-                                    },
-                                    {
-                                        "type": "CheckBox",
+                                        "Variable": "doc_delete_settings_days",
                                         "height": "wrap_content",
                                         "width": "match_parent",
                                         "weight": "0",
+                                        "type": "EditTextNumeric"
+                                    },
+                                    {
                                         "Value": "Удалять устаревшие документы",
-                                        "Variable": "doc_settings_confirm_delete_old_docs"
+                                        "Variable": "doc_settings_confirm_delete_old_docs",
+                                        "height": "wrap_content",
+                                        "width": "match_parent",
+                                        "weight": "0",
+                                        "type": "CheckBox"
                                     },
                                     {
                                         "Value": "Сохранить и закрыть",
@@ -6431,10 +6422,7 @@
                                         "TextColor": "",
                                         "type": "Button"
                                     }
-                                ],
-                                "BackgroundColor": "",
-                                "StrokeWidth": "",
-                                "Padding": ""
+                                ]
                             }
                         ],
                         "Handlers": [
@@ -6459,14 +6447,16 @@
                         "onlineOnInput": false
                     },
                     {
-                        "Name": "Новый экран",
                         "type": "Operation",
-                        "Elements": [],
+                        "Name": "Новый экран",
                         "Timer": false,
-                        "hideToolBarScreen": false,
+                        "hideBottomBarScreen": false,
                         "noScroll": false,
                         "handleKeyUp": false,
-                        "hideBottomBarScreen": false,
+                        "noConfirmation": false,
+                        "hideToolBarScreen": false,
+                        "Elements": [],
+                        "Handlers": [],
                         "onlineOnStart": false,
                         "onlineOnAfterStart": false,
                         "onlineOnInput": false
