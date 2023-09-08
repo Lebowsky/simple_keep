@@ -638,7 +638,7 @@ class DocService:
             """
 
         where = f"""WHERE id_doc = '{str(id_doc)}'"""
-        row_filters_condition = """AND RS_docs_table.qtty != RS_docs_table.qtty_plan""" if row_filters else ''
+        row_filters_condition = """AND qtty != COALESCE(qtty_plan, '0') """ if row_filters else ''
         search_string_condition = f"""AND good_name LIKE '%{search_string}%'""" if search_string else ''
 
         where_query = f"""
@@ -1126,11 +1126,13 @@ class AdrDocService(DocService):
         basic_where = f"""WHERE id_doc = :id_doc and table_type = :table_type"""
 
         cur_cell_condition = '''and (id_cell=:current_cell OR id_cell="" OR id_cell is Null)''' if curCell else ''
+        row_filters_condition = """AND qtty != COALESCE(qtty_plan, '0') """ if row_filters else ''
         search_string_condition = f"""AND good_name LIKE '%{search_string}%'""" if search_string else ''
 
         where_full = f"""
                 {basic_where}
                 {cur_cell_condition}
+                {row_filters_condition}
                 {search_string_condition}
         """
 
