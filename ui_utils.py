@@ -1,14 +1,14 @@
 import json
 import re
-from dataclasses import dataclass, asdict
-from typing import Callable, Union, List, Dict, Literal
-from functools import wraps
 import socket
+from dataclasses import dataclass, asdict
 from datetime import datetime, timedelta
+from functools import wraps
+from typing import Callable, Union, List, Dict, Literal
 
+from db_services import DocService, BarcodeService
 from java import jclass
 from ui_global import Rs_doc, find_barcode_in_barcode_table
-from db_services import DocService, BarcodeService
 
 noClass = jclass("ru.travelfood.simple_ui.NoSQL")
 rs_settings = noClass("rs_settings")

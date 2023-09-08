@@ -2,7 +2,7 @@
     "ClientConfiguration": {
         "ConfigurationName": "Simple Учет",
         "ConfigurationDescription": "Простое решение для работы с штрихкодами товаров. Поставляется в комплекте с расширением для 1С. Подробнее про расширение Вы можете узнать по ссылке: https://www.simple-kit.ru/products/simple-uchet/ ",
-        "ConfigurationVersion": "0.1.0.13.5",
+        "ConfigurationVersion": "0.1.0.13.7",
         "Processes": [
             {
                 "type": "Process",
@@ -403,6 +403,11 @@
                                 "type": "MenuItem",
                                 "Value": "Выгрузить документ",
                                 "Variable": "btn_doc_mark_verified"
+                            },
+                            {
+                                "type": "fab",
+                                "Value": "#f031",
+                                "Variable": "btn_goods_ocr"
                             }
                         ],
                         "Handlers": [
@@ -419,296 +424,6 @@
                                 "action": "run",
                                 "type": "python",
                                 "method": "doc_details_listener",
-                                "postExecute": ""
-                            }
-                        ],
-                        "onlineOnStart": false,
-                        "onlineOnAfterStart": false,
-                        "onlineOnInput": false
-                    },
-                    {
-                        "type": "Operation",
-                        "Name": "Товар",
-                        "Timer": false,
-                        "hideBottomBarScreen": true,
-                        "noScroll": false,
-                        "handleKeyUp": false,
-                        "noConfirmation": false,
-                        "hideToolBarScreen": false,
-                        "Elements": [
-                            {
-                                "type": "LinearLayout",
-                                "Variable": "",
-                                "orientation": "vertical",
-                                "height": "wrap_content",
-                                "width": "match_parent",
-                                "weight": "0",
-                                "Elements": [
-                                    {
-                                        "Value": "@Doc_data",
-                                        "Variable": "",
-                                        "height": "wrap_content",
-                                        "width": "wrap_content",
-                                        "weight": "0",
-                                        "type": "TextView"
-                                    },
-                                    {
-                                        "type": "LinearLayout",
-                                        "Variable": "",
-                                        "orientation": "horizontal",
-                                        "height": "wrap_content",
-                                        "width": "match_parent",
-                                        "weight": "0",
-                                        "Elements": [
-                                            {
-                                                "Value": "@Good",
-                                                "Variable": "",
-                                                "height": "wrap_content",
-                                                "width": "wrap_content",
-                                                "weight": "1",
-                                                "TextBold": true,
-                                                "TextSize": "24",
-                                                "TextColor": "#7A005C",
-                                                "type": "TextView"
-                                            },
-                                            {
-                                                "Value": "...",
-                                                "Variable": "btn_good_select",
-                                                "height": "wrap_content",
-                                                "width": "30",
-                                                "weight": "0",
-                                                "type": "Button"
-                                            }
-                                        ]
-                                    },
-                                    {
-                                        "type": "LinearLayout",
-                                        "Variable": "",
-                                        "orientation": "horizontal",
-                                        "height": "wrap_content",
-                                        "width": "match_parent",
-                                        "weight": "0",
-                                        "Elements": [
-                                            {
-                                                "Value": "@properties",
-                                                "Variable": "",
-                                                "height": "wrap_content",
-                                                "width": "wrap_content",
-                                                "weight": "1",
-                                                "TextSize": "16",
-                                                "type": "TextView"
-                                            },
-                                            {
-                                                "Value": "...",
-                                                "Variable": "btn_properties",
-                                                "height": "wrap_content",
-                                                "width": "30",
-                                                "weight": "0",
-                                                "type": "Button"
-                                            }
-                                        ]
-                                    },
-                                    {
-                                        "type": "LinearLayout",
-                                        "Variable": "",
-                                        "orientation": "horizontal",
-                                        "height": "0",
-                                        "width": "0",
-                                        "weight": "0",
-                                        "Elements": [
-                                            {
-                                                "Value": "@Series",
-                                                "Variable": "",
-                                                "height": "wrap_content",
-                                                "width": "wrap_content",
-                                                "weight": "1",
-                                                "TextSize": "16",
-                                                "type": "TextView"
-                                            },
-                                            {
-                                                "Value": "...",
-                                                "Variable": "btn_series",
-                                                "height": "wrap_content",
-                                                "width": "30",
-                                                "weight": "0",
-                                                "type": "Button"
-                                            }
-                                        ]
-                                    },
-                                    {
-                                        "type": "LinearLayout",
-                                        "Variable": "",
-                                        "orientation": "horizontal",
-                                        "height": "wrap_content",
-                                        "width": "match_parent",
-                                        "weight": "0",
-                                        "Elements": [
-                                            {
-                                                "Value": "@Unit",
-                                                "Variable": "",
-                                                "height": "wrap_content",
-                                                "width": "wrap_content",
-                                                "weight": "1",
-                                                "TextSize": "16",
-                                                "type": "TextView"
-                                            },
-                                            {
-                                                "Value": "...",
-                                                "Variable": "btn_unit",
-                                                "height": "wrap_content",
-                                                "width": "30",
-                                                "weight": "0",
-                                                "type": "Button"
-                                            }
-                                        ]
-                                    },
-                                    {
-                                        "type": "LinearLayout",
-                                        "Variable": "",
-                                        "orientation": "horizontal",
-                                        "height": "wrap_content",
-                                        "width": "match_parent",
-                                        "weight": "0",
-                                        "Elements": [
-                                            {
-                                                "type": "LinearLayout",
-                                                "Variable": "",
-                                                "orientation": "vertical",
-                                                "height": "wrap_content",
-                                                "width": "match_parent",
-                                                "weight": "1",
-                                                "Elements": [
-                                                    {
-                                                        "Value": "План",
-                                                        "Variable": "",
-                                                        "height": "wrap_content",
-                                                        "width": "match_parent",
-                                                        "weight": "0",
-                                                        "type": "TextView"
-                                                    },
-                                                    {
-                                                        "Value": "@qtty_plan",
-                                                        "Variable": "",
-                                                        "height": "wrap_content",
-                                                        "width": "match_parent",
-                                                        "weight": "0",
-                                                        "TextSize": "24",
-                                                        "type": "TextView"
-                                                    }
-                                                ]
-                                            },
-                                            {
-                                                "type": "LinearLayout",
-                                                "Variable": "",
-                                                "orientation": "vertical",
-                                                "height": "wrap_content",
-                                                "width": "match_parent",
-                                                "weight": "1",
-                                                "Elements": [
-                                                    {
-                                                        "Value": "Факт",
-                                                        "Variable": "",
-                                                        "height": "wrap_content",
-                                                        "width": "match_parent",
-                                                        "weight": "0",
-                                                        "type": "TextView"
-                                                    },
-                                                    {
-                                                        "Value": "@qtty",
-                                                        "Variable": "qtty",
-                                                        "height": "wrap_content",
-                                                        "width": "match_parent",
-                                                        "weight": "0",
-                                                        "TextSize": "24",
-                                                        "type": "EditTextNumeric"
-                                                    }
-                                                ]
-                                            }
-                                        ]
-                                    },
-                                    {
-                                        "type": "LinearLayout",
-                                        "Variable": "",
-                                        "orientation": "horizontal",
-                                        "height": "wrap_content",
-                                        "width": "match_parent",
-                                        "weight": "0",
-                                        "Elements": [
-                                            {
-                                                "Value": "Цена",
-                                                "Variable": "",
-                                                "height": "wrap_content",
-                                                "width": "wrap_content",
-                                                "weight": "0",
-                                                "type": "TextView"
-                                            },
-                                            {
-                                                "Value": "@price",
-                                                "Variable": "price",
-                                                "height": "wrap_content",
-                                                "width": "match_parent",
-                                                "weight": "0",
-                                                "type": "EditTextNumeric"
-                                            }
-                                        ]
-                                    },
-                                    {
-                                        "type": "LinearLayout",
-                                        "Variable": "",
-                                        "orientation": "horizontal",
-                                        "height": "wrap_content",
-                                        "width": "match_parent",
-                                        "weight": "0",
-                                        "Elements": [
-                                            {
-                                                "Value": "Сохранить",
-                                                "Variable": "btn_ok",
-                                                "height": "wrap_content",
-                                                "width": "match_parent",
-                                                "weight": "1",
-                                                "type": "Button"
-                                            }
-                                        ]
-                                    },
-                                    {
-                                        "Value": "@barcode_cards",
-                                        "Variable": "barcode_cards",
-                                        "height": "wrap_content",
-                                        "width": "match_parent",
-                                        "weight": "0",
-                                        "type": "CardsLayout"
-                                    }
-                                ]
-                            },
-                            {
-                                "type": "HorizontalGallery",
-                                "Value": "@photoGallery",
-                                "Variable": "photoGallery"
-                            },
-                            {
-                                "type": "photo",
-                                "Value": "",
-                                "Variable": "photo"
-                            },
-                            {
-                                "type": "photoGallery",
-                                "Value": "",
-                                "Variable": "photo"
-                            }
-                        ],
-                        "Handlers": [
-                            {
-                                "event": "onStart",
-                                "action": "run",
-                                "type": "python",
-                                "method": "elem_on_start",
-                                "postExecute": ""
-                            },
-                            {
-                                "event": "onInput",
-                                "action": "run",
-                                "type": "python",
-                                "method": "elem_on_click",
                                 "postExecute": ""
                             }
                         ],
@@ -1344,15 +1059,18 @@
                             },
                             {
                                 "type": "MenuItem",
-                                "Value": "Ввести штрихкод",
-                                "Variable": "btn_doc_good_barcode",
-                                "style_name": ""
+                                "Value": "Печать",
+                                "Variable": "btn_print"
                             },
                             {
                                 "type": "MenuItem",
-                                "Value": "Печать",
-                                "Variable": "btn_print",
-                                "style_name": ""
+                                "Value": "Ввести штрихкод",
+                                "Variable": "btn_doc_good_barcode"
+                            },
+                            {
+                                "type": "MenuItem",
+                                "Value": "Серии",
+                                "Variable": "btn_series_show"
                             }
                         ],
                         "Handlers": [
@@ -1369,55 +1087,6 @@
                                 "action": "run",
                                 "type": "python",
                                 "method": "elem_viev_on_click",
-                                "postExecute": ""
-                            }
-                        ],
-                        "onlineOnStart": false,
-                        "onlineOnAfterStart": false,
-                        "onlineOnInput": false
-                    },
-                    {
-                        "type": "Operation",
-                        "Name": "Документ штрихкоды",
-                        "Timer": false,
-                        "hideBottomBarScreen": true,
-                        "noScroll": false,
-                        "handleKeyUp": false,
-                        "noConfirmation": false,
-                        "hideToolBarScreen": false,
-                        "Elements": [
-                            {
-                                "type": "LinearLayout",
-                                "Variable": "",
-                                "orientation": "vertical",
-                                "height": "wrap_content",
-                                "width": "match_parent",
-                                "weight": "0",
-                                "Elements": [
-                                    {
-                                        "Value": "@barc_cards",
-                                        "Variable": "barcode_cards",
-                                        "height": "wrap_content",
-                                        "width": "match_parent",
-                                        "weight": "0",
-                                        "type": "CardsLayout"
-                                    }
-                                ]
-                            }
-                        ],
-                        "Handlers": [
-                            {
-                                "event": "onStart",
-                                "action": "run",
-                                "type": "python",
-                                "method": "doc_barcodes_on_start",
-                                "postExecute": ""
-                            },
-                            {
-                                "event": "onInput",
-                                "action": "run",
-                                "type": "python",
-                                "method": "doc_barcodes_listener",
                                 "postExecute": ""
                             }
                         ],
@@ -1772,6 +1441,72 @@
                                 "action": "run",
                                 "type": "python",
                                 "method": "barcode_flow_listener",
+                                "postExecute": ""
+                            }
+                        ],
+                        "onlineOnStart": false,
+                        "onlineOnAfterStart": false,
+                        "onlineOnInput": false
+                    },
+                    {
+                        "type": "Operation",
+                        "Name": "ВыборТовараАртикул",
+                        "Timer": false,
+                        "hideBottomBarScreen": true,
+                        "noScroll": false,
+                        "handleKeyUp": false,
+                        "noConfirmation": true,
+                        "hideToolBarScreen": false,
+                        "Elements": [
+                            {
+                                "type": "LinearLayout",
+                                "Variable": "",
+                                "orientation": "vertical",
+                                "height": "wrap_content",
+                                "width": "match_parent",
+                                "weight": "0",
+                                "Elements": [
+                                    {
+                                        "Value": "@title_select_good_article",
+                                        "Variable": "",
+                                        "height": "wrap_content",
+                                        "width": "match_parent",
+                                        "weight": "0",
+                                        "TextSize": "25",
+                                        "type": "TextView"
+                                    },
+                                    {
+                                        "Value": "@finded_goods_cards",
+                                        "Variable": "finded_goods_cards",
+                                        "height": "wrap_content",
+                                        "width": "match_parent",
+                                        "weight": "0",
+                                        "type": "CardsLayout"
+                                    },
+                                    {
+                                        "Value": "Внести изменения в документ",
+                                        "Variable": "update_docs_table_article",
+                                        "height": "wrap_content",
+                                        "width": "match_parent",
+                                        "weight": "0",
+                                        "type": "Button"
+                                    }
+                                ]
+                            }
+                        ],
+                        "Handlers": [
+                            {
+                                "event": "onInput",
+                                "action": "run",
+                                "type": "python",
+                                "method": "select_good_article_on_input",
+                                "postExecute": ""
+                            },
+                            {
+                                "event": "onStart",
+                                "action": "run",
+                                "type": "python",
+                                "method": "select_good_article_on_start",
                                 "postExecute": ""
                             }
                         ],
@@ -3148,244 +2883,6 @@
                     },
                     {
                         "type": "Operation",
-                        "Name": "Товар",
-                        "Timer": false,
-                        "hideBottomBarScreen": true,
-                        "noScroll": false,
-                        "handleKeyUp": false,
-                        "noConfirmation": true,
-                        "hideToolBarScreen": false,
-                        "Elements": [
-                            {
-                                "type": "LinearLayout",
-                                "Variable": "",
-                                "orientation": "vertical",
-                                "height": "wrap_content",
-                                "width": "match_parent",
-                                "weight": "0",
-                                "Elements": [
-                                    {
-                                        "Value": "@Doc_data",
-                                        "Variable": "",
-                                        "height": "wrap_content",
-                                        "width": "wrap_content",
-                                        "weight": "0",
-                                        "type": "TextView"
-                                    },
-                                    {
-                                        "type": "LinearLayout",
-                                        "Variable": "",
-                                        "orientation": "horizontal",
-                                        "height": "wrap_content",
-                                        "width": "match_parent",
-                                        "weight": "0",
-                                        "Elements": [
-                                            {
-                                                "Value": "@current_cell_name",
-                                                "Variable": "",
-                                                "height": "wrap_content",
-                                                "width": "wrap_content",
-                                                "weight": "0",
-                                                "TextSize": "20",
-                                                "TextColor": "#7A005C",
-                                                "type": "TextView"
-                                            },
-                                            {
-                                                "Value": "...",
-                                                "Variable": "btn_select_cell",
-                                                "height": "30",
-                                                "width": "30",
-                                                "weight": "0",
-                                                "type": "Button"
-                                            }
-                                        ]
-                                    },
-                                    {
-                                        "type": "LinearLayout",
-                                        "Variable": "",
-                                        "orientation": "horizontal",
-                                        "height": "wrap_content",
-                                        "width": "match_parent",
-                                        "weight": "0",
-                                        "Elements": [
-                                            {
-                                                "Value": "@Good",
-                                                "Variable": "",
-                                                "height": "wrap_content",
-                                                "width": "wrap_content",
-                                                "weight": "1",
-                                                "TextBold": true,
-                                                "TextSize": "24",
-                                                "TextColor": "#7A005C",
-                                                "type": "TextView"
-                                            },
-                                            {
-                                                "Value": "...",
-                                                "Variable": "btn_good_select",
-                                                "height": "wrap_content",
-                                                "width": "30",
-                                                "weight": "0",
-                                                "type": "Button"
-                                            }
-                                        ]
-                                    },
-                                    {
-                                        "type": "LinearLayout",
-                                        "Variable": "",
-                                        "orientation": "horizontal",
-                                        "height": "wrap_content",
-                                        "width": "match_parent",
-                                        "weight": "0",
-                                        "Elements": [
-                                            {
-                                                "Value": "@properties",
-                                                "Variable": "",
-                                                "height": "wrap_content",
-                                                "width": "wrap_content",
-                                                "weight": "1",
-                                                "TextSize": "16",
-                                                "type": "TextView"
-                                            },
-                                            {
-                                                "Value": "...",
-                                                "Variable": "btn_properties",
-                                                "height": "wrap_content",
-                                                "width": "30",
-                                                "weight": "0",
-                                                "type": "Button"
-                                            }
-                                        ]
-                                    },
-                                    {
-                                        "type": "LinearLayout",
-                                        "Variable": "",
-                                        "orientation": "horizontal",
-                                        "height": "wrap_content",
-                                        "width": "match_parent",
-                                        "weight": "0",
-                                        "Elements": [
-                                            {
-                                                "type": "LinearLayout",
-                                                "Variable": "",
-                                                "orientation": "vertical",
-                                                "height": "wrap_content",
-                                                "width": "match_parent",
-                                                "weight": "1",
-                                                "Elements": [
-                                                    {
-                                                        "Value": "План",
-                                                        "Variable": "",
-                                                        "height": "wrap_content",
-                                                        "width": "match_parent",
-                                                        "weight": "0",
-                                                        "type": "TextView"
-                                                    },
-                                                    {
-                                                        "Value": "@qtty_plan",
-                                                        "Variable": "",
-                                                        "height": "wrap_content",
-                                                        "width": "match_parent",
-                                                        "weight": "0",
-                                                        "TextSize": "24",
-                                                        "type": "TextView"
-                                                    }
-                                                ]
-                                            },
-                                            {
-                                                "type": "LinearLayout",
-                                                "Variable": "",
-                                                "orientation": "vertical",
-                                                "height": "wrap_content",
-                                                "width": "match_parent",
-                                                "weight": "1",
-                                                "Elements": [
-                                                    {
-                                                        "Value": "Факт",
-                                                        "Variable": "",
-                                                        "height": "wrap_content",
-                                                        "width": "match_parent",
-                                                        "weight": "0",
-                                                        "type": "TextView"
-                                                    },
-                                                    {
-                                                        "Value": "@qtty",
-                                                        "Variable": "qtty",
-                                                        "height": "wrap_content",
-                                                        "width": "match_parent",
-                                                        "weight": "0",
-                                                        "TextSize": "24",
-                                                        "type": "EditTextNumeric"
-                                                    }
-                                                ]
-                                            }
-                                        ]
-                                    },
-                                    {
-                                        "type": "LinearLayout",
-                                        "Variable": "",
-                                        "orientation": "horizontal",
-                                        "height": "wrap_content",
-                                        "width": "match_parent",
-                                        "weight": "0",
-                                        "Elements": [
-                                            {
-                                                "Value": "Сохранить",
-                                                "Variable": "btn_ok",
-                                                "height": "wrap_content",
-                                                "width": "match_parent",
-                                                "weight": "1",
-                                                "type": "Button"
-                                            }
-                                        ]
-                                    },
-                                    {
-                                        "Value": "@barcode_cards",
-                                        "Variable": "barcode_cards",
-                                        "height": "wrap_content",
-                                        "width": "match_parent",
-                                        "weight": "0",
-                                        "type": "CardsLayout"
-                                    }
-                                ]
-                            },
-                            {
-                                "type": "HorizontalGallery",
-                                "Value": "@photoGallery",
-                                "Variable": "photoGallery"
-                            },
-                            {
-                                "type": "photo",
-                                "Value": "",
-                                "Variable": "photo"
-                            },
-                            {
-                                "type": "photoGallery",
-                                "Value": "",
-                                "Variable": "photo"
-                            }
-                        ],
-                        "Handlers": [
-                            {
-                                "event": "onStart",
-                                "action": "run",
-                                "type": "python",
-                                "method": "adr_elem_on_start",
-                                "postExecute": ""
-                            },
-                            {
-                                "event": "onInput",
-                                "action": "run",
-                                "type": "python",
-                                "method": "adr_elem_on_click",
-                                "postExecute": ""
-                            }
-                        ],
-                        "onlineOnStart": false,
-                        "onlineOnAfterStart": false,
-                        "onlineOnInput": false
-                    },
-                    {
-                        "type": "Operation",
                         "Name": "Товар выбор",
                         "Timer": false,
                         "hideBottomBarScreen": true,
@@ -3962,125 +3459,6 @@
                             }
                         ],
                         "Handlers": [],
-                        "onlineOnStart": false,
-                        "onlineOnAfterStart": false,
-                        "onlineOnInput": false
-                    },
-                    {
-                        "type": "Operation",
-                        "Name": "Новый документ",
-                        "Timer": false,
-                        "hideBottomBarScreen": true,
-                        "noScroll": false,
-                        "handleKeyUp": false,
-                        "noConfirmation": false,
-                        "hideToolBarScreen": false,
-                        "Elements": [
-                            {
-                                "type": "LinearLayout",
-                                "Variable": "",
-                                "orientation": "vertical",
-                                "height": "match_parent",
-                                "width": "match_parent",
-                                "weight": "0",
-                                "Elements": [
-                                    {
-                                        "Value": "@doc_adr_type_select",
-                                        "Variable": "doc_type_click",
-                                        "height": "wrap_content",
-                                        "width": "wrap_content",
-                                        "weight": "0",
-                                        "type": "SpinnerLayout"
-                                    },
-                                    {
-                                        "Value": "@fld_number",
-                                        "Variable": "",
-                                        "height": "wrap_content",
-                                        "width": "50",
-                                        "weight": "0",
-                                        "type": "EditTextText"
-                                    },
-                                    {
-                                        "Value": "@doc_date",
-                                        "Variable": "fld_data",
-                                        "height": "wrap_content",
-                                        "width": "wrap_content",
-                                        "weight": "0",
-                                        "type": "DateField"
-                                    },
-                                    {
-                                        "type": "LinearLayout",
-                                        "Variable": "",
-                                        "orientation": "horizontal",
-                                        "height": "wrap_content",
-                                        "width": "match_parent",
-                                        "weight": "0",
-                                        "Elements": [
-                                            {
-                                                "Value": "@warehouse",
-                                                "Variable": "warehouse",
-                                                "height": "wrap_content",
-                                                "width": "wrap_content",
-                                                "weight": "1",
-                                                "TextSize": "18",
-                                                "type": "TextView"
-                                            },
-                                            {
-                                                "Value": "...",
-                                                "Variable": "btn_select_warehouse",
-                                                "height": "wrap_content",
-                                                "width": "wrap_content",
-                                                "weight": "0",
-                                                "TextSize": "18",
-                                                "type": "Button"
-                                            }
-                                        ]
-                                    },
-                                    {
-                                        "type": "LinearLayout",
-                                        "Variable": "",
-                                        "orientation": "horizontal",
-                                        "height": "wrap_content",
-                                        "width": "match_parent",
-                                        "weight": "0",
-                                        "Elements": [
-                                            {
-                                                "Value": "Сохранить",
-                                                "Variable": "btn_ok",
-                                                "height": "wrap_content",
-                                                "width": "wrap_content",
-                                                "weight": "0",
-                                                "type": "Button"
-                                            },
-                                            {
-                                                "Value": "Отменить",
-                                                "Variable": "btn_cancel",
-                                                "height": "wrap_content",
-                                                "width": "wrap_content",
-                                                "weight": "0",
-                                                "type": "Button"
-                                            }
-                                        ]
-                                    }
-                                ]
-                            }
-                        ],
-                        "Handlers": [
-                            {
-                                "event": "onStart",
-                                "action": "run",
-                                "type": "python",
-                                "method": "new_adr_doc_on_start",
-                                "postExecute": ""
-                            },
-                            {
-                                "event": "onInput",
-                                "action": "run",
-                                "type": "python",
-                                "method": "new_adr_doc_on_select",
-                                "postExecute": ""
-                            }
-                        ],
                         "onlineOnStart": false,
                         "onlineOnAfterStart": false,
                         "onlineOnInput": false
@@ -4764,9 +4142,13 @@
                             },
                             {
                                 "type": "MenuItem",
+                                "Value": "Печать",
+                                "Variable": "btn_print"
+                            },
+                            {
+                                "type": "MenuItem",
                                 "Value": "Добавить штрихкод",
-                                "Variable": "btn_item_good_barcode",
-                                "style_name": ""
+                                "Variable": "btn_item_good_barcode"
                             }
                         ],
                         "Handlers": [
@@ -4838,61 +4220,6 @@
                                 "action": "run",
                                 "type": "python",
                                 "method": "select_type_goods_on_input",
-                                "postExecute": ""
-                            }
-                        ],
-                        "onlineOnStart": false,
-                        "onlineOnAfterStart": false,
-                        "onlineOnInput": false
-                    },
-                    {
-                        "type": "Operation",
-                        "Name": "Выбор характеристик",
-                        "Timer": false,
-                        "hideBottomBarScreen": true,
-                        "noScroll": false,
-                        "handleKeyUp": false,
-                        "noConfirmation": false,
-                        "hideToolBarScreen": false,
-                        "Elements": [
-                            {
-                                "type": "LinearLayout",
-                                "Variable": "",
-                                "orientation": "vertical",
-                                "height": "wrap_content",
-                                "width": "match_parent",
-                                "weight": "0",
-                                "Elements": [
-                                    {
-                                        "Value": "@property_cards",
-                                        "Variable": "property_cards",
-                                        "height": "wrap_content",
-                                        "width": "match_parent",
-                                        "weight": "0",
-                                        "type": "CardsLayout"
-                                    }
-                                ]
-                            },
-                            {
-                                "type": "fab",
-                                "Value": "backward",
-                                "Variable": "back_to_prices"
-                            }
-                        ],
-                        "Handlers": [
-                            {
-                                "event": "onStart",
-                                "action": "run",
-                                "type": "python",
-                                "method": "item_properties_on_start",
-                                "postExecute": ""
-                            },
-                            {
-                                "event": "onInput",
-                                "listener": "",
-                                "action": "run",
-                                "type": "python",
-                                "method": "item_properties_on_input",
                                 "postExecute": ""
                             }
                         ],
@@ -5125,6 +4452,61 @@
                                 "action": "run",
                                 "type": "python",
                                 "method": "barcode_register_item_on_start",
+                                "postExecute": ""
+                            }
+                        ],
+                        "onlineOnStart": false,
+                        "onlineOnAfterStart": false,
+                        "onlineOnInput": false
+                    },
+                    {
+                        "type": "Operation",
+                        "Name": "Выбор характеристик",
+                        "Timer": false,
+                        "hideBottomBarScreen": true,
+                        "noScroll": false,
+                        "handleKeyUp": false,
+                        "noConfirmation": false,
+                        "hideToolBarScreen": false,
+                        "Elements": [
+                            {
+                                "type": "LinearLayout",
+                                "Variable": "",
+                                "orientation": "vertical",
+                                "height": "wrap_content",
+                                "width": "match_parent",
+                                "weight": "0",
+                                "Elements": [
+                                    {
+                                        "Value": "@property_cards",
+                                        "Variable": "property_cards",
+                                        "height": "wrap_content",
+                                        "width": "match_parent",
+                                        "weight": "0",
+                                        "type": "CardsLayout"
+                                    }
+                                ]
+                            },
+                            {
+                                "type": "fab",
+                                "Value": "backward",
+                                "Variable": "back_to_prices"
+                            }
+                        ],
+                        "Handlers": [
+                            {
+                                "event": "onStart",
+                                "action": "run",
+                                "type": "python",
+                                "method": "item_properties_on_start",
+                                "postExecute": ""
+                            },
+                            {
+                                "event": "onInput",
+                                "listener": "",
+                                "action": "run",
+                                "type": "python",
+                                "method": "item_properties_on_input",
                                 "postExecute": ""
                             }
                         ],
@@ -5646,7 +5028,6 @@
             {
                 "type": "Process",
                 "ProcessName": "Цены",
-                "PlanFactHeader": "",
                 "DefineOnBackPressed": true,
                 "hidden": true,
                 "login_screen": false,
@@ -6339,6 +5720,14 @@
                                         "type": "ProgressButton"
                                     },
                                     {
+                                        "Value": "Настройки документов",
+                                        "Variable": "btn_documents_settings",
+                                        "height": "wrap_content",
+                                        "width": "match_parent",
+                                        "weight": "0",
+                                        "type": "ProgressButton"
+                                    },
+                                    {
                                         "Value": "Тест сканера",
                                         "Variable": "btn_test_barcode",
                                         "height": "wrap_content",
@@ -6967,6 +6356,110 @@
                         "onlineOnStart": false,
                         "onlineOnAfterStart": false,
                         "onlineOnInput": false
+                    },
+                    {
+                        "type": "Operation",
+                        "Name": "Настройки документов",
+                        "Timer": false,
+                        "hideBottomBarScreen": true,
+                        "noScroll": false,
+                        "handleKeyUp": false,
+                        "noConfirmation": true,
+                        "hideToolBarScreen": false,
+                        "Elements": [
+                            {
+                                "type": "LinearLayout",
+                                "Variable": "",
+                                "orientation": "vertical",
+                                "height": "wrap_content",
+                                "width": "match_parent",
+                                "weight": "0",
+                                "Elements": [
+                                    {
+                                        "Value": "Время хранения",
+                                        "Variable": "",
+                                        "height": "wrap_content",
+                                        "width": "match_parent",
+                                        "weight": "0",
+                                        "TextBold": true,
+                                        "TextSize": "25",
+                                        "type": "TextView"
+                                    },
+                                    {
+                                        "Value": "Укажите сколько дней документы будут храниться на устройстве.",
+                                        "Variable": "",
+                                        "height": "wrap_content",
+                                        "width": "match_parent",
+                                        "weight": "0",
+                                        "type": "TextView"
+                                    },
+                                    {
+                                        "Value": "@doc_delete_settings_days",
+                                        "Variable": "doc_delete_settings_days",
+                                        "height": "wrap_content",
+                                        "width": "match_parent",
+                                        "weight": "0",
+                                        "type": "EditTextNumeric"
+                                    },
+                                    {
+                                        "Value": "Удалять устаревшие документы",
+                                        "Variable": "doc_settings_confirm_delete_old_docs",
+                                        "height": "wrap_content",
+                                        "width": "match_parent",
+                                        "weight": "0",
+                                        "type": "CheckBox"
+                                    },
+                                    {
+                                        "Value": "Сохранить и закрыть",
+                                        "Variable": "save_btn",
+                                        "height": "wrap_content",
+                                        "width": "wrap_content",
+                                        "orientation": "",
+                                        "weight": "",
+                                        "TextBold": false,
+                                        "TextItalic": false,
+                                        "TextSize": "",
+                                        "TextColor": "",
+                                        "type": "Button"
+                                    }
+                                ]
+                            }
+                        ],
+                        "Handlers": [
+                            {
+                                "event": "onStart",
+                                "action": "run",
+                                "type": "python",
+                                "method": "documents_settings_on_start",
+                                "postExecute": ""
+                            },
+                            {
+                                "event": "onInput",
+                                "listener": "",
+                                "action": "run",
+                                "type": "python",
+                                "method": "documents_settings_on_input",
+                                "postExecute": ""
+                            }
+                        ],
+                        "onlineOnStart": false,
+                        "onlineOnAfterStart": false,
+                        "onlineOnInput": false
+                    },
+                    {
+                        "type": "Operation",
+                        "Name": "Новый экран",
+                        "Timer": false,
+                        "hideBottomBarScreen": false,
+                        "noScroll": false,
+                        "handleKeyUp": false,
+                        "noConfirmation": false,
+                        "hideToolBarScreen": false,
+                        "Elements": [],
+                        "Handlers": [],
+                        "onlineOnStart": false,
+                        "onlineOnAfterStart": false,
+                        "onlineOnInput": false
                     }
                 ]
             },
@@ -7562,6 +7055,45 @@
                         "onlineOnInput": false
                     }
                 ]
+            },
+            {
+                "CVOperationName": "Распознавание артикулов",
+                "type": "CVOperation",
+                "hidden": true,
+                "CVFrames": [
+                    {
+                        "Name": "Новый шаг ActiveCV",
+                        "type": "CVFrame",
+                        "CVOnline": false,
+                        "CVDetector": "OCR",
+                        "CVResolution": "VGA",
+                        "CVMode": "list_and_grey",
+                        "CVActionButtons": "Обработать",
+                        "CVRecognitionSettings": "{\"name\": \"Артикул\", \"TypeRecognition\": \"Text\", \"NumberRecognition\": false, \"DateRecognition\": false, \"PlateNumberRecognition\": false, \"mesure_qty\": \"1\", \"min_freq\": \"1\", \"min_length\": \"3\", \"max_length\": \"20\", \"values_list\": \"@list_art\", \"result_var\": \"good_id\"}",
+                        "RecognitionTemplate": "Артикул",
+                        "CVAction": "Поиск по артикулу",
+                        "CVInfo": "@art_info",
+                        "CVCameraDevice": "Back",
+                        "CVDetectorMode": "train",
+                        "Handlers": [
+                            {
+                                "event": "OnObjectDetected",
+                                "action": "run",
+                                "type": "python",
+                                "method": "article_cv_on_object_detected",
+                                "postExecute": ""
+                            },
+                            {
+                                "event": "OnInput",
+                                "listener": "Обработать",
+                                "action": "run",
+                                "type": "set",
+                                "method": "button_manage_articles=true;FinishProcess",
+                                "postExecute": ""
+                            }
+                        ]
+                    }
+                ]
             }
         ],
         "ConfigurationSettings": {
@@ -7575,7 +7107,7 @@
             "handler_auth": "",
             "dictionaries": ""
         },
-        "ConfigurationTags": "Py,off-line",
+        "ConfigurationTags": "Py,off-line,ActiveCV®",
         "FaceRecognitionURL": "",
         "ForegroundService": false,
         "StopForegroundServiceOnExit": false,
@@ -7657,14 +7189,6 @@
             {
                 "PyFileKey": "new_handlers",
                 "PyFileData": ""
-            },
-            {
-                "PyFileKey": "printing_factory",
-                "PyFileData": ""
-            },
-            {
-                "PyFileKey": "tiny_db_services",
-                "PyFileData": ""
             }
         ],
         "StyleTemplates": [],
@@ -7711,6 +7235,21 @@
                 "method": "beep",
                 "postExecute": "",
                 "alias": ""
+            }
+        ],
+        "RecognitionTemplates": [
+            {
+                "name": "Артикул",
+                "TypeRecognition": "Text",
+                "NumberRecognition": false,
+                "DateRecognition": false,
+                "PlateNumberRecognition": false,
+                "mesure_qty": "1",
+                "min_freq": "1",
+                "min_length": "3",
+                "max_length": "20",
+                "values_list": "@list_art",
+                "result_var": "good_id"
             }
         ]
     }

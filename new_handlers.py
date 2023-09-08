@@ -141,7 +141,7 @@ def select_good_article_on_start(hash_map: HashMap):
 @HashMap()
 def docs_tiles_on_start(hash_map: HashMap):
     """Отдельные обработчики плиток для определения процесса hash_map'ом"""
-    screen = ui_models.DocumentsTiles(hash_map, rs_settings)
+    screen: ui_models.DocumentsTiles = ui_models.DocumentsTiles(hash_map, rs_settings)
     screen.on_start()
 
 
@@ -246,6 +246,11 @@ def elem_viev_on_click(hash_map):
     screen: ui_models.GoodsSelectScreen = create_screen(hash_map)
     screen.on_input()
 
+@HashMap()
+def offline_elem_view_on_click(hash_map):
+    screen = ui_models.GoodsSelectOfflineScreen(hash_map, rs_settings)
+    screen.on_input()
+
 
 @HashMap()
 def adr_elem_viev_on_start(hash_map):
@@ -288,7 +293,7 @@ def doc_units_on_input(hash_map):
     screen = ui_models.DocGoodSelectUnit(hash_map, rs_settings)
     screen.on_input()
 
-    
+
 
 # ^^^^^^^^^^^^^^^^^ Documents ^^^^^^^^^^^^^^^^^
 
@@ -302,7 +307,7 @@ def goods_on_start(hash_map):
 
 @HashMap()
 def goods_on_input(hash_map: HashMap):
-    screen = ui_models.GoodsListScreen(hash_map, rs_settings)
+    screen: ui_models.GoodsListScreen = ui_models.GoodsListScreen(hash_map, rs_settings)
     # screen: ui_models.GoodsListScreen = create_screen(hash_map)
     screen.on_input()
     # hash_map.toast(f'{hash_map.get_current_screen()} {hash_map.get_current_process()}')
@@ -335,6 +340,11 @@ def good_card_post_start(hash_map):
 @HashMap()
 def good_card_on_input(hash_map):
     screen: ui_models.ItemCard = create_screen(hash_map)
+    screen.on_input()
+
+@HashMap()
+def offline_good_card_on_input(hash_map):
+    screen = ui_models.ItemCardOfflineScreen(hash_map, rs_settings)
     screen.on_input()
 
 @HashMap()
@@ -443,7 +453,27 @@ def units_on_input(hash_map):
 
 # ^^^^^^^^^^^^^^^^^^^^^ GoodsPrices ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+@HashMap()
+def series_list_on_start(hash_map):
+    screen: ui_models.SeriesList = ui_models.SeriesList(hash_map, rs_settings)
+    screen.on_start()
 
+@HashMap()
+def series_list_on_input(hash_map):
+    screen = ui_models.SeriesList(hash_map, rs_settings)
+    screen.on_input()
+
+@HashMap()
+def series_item_on_start(hash_map):
+    screen: ui_models.SeriesItem = ui_models.SeriesItem(hash_map, rs_settings)
+    screen.on_start()
+
+@HashMap()
+def series_item_on_input(hash_map):
+    screen: ui_models.SeriesItem = ui_models.SeriesItem(hash_map, rs_settings)
+    screen.on_input()
+
+# ^^^^^^^^^^^^^^^^^^^^^ GoodsPrices ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 # =============== Settings =================
 
@@ -516,6 +546,18 @@ def sound_settings_listener(hash_map):
     screen.on_input()
 
 
+@HashMap()
+def documents_settings_on_input(hash_map):
+    """Процесс: Параметры. Экран: Настройки документов"""
+    screen = ui_models.DocumentsSettings(hash_map, rs_settings)
+    screen.on_input()
+
+
+@HashMap()
+def documents_settings_on_start(hash_map):
+    """Процесс: Параметры. Экран: Настройки документов"""
+    screen = ui_models.DocumentsSettings(hash_map, rs_settings)
+    screen.on_start()
 # ^^^^^^^^^^^^^^^^^ Settings ^^^^^^^^^^^^^^^^^
 
 # =============== Html =================
@@ -555,6 +597,16 @@ def file_browser_on_start(hash_map):
 def file_browser_on_input(hash_map):
     screen: ui_models.SimpleFileBrowser = ui_models.SimpleFileBrowser(hash_map, rs_settings)
     screen.on_input()
+
+# =============== UniversalCards =================
+
+@HashMap()
+def universal_cards_on_start(hash_map):
+    screen = ui_models.UniversalCardsScreen(hash_map=hash_map, rs_settings=rs_settings)
+    screen.on_start()
+
+
+# ^^^^^^^^^^^^^^^^^ UniversalCards ^^^^^^^^^^^^^^^^^
 
 
 # =============== Debug =================

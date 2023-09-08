@@ -176,6 +176,12 @@ def get_all_changes_from_database(doc_list: str = ''):
             #SELECT id_doc FROM RS_docs WHERE verified is Null)'''
         res_flow = ui_global.get_query_result(qtext,None,True)
         res_flow = replase_gs_in_res(res_flow)
+
+        qtext = f'''
+                    SELECT * FROM RS_docs_series WHERE id_doc in ({doc_list})'''  # in (
+        # SELECT id_doc FROM RS_docs WHERE verified is Null)'''
+        res_series = ui_global.get_query_result(qtext, None, True)
+        res_series = replase_gs_in_res(res_flow)
     except Exception as e:
             sql_error = True
             #error_pool.append(e.args[0])
@@ -192,6 +198,9 @@ def get_all_changes_from_database(doc_list: str = ''):
 
         filtered_list = [d for d in res_flow if d['id_doc'] == item['id_doc']]
         item['RS_barc_flow'] = filtered_list
+
+        filtered_list = [d for d in res_series if d['id_doc'] == item['id_doc']]
+        item['RS_docs_series'] = filtered_list
     #Адресное хранение
     try:
         qtext = f'''
