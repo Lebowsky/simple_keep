@@ -1133,14 +1133,12 @@
                             {
                                 "type": "MenuItem",
                                 "Value": "Печать",
-                                "Variable": "btn_print",
-                                "style_name": ""
+                                "Variable": "btn_print"
                             },
                             {
                                 "type": "barcode",
                                 "Value": "",
-                                "Variable": "barcode_good_select",
-                                "style_name": ""
+                                "Variable": "barcode_good_select"
                             }
                         ],
                         "Handlers": [
@@ -2504,7 +2502,8 @@
                                         "Value": "@Good",
                                         "Variable": "",
                                         "height": "wrap_content",
-                                        "width": "wrap_content",
+                                        "width": "match_parent",
+                                        "orientation": "",
                                         "weight": "0",
                                         "TextBold": true,
                                         "TextItalic": false,
@@ -2917,8 +2916,7 @@
                             {
                                 "type": "barcode",
                                 "Value": "",
-                                "Variable": "good_barcode",
-                                "style_name": ""
+                                "Variable": "barcode_good_select"
                             }
                         ],
                         "Handlers": [
@@ -3740,8 +3738,7 @@
                             {
                                 "type": "MenuItem",
                                 "Value": "Печать",
-                                "Variable": "btn_print",
-                                "style_name": ""
+                                "Variable": "btn_print"
                             }
                         ],
                         "Handlers": [

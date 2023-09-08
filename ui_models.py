@@ -2779,7 +2779,9 @@ class AdrDocDetailsScreen(DocDetailsScreen):
             else:
                 self.hash_map.put("qtty", str(current_elem['qtty']))
         self.hash_map.put('key', current_elem['key'])
-
+        self.hash_map.put('id_good', current_elem['id_good'])
+        self.hash_map.put('id_unit', current_elem['id_unit'])
+        self.hash_map.put('id_property', current_elem['id_properties']) 
         self.hash_map.put("ShowScreen", "Товар выбор")
 
     def _prepare_table_data(self, doc_details):
@@ -3242,11 +3244,7 @@ class GoodsSelectScreen(DocDetailsScreen):
         self.id_doc = self.hash_map['id_doc']
         self.service = DocService(self.id_doc)
         self.sql_service = SqlQueryProvider()
-    
-    def on_start(self):
-        # Режим работы с мультимедиа и файлами по ссылкам (флаг mm_local)
-        self.hash_map['mm_local'] = ''
-
+        
         q = 'SELECT count(id_doc) as doc_rows FROM RS_docs_table WHERE id_doc=?' 
         res = self.sql_service.sql_query(q, f'{self.id_doc}')
         doc_rows = res[0]['doc_rows']
@@ -3256,17 +3254,16 @@ class GoodsSelectScreen(DocDetailsScreen):
         self.hash_map.put("doc_data", table_view.to_json())
         self.hash_map.put('doc_rows', doc_rows)
 
-        #current_str = self.hash_map.get('selected_card_position')
-        #self.hash_map.put('good_str', f'{current_str} / {doc_rows}')
-
         current_str = int(self.hash_map.get('selected_card_position'))
-        self.hash_map.toast(current_str)
         current_page = int(self.hash_map.get('current_page'))
         items_on_page = self.items_on_page # из родительского класса
-        #selected_card_position = int(self.hash_map.get('selected_card_position'))
         doc_position = (current_page - 1) * items_on_page + current_str
-        self.hash_map.put('good_str', f'{current_str} / {doc_rows}')
+        self.hash_map.put('good_str', f'{doc_position} / {doc_rows}')
         self.hash_map.put('selected_card_position', doc_position)
+
+    def on_start(self):
+        # Режим работы с мультимедиа и файлами по ссылкам (флаг mm_local)
+        self.hash_map['mm_local'] = ''
 
         if not self.hash_map.get('qtty'):
             self.hash_map.put('qtty', '0')
@@ -3336,6 +3333,7 @@ class GoodsSelectScreen(DocDetailsScreen):
             self._set_delta(int(listener[4:]))
 
         elif listener in ["btn_cancel", 'BACK_BUTTON', 'ON_BACK_PRESSED']:
+            self._save_new_delta()
             self._set_delta(reset=True)
             self.hash_map.put('new_qtty', '')
             # self.hash_map.put("BackScreen", "") это мешает вернуться на экран "Товары список" из экрана "Карточка товара" в случае если мы перешли на него с экрана ТоварШтрихкоды
@@ -3349,8 +3347,9 @@ class GoodsSelectScreen(DocDetailsScreen):
         elif listener == 'barcode':
             barcode = self.hash_map.get('barcode_good_select')
             allowed_fact_input = self.rs_settings.get('allow_fact_input')
-
+            
             if not (barcode and allowed_fact_input):
+                self.hash_map.playsound('error')
                 self.hash_map.toast('Штрихкод не найден в документе!') # пока тост, модалка очищает дельту
                 # self.hash_map.show_dialog(listener='barcode_not_found', title='Штрихкод не найден в документе!')
                 return
@@ -3364,8 +3363,8 @@ class GoodsSelectScreen(DocDetailsScreen):
 
             if res and self._handle_found_barcode(res, id_good, id_property, id_unit):
                 return
-            
-            self.hash_map.toast('Штрихкод не найден в документе!') # пока тост, модалка очищает дельту
+            self.hash_map.playsound('error')
+            self.hash_map.toast(f'Штрихкод не найден в документе!') # пока тост, модалка очищает дельту
             #self.hash_map.show_dialog(listener='barcode_not_found', title='Штрихкод не найден в документе!')
                 
         elif listener == "CardsClick":
@@ -3450,8 +3449,6 @@ class GoodsSelectScreen(DocDetailsScreen):
         current_str = pos
         current_elem = table_data[pos]
         
-        self.hash_map.put("selected_card_position", current_str)
-        
         # текущий элемент не найден или это заголовок таблицы
         if current_elem is None or 'good_name' not in current_elem:
             return
@@ -3473,13 +3470,16 @@ class GoodsSelectScreen(DocDetailsScreen):
             'price': current_elem['price'] if 'price' in current_elem else '',
             'price_type': current_elem['price_name'] if 'price_name' in current_elem else '',
             'qtty': current_elem['qtty'] if current_elem['qtty'] and float(current_elem['qtty']) != 0 else '',
+            'new_qtty': current_elem['qtty'] if current_elem['qtty'] and float(current_elem['qtty']) != 0 else 0,
         }
 
         self._fill_none_values(
             put_data,
             ('good_art', 'good_sn', 'good_property', 'good_price', 'good_plan', 'price', 'price_type'),
             default='отсутствует')
-
+        
+        self._save_new_delta()
+        self.hash_map.put("selected_card_position", current_str)
         self.hash_map.put_data(put_data)  
 
     def _fill_none_values(self, data, keys, default=''):
@@ -3506,7 +3506,7 @@ class GoodsSelectScreen(DocDetailsScreen):
             self._set_delta(ratio)
             return True
 
-        if id_good != id_good_br:
+        if id_good != id_good_br and type(self) is GoodsSelectScreen:
             doc_goods_table = self.hash_map.get_json('doc_data')
             table_data = doc_goods_table['customtable']['tabledata']
             match_index = self._find_matching_good(table_data, id_good_br, id_property_br, id_unit_br)
@@ -3517,12 +3517,72 @@ class GoodsSelectScreen(DocDetailsScreen):
                 return True
 
         return False
+    
+    def _save_new_delta(self):
+        if int(self.hash_map.get('new_qtty')) < 0:         
+            self.hash_map.toast('Итоговое количество меньше 0')
+            self.hash_map.playsound('error')
+            self._set_delta(reset=True)
+            return
+        
+        control = self.hash_map.get_bool('control')
+        if control:
+            if int(self.hash_map.get('new_qtty')) > int(
+                    self.hash_map.get('qtty_plan')):
+                self.toast('Количество план в документе превышено')
+                self.hash_map.playsound('error')
+                self._set_delta(reset=True)
+                return
+        selected_card_position = int(self.hash_map.get('selected_card_position'))
+        doc_goods_table = self.hash_map.get_json('doc_data') 	
+        table_data = doc_goods_table['customtable']['tabledata'] 
+
+        current_elem = table_data[selected_card_position]
+        qtty = self.hash_map['new_qtty']
+        # price = self.hash_map.get('price') or 0  # это не используется
+
+        if self.hash_map.get('parent_screen') == 'ВыборТовараАртикул':
+            if int(qtty) == int(current_elem['qtty']):
+                self.hash_map.show_screen("ВыборТовараАртикул")
+                return
+            finded_goods_cards = self.hash_map.get('finded_goods_cards', from_json=True)
+            cardsdata = finded_goods_cards['customcards']['cardsdata']
+
+            card_data = next(elem for elem in cardsdata
+                                if elem['key'] == current_elem['key'])
+            card_data['qtty'] = float(qtty)
+            self.hash_map.put('finded_goods_cards', finded_goods_cards, to_json=True)
+            self.hash_map.show_screen("ВыборТовараАртикул")
+
+        else:
+            if int(qtty) != int(current_elem['qtty']):
+                update_data = {
+                    'sent': 0,
+                    'qtty': float(qtty) if qtty else 0,
+                    # 'price': float(price) # в Adr docs нет колонки прайс, не понятно нужна она вообще или нет
+                }
+                row_id = int(current_elem['key'])
+                self.service.update_doc_table_row(data=update_data, row_id=row_id)
+                self.hash_map.put('new_qtty', qtty)
+                self.hash_map.put('qtty', qtty)
+                if type(self) is GoodsSelectScreen:
+                    self._refresh_table_view()
+
+    def _refresh_table_view(self):
+        doc_rows = self.hash_map.get('doc_rows')
+        doc_data = self.service.get_doc_details_data(self.id_doc, 0, doc_rows)
+        table_data = self._prepare_table_data(doc_data)
+        table_view = self._get_doc_table_view(table_data=table_data)
+        self.hash_map.put("doc_data", table_view.to_json())
+            
 
 class AdrGoodsSelectScreen(GoodsSelectScreen):
     def __init__(self, hash_map: HashMap, rs_settings):
-        super().__init__(hash_map, rs_settings)
+        DocDetailsScreen.__init__(self, hash_map, rs_settings)
+        self.id_doc = self.hash_map['id_doc']
         self.service = AdrDocService()
-
+        self.sql_service = SqlQueryProvider()
+    
 class GoodBarcodeRegister(Screen):
     screen_name = 'ТоварШтрихкоды'
     process_name = 'Документы'
@@ -3658,6 +3718,9 @@ class GoodsSelectArticle(Screen):
             put_data = {
                 'Doc_data': f'{self.hash_map["doc_type"]} № {self.hash_map["doc_n"]} от {self.hash_map["doc_date"]}',
                 'Good': current_element['name'],
+                'id_good': current_elem['id_good'],
+                'id_unit': current_elem['id_unit'],
+                'id_property': current_elem['id_properties'],
                 'good_art': current_element['art'],
                 'good_sn': current_element['series_name'],
                 'good_property': current_element['property_name'],
