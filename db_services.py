@@ -807,6 +807,21 @@ class DocService:
             self.provider.table_name = table_name
         return self.provider.sql_query(q, params)
 
+    def get_doc_rows_count(self, id_doc):
+        if id_doc:
+            q = 'SELECT count(id_doc) as doc_rows FROM RS_docs_table WHERE id_doc=?'
+            res = self.provider.sql_query(q, f'{id_doc}')
+            if res:
+                return res[0]['doc_rows']
+        return {}    
+
+    def get_barcode(self, barcode):
+        if barcode:
+            q = 'SELECT * FROM RS_barcodes WHERE barcode=?'
+            res = self.provider.sql_query(q, f'{barcode}')
+            if res:
+                return res
+        return {}     
 
 class AdrDocService(DocService):
     def __init__(self, doc_id='', cur_cell='', table_type='in'):
