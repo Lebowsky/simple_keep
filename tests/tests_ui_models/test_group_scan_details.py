@@ -173,13 +173,56 @@ class TestGroupScanDocDetailsScreenNew(unittest.TestCase):
     def tearDown(self) -> None:
         self.sut.queue_service.provider.close()
 
-    def test_get_barcode(self):
+    def test_barcode_scanned_no_result_error(self):
         from tests.data_for_tests.nosql.initial_data import barcode_data
 
         self.hash_map.put('barcode_camera', '00000046198488X?io+qCABm8wAYa')
         self.hash_map.put('have_mark_plan', False)
+        self.sut.id_doc = '2da638d6-6e38-11ed-8a18-50e549ec2614'
 
         BarcodeWorker._get_barcode_data = MagicMock(return_value=barcode_data)
 
         result = self.sut._barcode_scanned()
+        self.assertIsNone(result)
+
+    # @unittest.skip
+    def test_send_post_lines_data(self):
+        from tests.data_for_tests.nosql.initial_data import initial_data
+        server_response = {
+            'result': True,
+            'data': [
+                {
+                    "id_doc": '123',
+                    "id_good": 'id_good_value',
+                    "id_properties": 'id_property_value',
+                    "id_series": 'id_series_value',
+                    "id_unit": "",
+                    'table_type': "",
+                    "d_qtty": 33,
+                    'sent': False
+                },
+                {
+                    "id_doc": '124',
+                    "id_good": 'id_good_value',
+                    "id_properties": 'id_property_value',
+                    "id_series": 'id_series_value',
+                    "id_unit": "",
+                    'table_type': "",
+                    "d_qtty": 45,
+                    'sent': False
+                }
+            ]
+        }
+        http_answer = HsService.HttpAnswer(
+            error=False,
+            error_text='',
+            status_code=200,
+            data=server_response,
+            url='')
+        self.sut.hs_service.send_document_lines = MagicMock(return_value=http_answer)
+
+        self.sut.send_post_lines_data()
+        # TODO доделать
+
+
 

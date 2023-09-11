@@ -1,6 +1,5 @@
 from abc import ABC, abstractmethod
 import json
-import base64
 from json.decoder import JSONDecodeError
 import os
 from pathlib import Path
@@ -1602,6 +1601,7 @@ class FlowDocScreen(DocsListScreen):
     def on_start(self):
         super().on_start()
 
+
     def on_input(self):
         if self.listener == "CardsClick":
             args = self._get_selected_card_put_data()
@@ -2308,6 +2308,9 @@ class GroupScanDocDetailsScreen(DocDetailsScreen):
         return False
 
 class GroupScanDocDetailsScreenNew(DocDetailsScreen):
+    screen_name = 'Документ товары'
+    process_name = 'Групповая обработка'
+
     def __init__(self, hash_map, rs_settings):
         super().__init__(hash_map, rs_settings)
         self.hs_service = hs_services.HsService(self.get_http_settings())
@@ -2321,6 +2324,7 @@ class GroupScanDocDetailsScreenNew(DocDetailsScreen):
         super().on_input()
         listeners = {
             'barcode': self._barcode_scanned,
+            'ON_BACK_PRESSED': self.go_back
         }
         if self.listener in listeners:
             listeners[self.listener]()
@@ -2334,41 +2338,60 @@ class GroupScanDocDetailsScreenNew(DocDetailsScreen):
         if not barcode:
             return
 
-        barcode_worker = BarcodeWorker(id_doc=self.id_doc, **self._get_barcode_process_params(),
-                                       use_scanning_queue=True)
-        # print(barcode_worker)
-        result = barcode_worker.process_the_barcode(barcode)
+        self.barcode_worker = BarcodeWorker(id_doc=self.id_doc, **self._get_barcode_process_params(),
+                                            use_scanning_queue=True)
+        result = self.barcode_worker.process_the_barcode(barcode)
+
         if result.error:
             self._process_error_scan_barcode(result)
             return result.error
 
+        if not self.hash_map.get_bool('send_document_lines_running'):
+            self.hash_map.run_event_async('send_post_lines_data', post_execute_method='after_send_post_lines_data')
+            self.hash_map.put('send_document_lines_running', True)
+
+    def go_back(self):
+        self.hash_map.show_screen('Документы')
+
+    def send_post_lines_data(self):
         send_data = self.queue_service.get_send_document_lines(self.id_doc)
-        return send_data
-        # http_result = self.hs_service.send_document_lines(self.id_doc, send_data)
-        # hash_map.put('send_document_lines_running', True)
-        # if http_result.status_code == 200:
-        #     # barcode_worker.update_document_barcode_data()
-        #     # barcode_worker.
-        # hash_map.put('send_document_lines_running', False)
+        http_result = self.hs_service.send_document_lines(self.id_doc, send_data)
 
-        # process the barcode
-        # barcode_worker = BarcodeWorker(
-        #     self.id_doc, **self._get_barcode_process_params())
-        #
-        # result = barcode_worker.process_the_barcode(barcode)
-        # if result.error:
-        #     self._process_error_scan_barcode(result)
-        #     return
+        if http_result.status_code == 200:
+            self.queue_service.update_sent_lines(send_data)
+            if http_result.data:
+                for element in http_result.data['data']:
+                    self.service.provider.table_name = "RS_docs_table"
+                    table_line = self.db_service.get_table_line('RS_docs_table', {'id_doc': element['id_doc'],
+                                                               'id_good': element['id_good'],
+                                                               'id_properties': element['id_properties'],
+                                                               'id_unit': element['id_unit']})
 
-        # run after_scan_processing async http post -> hs.send_document_lines()
-        # hash_map.put('send_document_lines_running', True)
-        # if 200 update barc queue
-        #   update RS_docs_table
-        #   update queue sent status
-        # hash_map.put('send_document_lines_running', False)
+                    if table_line:
+                        table_line['qtty'] = element['d_qtty']
+                        table_line['sent'] = 1
+                        self.db_service.update_table('RS_docs_table', table_line)
+                    else:
+                        new_table_line = self.create_new_table_line(element)
 
-    def after_scan_processing(self):
-        pass
+                        self.toast(new_table_line)
+                        self.db_service.update_table('RS_docs_table', new_table_line)
+
+    def after_send_data(self):
+        self.hash_map.put('send_document_lines_running', False)
+        self.hash_map.refresh_screen()
+        self.on_start()
+
+    @staticmethod
+    def create_new_table_line(element):
+        new_table_line = element
+        new_table_line['qtty'] = new_table_line['d_qtty']
+        del new_table_line['d_qtty']
+        del new_table_line['table_type']
+        new_table_line['id_series'] = ''
+        new_table_line['id_price'] = ''
+        new_table_line['qtty_plan'] = None
+        return new_table_line
 
     def _get_barcode_process_params(self):
         return {
@@ -2380,6 +2403,7 @@ class GroupScanDocDetailsScreenNew(DocDetailsScreen):
 
     def _process_error_scan_barcode(self, scan_result):
         self.hash_map.toast(scan_result.description)
+        self.hash_map.playsound('error')
 
 
 class DocumentsDocDetailScreen(DocDetailsScreen):
@@ -6422,7 +6446,7 @@ class ScreensFactory:
         DocumentsTiles,
         GroupScanDocsListScreen,
         DocumentsDocsListScreen,
-        GroupScanDocDetailsScreen,
+        GroupScanDocDetailsScreenNew,
         DocumentsDocDetailScreen,
         ErrorLogScreen,
         DebugSettingsScreen,

@@ -128,15 +128,17 @@ class BarcodeService(DbService):
                 ON barcodes.id_good = doc_table.id_good
                      AND barcodes.id_property = doc_table.id_properties
                      AND barcodes.id_unit = doc_table.id_unit
-                     AND doc_table.id_doc = {}
+                     AND doc_table.id_doc = "{}"
                      
             LEFT JOIN RS_docs_barcodes as doc_barcodes
-                ON doc_barcodes.id_doc = {}
-                    AND doc_barcodes.GTIN = {}
-                    AND doc_barcodes.Series = {}
+                ON doc_barcodes.id_doc = "{}"
+                    AND doc_barcodes.GTIN = "{}"
+                    AND doc_barcodes.Series = "{}"
                 
-            WHERE barcodes.barcode = {}'''.format(
+            WHERE barcodes.barcode = "{}"'''.format(
             id_doc, id_doc, barcode_info.gtin, barcode_info.serial, search_value)
+
+        print(q)
 
         result = self.provider.sql_query(q)
         if result:
@@ -170,6 +172,22 @@ class BarcodeService(DbService):
     def insert_no_sql(queue_update_data):
         provider = ScanningQueueService()
         provider.save_scanned_row_data(queue_update_data)
+
+    @staticmethod
+    def get_table_line(table_name, filters: dict = None):
+        provider = SqlQueryProvider(table_name=table_name)
+        query = f"""SELECT * FROM {table_name} WHERE """
+        for field in list(filters):
+            query += f"""{field}='{filters[field]}' AND """
+        query = query[:-4] if query.endswith('AND ') else query
+        result = provider.sql_query(query, '')
+        return result[0] if result else None
+
+
+    @staticmethod
+    def update_line_qtty(table_line):
+        provider = SqlQueryProvider(table_name='RS_docs_table')
+        provider.update(data=table_line)
 
 
 class DocService:

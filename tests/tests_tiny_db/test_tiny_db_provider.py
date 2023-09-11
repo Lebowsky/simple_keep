@@ -1,6 +1,8 @@
+import json
 import unittest
 from tinydb import TinyDB
 from tiny_db_services import TinyNoSQLProvider, ScanningQueueService
+from tests.data_for_tests.nosql.initial_data import initial_data
 
 
 class TestTinyNoSQLProvider(unittest.TestCase):
@@ -114,6 +116,7 @@ class TestScanningQueueService(unittest.TestCase):
     def setUp(self) -> None:
         self.provider = TinyNoSQLProvider(table_name='test_table', db_path='./')
         self.provider.drop_table('test_table')
+        self.provider.drop_table('scanning_queue')
 
     def tearDown(self) -> None:
         self.provider.close()
@@ -146,7 +149,6 @@ class TestScanningQueueService(unittest.TestCase):
         self.assertEqual(result, 6)
 
     def test_get_send_document_lines(self):
-        from tests.data_for_tests.nosql.initial_data import initial_data
         expect = [
             {
                 "id_doc": '123',
@@ -161,4 +163,17 @@ class TestScanningQueueService(unittest.TestCase):
         self.provider.insert_multiple(initial_data)
         sut = ScanningQueueService(provider=self.provider)
         result = sut.get_send_document_lines(id_doc='123')
+
         self.assertEqual(expect, result)
+
+    def test_update_sent(self):
+        expect = 0
+
+        self.provider.insert_multiple(initial_data)
+        sut = ScanningQueueService(provider=self.provider)
+        result = sut.get_send_document_lines(id_doc='123')
+        sut.update_sent_lines(result)
+        new_result = sut.get_send_document_lines(id_doc='123')
+
+        self.assertEqual(expect, len(new_result))
+
