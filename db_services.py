@@ -1,5 +1,6 @@
 import json
-from typing import List
+from datetime import datetime, timedelta, timezone
+from typing import List, Literal
 
 from ru.travelfood.simple_ui import SimpleSQLProvider as sqlClass
 from ui_global import get_query_result, bulk_query
@@ -29,6 +30,7 @@ class DbService:
             self.provider.sql_exec_many(q, params)
 
     def _sql_query(self, q, params: str = '', table_name=''):
+
         if table_name:
             self.provider.table_name = table_name
         return self.provider.sql_query(q, params)
@@ -42,7 +44,7 @@ class TimerService(DbService):
         if not data:
             return
 
-        clear_tables = ['RS_docs_table', 'RS_adr_docs_table', 'RS_docs_barcodes, RS_barc_flow']
+        clear_tables = ['RS_docs_table', 'RS_adr_docs_table', 'RS_docs_barcodes, RS_barc_flow', 'RS_docs_series']
 
         for table_name, values in data.items():
             self.provider.table_name = table_name
@@ -134,7 +136,7 @@ class BarcodeService(DbService):
                     AND doc_barcodes.Series = {}
                 
             WHERE barcodes.barcode = {}'''.format(
-            id_doc, id_doc, barcode_info.GTIN, barcode_info.Series, search_value)
+            id_doc, id_doc, barcode_info.gtin, barcode_info.serial, search_value)
 
         result = self.provider.sql_query(q)
         if result:
@@ -432,14 +434,44 @@ class DocService:
         return result
 
     def delete_doc(self, id_doc):
-        queryes = (f'DELETE FROM {self.docs_table_name} WHERE id_doc = ?',
+        queryes = (
         'DELETE FROM RS_barc_flow WHERE id_doc = ?',
         'DELETE FROM RS_docs_table WHERE id_doc = ?',
-        'DELETE FROM RS_adr_docs_table WHERE id_doc = ?')
-
+        'DELETE FROM RS_docs_series WHERE id_doc = ?',
+        'DELETE FROM RS_docs_barcodes WHERE id_doc = ?',
+        f'DELETE FROM {self.docs_table_name} WHERE id_doc = ?',
+        )
         for query in queryes:
             self._get_query_result(query, (id_doc,))
 
+    def delete_adr_doc(self, id_doc):
+        queryes = (
+        'DELETE FROM RS_adr_docs_table WHERE id_doc = ?',
+        'DELETE FROM RS_adr_docs WHERE id_doc = ?',
+        )
+        for query in queryes:
+            self._get_query_result(query, (id_doc,))
+
+    def delete_old_docs(self, days: int) -> list:
+        old_docs_ids = self._find_old_docs(days)
+        old_adr_docs_ids = self._find_old_docs(days, 'RS_adr_docs')
+        for id_doc in old_docs_ids:
+            self.delete_doc(id_doc)
+        for id_doc in old_adr_docs_ids:
+            self.delete_adr_doc(id_doc)
+        return old_docs_ids + old_adr_docs_ids
+
+    def _find_old_docs(
+            self,
+            days: int,
+            table: Literal['RS_docs', 'RS_adr_docs'] = 'RS_docs'
+    ) -> List[str]:
+        """Возвращает список id всех устаревших документов"""
+        query = f'''SELECT id_doc FROM {table} WHERE created_at < ?'''
+        current_datetime = datetime.now(tz=timezone.utc)
+        target_time = current_datetime - timedelta(days=days)
+        docs = self._get_query_result(query, (target_time, ))
+        return [doc[0] for doc in docs]
 
     def get_docs_stat(self):
         query = f'''
@@ -588,7 +620,8 @@ class DocService:
             RS_docs_table.price,
             RS_price_types.name as price_name,
             RS_docs_table.qtty_plan -RS_docs_table.qtty as IsDone,
-            RS_docs_table.last_updated
+            RS_docs_table.last_updated,
+            RS_docs_table.use_series
             
             FROM RS_docs_table 
 
@@ -605,7 +638,7 @@ class DocService:
             """
 
         where = f"""WHERE id_doc = '{str(id_doc)}'"""
-        row_filters_condition = """AND RS_docs_table.qtty != RS_docs_table.qtty_plan""" if row_filters else ''
+        row_filters_condition = """AND qtty != COALESCE(qtty_plan, '0') """ if row_filters else ''
         search_string_condition = f"""AND good_name LIKE '%{search_string}%'""" if search_string else ''
 
         where_query = f"""
@@ -731,7 +764,6 @@ class DocService:
             goods = self.provider.sql_query(q, id_doc)
             doc_data['RS_docs_table'] = goods
 
-
             fields = ['id_doc', 'id_good', 'id_property', 'id_series', 'barcode_from_scanner', 'GTIN', 'Series']
             q = '''
                 SELECT {}
@@ -741,7 +773,6 @@ class DocService:
 
             doc_barcodes = self.provider.sql_query(q, id_doc)
             doc_data['RS_docs_barcodes'] = doc_barcodes
-
 
             fields = ['id_doc', 'barcode']
             q = '''
@@ -753,10 +784,19 @@ class DocService:
             barc_flow = self.provider.sql_query(q, id_doc)
             doc_data['RS_barc_flow'] = barc_flow
 
+            fields = ['id_doc', 'id_good', 'id_series', 'id_warehouse', 'qtty', 'name', 'best_before', 'number',
+                      'production_date']
+            q = '''
+                SELECT {}
+                FROM RS_docs_series
+                WHERE id_doc = ?
+            '''.format(','.join(fields))
+
+            series_table = self.provider.sql_query(q, id_doc)
+            doc_data['RS_docs_series'] = series_table
             data.append(doc_data)
 
         return data
-
 
     def get_count_mark_codes(self, id_doc):
         q = '''
@@ -823,6 +863,232 @@ class DocService:
                 return res
         return {}     
 
+class SeriesService(DbService):
+    def __init__(self, params: dict):
+        super().__init__()
+        if params and isinstance(params, dict):
+            self.params = params
+        else:
+            params = {}
+
+    def get_series_by_barcode(self, barcode):
+        params = [self.params.get('id_doc'), self.params.get('id_good'), barcode,
+                  barcode]  # self.params.get('id_warehouse'),
+        q = '''
+        SELECT id,
+           id_doc,
+           id_good,
+           id_series,
+           id_warehouse,
+           qtty,
+           name,
+           best_before,
+           number,
+           production_date
+        FROM RS_docs_series
+        WHERE RS_docs_series.id_doc = ? AND 
+            RS_docs_series.id_good = ? 
+            AND (name = ? OR number = ?)'''
+        return get_query_result(q, params, True)
+
+    def get_series_by_doc_and_goods(self):
+        params = (self.params.get('id_doc'), self.params.get('id_good'))  # , self.params.get('id_warehouse')
+
+        q = '''
+            SELECT 
+            
+            RS_docs_series.id as key,
+            RS_docs_series.id_doc as id_doc,
+            RS_docs_series.id_good,
+            RS_docs_series.id_series,
+            RS_docs_series.id_warehouse,
+            RS_docs_series.qtty,
+            RS_docs_series.name,
+            RS_docs_series.best_before,
+            RS_docs_series.number,
+            RS_docs_series.production_date,
+            RS_docs.doc_type,
+            RS_docs.doc_n, 
+            RS_docs.doc_date,
+            RS_goods.name as good_name,
+            RS_goods.art,
+            RS_warehouses.name as warehouse_name
+             
+            FROM RS_docs_series 
+            
+            LEFT JOIN 
+            RS_docs ON 
+            RS_docs_series.id_doc =  RS_docs.id_doc
+            
+            LEFT JOIN 
+            RS_goods ON 
+            RS_docs_series.id_good =  RS_goods.id
+            
+            LEFT JOIN 
+            RS_warehouses ON 
+            RS_docs_series.id_warehouse =  RS_warehouses.id
+            
+            WHERE RS_docs_series.id_doc = ? AND 
+            RS_docs_series.id_good = ? 
+            
+        '''
+        return get_query_result(q, params, True)
+
+    def add_qtty_to_table_str(self, item_id):
+        params = (item_id,)
+        q = '''UPDATE RS_docs_series
+            SET qtty = qtty + 1
+            WHERE id = ?'''
+
+        return get_query_result(q, params)
+
+    def add_new_series_in_doc_series_table(self, barcode):
+        params = (
+        self.params.get('id_doc'), self.params.get('id_good'), self.params.get('id_warehouse'), 1, barcode, barcode)
+        q = 'INSERT INTO RS_docs_series (id_doc, id_good, id_warehouse, qtty, name, number) VALUES(?,?,?,?,?,?)'
+        return get_query_result(q, params)
+
+    def get_item_by_name(self, item_name, table_name):
+        q = f'SELECT id FROM {table_name} WHERE {table_name}.name = ?'
+        res = get_query_result(q, (item_name,))
+        if res:
+            return res[0][0]
+        else:
+            return None
+
+    def delete_current_st(self, id):
+        q = 'DELETE FROM RS_docs_series  WHERE id = ?'
+        return get_query_result(q, (id,))
+
+    @staticmethod
+    def get_series_prop_by_id(id, table_name):
+        q = f'''
+       SELECT {table_name}.id,
+       {table_name}.id_doc,
+       {table_name}.id_good,
+       {table_name}.id_properties,
+       {table_name}.id_series,
+       {table_name}.id_unit,
+       {table_name}.qtty,
+       {table_name}.qtty_plan,
+       {table_name}.price,
+       {table_name}.id_price,
+       {table_name}.id_cell,
+       {table_name}.use_series,
+       RS_goods.art as code_art, 
+       RS_goods.name as good_name,
+       RS_properties.name as properties_name,
+       RS_units.name as units_name
+               
+          FROM {table_name} 
+        LEFT JOIN   RS_goods
+        ON {table_name}.id_good = RS_goods.id
+        
+        LEFT JOIN   RS_properties
+        ON {table_name}.id_properties = RS_properties.id
+        
+        LEFT JOIN   RS_units
+        ON {table_name}.id_unit = RS_units.id
+        
+        WHERE {table_name}.id = ?
+        '''
+        res = get_query_result(q, (id,), True)
+        if res:
+            return res[0]
+        else:
+            return {}
+
+
+    @staticmethod
+    def get_series_table_str(id):
+        q = '''
+       SELECT 
+        RS_docs_series.id,
+        RS_docs_series.id_doc,
+        RS_docs_series.id_good,
+        RS_docs_series.id_series,
+        RS_docs_series.id_warehouse,
+        RS_docs_series.qtty,
+        RS_docs_series.name,
+        RS_docs_series.best_before,
+        RS_docs_series.number,
+        RS_docs_series.production_date,
+        RS_goods.name as good_name
+        FROM RS_docs_series
+        LEFT JOIN RS_goods
+        ON RS_goods.id = RS_docs_series.id_good
+        WHERE RS_docs_series.id = ?
+        '''
+        res = get_query_result(q, (id,),True)
+        if res:
+            return res[0]
+        else:
+            return {}
+
+    @staticmethod
+    def get_doc_prop_by_id(id_doc, table_name):
+        q = f'''
+        SELECT {table_name}.id_doc,
+           {table_name}.doc_n,
+           {table_name}.doc_date,
+           {table_name}.id_warehouse as id_warehouse,
+           RS_warehouses.name as warehouse
+           
+        FROM {table_name}
+        LEFT JOIN RS_warehouses ON
+        {table_name}.id_warehouse = RS_warehouses.id
+          
+        WHERE {table_name}.id_doc = ?
+        '''
+        res = get_query_result(q,(id_doc,),True)
+        if res:
+            return res[0]
+        else:
+            return {}
+
+    def save_table_str(self, params):
+        q = '''
+        UPDATE RS_docs_series
+        SET id = :id,
+           id_doc = :id_doc,
+           id_good = :id_good,
+           id_series = :id_series,
+           id_warehouse = :id_warehouse,
+           qtty = :qtty,
+           name = :name,
+           best_before = :best_before,
+           number = :number,
+           production_date = :production_date
+        WHERE id = :id '''
+        res = get_query_result(q, params)
+        return True
+
+    def get_total_qtty(self):
+        params = (self.params.get('id_doc'), self.params.get('id_good'))
+        q = '''
+        SELECT 
+        sum(qtty) FROM RS_docs_series
+         WHERE id_doc = ? AND id_good = ?'''
+        res = get_query_result(q, params)
+        if res:
+            return res[0][0]
+        else:
+            return 0
+
+    def set_total_qtty(self, qtty):
+        params = (qtty, self.params.get('id_doc'), self.params.get('id_good'))
+        q = '''
+        UPDATE RS_docs_table
+        SET qtty = ?
+        WHERE (RS_docs_table.id_series IS NULL OR RS_docs_table.id_series="" ) 
+        AND RS_docs_table.id_doc = ? AND RS_docs_table.id_good = ? 
+        '''
+        res = get_query_result(q, params)
+
+        DocService().set_doc_status_to_upload(self.params.get('id_doc'))
+
+        return True
+
 class AdrDocService(DocService):
     def __init__(self, doc_id='', cur_cell='', table_type='in'):
         self.doc_id = doc_id
@@ -875,11 +1141,13 @@ class AdrDocService(DocService):
         basic_where = f"""WHERE id_doc = :id_doc and table_type = :table_type"""
 
         cur_cell_condition = '''and (id_cell=:current_cell OR id_cell="" OR id_cell is Null)''' if curCell else ''
+        row_filters_condition = """AND qtty != COALESCE(qtty_plan, '0') """ if row_filters else ''
         search_string_condition = f"""AND good_name LIKE '%{search_string}%'""" if search_string else ''
 
         where_full = f"""
                 {basic_where}
                 {cur_cell_condition}
+                {row_filters_condition}
                 {search_string_condition}
         """
 
@@ -933,6 +1201,7 @@ class AdrDocService(DocService):
 
         return data
 
+
 class FlowDocService(DocService):
 
     def __init__(self, doc_id=''):
@@ -975,7 +1244,7 @@ class FlowDocService(DocService):
                 ON RS_countragents.id = {self.docs_table_name}.id_countragents
                 '''
         where = []
-        where.append( f'''{self.docs_table_name}.id_doc not in (SELECT distinct
+        where.append(f'''{self.docs_table_name}.id_doc not in (SELECT distinct
                 id_doc
                 From 
                 {self.details_table_name}
@@ -1007,7 +1276,6 @@ class FlowDocService(DocService):
 
         result = self._get_query_result(query_text, args_tuple, return_dict=True)
         return result
-
 
     def get_flow_table_data(self):
         query_text = '''WITH temp_q as (SELECT
@@ -1165,7 +1433,6 @@ class DbCreator(DbService):
         for table in tables:
             self._sql_query(f'DROP TABLE {table}')
 
-
     def get_all_tables(self):
         q = '''
             SELECT 
@@ -1191,6 +1458,77 @@ class ErrorService:
     def clear():
         return get_query_result("DELETE FROM Error_log")
 
+class UniversalCardsService(DbService):
+    def __init__(self):
+        super().__init__()
+        self.table_name: str
+        self.filter_fields = []
+        self.filter_value = ''
+        self.exclude_list = []
+        self.no_label = False
+        self.table_names = self._table_names_dict()
+
+    def get_views_data(self, table_name: str):
+        fields = self._get_fields(table_name)
+        fields_links = {}
+        q_fields = []
+        q_joins = []
+        q_conditions = ['true']
+
+        for field in fields:
+            if field in self.exclude_list:
+                continue
+
+            q_fields.append('{}.{} AS {}'.format(
+                table_name, field, 'key' if field == 'id' else field))
+
+            link_table_name = self.table_names.get(field)
+            if link_table_name:
+                q_fields.append(f'{link_table_name}.name as {link_table_name}_name')
+                q_joins.append('LEFT JOIN {} ON {}.id = {}.{}'.format(
+                    link_table_name, link_table_name, table_name, field
+                ))
+
+                fields_links[field] = f'{link_table_name}_name'
+            else:
+                fields_links[field] = 'key' if field == 'id' else field
+
+        if self.filter_value:
+            q_conditions = [f"{table_name}.{field} LIKE '%{self.filter_value}%'" for field in self.filter_fields]
+
+        q = '''SELECT {} 
+                FROM {}
+                {}
+                WHERE {}
+        '''. format(','.join(q_fields), table_name, ' '.join(q_joins), ' OR '.join(q_conditions))
+
+        return fields_links, self._sql_query(q)
+
+    def _get_fields(self, table_name) -> List[str]:
+        """
+        :param table_name:
+        :return list column names:
+        """
+        q = f'PRAGMA table_info({table_name})'
+        res = self._sql_query(q, table_name=table_name)
+
+        return [row['name'] for row in res]
+
+    def _table_names_dict(self):
+        return {
+            'id_good': 'RS_goods',
+            'type_good': 'RS_types_goods',
+            'unit': 'RS_units',
+            'id_property': 'RS_properties',
+            'id_series': 'RS_series',
+            'id_unit': 'RS_units',
+            'id_countragents': 'RS_countragents',
+            'id_warehouse': 'RS_warehouses',
+            'id_doc': 'RS_docs',
+            'id_cell': 'RS_cells',
+            'id_owner': 'RS_goods',
+            'id_price_types': 'RS_price_types'
+        }
 
 class SqlQueryProvider:
     def __init__(self, table_name='', sql_class=sqlClass(), debug=False):
@@ -1376,13 +1714,15 @@ class SqlQueryProvider:
     def convert_sql_params(sql_query, params_dict):
         import re
         param_values = []
+
         def replace_named_param(match):
             param_name = match.group(1)
 
             param_values.append(params_dict[param_name])
 
             return "?"
-        new_query = re.sub(r':(\w+)'    , replace_named_param, sql_query)
+
+        new_query = re.sub(r':(\w+)', replace_named_param, sql_query)
 
         return new_query, param_values
 
@@ -1410,4 +1750,3 @@ class SqlQueryProvider:
             return json.dumps(get_query_result(q, tuple(params.split(',')), return_dict=True))
         else:
             return json.dumps(get_query_result(q, return_dict=True))
-

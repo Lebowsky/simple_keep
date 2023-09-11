@@ -15,7 +15,7 @@ query_list = queue.Queue()
 if os.path.exists('//data/data/ru.travelfood.simple_ui/databases/'): #локально
     db_path = '//data/data/ru.travelfood.simple_ui/databases/SimpleKeep'  # rightscan'
 else:
-    db_path = 'rightscan5.db'  # D:\PythonProjects\RightScan\SUI_noPony\
+    db_path = file_abs_path = os.path.abspath('./SimpleKeep')  # D:\PythonProjects\RightScan\SUI_noPony\
 
 conn = None
 
@@ -436,6 +436,13 @@ class Rs_doc():
                         return {'Result': f'Количество план будет превышено при добавлении {str(ratio)} единиц товара',
                                 'Error': 'QuantityPlanReached',
                                 'barcode': barcode, 'Descr': f'Количество план будет превышено при добавлении {str(ratio)} единиц товара'}
+            #Товар подлежит учету по сериям
+            if res[0]['use_series'] == 1:
+                return {'Result': 'Данный товар подлежит учету по сериям',
+                        'Error': 'Must_use_series',
+                        'barcode': barcode,
+                        'Descr': f'Товар подлежит серийному учету',
+                        'current_elem': res[0]}
 
         else: #Товар не найден в документе
             if have_zero_plan and control:

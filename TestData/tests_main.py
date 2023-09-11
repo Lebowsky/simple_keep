@@ -32,7 +32,7 @@ rs_default_settings = {
     'path': '',
     'delete_files': 'false',
     'allow_overscan': 'false',
-    'path_to_databases': '//data/data/ru.travelfood.simple_ui/databases',
+    'path_to_databases': '.\TestData',
     'sqlite_name': 'SimpleKeep',
     'log_name': 'log.json',
     'timer_is_disabled': False,
@@ -163,6 +163,23 @@ def file_browser_on_input(hash_map):
 
 def elem_viev_on_click(hash_mao):
     main.elem_viev_on_click(hash_mao)
+
+
+def series_list_on_start(hash_map):
+    main.series_list_on_start(hash_map)
+
+
+def series_list_on_input(hash_map):
+    main.series_list_on_input(hash_map)
+
+
+def series_item_on_start(hash_map):
+    main.series_item_on_start(hash_map)
+
+
+def series_item_on_input(hash_map):
+    main.series_item_on_input(hash_map)
+
 
 class hashMap:
     d = {}
