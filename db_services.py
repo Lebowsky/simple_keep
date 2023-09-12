@@ -1309,6 +1309,13 @@ class FlowDocService(DocService):
                       '''
         return self._get_query_result(query_text, (self.doc_id, barcode), True)
 
+    def add_barcode_to_database(self, barcode: str):
+        if not barcode:
+            return
+        qtext = '''INSERT INTO RS_barc_flow (id_doc, barcode) VALUES (?,?)'''
+        self.provider.sql_exec(qtext, ','.join([self.doc_id, barcode]))
+        self.set_doc_status_to_upload(self.doc_id)
+
 
 class GoodsService(DbService):
     def __init__(self, item_id=''):
