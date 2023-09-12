@@ -3320,59 +3320,17 @@ class BaseGoodSelect(Screen):
                 self._set_delta(0)
 
         elif listener == "btn_ok":
-            if int(self.hash_map.get('new_qtty')) < 0:
-                self.hash_map.toast('Итоговое количество меньше 0')
-                self.hash_map.playsound('error')
-                self._set_delta(reset=True)
-                return
-            control = self.hash_map.get_bool('control')
-            if control:
-                if int(self.hash_map.get('new_qtty')) > int(
-                        self.hash_map.get('qtty_plan')):
-                    self.toast('Количество план в документе превышено')
-                    self.hash_map.playsound('error')
-                    self._set_delta(reset=True)
-                    return
-            current_elem = self.hash_map.get_json('selected_card_data')
-            qtty = self.hash_map['new_qtty']
-            price = self.hash_map.get('price') or 0
-
-            if self.hash_map.get('parent_screen') == 'ВыборТовараАртикул':
-                if int(qtty) == int(current_elem['qtty']):
-                    self.hash_map.show_screen("ВыборТовараАртикул")
-                    return
-                finded_goods_cards = self.hash_map.get('finded_goods_cards', from_json=True)
-                cardsdata = finded_goods_cards['customcards']['cardsdata']
-
-                card_data = next(elem for elem in cardsdata
-                                 if elem['key'] == current_elem['key'])
-                card_data['qtty'] = float(qtty)
-                self.hash_map.put('finded_goods_cards', finded_goods_cards, to_json=True)
-                self.hash_map.show_screen("ВыборТовараАртикул")
-
-            else:
-                if int(qtty) != int(current_elem['qtty']):
-                    update_data = {
-                        'sent': 0,
-                        'qtty': float(qtty) if qtty else 0,
-                        # 'price': float(price) # в Adr docs нет колонки прайс, не понятно нужна она вообще или нет
-                    }
-                    row_id = int(current_elem['key'])
-                    self.service.update_doc_table_row(data=update_data, row_id=row_id)
-                    self.service.set_doc_status_to_upload(self.hash_map.get('id_doc'))
-                    self.hash_map.show_screen("Документ товары")
-            self._set_delta(reset=True)
-            self.hash_map.put('new_qtty', '')
-
+            self._handle_btn_ok()
         elif 'ops' in listener:
             """Префикс кнопок +/-, значение в названиях кнопок"""
             self._set_delta(int(listener[4:]))
-
         elif listener in ["btn_cancel", 'BACK_BUTTON', 'ON_BACK_PRESSED']:
             self._save_new_delta()
             self._set_delta(reset=True)
             self.hash_map.put('new_qtty', '')
             self.hash_map.show_screen("Документ товары")
+        elif listener == 'btn_print':
+            self.print_ticket()
         elif listener == 'barcode':
             self._process_the_barcode()    
         elif listener == "CardsClick":
@@ -3391,6 +3349,54 @@ class BaseGoodSelect(Screen):
     def show(self, args=None):
         pass
     
+    def _handle_btn_ok(self):
+        if int(self.hash_map.get('new_qtty')) < 0:
+            self.hash_map.toast('Итоговое количество меньше 0')
+            self.hash_map.playsound('error')
+            self._set_delta(reset=True)
+            return
+        control = self.hash_map.get_bool('control')
+        if control:
+            if int(self.hash_map.get('new_qtty')) > int(self.hash_map.get('qtty_plan')):
+                self.toast('Количество план в документе превышено')
+                self.hash_map.playsound('error')
+                self._set_delta(reset=True)
+                return
+        current_elem = self.hash_map.get_json('selected_card_data')
+        qtty = self.hash_map['new_qtty']
+        price = self.hash_map.get('price') or 0
+
+        if self.hash_map.get('parent_screen') == 'ВыборТовараАртикул':
+            self._handle_choice_by_article(current_elem, qtty)
+        else:
+            self._handle_choice_by_other(current_elem, qtty)
+
+        self._set_delta(reset=True)
+        self.hash_map.put('new_qtty', '')
+
+    def _handle_choice_by_article(self, current_elem, qtty):
+        if int(qtty) == int(current_elem['qtty']):
+            self.hash_map.show_screen("ВыборТовараАртикул")
+            return
+        finded_goods_cards = self.hash_map.get('finded_goods_cards', from_json=True)
+        cardsdata = finded_goods_cards['customcards']['cardsdata']
+
+        card_data = next(elem for elem in cardsdata if elem['key'] == current_elem['key'])
+        card_data['qtty'] = float(qtty)
+        self.hash_map.put('finded_goods_cards', finded_goods_cards, to_json=True)
+        self.hash_map.show_screen("ВыборТовараАртикул")
+
+    def _handle_choice_by_other(self, current_elem, qtty):
+        if int(qtty) != int(current_elem['qtty']):
+            update_data = {
+                'sent': 0,
+                'qtty': float(qtty) if qtty else 0,
+            }
+            row_id = int(current_elem['key'])
+            self.service.update_doc_table_row(data=update_data, row_id=row_id)
+            self.service.set_doc_status_to_upload(self.hash_map.get('id_doc'))
+            self.hash_map.show_screen("Документ товары")
+        
     def _validate_delta_input(self):
         try:
             int(self.hash_map.get('delta'))
@@ -3425,6 +3431,9 @@ class BaseGoodSelect(Screen):
 
         return False
 
+    def _get_current_elem(self):
+        return self.hash_map.get_json('selected_card_data')
+
     def _save_new_delta(self):
         if int(self.hash_map.get('new_qtty')) < 0:
             self.hash_map.toast('Итоговое количество меньше 0')
@@ -3441,7 +3450,7 @@ class BaseGoodSelect(Screen):
                 self._set_delta(reset=True)
                 return
         
-        current_elem = self.hash_map.get_json('selected_card_data')
+        current_elem = self._get_current_elem()
             
         qtty = self.hash_map['new_qtty']
         # price = self.hash_map.get('price') or 0  # это не используется
@@ -3568,86 +3577,14 @@ class GoodsSelectScreen(BaseGoodSelect):
         self.hash_map.put('selected_card_position', doc_position)
 
     def on_input(self):
+        super().on_input()
 
         listener = self.listener
 
-        if listener is None:
-            """Ввод дельты из современного поля ввода (через enter клавиатуры)"""
-            if self._validate_delta_input():
-                self._set_delta(0)
-
-        elif listener == "btn_ok":
-            if int(self.hash_map.get('new_qtty')) < 0:
-                self.hash_map.toast('Итоговое количество меньше 0')
-                self.hash_map.playsound('error')
-                self._set_delta(reset=True)
-                return
-            control = self.hash_map.get_bool('control')
-            if control:
-                if int(self.hash_map.get('new_qtty')) > int(
-                        self.hash_map.get('qtty_plan')):
-                    self.toast('Количество план в документе превышено')
-                    self.hash_map.playsound('error')
-                    self._set_delta(reset=True)
-                    return
-            current_elem = self.hash_map.get_json('selected_card_data')
-            qtty = self.hash_map['new_qtty']
-            price = self.hash_map.get('price') or 0
-
-            if self.hash_map.get('parent_screen') == 'ВыборТовараАртикул':
-                if int(qtty) == int(current_elem['qtty']):
-                    self.hash_map.show_screen("ВыборТовараАртикул")
-                    return
-                finded_goods_cards = self.hash_map.get('finded_goods_cards', from_json=True)
-                cardsdata = finded_goods_cards['customcards']['cardsdata']
-
-                card_data = next(elem for elem in cardsdata
-                                 if elem['key'] == current_elem['key'])
-                card_data['qtty'] = float(qtty)
-                self.hash_map.put('finded_goods_cards', finded_goods_cards, to_json=True)
-                self.hash_map.show_screen("ВыборТовараАртикул")
-
-            else:
-                if int(qtty) != int(current_elem['qtty']):
-                    update_data = {
-                        'sent': 0,
-                        'qtty': float(qtty) if qtty else 0,
-                        # 'price': float(price) # в Adr docs нет колонки прайс, не понятно нужна она вообще или нет
-                    }
-                    row_id = int(current_elem['key'])
-                    self.service.update_doc_table_row(data=update_data, row_id=row_id)
-                    self.service.set_doc_status_to_upload(self.hash_map.get('id_doc'))
-                    self.hash_map.show_screen("Документ товары")
-            self._set_delta(reset=True)
-            self.hash_map.put('new_qtty', '')
-
-        elif 'ops' in listener:
-            """Префикс кнопок +/-, значение в названиях кнопок"""
-            self._set_delta(int(listener[4:]))
-
-        elif listener in ["btn_cancel", 'BACK_BUTTON', 'ON_BACK_PRESSED']:
-            self._save_new_delta()
-            self._set_delta(reset=True)
-            self.hash_map.put('new_qtty', '')
-            self.hash_map.show_screen("Документ товары")
-        elif listener == 'btn_print':
-            self.print_ticket()
-        elif listener == 'btn_next_good':
+        if listener == 'btn_next_good':
             self._goods_selector("next")
         elif listener == 'btn_previous_good':
             self._goods_selector("previous")
-        elif listener == 'barcode':
-            self._process_the_barcode()    
-        elif listener == "CardsClick":
-            current_elem = self.hash_map.get_json('selected_card_data')
-            self.print_ticket()
-        elif listener == 'btn_doc_good_barcode':
-            self.hash_map.show_screen("ТоварШтрихкоды")
-
-        elif listener == 'btn_series_show':
-            current_elem = self.hash_map.get_json('selected_card_data')
-            self.hash_map['back_screen'] = self.hash_map.get_current_screen()
-            self.open_series_screen('', current_elem)
 
     def on_post_start(self):
         pass
@@ -3658,54 +3595,12 @@ class GoodsSelectScreen(BaseGoodSelect):
     def get_doc(self):
         pass
 
-    def _save_new_delta(self):
-        if int(self.hash_map.get('new_qtty')) < 0:
-            self.hash_map.toast('Итоговое количество меньше 0')
-            self.hash_map.playsound('error')
-            self._set_delta(reset=True)
-            return
-
-        control = self.hash_map.get_bool('control')
-        if control:
-            if int(self.hash_map.get('new_qtty')) > int(
-                    self.hash_map.get('qtty_plan')):
-                self.toast('Количество план в документе превышено')
-                self.hash_map.playsound('error')
-                self._set_delta(reset=True)
-                return
+    def _get_current_elem(self):
         selected_card_position = int(self.hash_map.get('selected_card_position'))
-        
-        table_data = self.hash_map.get('doc_data', from_json=True) 	 
+        table_data = self.hash_map.get('doc_data', from_json=True)
         current_elem = table_data[selected_card_position]
         current_elem['key'] = current_elem.get('id')
-
-        qtty = self.hash_map['new_qtty']
-        # price = self.hash_map.get('price') or 0  # это не используется
-
-        if self.hash_map.get('parent_screen') == 'ВыборТовараАртикул':
-            if int(qtty) == int(current_elem['qtty']):
-                self.hash_map.show_screen("ВыборТовараАртикул")
-                return
-            finded_goods_cards = self.hash_map.get('finded_goods_cards', from_json=True)
-            cardsdata = finded_goods_cards['customcards']['cardsdata']
-
-            card_data = next(elem for elem in cardsdata
-                                if elem['key'] == current_elem['key'])
-            card_data['qtty'] = float(qtty)
-            self.hash_map.put('finded_goods_cards', finded_goods_cards, to_json=True)
-            self.hash_map.show_screen("ВыборТовараАртикул")
-
-        else:
-            if int(qtty) != int(current_elem['qtty']):
-                update_data = {
-                    'sent': 0,
-                    'qtty': float(qtty) if qtty else 0,
-                    # 'price': float(price) # в Adr docs нет колонки прайс, не понятно нужна она вообще или нет
-                }
-                row_id = int(current_elem['key'])
-                self.service.update_doc_table_row(data=update_data, row_id=row_id)
-                self.hash_map.put('new_qtty', qtty)
-                self.hash_map.put('qtty', qtty)
+        return current_elem
 
     def _goods_selector(self, action, index = None):
         selected_card_position = int(self.hash_map.get('selected_card_position'))
