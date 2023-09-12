@@ -90,6 +90,51 @@ class TestHsService(unittest.TestCase):
 
         self.save_to_json(data, 'get_doc_data')
 
+    @unittest.skip
+    def test_send_barcodes(self):
+        data = [
+            {
+                "barcode": "2000000058443",
+                "id_good": "190a7469-3325-4d33-b5ec-28a63ac83b06-848a00112f43529a11d955bccbcf492a",
+                "id_property": "",
+                "id_unit": "254a3240-79c0-4a3f-9259-5122c9ddd71b-83ca8c880b695ac211ee51683ff99f1e"
+            }
+        ]
+
+        expect = {
+            'result': True,
+            'total': 1,
+            'quantity_uploaded': 1
+        }
+
+        res = self.service.send_barcodes(data)
+        print(res)
+        self.assertEqual(res.status_code, 200)
+        self.assertIsNotNone(res.json)
+        self.assertEqual(expect, res.json)
+
+        data = [
+            {
+                "barcode": "2000000058444",
+                "id_good": "190a7469-3325-4d33-b5ec-28a63ac83b06-848a00112f43529a11d955bccbcf492a",
+                "id_property": "",
+                "id_unit": "254a3240-79c0-4a3f-9259-5122c9ddd71b-83ca8c880b695ac211ee51683ff99f1e"
+            }
+        ]
+
+        expect = {
+            'result': True,
+            'total': 1,
+            'quantity_uploaded': 1
+        }
+
+        res = self.service.send_barcodes(data)
+
+        self.assertEqual(res.status_code, 200)
+        self.assertIsNotNone(res.json)
+        self.assertEqual(expect, res.json)
+
+
     def get_http_settings(self):
         http_settings = {
             'url': self.rs_settings.get("URL"),
@@ -99,6 +144,8 @@ class TestHsService(unittest.TestCase):
             'android_id': self.rs_settings.get('ANDROID_ID'),
             'user_name': self.rs_settings.get('user_name')}
         return http_settings
+
+
 
     def save_to_json(self, data, file_name='data'):
         with open(f'{self.path}/{file_name}.json', 'w', encoding='utf-8') as fp:
