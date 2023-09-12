@@ -108,14 +108,23 @@ def flow_tiles_on_select(hash_map: HashMap):
 
 @HashMap()
 def barcode_flow_on_start(hash_map: HashMap):
-    screen :ui_models.FlowDocDetailsScreen = ui_models.FlowDocDetailsScreen(hash_map, rs_settings)
+    """Процесс: Сбор ШК. Экран: ПотокШтрихкодовДокумента"""
+    screen = ui_models.FlowDocDetailsScreen(hash_map, rs_settings)
     screen.on_start()
 
 
 @HashMap()
 def barcode_flow_listener(hash_map:HashMap):
-    screen: ui_models.FlowDocDetailsScreen = ui_models.FlowDocDetailsScreen(hash_map, rs_settings)
+    """Процесс: Сбор ШК. Экран: ПотокШтрихкодовДокумента"""
+    screen = ui_models.FlowDocDetailsScreen(hash_map, rs_settings)
     screen.on_input()
+
+
+@HashMap()
+def serial_key_recognition_ocr(hash_map:HashMap):
+    """Процесс: Сбор ШК. Экран: ПотокШтрихкодовДокумента.
+       Шаблон Распознавания: Серийный номер"""
+    ui_models.FlowDocDetailsScreen.serial_key_recognition_ocr(hash_map, rs_settings)
 
 
 @HashMap()

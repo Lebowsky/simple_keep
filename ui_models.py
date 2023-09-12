@@ -1,3 +1,4 @@
+import re
 from abc import ABC, abstractmethod
 import json
 import base64
@@ -24,6 +25,8 @@ from http_exchange import post_changes_to_server
 import widgets
 import ui_global
 import base64
+from java import jclass
+noClass = jclass("ru.travelfood.simple_ui.NoSQL")
 
 
 class Screen(ABC):
@@ -3050,6 +3053,7 @@ class FlowDocDetailsScreen(DocDetailsScreen):
     screen_name = 'ПотокШтрихкодовДокумента'
     process_name = 'Сбор ШК'
     printing_template_name = 'flow_doc_details_screen'
+    ocr_nosql = noClass("ocr_nosql")
 
     def __init__(self, hash_map: HashMap, rs_settings):
         super().__init__(hash_map, rs_settings)
@@ -3063,7 +3067,6 @@ class FlowDocDetailsScreen(DocDetailsScreen):
         self._barcode_flow_on_start()
 
     def on_input(self):
-
         listener = self.hash_map.get('listener')
         if listener == "CardsClick":
             current_str = self.hash_map.get("selected_card_position")
@@ -3087,40 +3090,67 @@ class FlowDocDetailsScreen(DocDetailsScreen):
         elif listener == 'btn_barcodes':
             self.hash_map.show_dialog('ВвестиШтрихкод')
 
-        elif listener == 'barcode' or self.hash_map.get("event") == "onResultPositive":
-            self.hash_map.put("SearchString", "")
-            doc = ui_global.Rs_doc
-            doc.id_doc = self.hash_map.get('id_doc')
-            if self.hash_map.get("event") == "onResultPositive":
-                barcode = self.hash_map.get('fld_barcode')
-            else:
-                barcode = self.hash_map.get('barcode_camera')
+        elif listener == 'barcode':
+            barcode = self.hash_map.get('barcode_camera')
+            self.service.add_barcode_to_database(barcode)
+            self.service.set_doc_status_to_upload(self.id_doc)
 
-            if barcode:
-                qtext = '''
-                INSERT INTO RS_barc_flow (id_doc, barcode) VALUES (?,?)
-                '''
-                ui_global.get_query_result(qtext, (doc.id_doc, barcode))
-                self.service.set_doc_status_to_upload(doc.id_doc)
-
-            if self._is_result_positive('confirm_verified'):
-                id_doc = self.hash_map['id_doc']
-                doc = RsDoc(id_doc)
-                doc.mark_verified(1)
-
-                self.hash_map.show_screen("Документы")
-
-        elif listener == 'btn_doc_mark_verified':
-            self.hash_map.show_dialog('confirm_verified', 'Завершить документ?', ['Да', 'Нет'])
+        elif self._is_result_positive('ВвестиШтрихкод'):
+            barcode = self.hash_map.get('fld_barcode')
+            self.service.add_barcode_to_database(barcode)
+            self.service.set_doc_status_to_upload(self.id_doc)
 
         elif self._is_result_positive('confirm_verified'):
-            id_doc = self.hash_map['id_doc']
-            doc = RsDoc(id_doc)
-            doc.mark_verified(1)
+            RsDoc(self.id_doc).mark_verified(1)
             self.hash_map.show_screen("Документы")
+
+        elif listener == 'btn_doc_mark_verified':
+            self.hash_map.show_dialog('confirm_verified',
+                                      'Завершить документ?',
+                                      ['Да', 'Нет'])
+
+        elif listener == 'btn_ocr_serial_template_settings':
+            num_amount = self.rs_settings.get('ocr_serial_template_num_amount') or 10
+            self.hash_map.put('ocr_serial_template_num_amount', str(num_amount))
+            prefix = self.rs_settings.get('ocr_serial_template_prefix') or 'SN'
+            self.hash_map.put('ocr_serial_template_prefix', prefix)
+            current_template = "Текущий шаблон: " + prefix + '*'*num_amount
+            self.hash_map.put('current_ocr_serial_template', current_template)
+
+            flag = self.rs_settings.get('continuous_recognition')
+            flag = str(flag).lower() if flag is not None else 'false'
+
+            self.hash_map.put('continuous_recognition', flag)
+            self.hash_map.show_dialog('ШаблонРаспознавания',
+                                      'Настройка шаблона распознавания',
+                                      ['Принять', 'Отмена'])
+
+        elif self._is_result_positive('ШаблонРаспознавания'):
+            num_amount = self.hash_map.get('ocr_serial_template_num_amount') or '10'
+            prefix = self.hash_map.get('ocr_serial_template_prefix')
+            continuous_recognition = self.hash_map.get('continuous_recognition')
+            continuous_recognition = True if continuous_recognition == 'true' else False
+            if int(num_amount) < 4:
+                self.hash_map.toast('Количество цифр меньше 4')
+                return
+            if prefix == '':
+                self.hash_map.toast('Не указан префикс')
+                return
+            self.rs_settings.put('ocr_serial_template_num_amount', int(num_amount), True)
+            self.rs_settings.put('ocr_serial_template_prefix', prefix, True)
+            self.rs_settings.put('continuous_recognition', continuous_recognition, True)
+            min_length = int(num_amount) + len(prefix)
+            self._set_vision_settings(min_length, min_length + 2)
+            self.hash_map.toast('Шаблон сохранён')
 
         elif listener == 'ON_BACK_PRESSED':
             self.hash_map.show_screen("Документы")
+
+        elif listener == 'vision_cancel':
+            FlowDocDetailsScreen.ocr_nosql.destroy()
+
+        elif listener == 'vision':
+            FlowDocDetailsScreen.ocr_nosql.destroy()
 
     def _barcode_flow_on_start(self):
 
@@ -3194,6 +3224,7 @@ class FlowDocDetailsScreen(DocDetailsScreen):
             self.hash_map.put('toast',
                               'Данный документ содержит плановые строки. Список штрихкодов в него поместить нельзя')
             self.hash_map.put('ShowScreen', 'Документы')
+        self._set_vision_settings()
 
     def on_post_start(self):
         pass
@@ -3281,6 +3312,54 @@ class FlowDocDetailsScreen(DocDetailsScreen):
 
         return table_data
 
+    def _set_vision_settings(
+            self,
+            min_length: Optional[int] = None,
+            max_length: Optional[int] = None
+    ) -> None:
+        if not min_length or not max_length:
+            num_amount = self.rs_settings.get('ocr_serial_template_num_amount') or 10
+            prefix = self.rs_settings.get('ocr_serial_template_prefix') or 'SN'
+            min_length = num_amount + int(len(prefix))
+            max_length = min_length + 2
+        values_list = ("~[{\"action\":\"run\",\"type\":\"python\","
+                       "\"method\":\"serial_key_recognition_ocr\"}]")
+        self.hash_map.set_vision_settings(values_list=values_list,max_length=max_length,
+                                          min_length=min_length,mesure_qty=1,min_freq=1)
+
+    @staticmethod
+    def serial_key_recognition_ocr(hash_map: HashMap, rs_settings) -> None:
+        """Находит в переданной из OCR строке серийный номер, по заданному шаблону"""
+        ocr_nosql = FlowDocDetailsScreen.ocr_nosql
+        ocr_text = hash_map.get("ocr_text")
+        num_amount = rs_settings.get('ocr_serial_template_num_amount')
+        num_amount_pattern = rf'([^\doO])(\d{{{num_amount}}})$'
+        prefix = rs_settings.get('ocr_serial_template_prefix')
+        prefix_pattern = rf'^{prefix}'
+        match_prefix = re.search(prefix_pattern, ocr_text)
+        if not match_prefix:
+            return
+        match_num = re.search(num_amount_pattern, ocr_text)
+        if not match_num:
+            return
+
+        result = match_num.group(2)
+        result_in_memory = ocr_nosql.get(result)
+        if result_in_memory is None:
+            ocr_nosql.put(result, 1, True)
+        elif result_in_memory < 5:
+            ocr_nosql.put(result, result_in_memory + 1, True)
+        elif result_in_memory == 5:
+            ocr_nosql.put(result, result_in_memory + 1, True)
+            db_services.FlowDocService(hash_map['id_doc']).add_barcode_to_database(result)
+            hash_map.beep()
+            hash_map.toast('Серийный номер: ' + result)
+            if not rs_settings.get('continuous_recognition'):
+                hash_map.put("ocr_result", result)
+                return
+            for serial in json.loads(ocr_nosql.getallkeys()):
+                if ocr_nosql.get(serial) < 5:
+                    ocr_nosql.delete(serial)
 
 # ^^^^^^^^^^^^^^^^^^^^^ DocDetails ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -3631,7 +3710,6 @@ class GoodsSelectArticle(Screen):
             cards_data = self._get_goods_list_data(goods)
             goods_cards = self._get_goods_cards_view(cards_data)
             self.hash_map['finded_goods_cards'] = goods_cards.to_json()
-
 
     def on_post_start(self):
         pass
@@ -6040,7 +6118,7 @@ class ActiveCVArticleRecognition(Screen):
         self.hash_map.add_to_cv_list(
             {'object': str(current_object),
              'info': f'Товар: <big>{good_name}</big>'},
-            'object_info_list')
+            'object_info_list', _dict=True)
         self.hash_map.add_to_cv_list(current_object, 'yellow_list')
 
         self.hash_map.put(
