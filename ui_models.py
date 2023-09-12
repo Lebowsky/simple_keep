@@ -3564,10 +3564,8 @@ class GoodsSelectScreen(BaseGoodSelect):
         doc_rows = self.service.get_doc_rows_count(self.id_doc)['doc_rows']
         doc_data = self.service.get_doc_details_data(self.id_doc, 0, doc_rows)
         doc_data.insert(0, {})
-        self.hash_map.put('doc_rows', doc_rows)
-        
-        json_string = json.dumps(doc_data)
-        self.hash_map.put('doc_data', json_string)
+        self.hash_map.put('doc_rows', doc_rows)    
+        self.hash_map.put('doc_data', doc_data, to_json=True)
 
         current_str = int(self.hash_map.get('selected_card_position'))
         current_page = int(self.hash_map.get('current_page'))
@@ -3663,7 +3661,7 @@ class GoodsSelectScreen(BaseGoodSelect):
             self._set_delta(ratio)
             return True
 
-        if id_good != id_good_br and type(self) is GoodsSelectScreen:
+        if id_good != id_good_br:
             table_data = self.hash_map.get('doc_data', from_json=True) 	 
             match_index = self._find_matching_good(table_data, id_good_br, id_property_br, id_unit_br)
 
