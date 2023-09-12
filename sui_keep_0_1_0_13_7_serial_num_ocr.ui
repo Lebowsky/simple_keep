@@ -3703,8 +3703,27 @@
                                         "width": "match_parent",
                                         "weight": "0",
                                         "type": "Button"
+                                    },
+                                    {
+                                        "type": "Button",
+                                        "height": "wrap_content",
+                                        "width": "match_parent",
+                                        "weight": "0",
+                                        "Value": "Удалить настройки распознавания",
+                                        "Variable": "btn_del_SetVisionSettings"
+                                    },
+                                    {
+                                        "type": "Button",
+                                        "height": "wrap_content",
+                                        "width": "match_parent",
+                                        "weight": "0",
+                                        "Value": "Установить SetVisionSettings",
+                                        "Variable": "btn_set_SetVisionSettings"
                                     }
-                                ]
+                                ],
+                                "BackgroundColor": "",
+                                "StrokeWidth": "",
+                                "Padding": ""
                             },
                             {
                                 "type": "barcode",
@@ -3722,10 +3741,15 @@
                                 "Variable": "btn_doc_mark_verified"
                             },
                             {
+                                "Value": "Шаблон распознавания",
+                                "Variable": "btn_ocr_serial_template_settings",
+                                "type": "MenuItem"
+                            },
+                            {
                                 "Value": "#f002",
                                 "Variable": "btn_find_serial_cv",
                                 "type": "Vision",
-                                "VisionSettings": "{\n    \"name\": \"Серийный номер\",\n    \"TypeRecognition\": \"Text\",\n    \"NumberRecognition\": false,\n    \"DateRecognition\": false,\n    \"PlateNumberRecognition\": false,\n    \"min_length\": \"10\",\n    \"max_length\": \"16\",\n    \"values_list\": \"~[{\\\"action\\\":\\\"run\\\",\\\"type\\\":\\\"python\\\",\\\"method\\\":\\\"serial_key_recognition_ocr\\\"}]\",\n    \"result_var\": \"text_test\"\n}",
+                                "VisionSettings": "{\"name\": \"Серийный номер\", \"TypeRecognition\": \"Text\", \"NumberRecognition\": false, \"DateRecognition\": false, \"PlateNumberRecognition\": false, \"min_length\": \"6\", \"max_length\": \"20\", \"values_list\": \"~[{\\\"action\\\":\\\"run\\\",\\\"type\\\":\\\"python\\\",\\\"method\\\":\\\"serial_key_recognition_ocr\\\"}]\", \"result_var\": \"text_test\", \"mesure_qty\": \"1\", \"min_freq\": \"1\"}",
                                 "RecognitionTemplate": "Серийный номер"
                             }
                         ],
@@ -3787,6 +3811,82 @@
                             }
                         ],
                         "Handlers": [],
+                        "onlineOnStart": false,
+                        "onlineOnAfterStart": false,
+                        "onlineOnInput": false
+                    },
+                    {
+                        "Name": "ШаблонРаспознавания",
+                        "type": "Operation",
+                        "Elements": [
+                            {
+                                "Value": "",
+                                "Variable": "",
+                                "type": "LinearLayout",
+                                "weight": "0",
+                                "height": "wrap_content",
+                                "width": "match_parent",
+                                "orientation": "vertical",
+                                "Elements": [
+                                    {
+                                        "type": "TextView",
+                                        "height": "wrap_content",
+                                        "width": "match_parent",
+                                        "weight": "0",
+                                        "Value": "Количество цифр",
+                                        "Variable": ""
+                                    },
+                                    {
+                                        "type": "EditTextNumeric",
+                                        "height": "wrap_content",
+                                        "width": "match_parent",
+                                        "weight": "0",
+                                        "Value": "@ocr_serial_template_num_amount",
+                                        "Variable": "ocr_serial_template_num_amount"
+                                    },
+                                    {
+                                        "type": "TextView",
+                                        "height": "wrap_content",
+                                        "width": "match_parent",
+                                        "weight": "0",
+                                        "Value": "Префикс",
+                                        "Variable": ""
+                                    },
+                                    {
+                                        "type": "EditTextText",
+                                        "height": "wrap_content",
+                                        "width": "match_parent",
+                                        "weight": "0",
+                                        "Value": "@ocr_serial_template_prefix",
+                                        "Variable": "ocr_serial_template_prefix"
+                                    },
+                                    {
+                                        "type": "TextView",
+                                        "height": "wrap_content",
+                                        "width": "match_parent",
+                                        "weight": "0",
+                                        "Value": "@current_ocr_serial_template",
+                                        "Variable": ""
+                                    },
+                                    {
+                                        "type": "CheckBox",
+                                        "height": "wrap_content",
+                                        "width": "wrap_content",
+                                        "weight": "0",
+                                        "Value": "Непрерывное распознавание",
+                                        "Variable": "continuous_recognition"
+                                    }
+                                ],
+                                "BackgroundColor": "",
+                                "StrokeWidth": "",
+                                "Padding": ""
+                            }
+                        ],
+                        "Timer": false,
+                        "hideToolBarScreen": false,
+                        "noScroll": false,
+                        "handleKeyUp": false,
+                        "hideBottomBarScreen": true,
                         "onlineOnStart": false,
                         "onlineOnAfterStart": false,
                         "onlineOnInput": false
@@ -7089,10 +7189,6 @@
             {
                 "PyFileKey": "new_handlers",
                 "PyFileData": ""
-            },
-            {
-                "PyFileKey": "printing_factory",
-                "PyFileData": ""
             }
         ],
         "StyleTemplates": [],
@@ -7161,10 +7257,21 @@
                 "NumberRecognition": false,
                 "DateRecognition": false,
                 "PlateNumberRecognition": false,
-                "min_length": "10",
-                "max_length": "16",
+                "min_length": "6",
+                "max_length": "20",
                 "values_list": "~[{\"action\":\"run\",\"type\":\"python\",\"method\":\"serial_key_recognition_ocr\"}]",
-                "result_var": "text_test"
+                "result_var": "text_test",
+                "mesure_qty": "1",
+                "min_freq": "1"
+            },
+            {
+                "name": "Новый шаблон распознавания"
+            },
+            {
+                "name": "Новый шаблон распознавания"
+            },
+            {
+                "name": "Новый шаблон распознавания"
             }
         ]
     }

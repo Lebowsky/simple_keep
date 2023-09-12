@@ -1,5 +1,3 @@
-import re
-
 from java import jclass
 from ru.travelfood.simple_ui import SimpleUtilites as suClass
 
@@ -124,14 +122,9 @@ def barcode_flow_listener(hash_map:HashMap):
 
 @HashMap()
 def serial_key_recognition_ocr(hash_map:HashMap):
-    """Процесс: Сбор ШК. Экран: ПотокШтрихкодовДокумента. Шаблон: Серийный номер"""
-    ocr_text = hash_map.get("ocr_text")
-    pattern = r'SN[\s\w]{0,2}\d{10}'
-    match = re.search(pattern, ocr_text)
-    if match:
-        serial = match.group()
-        hash_map.put('finded_serial_num', serial[-10::1])
-        hash_map.put("ocr_result", ocr_text)
+    """Процесс: Сбор ШК. Экран: ПотокШтрихкодовДокумента.
+       Шаблон Распознавания: Серийный номер"""
+    ui_models.FlowDocDetailsScreen.serial_key_recognition_ocr(hash_map, rs_settings)
 
 
 @HashMap()
