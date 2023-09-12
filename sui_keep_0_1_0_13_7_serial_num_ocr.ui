@@ -3703,22 +3703,6 @@
                                         "width": "match_parent",
                                         "weight": "0",
                                         "type": "Button"
-                                    },
-                                    {
-                                        "type": "Button",
-                                        "height": "wrap_content",
-                                        "width": "match_parent",
-                                        "weight": "0",
-                                        "Value": "Удалить настройки распознавания",
-                                        "Variable": "btn_del_SetVisionSettings"
-                                    },
-                                    {
-                                        "type": "Button",
-                                        "height": "wrap_content",
-                                        "width": "match_parent",
-                                        "weight": "0",
-                                        "Value": "Установить SetVisionSettings",
-                                        "Variable": "btn_set_SetVisionSettings"
                                     }
                                 ],
                                 "BackgroundColor": "",
@@ -3748,9 +3732,7 @@
                             {
                                 "Value": "#f002",
                                 "Variable": "btn_find_serial_cv",
-                                "type": "Vision",
-                                "VisionSettings": "{\"name\": \"Серийный номер\", \"TypeRecognition\": \"Text\", \"NumberRecognition\": false, \"DateRecognition\": false, \"PlateNumberRecognition\": false, \"min_length\": \"6\", \"max_length\": \"20\", \"values_list\": \"~[{\\\"action\\\":\\\"run\\\",\\\"type\\\":\\\"python\\\",\\\"method\\\":\\\"serial_key_recognition_ocr\\\"}]\", \"result_var\": \"text_test\", \"mesure_qty\": \"1\", \"min_freq\": \"1\"}",
-                                "RecognitionTemplate": "Серийный номер"
+                                "type": "Vision"
                             }
                         ],
                         "Handlers": [
@@ -7250,28 +7232,6 @@
                 "max_length": "20",
                 "values_list": "@list_art",
                 "result_var": "good_id"
-            },
-            {
-                "name": "Серийный номер",
-                "TypeRecognition": "Text",
-                "NumberRecognition": false,
-                "DateRecognition": false,
-                "PlateNumberRecognition": false,
-                "min_length": "6",
-                "max_length": "20",
-                "values_list": "~[{\"action\":\"run\",\"type\":\"python\",\"method\":\"serial_key_recognition_ocr\"}]",
-                "result_var": "text_test",
-                "mesure_qty": "1",
-                "min_freq": "1"
-            },
-            {
-                "name": "Новый шаблон распознавания"
-            },
-            {
-                "name": "Новый шаблон распознавания"
-            },
-            {
-                "name": "Новый шаблон распознавания"
             }
         ]
     }

@@ -3090,31 +3090,24 @@ class FlowDocDetailsScreen(DocDetailsScreen):
         elif listener == 'btn_barcodes':
             self.hash_map.show_dialog('ВвестиШтрихкод')
 
-        elif listener == 'barcode' or self._is_result_positive('ВвестиШтрихкод'):
-            self.hash_map.put("SearchString", "")
-            doc = ui_global.Rs_doc
-            doc.id_doc = self.hash_map.get('id_doc')
-            if self.hash_map.get("event") == "onResultPositive":
-                barcode = self.hash_map.get('fld_barcode')
-            else:
-                barcode = self.hash_map.get('barcode_camera')
+        elif listener == 'barcode':
+            barcode = self.hash_map.get('barcode_camera')
+            self.service.add_barcode_to_database(barcode)
+            self.service.set_doc_status_to_upload(self.id_doc)
 
-            if barcode:
-                qtext = '''
-                INSERT INTO RS_barc_flow (id_doc, barcode) VALUES (?,?)
-                '''
-                ui_global.get_query_result(qtext, (doc.id_doc, barcode))
-                self.service.set_doc_status_to_upload(doc.id_doc)
+        elif self._is_result_positive('ВвестиШтрихкод'):
+            barcode = self.hash_map.get('fld_barcode')
+            self.service.add_barcode_to_database(barcode)
+            self.service.set_doc_status_to_upload(self.id_doc)
 
-            if self._is_result_positive('confirm_verified'):
-                id_doc = self.hash_map['id_doc']
-                doc = RsDoc(id_doc)
-                doc.mark_verified(1)
-
-                self.hash_map.show_screen("Документы")
+        elif self._is_result_positive('confirm_verified'):
+            RsDoc(self.id_doc).mark_verified(1)
+            self.hash_map.show_screen("Документы")
 
         elif listener == 'btn_doc_mark_verified':
-            self.hash_map.show_dialog('confirm_verified', 'Завершить документ?', ['Да', 'Нет'])
+            self.hash_map.show_dialog('confirm_verified',
+                                      'Завершить документ?',
+                                      ['Да', 'Нет'])
 
         elif listener == 'btn_ocr_serial_template_settings':
             num_amount = self.rs_settings.get('ocr_serial_template_num_amount') or 10
@@ -3128,7 +3121,9 @@ class FlowDocDetailsScreen(DocDetailsScreen):
             flag = str(flag).lower() if flag is not None else 'false'
 
             self.hash_map.put('continuous_recognition', flag)
-            self.hash_map.show_dialog('ШаблонРаспознавания', 'Настройка шаблона распознавания', ['Принять', 'Отмена'])
+            self.hash_map.show_dialog('ШаблонРаспознавания',
+                                      'Настройка шаблона распознавания',
+                                      ['Принять', 'Отмена'])
 
         elif self._is_result_positive('ШаблонРаспознавания'):
             num_amount = self.hash_map.get('ocr_serial_template_num_amount') or '10'
@@ -3144,20 +3139,9 @@ class FlowDocDetailsScreen(DocDetailsScreen):
             self.rs_settings.put('ocr_serial_template_num_amount', int(num_amount), True)
             self.rs_settings.put('ocr_serial_template_prefix', prefix, True)
             self.rs_settings.put('continuous_recognition', continuous_recognition, True)
-            values_list = "~[{\"action\":\"run\",\"type\":\"python\",\"method\":\"serial_key_recognition_ocr\"}]"
-            min_length = int(num_amount) + int(len(prefix))
-            max_length = min_length + 2
-            self.hash_map.set_vision_settings(values_list=values_list,
-                                              max_length=max_length,
-                                              min_length=min_length, mesure_qty=1,
-                                              min_freq=1)
+            min_length = int(num_amount) + len(prefix)
+            self._set_vision_settings(min_length, min_length + 2)
             self.hash_map.toast('Шаблон сохранён')
-
-        elif self._is_result_positive('confirm_verified'):
-            id_doc = self.hash_map['id_doc']
-            doc = RsDoc(id_doc)
-            doc.mark_verified(1)
-            self.hash_map.show_screen("Документы")
 
         elif listener == 'ON_BACK_PRESSED':
             self.hash_map.show_screen("Документы")
@@ -3240,13 +3224,8 @@ class FlowDocDetailsScreen(DocDetailsScreen):
             self.hash_map.put('toast',
                               'Данный документ содержит плановые строки. Список штрихкодов в него поместить нельзя')
             self.hash_map.put('ShowScreen', 'Документы')
-        num_amount = self.rs_settings.get('ocr_serial_template_num_amount') or 10
-        prefix = self.rs_settings.get('ocr_serial_template_prefix') or 'SN'
-        values_list = "~[{\"action\":\"run\",\"type\":\"python\",\"method\":\"serial_key_recognition_ocr\"}]"
-        min_length = int(num_amount) + int(len(prefix))
-        max_length = min_length + 2
-        self.hash_map.set_vision_settings(values_list=values_list,max_length=max_length,
-                                          min_length=min_length,mesure_qty=1,min_freq=1)
+        self._set_vision_settings()
+
     def on_post_start(self):
         pass
 
@@ -3333,6 +3312,21 @@ class FlowDocDetailsScreen(DocDetailsScreen):
 
         return table_data
 
+    def _set_vision_settings(
+            self,
+            min_length: Optional[int] = None,
+            max_length: Optional[int] = None
+    ) -> None:
+        if not min_length or not max_length:
+            num_amount = self.rs_settings.get('ocr_serial_template_num_amount') or 10
+            prefix = self.rs_settings.get('ocr_serial_template_prefix') or 'SN'
+            min_length = num_amount + int(len(prefix))
+            max_length = min_length + 2
+        values_list = ("~[{\"action\":\"run\",\"type\":\"python\","
+                       "\"method\":\"serial_key_recognition_ocr\"}]")
+        self.hash_map.set_vision_settings(values_list=values_list,max_length=max_length,
+                                          min_length=min_length,mesure_qty=1,min_freq=1)
+
     @staticmethod
     def serial_key_recognition_ocr(hash_map: HashMap, rs_settings) -> None:
         """Находит в переданной из OCR строке серийный номер, по заданному шаблону"""
@@ -3357,32 +3351,15 @@ class FlowDocDetailsScreen(DocDetailsScreen):
             ocr_nosql.put(result, result_in_memory + 1, True)
         elif result_in_memory == 5:
             ocr_nosql.put(result, result_in_memory + 1, True)
-            FlowDocDetailsScreen.add_serial_to_database(hash_map, rs_settings, result)
+            db_services.FlowDocService(hash_map['id_doc']).add_barcode_to_database(result)
+            hash_map.beep()
+            hash_map.toast('Серийный номер: ' + result)
             if not rs_settings.get('continuous_recognition'):
                 hash_map.put("ocr_result", result)
                 return
-            hash_map.toast('Серийный номер: ' + result)
             for serial in json.loads(ocr_nosql.getallkeys()):
                 if ocr_nosql.get(serial) < 5:
                     ocr_nosql.delete(serial)
-
-    @staticmethod
-    def add_serial_to_database(hash_map: HashMap, rs_settings, serial):
-        id_doc = hash_map['id_doc']
-        if not serial:
-            # Иногда, каким то образом отсутствует serial
-            hash_map.notification(
-                text='Ошибка распознавания. Изменения не записаны.',
-                title='Ошибка'
-            )
-            hash_map.playsound('error')
-            return
-
-        qtext = '''INSERT INTO RS_barc_flow (id_doc, barcode) VALUES (?,?)'''
-        # Серийный номер записывается как штрихкод
-        ui_global.get_query_result(qtext, (id_doc, serial))
-        hash_map.beep()
-        DocService(id_doc).set_doc_status_to_upload(id_doc)
 
 # ^^^^^^^^^^^^^^^^^^^^^ DocDetails ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
