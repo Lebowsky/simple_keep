@@ -6536,7 +6536,7 @@ class MainEvents:
             if deleted_docs:
                 self.hash_map.notification(
                     text=f'Удалены документы: ({len(deleted_docs)})',
-                    title='Очистка не актуальных данных')
+                    title='Очистка неактуальных данных')
 
         rs_default_settings = {
             'TitleTextSize': 18,
