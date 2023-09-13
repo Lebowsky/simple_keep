@@ -185,15 +185,9 @@ class HashMap:
 
         if _dict:
             lst = self.get(cv_list, from_json=True) or []
-            in_list = False
-            for i, obj in enumerate(lst):
-                if obj == element:
-                    lst[i] = element
-                    in_list = True
-                    break
-            if not in_list:
+            if element not in lst:
                 lst.append(element)
-            self.put(cv_list, json.dumps(lst, ensure_ascii=False))
+                self.put(cv_list, json.dumps(lst, ensure_ascii=False))
 
         else:
             lst = self.get(cv_list)
