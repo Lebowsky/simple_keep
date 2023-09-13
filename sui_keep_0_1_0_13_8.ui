@@ -2,7 +2,7 @@
     "ClientConfiguration": {
         "ConfigurationName": "Simple Учет",
         "ConfigurationDescription": "Простое решение для работы с штрихкодами товаров. Поставляется в комплекте с расширением для 1С. Подробнее про расширение Вы можете узнать по ссылке: https://www.simple-kit.ru/products/simple-uchet/ ",
-        "ConfigurationVersion": "0.1.0.13.7",
+        "ConfigurationVersion": "0.1.0.13.8",
         "Processes": [
             {
                 "type": "Process",
@@ -3804,14 +3804,14 @@
                                 "Variable": "btn_doc_mark_verified"
                             },
                             {
+                                "type": "MenuItem",
                                 "Value": "Шаблон распознавания",
-                                "Variable": "btn_ocr_serial_template_settings",
-                                "type": "MenuItem"
+                                "Variable": "btn_ocr_serial_template_settings"
                             },
                             {
+                                "type": "Vision",
                                 "Value": "#f002",
-                                "Variable": "btn_find_serial_cv",
-                                "type": "Vision"
+                                "Variable": "btn_find_serial_cv"
                             }
                         ],
                         "Handlers": [
@@ -3877,77 +3877,75 @@
                         "onlineOnInput": false
                     },
                     {
-                        "Name": "ШаблонРаспознавания",
                         "type": "Operation",
+                        "Name": "ШаблонРаспознавания",
+                        "Timer": false,
+                        "hideBottomBarScreen": true,
+                        "noScroll": false,
+                        "handleKeyUp": false,
+                        "noConfirmation": false,
+                        "hideToolBarScreen": false,
                         "Elements": [
                             {
-                                "Value": "",
-                                "Variable": "",
                                 "type": "LinearLayout",
-                                "weight": "0",
+                                "Variable": "",
+                                "orientation": "vertical",
                                 "height": "wrap_content",
                                 "width": "match_parent",
-                                "orientation": "vertical",
+                                "weight": "0",
                                 "Elements": [
                                     {
-                                        "type": "TextView",
-                                        "height": "wrap_content",
-                                        "width": "match_parent",
-                                        "weight": "0",
                                         "Value": "Количество цифр",
-                                        "Variable": ""
-                                    },
-                                    {
-                                        "type": "EditTextNumeric",
+                                        "Variable": "",
                                         "height": "wrap_content",
                                         "width": "match_parent",
                                         "weight": "0",
+                                        "type": "TextView"
+                                    },
+                                    {
                                         "Value": "@ocr_serial_template_num_amount",
-                                        "Variable": "ocr_serial_template_num_amount"
-                                    },
-                                    {
-                                        "type": "TextView",
+                                        "Variable": "ocr_serial_template_num_amount",
                                         "height": "wrap_content",
                                         "width": "match_parent",
                                         "weight": "0",
+                                        "type": "EditTextNumeric"
+                                    },
+                                    {
                                         "Value": "Префикс",
-                                        "Variable": ""
-                                    },
-                                    {
-                                        "type": "EditTextText",
+                                        "Variable": "",
                                         "height": "wrap_content",
                                         "width": "match_parent",
                                         "weight": "0",
+                                        "type": "TextView"
+                                    },
+                                    {
                                         "Value": "@ocr_serial_template_prefix",
-                                        "Variable": "ocr_serial_template_prefix"
-                                    },
-                                    {
-                                        "type": "TextView",
+                                        "Variable": "ocr_serial_template_prefix",
                                         "height": "wrap_content",
                                         "width": "match_parent",
                                         "weight": "0",
-                                        "Value": "@current_ocr_serial_template",
-                                        "Variable": ""
+                                        "type": "EditTextText"
                                     },
                                     {
-                                        "type": "CheckBox",
+                                        "Value": "@current_ocr_serial_template",
+                                        "Variable": "",
+                                        "height": "wrap_content",
+                                        "width": "match_parent",
+                                        "weight": "0",
+                                        "type": "TextView"
+                                    },
+                                    {
+                                        "Value": "Непрерывное распознавание",
+                                        "Variable": "continuous_recognition",
                                         "height": "wrap_content",
                                         "width": "wrap_content",
                                         "weight": "0",
-                                        "Value": "Непрерывное распознавание",
-                                        "Variable": "continuous_recognition"
+                                        "type": "CheckBox"
                                     }
-                                ],
-                                "BackgroundColor": "",
-                                "StrokeWidth": "",
-                                "Padding": ""
+                                ]
                             }
                         ],
-                        "Timer": false,
-                        "hideToolBarScreen": false,
-                        "noScroll": false,
-                        "handleKeyUp": false,
-                        "hideBottomBarScreen": true,
+                        "Handlers": [],
                         "onlineOnStart": false,
                         "onlineOnAfterStart": false,
                         "onlineOnInput": false
