@@ -181,6 +181,24 @@ def series_item_on_input(hash_map):
     main.series_item_on_input(hash_map)
 
 
+
+def adr_series_list_on_start(hash_map):
+    main.adr_series_list_on_start(hash_map)
+
+
+def adr_series_list_on_input(hash_map):
+    main.adr_series_list_on_input(hash_map)
+
+
+def adr_series_item_on_start(hash_map):
+    main.adr_series_list_on_start(hash_map)
+
+
+def adr_series_item_on_input(hash_map):
+    main.adr_series_list_on_input(hash_map)
+
+
+
 class hashMap:
     d = {}
 

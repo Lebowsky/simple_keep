@@ -473,6 +473,29 @@ def series_item_on_input(hash_map):
     screen: ui_models.SeriesItem = ui_models.SeriesItem(hash_map, rs_settings)
     screen.on_input()
 
+@HashMap()
+def adr_series_list_on_start(hash_map):
+    screen: ui_models.SeriesAdrList = ui_models.SeriesAdrList(hash_map, rs_settings)
+    screen.on_start()
+
+
+@HashMap()
+def adr_series_list_on_input(hash_map):
+    screen: ui_models.SeriesAdrList = ui_models.SeriesAdrList(hash_map, rs_settings)
+    screen.on_input()
+
+@HashMap()
+def adr_series_item_on_start(hash_map):
+    screen: ui_models.SeriesAdrItem = ui_models.SeriesAdrItem(hash_map, rs_settings)
+    screen.on_start()
+
+
+@HashMap()
+def adr_series_item_on_input(hash_map):
+    screen: ui_models.SeriesAdrItem = ui_models.SeriesAdrItem(hash_map, rs_settings)
+    screen.on_input()
+
+
 # ^^^^^^^^^^^^^^^^^^^^^ GoodsPrices ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 # =============== Settings =================
