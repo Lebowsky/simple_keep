@@ -3011,18 +3011,7 @@ class FlowDocDetailsScreen(DocDetailsScreen):
 
         listener = self.hash_map.get('listener')
         if listener == "CardsClick":
-            current_str = self.hash_map.get("selected_card_position")
-            jlist = json.loads(self.hash_map.get("doc_barc_flow"))
-            current_elem = jlist['customtable']['tabledata'][int(current_str)]
-            data_dict = {'barcode': current_elem['barcode'],
-                         'Номенклатура': current_elem['name'],
-                         'qtty': current_elem['qtty'], 'Характеристика': ''}
-
-            HtmlView.print_from_any_screen(
-                self.hash_map,
-                self.rs_settings,
-                self.printing_template_name,
-                data_for_printing=data_dict)
+            self._card_click()
 
         elif listener == "BACK_BUTTON":
             self.hash_map.remove('rows_filter')
@@ -3140,6 +3129,20 @@ class FlowDocDetailsScreen(DocDetailsScreen):
                               'Данный документ содержит плановые строки. Список штрихкодов в него поместить нельзя')
             self.hash_map.put('ShowScreen', 'Документы')
 
+    def _card_click(self):
+        current_str = self.hash_map.get("selected_card_position")
+        jlist = json.loads(self.hash_map.get("doc_barc_flow"))
+        current_elem = jlist['customtable']['tabledata'][int(current_str)]
+        data_dict = {'barcode': current_elem['barcode'],
+                     'Номенклатура': current_elem['name'],
+                     'qtty': current_elem['qtty'], 'Характеристика': ''}
+
+        HtmlView.print_from_any_screen(
+            self.hash_map,
+            self.rs_settings,
+            self.printing_template_name,
+            data_for_printing=data_dict)
+
     def on_post_start(self):
         pass
 
@@ -3225,6 +3228,13 @@ class FlowDocDetailsScreen(DocDetailsScreen):
 
         return table_data
 
+
+class OfflineFlowDocDetailsScreen(FlowDocDetailsScreen):
+    def __init__(self, hash_map, rs_settings):
+        super().__init__(hash_map, rs_settings)
+
+    def _card_click(self):
+        pass
 
 # ^^^^^^^^^^^^^^^^^^^^^ DocDetails ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 

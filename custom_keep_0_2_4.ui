@@ -1573,9 +1573,10 @@
                             },
                             {
                                 "event": "onInput",
+                                "listener": "",
                                 "action": "run",
                                 "type": "python",
-                                "method": "barcode_flow_listener",
+                                "method": "offline_barcode_flow_listener",
                                 "postExecute": ""
                             }
                         ],

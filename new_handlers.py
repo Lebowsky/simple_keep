@@ -117,7 +117,10 @@ def barcode_flow_listener(hash_map:HashMap):
     screen: ui_models.FlowDocDetailsScreen = ui_models.FlowDocDetailsScreen(hash_map, rs_settings)
     screen.on_input()
 
-
+@HashMap()
+def offline_barcode_flow_listener(hash_map:HashMap):
+    screen = ui_models.OfflineFlowDocDetailsScreen(hash_map, rs_settings)
+    screen.on_input()
 
 @HashMap()
 def docs_tiles_on_start(hash_map: HashMap):
