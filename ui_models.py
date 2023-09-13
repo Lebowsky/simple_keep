@@ -3021,28 +3021,20 @@ class FlowDocDetailsScreen(DocDetailsScreen):
         elif listener == 'btn_barcodes':
             self.hash_map.show_dialog('ВвестиШтрихкод')
 
-        elif listener == 'barcode' or self.hash_map.get("event") == "onResultPositive":
+        elif listener == 'barcode' or self._is_result_positive('ВвестиШтрихкод'):
             self.hash_map.put("SearchString", "")
             doc = ui_global.Rs_doc
             doc.id_doc = self.hash_map.get('id_doc')
-            if self.hash_map.get("event") == "onResultPositive":
+            
+            if self._is_result_positive('ВвестиШтрихкод'):
                 barcode = self.hash_map.get('fld_barcode')
             else:
                 barcode = self.hash_map.get('barcode_camera')
+            
+            self._process_the_barcode(barcode, doc.id_doc) 
 
-            if barcode:
-                qtext = '''
-                INSERT INTO RS_barc_flow (id_doc, barcode) VALUES (?,?)
-                '''
-                ui_global.get_query_result(qtext, (doc.id_doc, barcode))
-                self.service.set_doc_status_to_upload(doc.id_doc)
-
-            if self._is_result_positive('confirm_verified'):
-                id_doc = self.hash_map['id_doc']
-                doc = RsDoc(id_doc)
-                doc.mark_verified(1)
-
-                self.hash_map.show_screen("Документы")
+        elif self._is_result_positive('ВвестиКоличество'):
+            self._process_new_qtty_from_user()
 
         elif listener == 'btn_doc_mark_verified':
             self.hash_map.show_dialog('confirm_verified', 'Завершить документ?', ['Да', 'Нет'])
@@ -3054,15 +3046,56 @@ class FlowDocDetailsScreen(DocDetailsScreen):
             self.hash_map.show_screen("Документы")
 
         elif listener == 'ON_BACK_PRESSED':
+            self.hash_map.show_screen("Документы")  
+
+    def _process_the_barcode(self, barcode, id_doc):
+        if barcode:
+            qtext = '''
+            INSERT INTO RS_barc_flow (id_doc, barcode) VALUES (?,?)
+            '''
+            ui_global.get_query_result(qtext, (id_doc, barcode))
+            self.service.set_doc_status_to_upload(id_doc)
+
+        if self._is_result_positive('confirm_verified'):
+            id_doc = self.hash_map['id_doc']
+            doc = RsDoc(id_doc)
+            doc.mark_verified(1)
+
             self.hash_map.show_screen("Документы")
+    
+    def _get_doc_details(self):
+        return self.service.get_flow_table_data()
+    
+    def _process_new_qtty_from_user(self):
+        new_qtty = self.hash_map.get('fld_qtty')
+
+        if not new_qtty:
+            self.hash_map.toast("Поле не может быть пустым.")
+            return
+        # Проверка на валидность числа
+        try:
+            new_qtty_float = float(new_qtty)
+        except ValueError:
+            self.hash_map.toast("Введенное значение не является валидным числом.")
+            return
+        # Проверка на отрицательное значение
+        if new_qtty_float < 0:
+            self.hash_map.toast("Количество не может быть отрицательным.")
+            return
+        
+        current_elem = self.hash_map.get_json('selected_card_data')
+        barcode = current_elem['barcode']
+        id_doc = self.hash_map.get('id_doc')
+                    
+        qtext = '''UPDATE RS_barc_flow SET qtty = :qtty WHERE id_doc = :id_doc AND barcode = :barcode'''
+        ui_global.get_query_result(qtext, {'id_doc': id_doc, 'barcode': barcode, 'qtty': new_qtty})
 
     def _barcode_flow_on_start(self):
 
         id_doc = self.hash_map.get('id_doc')
         falseValueList = (0, '0', 'false', 'False', None)
         # Формируем таблицу карточек и запрос к базе
-
-        doc_details = self.service.get_flow_table_data()
+        doc_details = self._get_doc_details()
         table_data = self._prepare_table_data(doc_details)
         table_view = self._get_doc_table_view(table_data=table_data)
 
@@ -3234,8 +3267,29 @@ class OfflineFlowDocDetailsScreen(FlowDocDetailsScreen):
         super().__init__(hash_map, rs_settings)
 
     def _card_click(self):
-        pass
+        self.hash_map.show_dialog('ВвестиКоличество')
 
+    def _get_doc_details(self):
+        doc_details = self.service.get_offline_flow_table_data()
+
+        return doc_details
+    
+    def _process_the_barcode(self, barcode, id_doc):
+        
+        if barcode:
+            qtext = '''SELECT qtty FROM RS_barc_flow WHERE id_doc = :id_doc AND barcode = :barcode'''
+            res = ui_global.get_query_result(qtext, {'id_doc': id_doc, 'barcode': barcode})
+            if not res:
+                qtext = '''INSERT INTO RS_barc_flow (id_doc, barcode, qtty) VALUES (:id_doc, :barcode, :qtty)'''
+                ui_global.get_query_result(qtext, {'id_doc': id_doc, 'barcode': barcode, 'qtty': 1})
+            else:
+                new_qtty = float(res[0][0]) + 1
+                qtext = '''UPDATE RS_barc_flow SET qtty = :qtty WHERE id_doc = :id_doc AND barcode = :barcode'''
+                ui_global.get_query_result(qtext, {'id_doc': id_doc, 'barcode': barcode, 'qtty': new_qtty})
+
+            self.service.set_doc_status_to_upload(id_doc)
+
+        
 # ^^^^^^^^^^^^^^^^^^^^^ DocDetails ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 # ==================== Goods select =============================

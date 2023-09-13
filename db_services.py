@@ -968,6 +968,26 @@ class FlowDocService(DocService):
                         GROUP BY temp_q.barcode'''
 
         return self._get_query_result(query_text, (self.doc_id,), True)
+    
+    def get_offline_flow_table_data(self):
+        query_text = '''SELECT
+                            RS_barc_flow.barcode,
+                            RS_barcodes.id_good as id_good,
+                            RS_barcodes.id_property as id_property,
+                            CASE 
+                                WHEN RS_barc_flow.qtty % 1 = 0 THEN CAST(RS_barc_flow.qtty AS INTEGER)
+                                ELSE RS_barc_flow.qtty
+                            END as qtty,
+                            RS_goods.name as name
+                        FROM RS_barc_flow
+                        LEFT JOIN RS_barcodes
+                            ON RS_barcodes.barcode = RS_barc_flow.barcode
+                        LEFT JOIN RS_goods
+                            ON RS_goods.id = RS_barcodes.id_good
+                        WHERE RS_barc_flow.id_doc = ?
+                        '''
+
+        return self._get_query_result(query_text, (self.doc_id,), True)
 
     def get_data_for_ticket_printing(self, barcode):
         query_text = '''WITH temp_q as (SELECT
