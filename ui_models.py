@@ -3088,7 +3088,7 @@ class FlowDocDetailsScreen(DocDetailsScreen):
         id_doc = self.hash_map.get('id_doc')
                     
         qtext = '''UPDATE RS_barc_flow SET qtty = :qtty WHERE id_doc = :id_doc AND barcode = :barcode'''
-        ui_global.get_query_result(qtext, {'id_doc': id_doc, 'barcode': barcode, 'qtty': new_qtty})
+        ui_global.get_query_result(qtext, {'id_doc': id_doc, 'barcode': barcode, 'qtty': new_qtty_float})
 
     def _barcode_flow_on_start(self):
 
@@ -3245,9 +3245,9 @@ class FlowDocDetailsScreen(DocDetailsScreen):
         table_data = [{}]
 
         for record in doc_details:
-
+            qtty = str(self._format_qtty(record['qtty']))
             product_row = {'key': str(record['barcode']), 'barcode': str(record['barcode']),
-                           'name': record['name'] if record['name'] is not None else '-нет данных-', 'qtty': str(record['qtty']),
+                           'name': record['name'] if record['name'] is not None else '-нет данных-', 'qtty': qtty,
                            '_layout': self._get_doc_table_row_view()}
 
             product_row['_layout'].BackgroundColor = '#FFFFFF' if record['name'] is not None else "#FBE9E7"
@@ -3260,6 +3260,12 @@ class FlowDocDetailsScreen(DocDetailsScreen):
             #table_data.append(product_row)
 
         return table_data
+    
+    def _format_qtty(self, qtty):
+        if qtty % 1 == 0:
+            return int(qtty)
+        else:
+            return qtty
 
 
 class OfflineFlowDocDetailsScreen(FlowDocDetailsScreen):
@@ -3271,7 +3277,6 @@ class OfflineFlowDocDetailsScreen(FlowDocDetailsScreen):
 
     def _get_doc_details(self):
         doc_details = self.service.get_offline_flow_table_data()
-
         return doc_details
     
     def _process_the_barcode(self, barcode, id_doc):

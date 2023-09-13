@@ -974,10 +974,7 @@ class FlowDocService(DocService):
                             RS_barc_flow.barcode,
                             RS_barcodes.id_good as id_good,
                             RS_barcodes.id_property as id_property,
-                            CASE 
-                                WHEN RS_barc_flow.qtty % 1 = 0 THEN CAST(RS_barc_flow.qtty AS INTEGER)
-                                ELSE RS_barc_flow.qtty
-                            END as qtty,
+                            RS_barc_flow.qtty as qtty,
                             RS_goods.name as name
                         FROM RS_barc_flow
                         LEFT JOIN RS_barcodes
