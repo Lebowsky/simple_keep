@@ -168,7 +168,107 @@ def r0_1_0_13_7(hash_map):
     
     DROP TABLE sqlitestudio_temp_table;
     
+
+    CREATE TABLE sqlitestudio_temp_table AS SELECT *
+                                          FROM RS_docs_series;
+
+    DROP TABLE RS_docs_series;
+    
+    CREATE TABLE RS_docs_series (
+        id              INTEGER  NOT NULL
+                                 PRIMARY KEY AUTOINCREMENT,
+        id_doc          TEXT     NOT NULL
+                                 REFERENCES RS_docs (id_doc),
+        id_good         TEXT     NOT NULL
+                                 REFERENCES RS_goods (id),
+        id_series       TEXT     REFERENCES RS_series (id),
+        id_warehouse    TEXT     REFERENCES RS_warehouses (id),
+        qtty            REAL,
+        name            TEXT     NOT NULL,
+        best_before     DATETIME,
+        number          TEXT     NOT NULL,
+        production_date DATETIME,
+        cell             TEXT     REFERENCES RS_cells (id) ON DELETE NO ACTION
+                                                          ON UPDATE NO ACTION
+    );
+    
+    INSERT INTO RS_docs_series (
+                                   id,
+                                   id_doc,
+                                   id_good,
+                                   id_series,
+                                   id_warehouse,
+                                   qtty,
+                                   name,
+                                   best_before,
+                                   number,
+                                   production_date
+                               )
+                               SELECT id,
+                                      id_doc,
+                                      id_good,
+                                      id_series,
+                                      id_warehouse,
+                                      qtty,
+                                      name,
+                                      best_before,
+                                      number,
+                                      production_date
+                                 FROM sqlitestudio_temp_table;
+    
+    DROP TABLE sqlitestudio_temp_table;
+    
+    
+    CREATE TABLE sqlitestudio_temp_table AS SELECT *
+                                              FROM RS_adr_docs;
+    
+    DROP TABLE RS_adr_docs;
+    
+    CREATE TABLE RS_adr_docs (
+        id_doc             TEXT        NOT NULL
+                                       PRIMARY KEY,
+        doc_type           TEXT        NOT NULL,
+        doc_n              TEXT        NOT NULL,
+        doc_date           TEXT        NOT NULL,
+        id_warehouse       TEXT        NOT NULL
+                                       REFERENCES RS_warehouses (id),
+        verified           INTEGER,
+        sent               INTEGER,
+        add_mark_selection INTEGER,
+        created_at         DATETIME    DEFAULT CURRENT_TIMESTAMP,
+        control            TEXT        DEFAULT 0,
+        allow_fact_input TEXT     DEFAULT (0),
+        use_series         INTEGER (1) DEFAULT (0) 
+    );
+    
+    INSERT INTO RS_adr_docs (
+                                id_doc,
+                                doc_type,
+                                doc_n,
+                                doc_date,
+                                id_warehouse,
+                                verified,
+                                sent,
+                                add_mark_selection,
+                                created_at,
+                                control
+                            )
+                            SELECT id_doc,
+                                   doc_type,
+                                   doc_n,
+                                   doc_date,
+                                   id_warehouse,
+                                   verified,
+                                   sent,
+                                   add_mark_selection,
+                                   created_at,
+                                   control
+                              FROM sqlitestudio_temp_table;
+    
+    DROP TABLE sqlitestudio_temp_table;
+    
     PRAGMA foreign_keys = 1;
+
 
     '''
     try:

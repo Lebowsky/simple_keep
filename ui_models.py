@@ -2691,6 +2691,9 @@ class AdrDocDetailsScreen(DocDetailsScreen):
                     self.hash_map.put('toast', res['Descr'])
                 elif res['Error'] == 'Zero_plan_error':
                     self.hash_map.put('toast', res['Descr'])
+                elif res['Error'] == 'Must_use_series':
+                    self.open_series_screen(doc.id_doc, res)
+                    return res
                 else:
                     self.hash_map.put('toast', res['Descr'])  # + ' '+ res['Barcode']
             else:
@@ -2809,6 +2812,7 @@ class AdrDocDetailsScreen(DocDetailsScreen):
         current_str = self.hash_map.get("selected_card_position")
         jlist = json.loads(self.hash_map.get("doc_goods_table"))
         current_elem = jlist['customtable']['tabledata'][int(current_str)]
+        id_doc =  self.hash_map.get('id_doc')
         self.hash_map.put("Doc_data",
                           self.hash_map.get('doc_type') + ' №' + self.hash_map.get('doc_n') +
                           ' от' + self.hash_map.get('doc_date'))
@@ -2827,7 +2831,14 @@ class AdrDocDetailsScreen(DocDetailsScreen):
         self.hash_map.put('id_good', current_elem['id_good'])
         self.hash_map.put('id_unit', current_elem['id_unit'])
         self.hash_map.put('id_property', current_elem['id_properties'])
-        self.hash_map.put("ShowScreen", "Товар выбор")
+
+        # ----------- Блок работы с сериями товара. Если строка документа должна хранить серии
+        # ВАЖНО! Заменяет экран товара по умолчанию
+        if current_elem['use_series'] == '1':
+            current_elem['id'] = current_elem['key']
+            self.open_series_screen(id_doc, current_elem)
+        else:
+            self.hash_map.put("ShowScreen", "Товар выбор")
 
     def _prepare_table_data(self, doc_details):
         # TODO добавить группировку по ячейкам
@@ -2857,6 +2868,7 @@ class AdrDocDetailsScreen(DocDetailsScreen):
                 'code_art': 'Код: ' + str(record['code']),
                 'art': str(record['art']),
                 'picture': pic,
+                'use_series': str(record['use_series'])
             }
 
             props = [
@@ -3051,7 +3063,8 @@ class AdrDocDetailsScreen(DocDetailsScreen):
         self.hash_map['params_for_series_screen'] = params_for_series_screen
         # self.hash_map.show_process_result(SeriesList.process_name, SeriesList.screen_name)
         self.hash_map['back_screen'] = self.hash_map.get_current_screen()
-        self.hash_map.show_screen(SeriesList.screen_name)
+        self.hash_map.show_screen(SeriesAdrList.screen_name)
+
 
 
 class FlowDocDetailsScreen(DocDetailsScreen):
@@ -3937,9 +3950,9 @@ class GoodsSelectArticle(Screen):
             put_data = {
                 'Doc_data': f'{self.hash_map["doc_type"]} № {self.hash_map["doc_n"]} от {self.hash_map["doc_date"]}',
                 'Good': current_element['name'],
-                'id_good': current_elem['id_good'],
-                'id_unit': current_elem['id_unit'],
-                'id_property': current_elem['id_properties'],
+                'id_good': current_element['id_good'],
+                'id_unit': current_element['id_unit'],
+                'id_property': current_element['id_properties'],
                 'good_art': current_element['art'],
                 'good_sn': current_element['series_name'],
                 'good_property': current_element['property_name'],
@@ -5422,19 +5435,15 @@ class SeriesList(Screen):
         str_params = self.hash_map.get('params_for_series_screen')
         if str_params:
             self.params = json.loads(str_params)
-            self.doc_basic_table_name = self.params['doc_basic_table_name'] if self.params.get(
-                'doc_basic_table_name') else 'RS_docs_table'
-            self.doc_basic_handler_name = self.params['doc_basic_handler_name'] if self.params.get(
-                'doc_basic_handler_name') else 'RS_docs'
         else:
             self.params = {}
 
         self.service = db_services.SeriesService(self.params)
         self.popup_menu_data = 'Удалить;Изменить'
-        res = self.service.get_series_prop_by_id(self.params['id'], self.doc_basic_table_name)
+        res = self.service.get_series_prop_by_id(self.params['id'])
         self.params.update(res)
 
-        res = self.service.get_doc_prop_by_id(self.params['id_doc'], self.doc_basic_handler_name)
+        res = self.service.get_doc_prop_by_id(self.params['id_doc'])
         self.params.update(res)
 
     def on_start(self):
@@ -5607,6 +5616,231 @@ class SeriesItem(SeriesList):
     def on_input(self):
         listener = self.listener
         if listener == "btn_save":
+
+            self.save_data()
+            self.hash_map.show_screen('Выбор серии')
+        elif listener == "ON_BACK_PRESSED":
+            self.hash_map.show_screen('Выбор серии')
+        elif listener == "btn_cancel":
+            self.hash_map.show_screen('Выбор серии')
+
+
+    def save_data(self):
+        params = {'id': int(self.hash_map.get('current_series_id')),
+                  'id_doc': self.params['id_doc'],
+                  'id_good':  self.params['id_good'],
+                  'id_properties': self.params['id_properties'],
+                  'id_series': self.params['id_series'],
+                  'id_warehouse': self.params['id_warehouse'],
+                  'qtty': self.hash_map['qtty'],
+                  'name': self.hash_map['name'],
+                  'best_before': self.hash_map['best_before'],
+                  'number': self.hash_map['number'],
+                  'production_date': self.hash_map['production_date'],
+                  'cell': None
+                  }
+        self.service.save_table_str(params)
+
+
+class SeriesAdrList(Screen):
+    process_name = 'Адресное хранение'
+    screen_name = 'Выбор серии'
+    doc_basic_table_name = 'RS_docs_table'
+    doc_basic_handler_name = 'RS_docs'
+    id: str = None
+
+    def __init__(self, hash_map: HashMap, rs_settings):
+        super().__init__(hash_map, rs_settings)
+
+        list_of_params = ['id_doc', 'Doc_data', 'code_art', 'properties_name',
+                          'price', 'units_name', 'good_name', 'qtty_plan', 'qtty']
+        str_params = self.hash_map.get('params_for_series_screen')
+        if str_params:
+            self.params = json.loads(str_params)
+
+        else:
+            self.params = {}
+
+        self.service = db_services.SeriesService(self.params)
+        self.service.doc_basic_table_name = 'RS_adr_docs_table'
+        self.service.doc_basic_handler_name = 'RS_adr_docs'
+        self.popup_menu_data = 'Удалить;Изменить'
+        res = self.service.get_series_prop_by_id(self.params['id'])
+        self.params.update(res)
+
+        res = self.service.get_doc_prop_by_id(self.params['id_doc'])
+        self.params.update(res)
+
+    def on_start(self):
+        # Сохраним текущий hash_map чтобы вернуть его при выходе
+        # self.rs_settings.put('_stored_hash_', json.dumps(self.hash_map.export()), True)
+
+        for key in self.params.keys():
+            self.hash_map[key] = self.params[key]
+
+        query_data = self.service.get_series_by_adr_doc_and_goods()
+        list_data = query_data  # self._prepare_table_data(query_data)
+        doc_cards = self._get_doc_cards_view(list_data)
+        self.hash_map['series_cards'] = doc_cards.to_json()
+
+        #Обновим количесмтво факт по сериям
+        real_qtty = self.service.get_adr_total_qtty()
+        self.hash_map['qtty'] = str(real_qtty)
+        self.service.set_total_qtty(real_qtty)
+
+
+    def on_input(self):
+        listener = self.listener
+        if listener == "CardsClick":
+            self.hash_map.put('current_series_id', self.hash_map.get("selected_card_key"))
+            #self.update_hash_map_keys()
+            self.hash_map.put('barcode', '')
+
+            self.hash_map.show_screen("Заполнение серии", self.params)
+        elif listener == "ON_BACK_PRESSED":
+            real_qtty = self.service.get_adr_total_qtty()
+            self.service.set_total_qtty(real_qtty)
+            # self.hash_map.importing(json.loads(self.rs_settings.get('_stored_hash')))
+            # self.hash_map.put("FinishProcess", "")
+            self.hash_map.show_screen(self.hash_map.get('back_screen'))
+        elif listener == 'barcode':
+            self._identify_add_barcode_series()
+        elif self.listener == 'LayoutAction':
+            self._layout_action()
+
+    def update_hash_map_keys(self):
+        params = self.params
+        exclude_keys = ('hash_map', 'screen_values', 'rs_settings')
+        for key in params.keys():
+            if key in exclude_keys:
+                continue
+            self.hash_map[key] = self.params[key]
+
+    def on_post_start(self):
+        pass
+
+    def show(self, args=None):
+        pass
+
+    def _get_doc_cards_view(self, table_data):
+
+        title_text_size = self.rs_settings.get("TitleTextSize")
+        card_title_text_size = self.rs_settings.get('CardTitleTextSize')
+        card_date_text_size = self.rs_settings.get('CardDateTextSize')
+
+        doc_cards = widgets.CustomCards(
+            widgets.LinearLayout(
+                widgets.LinearLayout(
+                    widgets.TextView(
+                        Value='@name',
+                        width='match_parent',
+                        gravity_horizontal='left',
+                        weight=2
+                    ),
+                    widgets.TextView(
+                        Value='@best_before',
+                        TextSize=title_text_size,
+                    ),
+                    # widgets.PopupMenuButton(
+                    #     Value=self.popup_menu_data,
+                    #     Variable="menu_series",
+                    # ),
+
+                    orientation='horizontal',
+                    width='match_parent',
+
+                ),
+                widgets.LinearLayout(
+                    widgets.TextView(
+                        Value='@qtty',
+                        TextBold=True,
+                        TextSize=card_title_text_size
+                    ),
+                    widgets.TextView(
+                        Value='@number',
+                        TextBold=True,
+                        TextSize=card_title_text_size
+                    ),
+                    widgets.TextView(
+                        Value='@production_date',
+                        TextBold=True,
+                        TextSize=card_title_text_size
+                    )
+
+                ),
+
+                width="match_parent"
+            ),
+            options=widgets.Options().options,
+            cardsdata=table_data
+        )
+
+        return doc_cards
+
+    def _prepare_table_data(self, doc_details):
+
+        table_data = [{}]
+
+        for record in doc_details:
+            product_row = {}
+            for el in record.keys():
+                product_row[el] = record[el]
+
+            # product_row = {'key': str(record['barcode']), 'barcode': str(record['barcode']),
+            #                'name': record['name'] if record['name'] is not None else '-нет данных-', 'qtty': str(record['qtty'])}
+
+            product_row['_layout'].BackgroundColor = '#FFFFFF' if record['name'] is not None else "#FBE9E7"
+
+            if self._added_goods_has_key(product_row['key']):
+                table_data.insert(1, product_row)
+            else:
+                table_data.append(product_row)
+
+            # table_data.append(product_row)
+
+        return table_data
+
+    def _identify_add_barcode_series(self):
+        barcode = self.hash_map.get('barcode')
+        if barcode:
+
+            values = self.service.get_adr_series_by_barcode(barcode)
+            if values:
+                item_id = values[0]['id']
+                self.service.add_qtty_to_table_str(item_id)
+            else:
+                self.service.add_new_series_in_doc_series_table(barcode)
+
+    def _layout_action(self):
+        layout_listener = self.hash_map.get('layout_listener')
+        if layout_listener == 'Удалить':
+            id = self.hash_map.get('selected_card_key')
+            self.service.delete_current_st(id)
+        elif layout_listener == 'Изменить':
+            self.hash_map['current_series_id'] = self.hash_map.get('selected_card_key')
+            self.hash_map.show_screen('Заполнение серии', self.params)
+
+
+class SeriesAdrItem(SeriesAdrList):
+    process_name = 'Адресное хранение'
+    screen_name = 'Заполнение серии'
+
+
+    def __init__(self, hash_map: HashMap, rs_settings):
+        super().__init__(hash_map, rs_settings)
+
+
+    def on_start(self):
+        prop_list = self.service.get_series_table_str(self.hash_map.get('current_series_id'))
+        for key, value in prop_list.items():
+            if value:
+                self.hash_map.put(key, value)
+            else:
+                self.hash_map.put(key, '_')
+
+    def on_input(self):
+        listener = self.listener
+        if listener == "btn_save":
             self.save_data()
             self.hash_map.show_screen('Выбор серии')
         elif listener == "ON_BACK_PRESSED":
@@ -5621,14 +5855,15 @@ class SeriesItem(SeriesList):
                   'id_good':  self.params['id_good'],
                   'id_series': self.params['id_series'],
                   'id_warehouse': self.params['id_warehouse'],
+                  'id_properties': self.params['id_properties'],
                   'qtty': self.hash_map['qtty'],
                   'name': self.hash_map['name'],
                   'best_before': self.hash_map['best_before'],
                   'number': self.hash_map['number'],
                   'production_date': self.hash_map['production_date'],
+                  'cell': self.hash_map['cell']
                   }
         self.service.save_table_str(params)
-
 
 # ^^^^^^^^^^^^^^^^^^^^^ Series ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
