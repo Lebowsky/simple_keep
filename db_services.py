@@ -1277,7 +1277,8 @@ class AdrDocService(DocService):
             RS_adr_docs_table.qtty_plan as qtty_plan,
             RS_adr_docs_table.qtty_plan - RS_adr_docs_table.qtty as IsDone,
             ifnull(RS_adr_docs_table.id_cell, :EmptyString) as id_cell,
-            ifnull(RS_cells.name, :NullValue) as cell_name
+            ifnull(RS_cells.name, :NullValue) as cell_name,
+            RS_adr_docs_table.use_series
             
             
             FROM RS_adr_docs_table 

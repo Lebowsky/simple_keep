@@ -2812,6 +2812,7 @@ class AdrDocDetailsScreen(DocDetailsScreen):
         current_str = self.hash_map.get("selected_card_position")
         jlist = json.loads(self.hash_map.get("doc_goods_table"))
         current_elem = jlist['customtable']['tabledata'][int(current_str)]
+        id_doc =  self.hash_map.get('id_doc')
         self.hash_map.put("Doc_data",
                           self.hash_map.get('doc_type') + ' №' + self.hash_map.get('doc_n') +
                           ' от' + self.hash_map.get('doc_date'))
@@ -2830,7 +2831,14 @@ class AdrDocDetailsScreen(DocDetailsScreen):
         self.hash_map.put('id_good', current_elem['id_good'])
         self.hash_map.put('id_unit', current_elem['id_unit'])
         self.hash_map.put('id_property', current_elem['id_properties'])
-        self.hash_map.put("ShowScreen", "Товар выбор")
+
+        # ----------- Блок работы с сериями товара. Если строка документа должна хранить серии
+        # ВАЖНО! Заменяет экран товара по умолчанию
+        if current_elem['use_series'] == '1':
+            current_elem['id'] = current_elem['key']
+            self.open_series_screen(id_doc, current_elem)
+        else:
+            self.hash_map.put("ShowScreen", "Товар выбор")
 
     def _prepare_table_data(self, doc_details):
         # TODO добавить группировку по ячейкам
@@ -2860,6 +2868,7 @@ class AdrDocDetailsScreen(DocDetailsScreen):
                 'code_art': 'Код: ' + str(record['code']),
                 'art': str(record['art']),
                 'picture': pic,
+                'use_series': str(record['use_series'])
             }
 
             props = [
@@ -3941,9 +3950,9 @@ class GoodsSelectArticle(Screen):
             put_data = {
                 'Doc_data': f'{self.hash_map["doc_type"]} № {self.hash_map["doc_n"]} от {self.hash_map["doc_date"]}',
                 'Good': current_element['name'],
-                'id_good': current_elem['id_good'],
-                'id_unit': current_elem['id_unit'],
-                'id_property': current_elem['id_properties'],
+                'id_good': current_element['id_good'],
+                'id_unit': current_element['id_unit'],
+                'id_property': current_element['id_properties'],
                 'good_art': current_element['art'],
                 'good_sn': current_element['series_name'],
                 'good_property': current_element['property_name'],
