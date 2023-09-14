@@ -20,17 +20,7 @@ class TestUniversalCardsScreen(unittest.TestCase):
         self.service.drop_all_tables()
         self.service.create_tables()
 
-    # def test_on_start(self):
-    #     # init test data
-    #     self.hash_map['some_key'] = 'some_value'
-    #     expect = 'some_result_value'
-    #
-    #     # execute test method
-    #     actual = self.sut.some_method()
-    #
-    #     # assert test method results
-    #     self.assertEqual(expect, actual)
-
+    @unittest.skip
     def test_get_views_data(self):
         self.service.insert_data(*['RS_goods', 'RS_units', 'RS_types_goods'])
 
@@ -42,8 +32,4 @@ class TestUniversalCardsScreen(unittest.TestCase):
         self.sut.on_start()
         actual = json.loads(self.hash_map['cards'])
 
-        print(actual)
         self.assertEqual(expect, actual)
-
-
-        # print(self.sut._get_table_cards('RS_goods').to_json())

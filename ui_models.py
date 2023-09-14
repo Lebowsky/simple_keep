@@ -1,3 +1,4 @@
+import re
 from abc import ABC, abstractmethod
 import json
 import base64
@@ -6,14 +7,14 @@ import os
 from pathlib import Path
 import time
 from datetime import datetime
-from typing import Dict, List, Optional
+from typing import Dict, List, Optional, Tuple
 
 import db_services
 import hs_services
 import printing_factory
 from ui_utils import HashMap, RsDoc, BarcodeWorker, get_ip_address
 from db_services import (DocService, ErrorService, GoodsService, BarcodeService, AdrDocService, TimerService,
-                         UniversalCardsService)
+                         UniversalCardsService, SqlQueryProvider)
 from tiny_db_services import ScanningQueueService, TinyNoSQLProvider
 from hs_services import HsService
 from ru.travelfood.simple_ui import SimpleUtilites as suClass
@@ -24,6 +25,8 @@ from http_exchange import post_changes_to_server
 import widgets
 import ui_global
 import base64
+from java import jclass
+noClass = jclass("ru.travelfood.simple_ui.NoSQL")
 
 
 class Screen(ABC):
@@ -2425,7 +2428,10 @@ class DocumentsDocDetailScreen(DocDetailsScreen):
             put_data = {
                 'Doc_data': title,
                 'Good': current_elem['good_name'],
+                'items_on_page': self.items_on_page,
                 'id_good': current_elem['id_good'],
+                'id_unit': current_elem['id_unit'],
+                'id_property': current_elem['id_properties'],
                 'good_art': current_elem['art'],
                 'good_sn': current_elem['series_name'],
                 'good_property': current_elem['properties_name'],
@@ -2821,7 +2827,9 @@ class AdrDocDetailsScreen(DocDetailsScreen):
             else:
                 self.hash_map.put("qtty", str(current_elem['qtty']))
         self.hash_map.put('key', current_elem['key'])
-
+        self.hash_map.put('id_good', current_elem['id_good'])
+        self.hash_map.put('id_unit', current_elem['id_unit'])
+        self.hash_map.put('id_property', current_elem['id_properties'])
         self.hash_map.put("ShowScreen", "Товар выбор")
 
     def _prepare_table_data(self, doc_details):
@@ -3054,6 +3062,7 @@ class FlowDocDetailsScreen(DocDetailsScreen):
     screen_name = 'ПотокШтрихкодовДокумента'
     process_name = 'Сбор ШК'
     printing_template_name = 'flow_doc_details_screen'
+    ocr_nosql = noClass("ocr_nosql")
 
     def __init__(self, hash_map: HashMap, rs_settings):
         super().__init__(hash_map, rs_settings)
@@ -3065,9 +3074,9 @@ class FlowDocDetailsScreen(DocDetailsScreen):
 
     def on_start(self):
         self._barcode_flow_on_start()
+        self._set_vision_settings()
 
     def on_input(self):
-
         listener = self.hash_map.get('listener')
         if listener == "CardsClick":
             current_str = self.hash_map.get("selected_card_position")
@@ -3091,40 +3100,79 @@ class FlowDocDetailsScreen(DocDetailsScreen):
         elif listener == 'btn_barcodes':
             self.hash_map.show_dialog('ВвестиШтрихкод')
 
-        elif listener == 'barcode' or self.hash_map.get("event") == "onResultPositive":
-            self.hash_map.put("SearchString", "")
-            doc = ui_global.Rs_doc
-            doc.id_doc = self.hash_map.get('id_doc')
-            if self.hash_map.get("event") == "onResultPositive":
-                barcode = self.hash_map.get('fld_barcode')
-            else:
-                barcode = self.hash_map.get('barcode_camera')
+        elif listener == 'barcode':
+            barcode = self.hash_map.get('barcode_camera')
+            self.service.add_barcode_to_database(barcode)
+            self.service.set_doc_status_to_upload(self.id_doc)
 
-            if barcode:
-                qtext = '''
-                INSERT INTO RS_barc_flow (id_doc, barcode) VALUES (?,?)
-                '''
-                ui_global.get_query_result(qtext, (doc.id_doc, barcode))
-                self.service.set_doc_status_to_upload(doc.id_doc)
-
-            if self._is_result_positive('confirm_verified'):
-                id_doc = self.hash_map['id_doc']
-                doc = RsDoc(id_doc)
-                doc.mark_verified(1)
-
-                self.hash_map.show_screen("Документы")
-
-        elif listener == 'btn_doc_mark_verified':
-            self.hash_map.show_dialog('confirm_verified', 'Завершить документ?', ['Да', 'Нет'])
+        elif self._is_result_positive('ВвестиШтрихкод'):
+            barcode = self.hash_map.get('fld_barcode')
+            self.service.add_barcode_to_database(barcode)
+            self.service.set_doc_status_to_upload(self.id_doc)
 
         elif self._is_result_positive('confirm_verified'):
-            id_doc = self.hash_map['id_doc']
-            doc = RsDoc(id_doc)
-            doc.mark_verified(1)
+            RsDoc(self.id_doc).mark_verified(1)
             self.hash_map.show_screen("Документы")
+
+        elif listener == 'btn_doc_mark_verified':
+            self.hash_map.show_dialog('confirm_verified',
+                                      'Завершить документ?',
+                                      ['Да', 'Нет'])
+
+        elif listener == 'btn_ocr_serial_template_settings':
+            min_rec_amount = self.rs_settings.get('ocr_serial_template_min_rec_amount') or 5
+            self.hash_map.put('ocr_serial_template_min_rec_amount', str(min_rec_amount))
+            num_amount = self.rs_settings.get('ocr_serial_template_num_amount') or 10
+            self.hash_map.put('ocr_serial_template_num_amount', str(num_amount))
+            prefix = self.rs_settings.get('ocr_serial_template_prefix') or 'SN'
+            self.hash_map.put('ocr_serial_template_prefix', prefix)
+            flag_rec = self.rs_settings.get('ocr_serial_template_continuous_recognition')
+            flag_rec = str(flag_rec).lower() if flag_rec is not None else 'false'
+            flag_pref = self.rs_settings.get('ocr_serial_template_use_prefix')
+            flag_pref = str(flag_pref).lower() if flag_pref is not None else 'false'
+            current_template = f'Текущий шаблон: {prefix if flag_pref == "true" else ""}{"*"*num_amount}'
+            self.hash_map.put('current_ocr_serial_template', current_template)
+            self.hash_map.put('ocr_serial_template_continuous_recognition', flag_rec)
+            self.hash_map.put('ocr_serial_template_use_prefix', flag_pref)
+            self.hash_map.show_dialog('ШаблонРаспознавания',
+                                      'Настройка шаблона распознавания',
+                                      ['Принять', 'Отмена'])
+
+        elif self._is_result_positive('ШаблонРаспознавания'):
+            min_rec_amount = self.hash_map.get('ocr_serial_template_min_rec_amount')
+            num_amount = self.hash_map.get('ocr_serial_template_num_amount') or '10'
+            prefix = self.hash_map.get('ocr_serial_template_prefix')
+            continuous_recognition = self.hash_map.get('ocr_serial_template_continuous_recognition')
+            continuous_recognition = True if continuous_recognition == 'true' else False
+            use_prefix = self.hash_map.get('ocr_serial_template_use_prefix')
+            use_prefix = True if use_prefix == 'true' else False
+            is_valid, error = self._validate_ocr_settings(min_rec_amount, num_amount,
+                                                          prefix, use_prefix)
+            if not is_valid:
+                self.hash_map.toast(error)
+                return
+            prefix = prefix.strip()
+            self.rs_settings.put('ocr_serial_template_num_amount', int(num_amount), True)
+            self.rs_settings.put('ocr_serial_template_prefix', prefix, True)
+            self.rs_settings.put('ocr_serial_template_continuous_recognition', continuous_recognition, True)
+            self.rs_settings.put('ocr_serial_template_use_prefix', use_prefix, True)
+            self.rs_settings.put('ocr_serial_template_min_rec_amount', int(min_rec_amount), True)
+
+            if use_prefix:
+                patterns = [rf'^{prefix}', rf'([^\doO])(\d{{{num_amount}}})$']
+            else:
+                patterns = [rf'\d{{{num_amount}}}']
+            self.rs_settings.put('ocr_serial_template_patterns', json.dumps(patterns), True)
+            self.hash_map.toast('Шаблон сохранён')
 
         elif listener == 'ON_BACK_PRESSED':
             self.hash_map.show_screen("Документы")
+
+        elif listener == 'vision_cancel':
+            FlowDocDetailsScreen.ocr_nosql.destroy()
+
+        elif listener == 'vision':
+            FlowDocDetailsScreen.ocr_nosql.destroy()
 
     def _barcode_flow_on_start(self):
 
@@ -3285,22 +3333,92 @@ class FlowDocDetailsScreen(DocDetailsScreen):
 
         return table_data
 
+    def _set_vision_settings(self) -> None:
+        """Устанавливает настройки для кнопки распознавания текста"""
+        num_amount = self.rs_settings.get('ocr_serial_template_num_amount') or 10
+        use_prefix = self.rs_settings.get('ocr_serial_template_use_prefix')
+        if use_prefix:
+            prefix = self.rs_settings.get('ocr_serial_template_prefix')
+            min_length = num_amount + len(prefix)
+            max_length = min_length + 2
+        else:
+            min_length, max_length = num_amount, num_amount
+        values_list = ("~[{\"action\":\"run\",\"type\":\"python\","
+                       "\"method\":\"serial_key_recognition_ocr\"}]")
+        rec_settings = dict(
+            values_list=values_list,
+            max_length=max_length,
+            min_length=min_length,
+            mesure_qty=1,
+            min_freq=1,
+        )
+        self.hash_map.set_vision_settings(**rec_settings)
+
+    def _validate_ocr_settings(
+            self,
+            min_rec_amount: str,
+            num_amount: str,
+            prefix: str,
+            use_prefix: bool
+    ) -> Tuple[bool, str]:
+        """Валидация данных введенных в диалоге ШаблонРаспознавания"""
+        if not min_rec_amount.isdigit() or int(min_rec_amount) == 0:
+            error = 'Укажите минимальное количество обнаружений серийного номера'
+            return False, error
+        if not num_amount.isdigit():
+            error = 'Количество цифр в шаблоне не корректно'
+            return False, error
+        if not 1 < int(num_amount) < 21:
+            error = 'Количество цифр в шаблоне должно быть в интервале от 2 до 20'
+            return False, error
+        if prefix.isspace() and use_prefix:
+            error = 'Не указан префикс'
+            return False, error
+        return True, ''
+
+    @staticmethod
+    def serial_key_recognition_ocr(hash_map: HashMap, rs_settings) -> None:
+        """Находит в переданной из OCR строке серийный номер, по заданному шаблону"""
+        ocr_nosql = FlowDocDetailsScreen.ocr_nosql
+        ocr_text = hash_map.get("ocr_text")
+        use_prefix = rs_settings.get('ocr_serial_template_use_prefix')
+        num_amount = rs_settings.get('ocr_serial_template_num_amount') or 10
+        patterns = rs_settings.get('ocr_serial_template_patterns')
+        patterns = json.loads(patterns) if patterns else [rf'\d{{{num_amount}}}']
+        for pattern in patterns:
+            match_num = re.search(pattern, ocr_text)
+            if not match_num:
+                return
+        result = match_num.group(2) if use_prefix else match_num.group()
+        min_rec_amount = rs_settings.get('ocr_serial_template_min_rec_amount')
+        result_in_memory = ocr_nosql.get(result)
+        if result_in_memory is None:
+            ocr_nosql.put(result, 1, True)
+        elif result_in_memory < min_rec_amount:
+            ocr_nosql.put(result, result_in_memory + 1, True)
+        elif result_in_memory == min_rec_amount:
+            ocr_nosql.put(result, result_in_memory + 1, True)
+            db_services.FlowDocService(hash_map['id_doc']).add_barcode_to_database(result)
+            hash_map.beep()
+            hash_map.toast('Серийный номер: ' + result)
+            if not rs_settings.get('ocr_serial_template_continuous_recognition'):
+                hash_map.put("ocr_result", result)
+                return
+            for serial in json.loads(ocr_nosql.getallkeys()):
+                if ocr_nosql.get(serial) < min_rec_amount:
+                    ocr_nosql.put(serial, 0, True)
+
 
 # ^^^^^^^^^^^^^^^^^^^^^ DocDetails ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 # ==================== Goods select =============================
 
-
-class GoodsSelectScreen(Screen):
-    screen_name = 'Товар выбор'
-    process_name = 'Документы'
-    printing_template_name = 'goods_select_screen'
-
+class BaseGoodSelect(Screen):
     def __init__(self, hash_map: HashMap, rs_settings):
         super().__init__(hash_map, rs_settings)
         self.id_doc = self.hash_map['id_doc']
         self.service = DocService(self.id_doc)
-
+    
     def on_start(self):
         # Режим работы с мультимедиа и файлами по ссылкам (флаг mm_local)
         self.hash_map['mm_local'] = ''
@@ -3324,67 +3442,24 @@ class GoodsSelectScreen(Screen):
                 self._set_delta(0)
 
         elif listener == "btn_ok":
-            if int(self.hash_map.get('new_qtty')) < 0:
-                self.hash_map.toast('Итоговое количество меньше 0')
-                self.hash_map.playsound('error')
-                self._set_delta(reset=True)
-                return
-            control = self.hash_map.get_bool('control')
-            if control:
-                if int(self.hash_map.get('new_qtty')) > int(
-                        self.hash_map.get('qtty_plan')):
-                    self.toast('Количество план в документе превышено')
-                    self.hash_map.playsound('error')
-                    self._set_delta(reset=True)
-                    return
-            current_elem = self.hash_map.get_json('selected_card_data')
-            qtty = self.hash_map['new_qtty']
-            price = self.hash_map.get('price') or 0
-
-            if self.hash_map.get('parent_screen') == 'ВыборТовараАртикул':
-                if int(qtty) == int(current_elem['qtty']):
-                    self.hash_map.show_screen("ВыборТовараАртикул")
-                    return
-                finded_goods_cards = self.hash_map.get('finded_goods_cards', from_json=True)
-                cardsdata = finded_goods_cards['customcards']['cardsdata']
-
-                card_data = next(elem for elem in cardsdata
-                                 if elem['key'] == current_elem['key'])
-                card_data['qtty'] = float(qtty)
-                self.hash_map.put('finded_goods_cards', finded_goods_cards, to_json=True)
-                self.hash_map.show_screen("ВыборТовараАртикул")
-
-            else:
-                if int(qtty) != int(current_elem['qtty']):
-                    update_data = {
-                        'sent': 0,
-                        'qtty': float(qtty) if qtty else 0,
-                        # 'price': float(price) # в Adr docs нет колонки прайс, не понятно нужна она вообще или нет
-                    }
-                    row_id = int(current_elem['key'])
-                    self.service.update_doc_table_row(data=update_data, row_id=row_id)
-                    self.service.set_doc_status_to_upload(self.hash_map.get('id_doc'))
-                    self.hash_map.show_screen("Документ товары")
-            self._set_delta(reset=True)
-            self.hash_map.put('new_qtty', '')
-
+            self._handle_btn_ok()
         elif 'ops' in listener:
             """Префикс кнопок +/-, значение в названиях кнопок"""
             self._set_delta(int(listener[4:]))
-
         elif listener in ["btn_cancel", 'BACK_BUTTON', 'ON_BACK_PRESSED']:
+            self._save_new_delta()
             self._set_delta(reset=True)
             self.hash_map.put('new_qtty', '')
             self.hash_map.show_screen("Документ товары")
         elif listener == 'btn_print':
             self.print_ticket()
-
+        elif listener == 'barcode':
+            self._process_the_barcode()    
         elif listener == "CardsClick":
             current_elem = self.hash_map.get_json('selected_card_data')
             self.print_ticket()
         elif listener == 'btn_doc_good_barcode':
             self.hash_map.show_screen("ТоварШтрихкоды")
-
         elif listener == 'btn_series_show':
             current_elem = self.hash_map.get_json('selected_card_data')
             self.hash_map['back_screen'] = self.hash_map.get_current_screen()
@@ -3395,10 +3470,55 @@ class GoodsSelectScreen(Screen):
 
     def show(self, args=None):
         pass
+    
+    def _handle_btn_ok(self):
+        if int(self.hash_map.get('new_qtty')) < 0:
+            self.hash_map.toast('Итоговое количество меньше 0')
+            self.hash_map.playsound('error')
+            self._set_delta(reset=True)
+            return
+        control = self.hash_map.get_bool('control')
+        if control:
+            if int(self.hash_map.get('new_qtty')) > int(self.hash_map.get('qtty_plan')):
+                self.toast('Количество план в документе превышено')
+                self.hash_map.playsound('error')
+                self._set_delta(reset=True)
+                return
+        current_elem = self.hash_map.get_json('selected_card_data')
+        qtty = self.hash_map['new_qtty']
+        price = self.hash_map.get('price') or 0
 
-    def get_doc(self):
-        pass
+        if self.hash_map.get('parent_screen') == 'ВыборТовараАртикул':
+            self._handle_choice_by_article(current_elem, qtty)
+        else:
+            self._handle_choice_by_other(current_elem, qtty)
 
+        self._set_delta(reset=True)
+        self.hash_map.put('new_qtty', '')
+
+    def _handle_choice_by_article(self, current_elem, qtty):
+        if int(qtty) == int(current_elem['qtty']):
+            self.hash_map.show_screen("ВыборТовараАртикул")
+            return
+        finded_goods_cards = self.hash_map.get('finded_goods_cards', from_json=True)
+        cardsdata = finded_goods_cards['customcards']['cardsdata']
+
+        card_data = next(elem for elem in cardsdata if elem['key'] == current_elem['key'])
+        card_data['qtty'] = float(qtty)
+        self.hash_map.put('finded_goods_cards', finded_goods_cards, to_json=True)
+        self.hash_map.show_screen("ВыборТовараАртикул")
+
+    def _handle_choice_by_other(self, current_elem, qtty):
+        if int(qtty) != int(current_elem['qtty']):
+            update_data = {
+                'sent': 0,
+                'qtty': float(qtty) if qtty else 0,
+            }
+            row_id = int(current_elem['key'])
+            self.service.update_doc_table_row(data=update_data, row_id=row_id)
+            self.service.set_doc_status_to_upload(self.hash_map.get('id_doc'))
+            self.hash_map.show_screen("Документ товары")
+        
     def _validate_delta_input(self):
         try:
             int(self.hash_map.get('delta'))
@@ -3407,6 +3527,102 @@ class GoodsSelectScreen(Screen):
             self.toast('Введенное значение не является целым числом')
             self.hash_map.playsound('error')
             self._set_delta(reset=True)
+
+    def _fill_none_values(self, data, keys, default=''):
+        none_list = [None, 'None']
+        for key in keys:
+            data[key] = default if data[key] in none_list else data[key]
+
+    def _match_record(self, record, id_good, id_property, id_unit):
+        return (record['id_good'] == id_good and
+                record['id_properties'] == id_property and
+                record['id_unit'] == id_unit)
+
+    def _find_matching_good(self, table_data, id_good, id_property, id_unit):
+        for i, record in enumerate(table_data[1:], start=1):
+            if self._match_record(record, id_good, id_property, id_unit):
+                return i
+        return None
+
+    def _handle_found_barcode(self, res, id_good, id_property, id_unit):
+        id_good_br, id_property_br, id_unit_br, ratio = res['id_good'], res['id_property'], res['id_unit'], int(res['ratio'])
+
+        if id_good == id_good_br and id_property == id_property_br and id_unit == id_unit_br:
+            self._set_delta(ratio)
+            return True
+
+        return False
+
+    def _get_current_elem(self):
+        return self.hash_map.get_json('selected_card_data')
+
+    def _save_new_delta(self):
+        if int(self.hash_map.get('new_qtty')) < 0:
+            self.hash_map.toast('Итоговое количество меньше 0')
+            self.hash_map.playsound('error')
+            self._set_delta(reset=True)
+            return
+
+        control = self.hash_map.get_bool('control')
+        if control:
+            if int(self.hash_map.get('new_qtty')) > int(
+                    self.hash_map.get('qtty_plan')):
+                self.toast('Количество план в документе превышено')
+                self.hash_map.playsound('error')
+                self._set_delta(reset=True)
+                return
+        
+        current_elem = self._get_current_elem()
+            
+        qtty = self.hash_map['new_qtty']
+        # price = self.hash_map.get('price') or 0  # это не используется
+
+        if self.hash_map.get('parent_screen') == 'ВыборТовараАртикул':
+            if int(qtty) == int(current_elem['qtty']):
+                self.hash_map.show_screen("ВыборТовараАртикул")
+                return
+            finded_goods_cards = self.hash_map.get('finded_goods_cards', from_json=True)
+            cardsdata = finded_goods_cards['customcards']['cardsdata']
+
+            card_data = next(elem for elem in cardsdata
+                                if elem['key'] == current_elem['key'])
+            card_data['qtty'] = float(qtty)
+            self.hash_map.put('finded_goods_cards', finded_goods_cards, to_json=True)
+            self.hash_map.show_screen("ВыборТовараАртикул")
+
+        else:
+            if int(qtty) != int(current_elem['qtty']):
+                update_data = {
+                    'sent': 0,
+                    'qtty': float(qtty) if qtty else 0,
+                    # 'price': float(price) # в Adr docs нет колонки прайс, не понятно нужна она вообще или нет
+                }
+                row_id = int(current_elem['key'])
+                self.service.update_doc_table_row(data=update_data, row_id=row_id)
+                self.hash_map.put('new_qtty', qtty)
+                self.hash_map.put('qtty', qtty)
+
+    def _process_the_barcode(self):
+        barcode = self.hash_map.get('barcode_good_select')
+        allowed_fact_input = self.rs_settings.get('allow_fact_input')
+        
+        if not (barcode and allowed_fact_input):
+            self.hash_map.playsound('error')
+            self.hash_map.toast('Штрихкод не найден в документе!') # пока тост, модалка очищает дельту
+            # self.hash_map.show_dialog(listener='barcode_not_found', title='Штрихкод не найден в документе!')
+            return
+
+        id_good = self.hash_map.get('id_good')
+        id_property = self.hash_map.get('id_property')
+        id_unit = self.hash_map.get('id_unit')
+
+        res = self.service.get_barcode(barcode)
+
+        if res and self._handle_found_barcode(res, id_good, id_property, id_unit):
+            return
+        self.hash_map.playsound('error')
+        self.hash_map.toast(f'Штрихкод не найден в документе!') # пока тост, модалка очищает дельту
+        #self.hash_map.show_dialog(listener='barcode_not_found', title='Штрихкод не найден в документе!')        
 
     def _set_delta(self, value: int = 0, reset: bool = False):
         """Создаем (обнуляем) поле ввода"""
@@ -3455,12 +3671,141 @@ class GoodsSelectScreen(Screen):
         self.hash_map.show_screen(SeriesList.screen_name)
 
 
-class AdrGoodsSelectScreen(GoodsSelectScreen):
+class GoodsSelectScreen(BaseGoodSelect):
+    screen_name = 'Товар выбор'
+    process_name = 'Документы'
+    printing_template_name = 'goods_select_screen'
+
+
     def __init__(self, hash_map: HashMap, rs_settings):
         super().__init__(hash_map, rs_settings)
+        
+    def on_start(self):
+        super().on_start()
+        
+        doc_rows = self.service.get_doc_rows_count(self.id_doc)['doc_rows']
+        doc_data = self.service.get_doc_details_data(self.id_doc, 0, doc_rows)
+        doc_data.insert(0, {})
+        self.hash_map.put('doc_rows', doc_rows)    
+        self.hash_map.put('doc_data', doc_data, to_json=True)
+
+        current_str = int(self.hash_map.get('selected_card_position'))
+        current_page = int(self.hash_map.get('current_page'))
+        items_on_page = int(self.hash_map.get('items_on_page'))
+        doc_position = (current_page - 1) * items_on_page + current_str
+        self.hash_map.put('good_str', f'{doc_position} / {doc_rows}')
+        self.hash_map.put('selected_card_position', doc_position)
+
+    def on_input(self):
+        super().on_input()
+
+        listener = self.listener
+
+        if listener == 'btn_next_good':
+            self._goods_selector("next")
+        elif listener == 'btn_previous_good':
+            self._goods_selector("previous")
+
+    def on_post_start(self):
+        pass
+
+    def show(self, args=None):
+        pass
+
+    def get_doc(self):
+        pass
+
+    def _get_current_elem(self):
+        selected_card_position = int(self.hash_map.get('selected_card_position'))
+        table_data = self.hash_map.get('doc_data', from_json=True)
+        current_elem = table_data[selected_card_position]
+        current_elem['key'] = current_elem.get('id')
+        return current_elem
+
+    def _goods_selector(self, action, index = None):
+        selected_card_position = int(self.hash_map.get('selected_card_position'))
+        table_lines_qtty = int(self.hash_map.get('doc_rows'))
+        table_data = self.hash_map.get('doc_data', from_json=True)
+        
+        if action == 'next':
+            if selected_card_position != table_lines_qtty:
+                pos = selected_card_position + 1
+            else:
+                pos = selected_card_position + 1 - table_lines_qtty
+        elif action == 'previous':
+            if selected_card_position != 1:
+                pos = selected_card_position - 1
+            else:
+                pos = selected_card_position + table_lines_qtty - 1
+        elif action == 'index' and index:
+            pos = index
+
+        current_str = pos
+        current_elem = table_data[pos]
+
+        # текущий элемент не найден или это заголовок таблицы
+        if current_elem is None or 'good_name' not in current_elem:
+            return
+
+        title = '{} № {} от {}'.format(self.hash_map['doc_type'], self.hash_map['doc_n'], self.hash_map['doc_date'])
+        put_data = {
+            'Doc_data': title,
+            'Good': current_elem['good_name'],
+            'id_good': current_elem['id_good'],
+            'good_art': current_elem['art'],
+            'good_sn': current_elem['series_name'],
+            'good_property': current_elem['properties_name'],
+            'good_price': current_elem['price'] if 'price' in current_elem else '',
+            'good_unit': current_elem['units_name'],
+            'good_str': f'{current_str} / {table_lines_qtty}',
+            'qtty_plan': self._format_quantity(current_elem['qtty_plan']) if current_elem['qtty_plan'] else 0,
+            'good_plan': current_elem['qtty_plan'],
+            'key': current_elem['id'],
+            'price': current_elem['price'] if 'price' in current_elem else '',
+            'price_type': current_elem['price_name'] if 'price_name' in current_elem else '',
+            'qtty': self._format_quantity(current_elem['qtty']) if current_elem['qtty'] else 0,
+            'new_qtty': self._format_quantity(current_elem['qtty']) if current_elem['qtty'] else 0,
+        }
+
+        self._fill_none_values(
+            put_data,
+            ('good_art', 'good_sn', 'good_property', 'good_price', 'good_plan', 'price', 'price_type'),
+            default='отсутствует')
+
+        self._save_new_delta()
+        self.hash_map.put("selected_card_position", current_str)
+        self.hash_map.put_data(put_data)
+
+    def _handle_found_barcode(self, res, id_good, id_property, id_unit):
+        id_good_br, id_property_br, id_unit_br, ratio = res['id_good'], res['id_property'], res['id_unit'], int(res['ratio'])
+
+        if id_good == id_good_br and id_property == id_property_br and id_unit == id_unit_br:
+            self._set_delta(ratio)
+            return True
+
+        if id_good != id_good_br:
+            table_data = self.hash_map.get('doc_data', from_json=True) 	 
+            match_index = self._find_matching_good(table_data, id_good_br, id_property_br, id_unit_br)
+
+            if match_index is not None:
+                self._goods_selector("index", index=match_index)
+                self._set_delta(ratio)
+                return True
+
+        return False
+
+    def _format_quantity(self, qtty):
+        if qtty % 1 == 0:
+            return int(qtty)
+        else:
+            return qtty
+    
+class AdrGoodsSelectScreen(BaseGoodSelect):
+    def __init__(self, hash_map: HashMap, rs_settings):
+        super().__init__(hash_map, rs_settings)
+        self.id_doc = self.hash_map['id_doc']
         self.service = AdrDocService()
-
-
+    
 class GoodBarcodeRegister(Screen):
     screen_name = 'ТоварШтрихкоды'
     process_name = 'Документы'
@@ -3596,6 +3941,9 @@ class GoodsSelectArticle(Screen):
             put_data = {
                 'Doc_data': f'{self.hash_map["doc_type"]} № {self.hash_map["doc_n"]} от {self.hash_map["doc_date"]}',
                 'Good': current_element['name'],
+                'id_good': current_elem['id_good'],
+                'id_unit': current_elem['id_unit'],
+                'id_property': current_elem['id_properties'],
                 'good_art': current_element['art'],
                 'good_sn': current_element['series_name'],
                 'good_property': current_element['property_name'],
@@ -3635,7 +3983,6 @@ class GoodsSelectArticle(Screen):
             cards_data = self._get_goods_list_data(goods)
             goods_cards = self._get_goods_cards_view(cards_data)
             self.hash_map['finded_goods_cards'] = goods_cards.to_json()
-
 
     def on_post_start(self):
         pass
@@ -6266,7 +6613,7 @@ class ActiveCVArticleRecognition(Screen):
         self.hash_map.add_to_cv_list(
             {'object': str(current_object),
              'info': f'Товар: <big>{good_name}</big>'},
-            'object_info_list')
+            'object_info_list', _dict=True)
         self.hash_map.add_to_cv_list(current_object, 'yellow_list')
 
         self.hash_map.put(
@@ -6454,7 +6801,7 @@ class MainEvents:
             if deleted_docs:
                 self.hash_map.notification(
                     text=f'Удалены документы: ({len(deleted_docs)})',
-                    title='Очистка не актуальных данных')
+                    title='Очистка неактуальных данных')
 
         rs_default_settings = {
             'TitleTextSize': 18,

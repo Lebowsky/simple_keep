@@ -846,7 +846,30 @@ class DocService:
         if table_name:
             self.provider.table_name = table_name
         return self.provider.sql_query(q, params)
+    
+    def get_doc_rows_count(self, id_doc) -> dict:
+        result = {}  
+        
+        if id_doc:  
+            q = 'SELECT count(id_doc) as doc_rows FROM RS_docs_table WHERE id_doc=?'
+            res = self.provider.sql_query(q, str(id_doc))  
+            
+            if res and 'doc_rows' in res[0]: 
+                result = {'doc_rows': res[0]['doc_rows']}
+                
+        return result  
 
+    def get_barcode(self, barcode) -> dict:
+        result = {}  
+
+        if barcode:  
+            q = 'SELECT * FROM RS_barcodes WHERE barcode=?'
+            res = self.provider.sql_query(q, str(barcode)) 
+            
+            if res:  
+                result = res[0] if res else {}
+
+        return result    
 
 class SeriesService(DbService):
     doc_basic_table_name = 'RS_docs_table'
@@ -1456,6 +1479,13 @@ class FlowDocService(DocService):
                       GROUP BY temp_q.barcode
                       '''
         return self._get_query_result(query_text, (self.doc_id, barcode), True)
+
+    def add_barcode_to_database(self, barcode: str):
+        if not barcode:
+            return
+        qtext = '''INSERT INTO RS_barc_flow (id_doc, barcode) VALUES (?,?)'''
+        self.provider.sql_exec(qtext, ','.join([self.doc_id, barcode]))
+        self.set_doc_status_to_upload(self.doc_id)
 
 
 class GoodsService(DbService):
