@@ -1357,7 +1357,21 @@ class AdrDocService(DocService):
 
             goods = self.provider.sql_query(q, id_doc)
             doc_data['RS_adr_docs_table'] = goods
+
+
+            fields = ['id_doc', 'id_good', 'id_series', 'id_warehouse', 'cell', 'qtty', 'name', 'best_before', 'number',
+                      'production_date']
+            q = '''
+                SELECT {}
+                FROM RS_docs_series
+                WHERE id_doc = ?
+            '''.format(','.join(fields))
+
+            series_table = self.provider.sql_query(q, id_doc)
+            doc_data['RS_docs_series'] = series_table
+
             data.append(doc_data)
+
 
         return data
 
