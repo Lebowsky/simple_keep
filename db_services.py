@@ -986,6 +986,22 @@ class FlowDocService(DocService):
 
         return self._get_query_result(query_text, (self.doc_id,), True)
 
+    def get_barcode_qtty(self, barcode) -> float:
+        query_text = '''SELECT qtty FROM RS_barc_flow WHERE id_doc = :id_doc AND barcode = :barcode'''
+        res = self._get_query_result(query_text, {'id_doc': self.doc_id, 'barcode': barcode})
+        if res:
+            return float(res[0][0])
+        else:
+            return None 
+
+    def add_barcode_one_qtty(self, barcode):
+        query_text = '''INSERT INTO RS_barc_flow (id_doc, barcode, qtty) VALUES (:id_doc, :barcode, :qtty)'''
+        self._get_query_result(query_text, {'id_doc': self.doc_id, 'barcode': barcode, 'qtty': 1})
+
+    def update_barcode_qtty(self, barcode, qtty: float):
+        query_text = '''UPDATE RS_barc_flow SET qtty = :qtty WHERE id_doc = :id_doc AND barcode = :barcode'''
+        self._get_query_result(query_text, {'id_doc': self.doc_id, 'barcode': barcode, 'qtty': qtty})
+
     def get_data_for_ticket_printing(self, barcode):
         query_text = '''WITH temp_q as (SELECT
                         RS_barc_flow.barcode,

@@ -3032,6 +3032,13 @@ class FlowDocDetailsScreen(DocDetailsScreen):
                 barcode = self.hash_map.get('barcode_camera')
             
             self._process_the_barcode(barcode, doc.id_doc) 
+            
+            if self._is_result_positive('confirm_verified'):
+                id_doc = self.hash_map['id_doc']
+                doc = RsDoc(id_doc)
+                doc.mark_verified(1)
+
+                self.hash_map.show_screen("Документы")
 
         elif self._is_result_positive('ВвестиКоличество'):
             self._process_new_qtty_from_user()
@@ -3055,13 +3062,6 @@ class FlowDocDetailsScreen(DocDetailsScreen):
             '''
             ui_global.get_query_result(qtext, (id_doc, barcode))
             self.service.set_doc_status_to_upload(id_doc)
-
-        if self._is_result_positive('confirm_verified'):
-            id_doc = self.hash_map['id_doc']
-            doc = RsDoc(id_doc)
-            doc.mark_verified(1)
-
-            self.hash_map.show_screen("Документы")
     
     def _get_doc_details(self):
         return self.service.get_flow_table_data()
@@ -3084,11 +3084,9 @@ class FlowDocDetailsScreen(DocDetailsScreen):
             return
         
         current_elem = self.hash_map.get_json('selected_card_data')
-        barcode = current_elem['barcode']
-        id_doc = self.hash_map.get('id_doc')
-                    
-        qtext = '''UPDATE RS_barc_flow SET qtty = :qtty WHERE id_doc = :id_doc AND barcode = :barcode'''
-        ui_global.get_query_result(qtext, {'id_doc': id_doc, 'barcode': barcode, 'qtty': new_qtty_float})
+        barcode = current_elem['barcode']                  
+        self.service.update_barcode_qtty(barcode, new_qtty_float)
+        self.hash_map.put('fld_qtty','')
 
     def _barcode_flow_on_start(self):
 
@@ -3241,11 +3239,19 @@ class FlowDocDetailsScreen(DocDetailsScreen):
         return row_view
 
     def _prepare_table_data(self, doc_details):
+        
+        if self.hash_map.get("event") == "onResultPositive":
+            barcode = str(self.hash_map.get('fld_barcode'))
+        else:
+            barcode = str(self.hash_map.get('barcode_camera'))
+        
+        if barcode:
+            doc_details = self._sort_table_by_barcode(doc_details, barcode)
 
         table_data = [{}]
 
         for record in doc_details:
-            qtty = str(self._format_qtty(record['qtty']))
+            qtty = str(self._format_qtty(record['qtty'])) if record['qtty'] else 1
             product_row = {'key': str(record['barcode']), 'barcode': str(record['barcode']),
                            'name': record['name'] if record['name'] is not None else '-нет данных-', 'qtty': qtty,
                            '_layout': self._get_doc_table_row_view()}
@@ -3266,6 +3272,16 @@ class FlowDocDetailsScreen(DocDetailsScreen):
             return int(qtty)
         else:
             return qtty
+        
+    def _sort_table_by_barcode(self, table, barcode):
+        
+        for i, row in enumerate(table):
+            if str(row.get('barcode')) == barcode:
+                del table[i]
+                table.insert(0, row)
+                break  
+
+        return table  
 
 
 class OfflineFlowDocDetailsScreen(FlowDocDetailsScreen):
@@ -3282,18 +3298,14 @@ class OfflineFlowDocDetailsScreen(FlowDocDetailsScreen):
     def _process_the_barcode(self, barcode, id_doc):
         
         if barcode:
-            qtext = '''SELECT qtty FROM RS_barc_flow WHERE id_doc = :id_doc AND barcode = :barcode'''
-            res = ui_global.get_query_result(qtext, {'id_doc': id_doc, 'barcode': barcode})
-            if not res:
-                qtext = '''INSERT INTO RS_barc_flow (id_doc, barcode, qtty) VALUES (:id_doc, :barcode, :qtty)'''
-                ui_global.get_query_result(qtext, {'id_doc': id_doc, 'barcode': barcode, 'qtty': 1})
+            res_qtty =  self.service.get_barcode_qtty(barcode) 
+            if not res_qtty:
+                self.service.add_barcode_one_qtty(barcode)
             else:
-                new_qtty = float(res[0][0]) + 1
-                qtext = '''UPDATE RS_barc_flow SET qtty = :qtty WHERE id_doc = :id_doc AND barcode = :barcode'''
-                ui_global.get_query_result(qtext, {'id_doc': id_doc, 'barcode': barcode, 'qtty': new_qtty})
-
+                new_qtty = res_qtty + 1
+                self.service.update_barcode_qtty(barcode, new_qtty)
+            
             self.service.set_doc_status_to_upload(id_doc)
-
         
 # ^^^^^^^^^^^^^^^^^^^^^ DocDetails ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
