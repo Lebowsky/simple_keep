@@ -1568,7 +1568,7 @@
                                 "event": "onStart",
                                 "action": "run",
                                 "type": "python",
-                                "method": "barcode_flow_on_start",
+                                "method": "offline_barcode_flow_on_start",
                                 "postExecute": ""
                             },
                             {
@@ -1616,6 +1616,55 @@
                                         "height": "wrap_content",
                                         "width": "match_parent",
                                         "weight": "0",
+                                        "type": "EditTextText"
+                                    }
+                                ]
+                            }
+                        ],
+                        "Handlers": [],
+                        "onlineOnStart": false,
+                        "onlineOnAfterStart": false,
+                        "onlineOnInput": false
+                    },
+                    {
+                        "type": "Operation",
+                        "Name": "ВвестиКоличество",
+                        "Timer": false,
+                        "hideBottomBarScreen": false,
+                        "noScroll": false,
+                        "handleKeyUp": false,
+                        "noConfirmation": false,
+                        "hideToolBarScreen": false,
+                        "Elements": [
+                            {
+                                "type": "LinearLayout",
+                                "Variable": "",
+                                "orientation": "vertical",
+                                "height": "wrap_content",
+                                "width": "wrap_content",
+                                "weight": "0",
+                                "Elements": [
+                                    {
+                                        "Value": "Введите количество",
+                                        "Variable": "",
+                                        "height": "wrap_content",
+                                        "width": "wrap_content",
+                                        "weight": "0",
+                                        "TextBold": false,
+                                        "TextItalic": false,
+                                        "type": "TextView"
+                                    },
+                                    {
+                                        "Value": "@fld_qtty",
+                                        "Variable": "fld_qtty",
+                                        "height": "wrap_content",
+                                        "width": "match_parent",
+                                        "orientation": "",
+                                        "weight": "0",
+                                        "TextBold": false,
+                                        "TextItalic": false,
+                                        "TextSize": "",
+                                        "TextColor": "",
                                         "type": "EditTextText"
                                     }
                                 ]

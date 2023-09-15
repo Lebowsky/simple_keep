@@ -123,6 +123,11 @@ def offline_barcode_flow_listener(hash_map:HashMap):
     screen.on_input()
 
 @HashMap()
+def offline_barcode_flow_on_start(hash_map:HashMap):
+    screen = ui_models.OfflineFlowDocDetailsScreen(hash_map, rs_settings)
+    screen.on_start()
+
+@HashMap()
 def docs_tiles_on_start(hash_map: HashMap):
     """Отдельные обработчики плиток для определения процесса hash_map'ом"""
     screen = ui_models.DocumentsTiles(hash_map, rs_settings)

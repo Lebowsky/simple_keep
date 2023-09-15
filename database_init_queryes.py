@@ -284,7 +284,8 @@ def database_shema():
     Rs.append('''
     CREATE TABLE IF NOT EXISTS RS_barc_flow (
     id_doc  TEXT REFERENCES RS_docs (id_doc),
-    barcode TEXT
+    barcode TEXT, 
+    qtty REAL
     )
     ''')
 

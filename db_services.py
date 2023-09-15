@@ -968,6 +968,43 @@ class FlowDocService(DocService):
                         GROUP BY temp_q.barcode'''
 
         return self._get_query_result(query_text, (self.doc_id,), True)
+    
+    def get_offline_flow_table_data(self):
+        query_text = '''SELECT
+                            RS_barc_flow.barcode,
+                            RS_barcodes.id_good as id_good,
+                            RS_barcodes.id_property as id_property,
+                            RS_barc_flow.qtty as qtty,
+                            RS_goods.name as name
+                        FROM RS_barc_flow
+                        LEFT JOIN RS_barcodes
+                            ON RS_barcodes.barcode = RS_barc_flow.barcode
+                        LEFT JOIN RS_goods
+                            ON RS_goods.id = RS_barcodes.id_good
+                        WHERE RS_barc_flow.id_doc = ?
+                        '''
+
+        return self._get_query_result(query_text, (self.doc_id,), True)
+
+    def get_barcode_qtty(self, barcode) -> float:
+        query_text = '''SELECT qtty FROM RS_barc_flow WHERE id_doc = :id_doc AND barcode = :barcode'''
+        res = self._get_query_result(query_text, {'id_doc': self.doc_id, 'barcode': barcode})
+        if res:
+            return float(res[0][0])
+        else:
+            return None 
+
+    def add_barcode_one_qtty(self, barcode):
+        query_text = '''INSERT INTO RS_barc_flow (id_doc, barcode, qtty) VALUES (:id_doc, :barcode, :qtty)'''
+        self._get_query_result(query_text, {'id_doc': self.doc_id, 'barcode': barcode, 'qtty': 1})
+
+    def update_barcode_qtty(self, barcode, qtty: float):
+        query_text = '''UPDATE RS_barc_flow SET qtty = :qtty WHERE id_doc = :id_doc AND barcode = :barcode'''
+        self._get_query_result(query_text, {'id_doc': self.doc_id, 'barcode': barcode, 'qtty': qtty})
+
+    def insert_barcode(self, barcode):
+        query_text = '''INSERT INTO RS_barc_flow (id_doc, barcode) VALUES (:id_doc, :barcode)'''
+        self._get_query_result(query_text, {'id_doc': self.doc_id, 'barcode': barcode})
 
     def get_data_for_ticket_printing(self, barcode):
         query_text = '''WITH temp_q as (SELECT
