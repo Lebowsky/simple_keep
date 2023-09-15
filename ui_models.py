@@ -3266,8 +3266,17 @@ class FlowDocDetailsScreen(DocDetailsScreen):
 
     def _prepare_table_data(self, doc_details):
 
+        if self.hash_map.get("event") == "onResultPositive":
+            barcode = str(self.hash_map.get('fld_barcode'))
+        else:
+            barcode = str(self.hash_map.get('barcode_camera'))
+        
+        if barcode:
+            doc_details = self._sort_table_by_barcode(doc_details, barcode)
+        
         table_data = [{}]
-
+        # self.hash_map.toast(self.hash_map.get('added_goods'))
+        
         for record in doc_details:
 
             product_row = {'key': str(record['barcode']), 'barcode': str(record['barcode']),
@@ -3275,17 +3284,25 @@ class FlowDocDetailsScreen(DocDetailsScreen):
                            'qtty': str(record['qtty']),
                            '_layout': self._get_doc_table_row_view()}
 
-            product_row['_layout'].BackgroundColor = '#FFFFFF' if record['name'] is not None else "#FBE9E7"
+            product_row['_layout'].BackgroundColor = '#FFFFFF' if record['name'] is not None else "#FBE9E7" 
 
+            # это не работает судя по всему потому что нет в hash_map ключа added_goods
             if self._added_goods_has_key(product_row['key']):
                 table_data.insert(1, product_row)
             else:
                 table_data.append(product_row)
 
-            # table_data.append(product_row)
-
         return table_data
 
+    def _sort_table_by_barcode(self, table, barcode):
+        
+        for i, row in enumerate(table):
+            if str(row.get('barcode')) == barcode:
+                del table[i]
+                table.insert(0, row)
+                break  
+
+        return table 
 
 # ^^^^^^^^^^^^^^^^^^^^^ DocDetails ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
