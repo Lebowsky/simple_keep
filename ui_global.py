@@ -61,7 +61,7 @@ def check_adr_barcode_compliance(el_dict: dict, id_doc):
 
     query_text =  '''
     SELECT ifnull(qtty_plan,0) as qtty_plan,
-    ifnull(qtty,0) as qtty, id_good
+    ifnull(qtty,0) as qtty, id_good, id_cell, id, use_series
     FROM RS_adr_docs_table
     WHERE 
     id_doc = :idDoc 
@@ -634,6 +634,13 @@ class Rs_adr_doc():
                         return {'Result':  f'Количество план будет превышено при добавлении {str(ratio)} единиц товара',
                                 'Error': 'QuantityPlanReached',
                                 'barcode': barcode, 'Descr': f'Количество план будет превышено при добавлении {str(ratio)} единиц товара'}
+        # Товар подлежит учету по сериям
+            if res[0]['use_series'] == 1:
+                return {'Result': 'Данный товар подлежит учету по сериям',
+                        'Error': 'Must_use_series',
+                        'barcode': barcode,
+                        'Descr': f'Товар подлежит серийному учету',
+                        'current_elem': res[0]}
 
         else: #Товар не найден в документе
             if have_zero_plan and control:

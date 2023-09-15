@@ -4,7 +4,7 @@ import socket
 from dataclasses import dataclass, asdict
 from datetime import datetime, timedelta
 from functools import wraps
-from typing import Callable, Union, List, Dict, Literal
+from typing import Callable, Union, List, Dict, Literal, Optional
 
 from db_services import DocService, BarcodeService
 from java import jclass
@@ -171,24 +171,111 @@ class HashMap:
             self,
             element: Union[str, dict],
             cv_list: Literal['green_list', 'yellow_list', 'red_list', 'gray_list',
-                             'hidden_list', 'object_info_list', 'stop_listener_list']
+                             'blue_list', 'hidden_list', 'object_info_list',
+                             'stop_listener_list', 'object_caption_list',
+                             'object_detector_mode'],
+            _dict: bool = False
     ) -> None:
         """ Добавляет в cv-список элемент, или создает новый список с этим элементом.
-            object_info_list - Информация об объекте. [{'object': value, 'info': value}]
+            object_info_list - Информация об объекте (снизу). [{'object': object_id: str, 'info': value}]
+            object_detector_mode - Режим детектора. [{'object_id': object_id: int, 'mode': barcode|ocr|stop}]
+            object_caption_list - Информация об объекте (сверху). [{'object': object_id: str, 'caption': value}]
             stop_listener_list - Блокирует выполние обработчиков для объектов в списке
         """
 
-        if cv_list == 'object_info_list':
+        if _dict:
             lst = self.get(cv_list, from_json=True) or []
             if element not in lst:
                 lst.append(element)
                 self.put(cv_list, json.dumps(lst, ensure_ascii=False))
+
         else:
             lst = self.get(cv_list)
             lst = lst.split(';') if lst else []
             if element not in lst:
                 lst.append(element)
                 self.put(cv_list, ';'.join(lst))
+
+    def remove_from_cv_list(
+        self,
+        element: Union[str, dict],
+        cv_list: Literal['green_list', 'yellow_list', 'red_list', 'gray_list',
+                         'blue_list', 'hidden_list', 'object_info_list',
+                         'stop_listener_list', 'object_caption_list',
+                         'object_detector_mode'],
+        _dict: bool = False
+    ):
+        """Удаляет из cv-списка"""
+        if _dict:
+            lst = self.get(cv_list, from_json=True) or []
+            try:
+                lst.remove(element)
+                self.put(cv_list, json.dumps(lst, ensure_ascii=False))
+            except ValueError:
+                pass
+        else:
+            lst = self.get(cv_list)
+            lst = lst.split(';') if lst else []
+            if element in lst:
+                lst.remove(element)
+                self.put(cv_list, ';'.join(lst))
+
+    def set_vision_settings(
+            self,
+            values_list: str,
+            type_rec: str = 'Text',
+            NumberRecognition: bool = False,
+            DateRecognition: bool = False,
+            PlateNumberRecognition: bool = False,
+            min_length: int = 1,
+            max_length: int = 20,
+            result_var: str = 'ocr_result',
+            mesure_qty: int = 0,
+            min_freq: int = 0,
+            query: str = '',
+            control_field: str = '',
+            cursor: Optional[list] = None,
+            count_objects: int = 0,
+            ReplaceO: bool = False,
+            ToUpcase: bool = False,
+    ):
+        """query - SQL запрос для варианта поиска по SQL-таблице с одинм параметром(в который передается распознанный текст )
+                Например: select * from SW_Goods where product_number like  ?
+           control_field - поле таблицы по которому проверяется OCR , условно Артикул (несмотря на то, что в query оно скорее всего также участвует)
+           cursor - Массив  с объектами {"field":<поле таблицы>,"var":<переменная результат>}
+           values_list - Режим поиска по списку, либо обработчиком ("~")
+           mesure_qty - Количество измерений плотности вероятности (норм. распределение)
+           min_freq - Вероятность (в процентах от 0 до 100 для удобства ввода)
+           min_length - Минимальная длина текста
+           max_length - Максимальная длина текста
+           count_objects - Для NumberRecognition количество циклов измерений для решения комбинаторной задачи. Чем больше циклов тем больше точность
+           ReplaceO - Заменить буквы О на 0 (нули)
+           ToUpcase - Преобразование в верхний регистр
+           PlateNumberRecognition - Российские номера (только для ActiveCV)
+           NumberRecognition - Распознавание чисел
+           DateRecognition - Распознавние дат
+           result_field  для распознвания дат и номеров, туда помещается результаты особым образом (смотря что ищем)"""
+        if cursor is None:
+            cursor = []
+        settings = {
+            "TypeRecognition": type_rec,
+            "NumberRecognition": NumberRecognition,
+            "DateRecognition": DateRecognition,
+            "PlateNumberRecognition": PlateNumberRecognition,
+            "min_length": min_length,
+            "max_length": max_length,
+            "values_list": values_list,
+            "result_var": result_var,
+            "mesure_qty": mesure_qty,
+            "min_freq": min_freq,
+            "query": query,
+            "control_field": control_field,
+            "cursor": cursor,
+            "count_objects": count_objects,
+            "ReplaceO": ReplaceO,
+            "ToUpcase": ToUpcase
+        }
+        self.hash_map.put("SetVisionSettings", json.dumps(settings))
 
     def show_screen(self, name, data=None):
         self.put('ShowScreen', name)

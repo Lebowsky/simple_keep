@@ -1060,17 +1060,20 @@
                             {
                                 "type": "MenuItem",
                                 "Value": "Печать",
-                                "Variable": "btn_print"
+                                "Variable": "btn_print",
+                                "style_name": ""
                             },
                             {
                                 "type": "MenuItem",
                                 "Value": "Ввести штрихкод",
-                                "Variable": "btn_doc_good_barcode"
+                                "Variable": "btn_doc_good_barcode",
+                                "style_name": ""
                             },
                             {
                                 "type": "MenuItem",
                                 "Value": "Серии",
-                                "Variable": "btn_series_show"
+                                "Variable": "btn_series_show",
+                                "style_name": ""
                             }
                         ],
                         "Handlers": [
@@ -3701,7 +3704,10 @@
                                         "weight": "0",
                                         "type": "Button"
                                     }
-                                ]
+                                ],
+                                "BackgroundColor": "",
+                                "StrokeWidth": "",
+                                "Padding": ""
                             },
                             {
                                 "type": "barcode",
@@ -3717,6 +3723,16 @@
                                 "type": "MenuItem",
                                 "Value": "Выгрузить документ",
                                 "Variable": "btn_doc_mark_verified"
+                            },
+                            {
+                                "Value": "Шаблон распознавания",
+                                "Variable": "btn_ocr_serial_template_settings",
+                                "type": "MenuItem"
+                            },
+                            {
+                                "Value": "#f002",
+                                "Variable": "btn_find_serial_cv",
+                                "type": "Vision"
                             }
                         ],
                         "Handlers": [
@@ -3780,13 +3796,88 @@
                         "onlineOnStart": false,
                         "onlineOnAfterStart": false,
                         "onlineOnInput": false
+                    },
+                    {
+                        "Name": "ШаблонРаспознавания",
+                        "type": "Operation",
+                        "Elements": [
+                            {
+                                "Value": "",
+                                "Variable": "",
+                                "type": "LinearLayout",
+                                "weight": "0",
+                                "height": "wrap_content",
+                                "width": "match_parent",
+                                "orientation": "vertical",
+                                "Elements": [
+                                    {
+                                        "type": "TextView",
+                                        "height": "wrap_content",
+                                        "width": "match_parent",
+                                        "weight": "0",
+                                        "Value": "Количество цифр",
+                                        "Variable": ""
+                                    },
+                                    {
+                                        "type": "EditTextNumeric",
+                                        "height": "wrap_content",
+                                        "width": "match_parent",
+                                        "weight": "0",
+                                        "Value": "@ocr_serial_template_num_amount",
+                                        "Variable": "ocr_serial_template_num_amount"
+                                    },
+                                    {
+                                        "type": "TextView",
+                                        "height": "wrap_content",
+                                        "width": "match_parent",
+                                        "weight": "0",
+                                        "Value": "Префикс",
+                                        "Variable": ""
+                                    },
+                                    {
+                                        "type": "EditTextText",
+                                        "height": "wrap_content",
+                                        "width": "match_parent",
+                                        "weight": "0",
+                                        "Value": "@ocr_serial_template_prefix",
+                                        "Variable": "ocr_serial_template_prefix"
+                                    },
+                                    {
+                                        "type": "TextView",
+                                        "height": "wrap_content",
+                                        "width": "match_parent",
+                                        "weight": "0",
+                                        "Value": "@current_ocr_serial_template",
+                                        "Variable": ""
+                                    },
+                                    {
+                                        "type": "CheckBox",
+                                        "height": "wrap_content",
+                                        "width": "wrap_content",
+                                        "weight": "0",
+                                        "Value": "Непрерывное распознавание",
+                                        "Variable": "continuous_recognition"
+                                    }
+                                ],
+                                "BackgroundColor": "",
+                                "StrokeWidth": "",
+                                "Padding": ""
+                            }
+                        ],
+                        "Timer": false,
+                        "hideToolBarScreen": false,
+                        "noScroll": false,
+                        "handleKeyUp": false,
+                        "hideBottomBarScreen": true,
+                        "onlineOnStart": false,
+                        "onlineOnAfterStart": false,
+                        "onlineOnInput": false
                     }
                 ]
             },
             {
                 "type": "Process",
                 "ProcessName": "Универсальный справочник",
-                "PlanFactHeader": "",
                 "DefineOnBackPressed": false,
                 "hidden": true,
                 "login_screen": false,
@@ -4144,12 +4235,14 @@
                             {
                                 "type": "MenuItem",
                                 "Value": "Печать",
-                                "Variable": "btn_print"
+                                "Variable": "btn_print",
+                                "style_name": ""
                             },
                             {
                                 "type": "MenuItem",
                                 "Value": "Добавить штрихкод",
-                                "Variable": "btn_item_good_barcode"
+                                "Variable": "btn_item_good_barcode",
+                                "style_name": ""
                             }
                         ],
                         "Handlers": [
@@ -5721,14 +5814,6 @@
                                         "type": "ProgressButton"
                                     },
                                     {
-                                        "Value": "Настройки документов",
-                                        "Variable": "btn_documents_settings",
-                                        "height": "wrap_content",
-                                        "width": "match_parent",
-                                        "weight": "0",
-                                        "type": "ProgressButton"
-                                    },
-                                    {
                                         "Value": "Тест сканера",
                                         "Variable": "btn_test_barcode",
                                         "height": "wrap_content",
@@ -6351,95 +6436,6 @@
                                 "action": "run",
                                 "type": "python",
                                 "method": "sound_settings_listener",
-                                "postExecute": ""
-                            }
-                        ],
-                        "onlineOnStart": false,
-                        "onlineOnAfterStart": false,
-                        "onlineOnInput": false
-                    },
-                    {
-                        "type": "Operation",
-                        "Name": "Настройки документов",
-                        "Timer": false,
-                        "hideBottomBarScreen": true,
-                        "noScroll": false,
-                        "handleKeyUp": false,
-                        "noConfirmation": true,
-                        "hideToolBarScreen": false,
-                        "Elements": [
-                            {
-                                "type": "LinearLayout",
-                                "Variable": "",
-                                "orientation": "vertical",
-                                "height": "wrap_content",
-                                "width": "match_parent",
-                                "weight": "0",
-                                "Elements": [
-                                    {
-                                        "Value": "Время хранения",
-                                        "Variable": "",
-                                        "height": "wrap_content",
-                                        "width": "match_parent",
-                                        "weight": "0",
-                                        "TextBold": true,
-                                        "TextSize": "25",
-                                        "type": "TextView"
-                                    },
-                                    {
-                                        "Value": "Укажите сколько дней документы будут храниться на устройстве.",
-                                        "Variable": "",
-                                        "height": "wrap_content",
-                                        "width": "match_parent",
-                                        "weight": "0",
-                                        "type": "TextView"
-                                    },
-                                    {
-                                        "Value": "@doc_delete_settings_days",
-                                        "Variable": "doc_delete_settings_days",
-                                        "height": "wrap_content",
-                                        "width": "match_parent",
-                                        "weight": "0",
-                                        "type": "EditTextNumeric"
-                                    },
-                                    {
-                                        "Value": "Удалять устаревшие документы",
-                                        "Variable": "doc_settings_confirm_delete_old_docs",
-                                        "height": "wrap_content",
-                                        "width": "match_parent",
-                                        "weight": "0",
-                                        "type": "CheckBox"
-                                    },
-                                    {
-                                        "Value": "Сохранить и закрыть",
-                                        "Variable": "save_btn",
-                                        "height": "wrap_content",
-                                        "width": "wrap_content",
-                                        "orientation": "",
-                                        "weight": "",
-                                        "TextBold": false,
-                                        "TextItalic": false,
-                                        "TextSize": "",
-                                        "TextColor": "",
-                                        "type": "Button"
-                                    }
-                                ]
-                            }
-                        ],
-                        "Handlers": [
-                            {
-                                "event": "onStart",
-                                "action": "run",
-                                "type": "python",
-                                "method": "documents_settings_on_start",
-                                "postExecute": ""
-                            },
-                            {
-                                "event": "onInput",
-                                "listener": "",
-                                "action": "run",
-                                "type": "python",
-                                "method": "documents_settings_on_input",
                                 "postExecute": ""
                             }
                         ],
@@ -7093,7 +7089,7 @@
             "handler_auth": "",
             "dictionaries": ""
         },
-        "ConfigurationTags": "",
+        "ConfigurationTags": "Py,off-line,ActiveCV®",
         "FaceRecognitionURL": "",
         "ForegroundService": false,
         "StopForegroundServiceOnExit": false,
@@ -7174,14 +7170,6 @@
             },
             {
                 "PyFileKey": "new_handlers",
-                "PyFileData": ""
-            },
-            {
-                "PyFileKey": "printing_factory",
-                "PyFileData": ""
-            },
-            {
-                "PyFileKey": "tiny_db_services",
                 "PyFileData": ""
             }
         ],

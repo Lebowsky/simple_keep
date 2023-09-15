@@ -178,6 +178,20 @@ class HsService:
         self.http_answer = self._create_http_answer(answer)
         return self.http_answer
 
+    def send_barcodes(self, data: list, **kwargs) -> 'HttpAnswer':
+        """
+        :param data: dict ('barcode', 'id_good', 'id_property', 'id_unit')
+        :param kwargs: requests post params
+        :return: HttpAnswer
+        """
+        kwargs['data'] = data if isinstance(data, str) else json.dumps(data)
+        self._hs = 'barcodes'
+        self._method = requests.post
+
+        answer = self._send_request(kwargs)
+        self.http_answer = self._create_http_answer(answer)
+        return self.http_answer
+
     def _send_request(self, kwargs) -> dict:
         answer = {'empty': True}
         try:
@@ -191,6 +205,11 @@ class HsService:
             answer['url'] = r.url
             answer['reason'] = r.reason
             answer['text'] = r.text.encode("utf-8")
+
+            try:
+                answer['json'] = r.json()
+            except requests.exceptions.JSONDecodeError:
+                answer['json'] = {}
 
             if r.status_code == 200:
                 answer['empty'] = False
@@ -207,6 +226,7 @@ class HsService:
         answer_data = {
             'status_code': answer.get('status_code'),
             'url': answer.get('url'),
+            'json': answer.get('json')
         }
 
         if answer_data['status_code'] == 200:
@@ -234,6 +254,7 @@ class HsService:
     class HttpAnswer:
         url: str
         status_code: int
+        json: Optional = None
         error_text: Optional[str] = ''
         data: Optional = None
         unauthorized: bool = False
