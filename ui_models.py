@@ -5702,7 +5702,7 @@ class SeriesAdrList(Screen):
             self.hash_map.show_screen("Заполнение серии", self.params)
         elif listener == "ON_BACK_PRESSED":
             real_qtty = self.service.get_adr_total_qtty()
-            self.service.set_total_qtty(real_qtty)
+            self.service.set_adr_total_qtty(real_qtty)
             # self.hash_map.importing(json.loads(self.rs_settings.get('_stored_hash')))
             # self.hash_map.put("FinishProcess", "")
             self.hash_map.show_screen(self.hash_map.get('back_screen'))
