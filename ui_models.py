@@ -3057,10 +3057,7 @@ class FlowDocDetailsScreen(DocDetailsScreen):
 
     def _process_the_barcode(self, barcode, id_doc):
         if barcode:
-            qtext = '''
-            INSERT INTO RS_barc_flow (id_doc, barcode) VALUES (?,?)
-            '''
-            ui_global.get_query_result(qtext, (id_doc, barcode))
+            self.service.insert_barcode(barcode)
             self.service.set_doc_status_to_upload(id_doc)
     
     def _get_doc_details(self):
