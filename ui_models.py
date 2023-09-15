@@ -3566,7 +3566,8 @@ class BaseGoodSelect(Screen):
         return self.hash_map.get_json('selected_card_data')
 
     def _save_new_delta(self):
-        if int(self.hash_map.get('new_qtty')) < 0:
+        new_qtty = float(self.hash_map.get('new_qtty')) if self.hash_map.get('new_qtty')  else 0
+        if new_qtty < 0:
             self.hash_map.toast('Итоговое количество меньше 0')
             self.hash_map.playsound('error')
             self._set_delta(reset=True)
@@ -3574,7 +3575,7 @@ class BaseGoodSelect(Screen):
 
         control = self.hash_map.get_bool('control')
         if control:
-            if int(self.hash_map.get('new_qtty')) > int(
+            if new_qtty > float(
                     self.hash_map.get('qtty_plan')):
                 self.toast('Количество план в документе превышено')
                 self.hash_map.playsound('error')
@@ -3583,11 +3584,11 @@ class BaseGoodSelect(Screen):
         
         current_elem = self._get_current_elem()
             
-        qtty = self.hash_map['new_qtty']
+        qtty = new_qtty
         # price = self.hash_map.get('price') or 0  # это не используется
 
         if self.hash_map.get('parent_screen') == 'ВыборТовараАртикул':
-            if int(qtty) == int(current_elem['qtty']):
+            if qtty == float(current_elem['qtty']) if current_elem['qtty'] else 0:
                 self.hash_map.show_screen("ВыборТовараАртикул")
                 return
             finded_goods_cards = self.hash_map.get('finded_goods_cards', from_json=True)
@@ -3595,21 +3596,21 @@ class BaseGoodSelect(Screen):
 
             card_data = next(elem for elem in cardsdata
                                 if elem['key'] == current_elem['key'])
-            card_data['qtty'] = float(qtty)
+            card_data['qtty'] = qtty
             self.hash_map.put('finded_goods_cards', finded_goods_cards, to_json=True)
             self.hash_map.show_screen("ВыборТовараАртикул")
 
         else:
-            if int(qtty) != int(current_elem['qtty']):
+            if qtty != float(current_elem['qtty']):
                 update_data = {
                     'sent': 0,
-                    'qtty': float(qtty) if qtty else 0,
+                    'qtty': qtty,
                     # 'price': float(price) # в Adr docs нет колонки прайс, не понятно нужна она вообще или нет
                 }
                 row_id = int(current_elem['key'])
                 self.service.update_doc_table_row(data=update_data, row_id=row_id)
-                self.hash_map.put('new_qtty', qtty)
-                self.hash_map.put('qtty', qtty)
+                self.hash_map.put('new_qtty', str(qtty))
+                self.hash_map.put('qtty', str(qtty))
 
     def _process_the_barcode(self):
         barcode = self.hash_map.get('barcode_good_select')
@@ -5685,6 +5686,8 @@ class SeriesAdrList(Screen):
 
         #Обновим количесмтво факт по сериям
         real_qtty = self.service.get_adr_total_qtty()
+        if real_qtty is None:
+            real_qtty = 0
         self.hash_map['qtty'] = str(real_qtty)
         self.service.set_total_qtty(real_qtty)
 
