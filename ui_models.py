@@ -5686,6 +5686,8 @@ class SeriesAdrList(Screen):
 
         #Обновим количесмтво факт по сериям
         real_qtty = self.service.get_adr_total_qtty()
+        if real_qtty is None:
+            real_qtty = 0
         self.hash_map['qtty'] = str(real_qtty)
         self.service.set_total_qtty(real_qtty)
 
