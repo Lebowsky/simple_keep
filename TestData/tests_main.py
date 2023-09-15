@@ -91,6 +91,9 @@ def adr_doc_details_on_start(hash_map):
 def adr_doc_details_on_input(hash_map):
     main.adr_doc_details_on_input(hash_map)
 
+def adr_elem_viev_on_click(hash_map):
+    main.adr_elem_viev_on_click(hash_map)
+
 def settings_on_click(hash_map):
     main.rs_settings = rs_settings.RSSettings()
     main.rs_settings.put('URL' , 'http://192.168.1.77/Mark/hs/')
