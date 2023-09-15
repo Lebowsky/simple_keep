@@ -1003,7 +1003,7 @@ class FlowDocService(DocService):
         self._get_query_result(query_text, {'id_doc': self.doc_id, 'barcode': barcode, 'qtty': qtty})
 
     def insert_barcode(self, barcode):
-        query_text = '''INSERT INTO RS_barc_flow (id_doc, barcode) VALUES (?,?)'''
+        query_text = '''INSERT INTO RS_barc_flow (id_doc, barcode) VALUES (:id_doc, :barcode)'''
         self._get_query_result(query_text, {'id_doc': self.doc_id, 'barcode': barcode})
 
     def get_data_for_ticket_printing(self, barcode):
