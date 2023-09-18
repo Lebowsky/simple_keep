@@ -302,6 +302,10 @@ def doc_units_on_input(hash_map):
     screen = ui_models.DocGoodSelectUnit(hash_map, rs_settings)
     screen.on_input()
 
+@HashMap()
+def barcode_error_screen_listener(hash_map: HashMap):
+    if hash_map['listener'] in ['ON_BACK_PRESSED', 'btn_continue_scan']:
+        hash_map.show_screen("Документ товары")
 
 
 # ^^^^^^^^^^^^^^^^^ Documents ^^^^^^^^^^^^^^^^^
@@ -584,12 +588,12 @@ def documents_settings_on_input(hash_map):
     screen = ui_models.DocumentsSettings(hash_map, rs_settings)
     screen.on_input()
 
-
 @HashMap()
 def documents_settings_on_start(hash_map):
     """Процесс: Параметры. Экран: Настройки документов"""
     screen = ui_models.DocumentsSettings(hash_map, rs_settings)
     screen.on_start()
+
 # ^^^^^^^^^^^^^^^^^ Settings ^^^^^^^^^^^^^^^^^
 
 # =============== Html =================
@@ -629,16 +633,6 @@ def file_browser_on_start(hash_map):
 def file_browser_on_input(hash_map):
     screen: ui_models.SimpleFileBrowser = ui_models.SimpleFileBrowser(hash_map, rs_settings)
     screen.on_input()
-
-# =============== UniversalCards =================
-
-@HashMap()
-def universal_cards_on_start(hash_map):
-    screen = ui_models.UniversalCardsScreen(hash_map=hash_map, rs_settings=rs_settings)
-    screen.on_start()
-
-
-# ^^^^^^^^^^^^^^^^^ UniversalCards ^^^^^^^^^^^^^^^^^
 
 
 # =============== Debug =================

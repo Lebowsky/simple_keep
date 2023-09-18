@@ -9,8 +9,6 @@ from flask import Flask
 from flask import request
 
 import main
-import ui_models
-#from rs_settings import RSSettings as rs_settings
 from ui_utils import HashMap
 
 app = Flask(__name__)
@@ -52,8 +50,6 @@ for k, v in rs_default_settings.items():
 def tiles_on_input(hash_map: HashMap):
     main.tiles_on_input(hash_map)
 
-def tiles_on_start(hash_map: HashMap):
-    main.tiles_on_start(hash_map)
 
 def docs_on_start(hash_map: HashMap):
     main.docs_on_start(hash_map)
@@ -73,14 +69,9 @@ def doc_details_listener(hash_map):
     main.doc_details_listener(hash_map)
 
 
-def doc_details_barcode_scanned(hash_map):
-    main.doc_details_barcode_scanned(hash_map)
-
 def adr_docs_on_start(hash_map):
     main.adr_docs_on_start(hash_map)
 
-def docs_adr_on_select(hash_map):
-    main.docs_adr_on_select(hash_map)
 
 def adr_doc_on_select(hash_map):
     main.adr_doc_on_select(hash_map)
@@ -107,13 +98,6 @@ def settings_on_click(hash_map):
 
 def debug_listener(hash_map):
     main.debug_listener(hash_map)
-
-def universal_cards_on_start(hash_map):
-    main.universal_cards_on_start(hash_map)
-
-
-def universal_cards_listener(hash_map):
-    main.universal_cards_listener(hash_map)
 
 
 def flow_docs_on_start(hash_map):
