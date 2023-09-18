@@ -54,12 +54,3 @@ def delete_barcode_screen_click(hashMap, _files=None, _data=None):
 
     return hashMap
 
-
-def barcode_error_screen_listener(hashMap, _files=None, _data=None):
-    if hashMap.get('listener') == 'ON_BACK_PRESSED':
-        # suClass.urovo_set_lock_trigger(False)
-        hashMap.put("ShowScreen", "Документ товары")
-    elif hashMap.get('listener') == 'btn_continue_scan':
-        # suClass.urovo_set_lock_trigger(False)
-        hashMap.put("ShowScreen", "Документ товары")
-    return hashMap
