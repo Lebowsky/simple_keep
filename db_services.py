@@ -111,9 +111,11 @@ class BarcodeService(DbService):
                 IFNULL(doc_barcodes.id, 0) AS mark_id,
                 IFNULL(goods.use_mark, false) AS use_mark,
                 IFNULL(doc_table.id, '') AS row_key,
+                IFNULL(doc_table.d_qtty, 0.0) AS d_qtty,
                 IFNULL(doc_table.qtty, 0.0) AS qtty,
-                IFNULL(doc_table.qtty_plan, 0.0) AS qtty_plan
-                
+                IFNULL(doc_table.qtty_plan, 0.0) AS qtty_plan,
+                IFNULL(doc_table.price, 0.0) AS price,
+                IFNULL(doc_table.id_price, '') AS id_price
             FROM RS_barcodes AS barcodes
             LEFT JOIN 
                     (SELECT 
@@ -137,8 +139,6 @@ class BarcodeService(DbService):
                 
             WHERE barcodes.barcode = "{}"'''.format(
             id_doc, id_doc, barcode_info.gtin, barcode_info.serial, search_value)
-
-        print(q)
 
         result = self.provider.sql_query(q)
         if result:
@@ -164,7 +164,7 @@ class BarcodeService(DbService):
             return '0000000000011'
 
     @staticmethod
-    def update_table(table_name, docs_table_update_data):
+    def replace_or_create_table(table_name, docs_table_update_data):
         provider = SqlQueryProvider(table_name=table_name)
         provider.replace(docs_table_update_data)
 
@@ -183,11 +183,15 @@ class BarcodeService(DbService):
         result = provider.sql_query(query, '')
         return result[0] if result else None
 
-
     @staticmethod
     def update_line_qtty(table_line):
         provider = SqlQueryProvider(table_name='RS_docs_table')
         provider.update(data=table_line)
+
+    def log_error(self, error_msg):
+        error_text = f"Работа с штрихкодами:" \
+                     f"{error_msg}"
+        super()._write_error_on_log(error_text)
 
 
 class DocService:
@@ -633,6 +637,7 @@ class DocService:
             RS_series.name as series_name,
             RS_docs_table.id_unit,
             RS_units.name as units_name,
+            RS_docs_table.d_qtty,
             RS_docs_table.qtty,
             RS_docs_table.qtty_plan,
             RS_docs_table.price,

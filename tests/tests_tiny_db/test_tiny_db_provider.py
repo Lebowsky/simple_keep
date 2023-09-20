@@ -158,6 +158,15 @@ class TestScanningQueueService(unittest.TestCase):
                 "d_qtty": 3,
                 'row_key': '1',
                 'sent': False
+            },
+            {
+                "id_doc": '123',
+                "id_good": 'id_good_value',
+                "id_properties": 'id_property_value',
+                "id_series": 'id_series_value',
+                "d_qtty": 3,
+                'row_key': '2',
+                'sent': False
             }
         ]
         self.provider.insert_multiple(initial_data)
@@ -167,13 +176,17 @@ class TestScanningQueueService(unittest.TestCase):
         self.assertEqual(expect, result)
 
     def test_update_sent(self):
-        expect = 0
+        expect = 1
 
         self.provider.insert_multiple(initial_data)
         sut = ScanningQueueService(provider=self.provider)
         result = sut.get_send_document_lines(id_doc='123')
-        sut.update_sent_lines(result)
-        new_result = sut.get_send_document_lines(id_doc='123')
+        result.pop()  # Проверяем что меняет только в переданном списке (по doc_id)
 
+        sut.update_sent_lines(result)
+
+        new_result = sut.get_send_document_lines(id_doc='123')
         self.assertEqual(expect, len(new_result))
+
+
 

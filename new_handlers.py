@@ -180,6 +180,12 @@ def docs_on_select(hash_map: HashMap):
     screen.on_input()
 
 
+
+# @HashMap()
+# def doc_details_on_start(hash_map: HashMap):
+#     screen: ui_models.GroupScanDocDetailsScreen = create_screen(hash_map)
+#     screen.on_start()
+
 @HashMap()
 def doc_details_on_start(hash_map: HashMap):
     screen: ui_models.GroupScanDocDetailsScreenNew = create_screen(hash_map)
@@ -190,6 +196,38 @@ def doc_details_on_start(hash_map: HashMap):
 def doc_details_listener(hash_map: HashMap):
     screen = create_screen(hash_map)
     screen.on_input()
+
+
+@HashMap()
+def doc_details_before_process_barcode(hash_map):
+    """ Обработчик для синхронного запроса и обновления данных после сканирования и перед обработкой ШК"""
+
+    screen = ui_models.GroupScanDocDetailsScreen(hash_map, rs_settings)
+    screen.before_process_barcode()
+
+
+@HashMap()
+def doc_run_post_barcode_scanned(hash_map):
+    """ Отправка данных после обработки ШК"""
+
+    screen = ui_models.GroupScanDocDetailsScreen(hash_map, rs_settings)
+    screen.hash_map.remove('toast')
+    screen.post_barcode_scanned()
+
+
+@HashMap()
+def doc_scan_error_sound(hash_map):
+    """ Звуковые сигналы ошибок сканирования"""
+
+    screen = ui_models.GroupScanDocDetailsScreen(hash_map, rs_settings)
+    screen.scan_error_sound()
+
+
+@HashMap()
+def highlight_scanned_item(hash_map: HashMap):
+    """ Обработчик для отмены раскраски отсканированного товара """
+    screen = ui_models.DocDetailsScreen(hash_map, rs_settings)
+    screen.disable_highlight()
 
 
 @HashMap()
@@ -205,11 +243,6 @@ def after_send_post_lines_data(hash_map: HashMap):
     screen = ui_models.GroupScanDocDetailsScreenNew(hash_map, rs_settings)
     screen.after_send_data()
 
-@HashMap()
-def highlight_scanned_item(hash_map: HashMap):
-    """ Обработчик для отмены раскраски отсканированного товара """
-    screen = ui_models.DocDetailsScreen(hash_map, rs_settings)
-    screen.disable_highlight()
 
 @HashMap()
 def adr_docs_on_start(hash_map: HashMap):

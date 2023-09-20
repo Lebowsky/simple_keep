@@ -473,9 +473,9 @@ class BarcodeWorker:
         if self.process_result.error:
             return
 
-        new_qtty = self.barcode_data['qtty'] + self.barcode_data['ratio']
+        new_device_qtty = self.barcode_data['d_qtty'] + self.barcode_data['ratio']
         if self.barcode_data['row_key']:
-            if self.have_qtty_plan and self.control and self.barcode_data['qtty_plan'] < new_qtty:
+            if self.have_qtty_plan and self.control and self.barcode_data['qtty_plan'] < new_device_qtty:
                 self._set_process_result_info('quantity_plan_reached')
 
         elif self.have_zero_plan and self.control:
@@ -483,10 +483,10 @@ class BarcodeWorker:
 
         if not self.process_result.error:
             if self.use_scanning_queue:
-                self._insert_queue_data(new_qtty)
-                self._insert_doc_table_data(new_qtty)
+                self._insert_queue_data()
+                self._insert_doc_table_data(new_device_qtty)
             else:
-                self._insert_doc_table_data(new_qtty)
+                self._insert_doc_table_data(new_device_qtty)
 
 
     def _insert_mark_data(self):
@@ -511,16 +511,19 @@ class BarcodeWorker:
             'id_properties': self.barcode_data['id_property'],
             'id_series': self.barcode_data['id_series'],
             'id_unit': self.barcode_data['id_unit'],
-            'qtty': float(qty),
+            'qtty': self.barcode_data['qtty'],
+            'd_qtty': float(qty),
             'qtty_plan': self.barcode_data['qtty_plan'],
             'last_updated': (datetime.now() - timedelta(hours=self.user_tmz)).strftime("%Y-%m-%d %H:%M:%S"),
             'id_cell': '',
+            'price': self.barcode_data['price'],
+            'id_price': self.barcode_data['id_price']
         }
 
         if self.barcode_data['row_key']:
             self.docs_table_update_data['id'] = self.barcode_data['row_key']
 
-    def _insert_queue_data(self, qty):
+    def _insert_queue_data(self):
         self.queue_update_data = {
             "id_doc": self.id_doc,
             "id_good": self.barcode_data['id_good'],
@@ -530,7 +533,9 @@ class BarcodeWorker:
             "id_cell": '',
             "d_qtty": self.barcode_data['ratio'],
             'row_key': self.barcode_data['row_key'],
-            'sent': False
+            'sent': False,
+            'price': self.barcode_data['price'],
+            'id_price': self.barcode_data['id_price']
         }
 
     def update_document_barcode_data(self):
@@ -538,10 +543,11 @@ class BarcodeWorker:
             return
 
         if self.mark_update_data:
-            self.db_service.update_table(table_name="RS_docs_barcodes", docs_table_update_data=self.mark_update_data)
+            self.db_service.replace_or_create_table(table_name="RS_docs_barcodes", docs_table_update_data=self.mark_update_data)
+
 
         if self.docs_table_update_data:
-            self.db_service.update_table(table_name="RS_docs_table", docs_table_update_data=self.docs_table_update_data)
+            self.db_service.replace_or_create_table(table_name="RS_docs_table", docs_table_update_data=self.docs_table_update_data)
 
         if self.queue_update_data:
             self.db_service.insert_no_sql(self.queue_update_data)
