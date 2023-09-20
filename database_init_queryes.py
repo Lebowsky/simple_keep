@@ -308,6 +308,7 @@ def database_shema():
     created_at         DATETIME DEFAULT CURRENT_TIMESTAMP,
     control            TEXT     DEFAULT 0,
     allow_fact_input   TEXT DEFAULT 0
+    
     )
     ''')
 
@@ -329,7 +330,8 @@ def database_shema():
     is_plan       TEXT     DEFAULT True,
     id_cell       TEXT     REFERENCES RS_cells (id), 
     table_type    TEXT     NOT NULL
-                           DEFAULT 'out'
+                           DEFAULT 'out',
+    use_series         INTEGER (1) DEFAULT (0)
     )
     ''')
 
@@ -360,13 +362,16 @@ def database_shema():
                              REFERENCES RS_docs (id_doc),
     id_good         TEXT     NOT NULL
                              REFERENCES RS_goods (id),
+    id_properties   TEXT     REFERENCES RS_properties (id),
     id_series       TEXT     REFERENCES RS_series (id),
     id_warehouse    TEXT     REFERENCES RS_warehouses (id),
     qtty            REAL,
     name            TEXT     NOT NULL,
     best_before     DATETIME,
     number          TEXT     NOT NULL,
-    production_date DATETIME
+    production_date DATETIME,
+    cell            TEXT     REFERENCES RS_cells (id) ON DELETE NO ACTION
+                                                      ON UPDATE NO ACTION
     )''')
 
 

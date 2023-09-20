@@ -35,6 +35,8 @@ def create_screen(hash_map: HashMap):
     return current_screen
 
 
+
+
 # =============== Main events =================
 
 
@@ -108,14 +110,23 @@ def flow_tiles_on_select(hash_map: HashMap):
 
 @HashMap()
 def barcode_flow_on_start(hash_map: HashMap):
-    screen :ui_models.FlowDocDetailsScreen = ui_models.FlowDocDetailsScreen(hash_map, rs_settings)
+    """Процесс: Сбор ШК. Экран: ПотокШтрихкодовДокумента"""
+    screen = ui_models.FlowDocDetailsScreen(hash_map, rs_settings)
     screen.on_start()
 
 
 @HashMap()
 def barcode_flow_listener(hash_map:HashMap):
-    screen: ui_models.FlowDocDetailsScreen = ui_models.FlowDocDetailsScreen(hash_map, rs_settings)
+    """Процесс: Сбор ШК. Экран: ПотокШтрихкодовДокумента"""
+    screen = ui_models.FlowDocDetailsScreen(hash_map, rs_settings)
     screen.on_input()
+
+
+@HashMap()
+def serial_key_recognition_ocr(hash_map:HashMap):
+    """Процесс: Сбор ШК. Экран: ПотокШтрихкодовДокумента.
+       Шаблон Распознавания: Серийный номер"""
+    ui_models.FlowDocDetailsScreen.serial_key_recognition_ocr(hash_map, rs_settings)
 
 
 @HashMap()
@@ -285,6 +296,10 @@ def doc_units_on_input(hash_map):
     screen = ui_models.DocGoodSelectUnit(hash_map, rs_settings)
     screen.on_input()
 
+@HashMap()
+def barcode_error_screen_listener(hash_map: HashMap):
+    if hash_map['listener'] in ['ON_BACK_PRESSED', 'btn_continue_scan']:
+        hash_map.show_screen("Документ товары")
 
 
 # ^^^^^^^^^^^^^^^^^ Documents ^^^^^^^^^^^^^^^^^
@@ -463,6 +478,29 @@ def series_item_on_input(hash_map):
     screen: ui_models.SeriesItem = ui_models.SeriesItem(hash_map, rs_settings)
     screen.on_input()
 
+@HashMap()
+def adr_series_list_on_start(hash_map):
+    screen: ui_models.SeriesAdrList = ui_models.SeriesAdrList(hash_map, rs_settings)
+    screen.on_start()
+
+
+@HashMap()
+def adr_series_list_on_input(hash_map):
+    screen: ui_models.SeriesAdrList = ui_models.SeriesAdrList(hash_map, rs_settings)
+    screen.on_input()
+
+@HashMap()
+def adr_series_item_on_start(hash_map):
+    screen: ui_models.SeriesAdrItem = ui_models.SeriesAdrItem(hash_map, rs_settings)
+    screen.on_start()
+
+
+@HashMap()
+def adr_series_item_on_input(hash_map):
+    screen: ui_models.SeriesAdrItem = ui_models.SeriesAdrItem(hash_map, rs_settings)
+    screen.on_input()
+
+
 # ^^^^^^^^^^^^^^^^^^^^^ GoodsPrices ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 # =============== Settings =================
@@ -542,12 +580,12 @@ def documents_settings_on_input(hash_map):
     screen = ui_models.DocumentsSettings(hash_map, rs_settings)
     screen.on_input()
 
-
 @HashMap()
 def documents_settings_on_start(hash_map):
     """Процесс: Параметры. Экран: Настройки документов"""
     screen = ui_models.DocumentsSettings(hash_map, rs_settings)
     screen.on_start()
+
 # ^^^^^^^^^^^^^^^^^ Settings ^^^^^^^^^^^^^^^^^
 
 # =============== Html =================
@@ -587,16 +625,6 @@ def file_browser_on_start(hash_map):
 def file_browser_on_input(hash_map):
     screen: ui_models.SimpleFileBrowser = ui_models.SimpleFileBrowser(hash_map, rs_settings)
     screen.on_input()
-
-# =============== UniversalCards =================
-
-@HashMap()
-def universal_cards_on_start(hash_map):
-    screen = ui_models.UniversalCardsScreen(hash_map=hash_map, rs_settings=rs_settings)
-    screen.on_start()
-
-
-# ^^^^^^^^^^^^^^^^^ UniversalCards ^^^^^^^^^^^^^^^^^
 
 
 # =============== Debug =================

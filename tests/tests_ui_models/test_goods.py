@@ -161,8 +161,8 @@ class TestModelItemCard(unittest.TestCase):
 
         # execute test method
         self.sut.on_input()
-        actual = self.hash_map.containsKey('BackScreen')
+        actual = self.hash_map['ShowScreen']
 
         # assert test method results
-        self.assertTrue(actual)
+        self.assertEqual('Товары список', actual)
         self.assertEqual("", self.sut.hash_map.get('barcode_cards'))

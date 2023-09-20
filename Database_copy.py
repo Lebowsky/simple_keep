@@ -25,8 +25,9 @@ def post():
     for filename in request.files:
         file = request.files[filename] #rightscan
         if file:
-            file.save(path + '\\'+ filename + '.db')
-            print('file uploaded')
+            file.save(path + '\\'+ filename)
+            print(f'file {filename} uploaded')
+            file.close()
     return '200'
 
 
