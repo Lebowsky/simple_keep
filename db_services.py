@@ -1269,7 +1269,14 @@ class SeriesService(DbService):
         AdrDocService(doc_id = self.params.get('id_doc'), cur_cell = self.params.get('cell')).set_doc_status_to_upload(doc_id = self.params.get('id_doc'))
         return True
 
+class SelectItemService(DbService):
+    def __init__(self, table_name):
+        super().__init__()
+        self.table_name = table_name
 
+    def get_select_data(self, **cond) -> list:
+        self.provider.table_name = self.table_name
+        return self.provider.select(cond)
 
 class AdrDocService(DocService):
     def __init__(self, doc_id='', cur_cell='', table_type='in'):
@@ -1748,7 +1755,10 @@ class SqlQueryProvider:
         if self._table_name:
             return self._table_name
         else:
-            raise ValueError('table_name must be specified')
+            raise ValueError(f'{self}: table_name must be specified')
+
+    def __repr__(self):
+        return f'SqlQueryProvider(table_name={self._table_name})'
 
     @table_name.setter
     def table_name(self, v):

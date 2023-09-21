@@ -337,6 +337,18 @@ def barcode_error_screen_listener(hash_map: HashMap):
 
 # ^^^^^^^^^^^^^^^^^ Documents ^^^^^^^^^^^^^^^^^
 
+@HashMap()
+def select_item_on_start(hash_map: HashMap):
+    ui_models.SelectItemScreen(hash_map, rs_settings).on_start()
+
+@HashMap()
+def select_item_on_input(hash_map: HashMap):
+    ui_models.SelectItemScreen(hash_map, rs_settings).on_input()
+
+@HashMap()
+def select_item_result(hash_map: HashMap):
+    hash_map.toast('select_item_result')
+
 # =============== Goods =================
 
 @HashMap()
