@@ -132,7 +132,16 @@ class TestSqlQueryProvider(unittest.TestCase):
 
     def test_select(self):
         # TODO AND create test
-        pass
+        sut = SqlQueryProvider(debug=True)
+        sut.table_name = 'table'
+        expect = 'SELECT * FROM table WHERE id=? and id_doc=? id_5, id_doc_5'
+
+        data = {'id': 'id_5', 'id_doc': 'id_doc_5', 'qtty': 5, 'price': '500'}
+        result = sut.select({'id': 'id_5', 'id_doc': 'id_doc_5'})
+
+        actual = sut.sql_text
+
+        self.assertEqual(expect, f'{actual} {sut.sql_params}')
 
     def test_sql_query(self):
         self.sut.table_name = 'Error_log'
