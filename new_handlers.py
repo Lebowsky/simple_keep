@@ -180,9 +180,15 @@ def docs_on_select(hash_map: HashMap):
     screen.on_input()
 
 
+
+# @HashMap()
+# def doc_details_on_start(hash_map: HashMap):
+#     screen: ui_models.GroupScanDocDetailsScreen = create_screen(hash_map)
+#     screen.on_start()
+
 @HashMap()
 def doc_details_on_start(hash_map: HashMap):
-    screen: ui_models.GroupScanDocDetailsScreen = create_screen(hash_map)
+    screen: ui_models.GroupScanDocDetailsScreenNew = create_screen(hash_map)
     screen.on_start()
 
 
@@ -191,12 +197,14 @@ def doc_details_listener(hash_map: HashMap):
     screen = create_screen(hash_map)
     screen.on_input()
 
+
 @HashMap()
 def doc_details_before_process_barcode(hash_map):
     """ Обработчик для синхронного запроса и обновления данных после сканирования и перед обработкой ШК"""
 
     screen = ui_models.GroupScanDocDetailsScreen(hash_map, rs_settings)
     screen.before_process_barcode()
+
 
 @HashMap()
 def doc_run_post_barcode_scanned(hash_map):
@@ -206,6 +214,7 @@ def doc_run_post_barcode_scanned(hash_map):
     screen.hash_map.remove('toast')
     screen.post_barcode_scanned()
 
+
 @HashMap()
 def doc_scan_error_sound(hash_map):
     """ Звуковые сигналы ошибок сканирования"""
@@ -213,12 +222,27 @@ def doc_scan_error_sound(hash_map):
     screen = ui_models.GroupScanDocDetailsScreen(hash_map, rs_settings)
     screen.scan_error_sound()
 
+
 @HashMap()
 def highlight_scanned_item(hash_map: HashMap):
     """ Обработчик для отмены раскраски отсканированного товара """
-
     screen = ui_models.DocDetailsScreen(hash_map, rs_settings)
     screen.disable_highlight()
+
+
+@HashMap()
+def send_post_lines_data(hash_map: HashMap):
+    """ Отправка на 1С выбранных в nosql строк post-запросом """
+    screen = ui_models.GroupScanDocDetailsScreenNew(hash_map, rs_settings)
+    screen.send_post_lines_data()
+
+
+@HashMap()
+def after_send_post_lines_data(hash_map: HashMap):
+    """ После отправки-обработки post-запроса """
+    screen = ui_models.GroupScanDocDetailsScreenNew(hash_map, rs_settings)
+    screen.after_send_data()
+
 
 @HashMap()
 def adr_docs_on_start(hash_map: HashMap):
@@ -230,6 +254,7 @@ def adr_docs_on_start(hash_map: HashMap):
 def adr_doc_on_select(hash_map: HashMap):
     screen: ui_models.AdrDocsListScreen = create_screen(hash_map)
     screen.on_input()
+
 
 @HashMap()
 def adr_doc_details_on_start(hash_map: HashMap):
@@ -323,9 +348,7 @@ def goods_on_start(hash_map):
 @HashMap()
 def goods_on_input(hash_map: HashMap):
     screen: ui_models.GoodsListScreen = ui_models.GoodsListScreen(hash_map, rs_settings)
-    # screen: ui_models.GoodsListScreen = create_screen(hash_map)
     screen.on_input()
-    # hash_map.toast(f'{hash_map.get_current_screen()} {hash_map.get_current_process()}')
 
 
 @HashMap()

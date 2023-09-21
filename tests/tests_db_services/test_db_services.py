@@ -255,10 +255,10 @@ class TestBarcodeService(unittest.TestCase):
         self.data_creator.insert_data('RS_barcodes')
         barcode_info = BarcodeParser.BarcodeInfo(
             barcode='2000000025988',
-            gtin='""',
-            serial='""'
+            gtin='',
+            serial=''
         )
-        id_doc = '"37c4c709-d22b-11e4-869d-0050568b35ac1"'
+        id_doc = '37c4c709-d22b-11e4-869d-0050568b35ac1'
 
         sut = BarcodeService()
         expect = {
@@ -275,7 +275,6 @@ class TestBarcodeService(unittest.TestCase):
             'qtty_plan': 0.0,
         }
 
-
         actual = sut.get_barcode_data(barcode_info, id_doc)
 
         self.assertEqual(expect, actual)
@@ -284,10 +283,10 @@ class TestBarcodeService(unittest.TestCase):
         self.data_creator.insert_data('RS_barcodes', 'RS_docs_table')
         barcode_info = BarcodeParser.BarcodeInfo(
             barcode='2000000025988',
-            gtin='""',
-            serial='""'
+            gtin='',
+            serial=''
         )
-        id_doc = '"37c4c709-d22b-11e4-869d-0050568b35ac1"'
+        id_doc = '37c4c709-d22b-11e4-869d-0050568b35ac1'
 
         sut = BarcodeService()
         expect = {
@@ -299,6 +298,62 @@ class TestBarcodeService(unittest.TestCase):
             'ratio': 1,
             'approved': 0,
             'use_mark': 0,
+            'row_key': 1,
+            'qtty': 1.0,
+            'qtty_plan': 5.0,
+        }
+
+        actual = sut.get_barcode_data(barcode_info, id_doc)
+
+        self.assertEqual(expect, actual)
+
+    def test_must_getting_barcode_data_ean13_with_mark(self):
+        self.data_creator.insert_data('RS_barcodes', 'RS_docs_table', 'RS_docs_barcodes')
+        barcode_info = BarcodeParser.BarcodeInfo(
+            barcode='2000000025988',
+            gtin='07623900408085',
+            serial='tEjE+7q'
+        )
+        id_doc = '37c4c709-d22b-11e4-869d-0050568b35ac1'
+
+        sut = BarcodeService()
+        expect = {
+            'id_good': '37c4c709-d22b-11e4-869d-0050568b35ac1',
+            'id_property': '',
+            'id_series': '',
+            'id_unit': '',
+            'mark_id': 3,
+            'ratio': 1,
+            'approved': '0',
+            'use_mark': 0,
+            'row_key': 1,
+            'qtty': 1.0,
+            'qtty_plan': 5.0,
+        }
+
+        actual = sut.get_barcode_data(barcode_info, id_doc)
+
+        self.assertEqual(expect, actual)
+
+    def test_must_getting_barcode_data_ean13_use_mark(self):
+        self.data_creator.insert_data('RS_barcodes', 'RS_docs_table', 'RS_goods', 'RS_types_goods')
+        barcode_info = BarcodeParser.BarcodeInfo(
+            barcode='2000000025988',
+            gtin='',
+            serial=''
+        )
+        id_doc = '37c4c709-d22b-11e4-869d-0050568b35ac1'
+
+        sut = BarcodeService()
+        expect = {
+            'id_good': '37c4c709-d22b-11e4-869d-0050568b35ac1',
+            'id_property': '',
+            'id_series': '',
+            'id_unit': '',
+            'mark_id': 0,
+            'ratio': 1,
+            'approved': 0,
+            'use_mark': 1,
             'row_key': 1,
             'qtty': 1.0,
             'qtty_plan': 5.0,
@@ -354,12 +409,14 @@ class DataCreator:
                 'sent': '0'
             },
             'RS_docs_barcodes': {
+                'id': '3',
                 'id_doc': '"37c4c709-d22b-11e4-869d-0050568b35ac1"',
                 'id_good': '"37c4c709-d22b-11e4-869d-0050568b35ac1"',
                 'id_property': '""',
                 'id_series': '""',
                 'id_unit': '""',
                 'barcode_from_scanner': '"07623900408085tEjE+7qAAAAXi6n"',
+                'approved': '0',
                 'GTIN': '"07623900408085"',
                 'Series': '"tEjE+7q"'
             },
@@ -374,6 +431,17 @@ class DataCreator:
                 'id_series': '""',
                 'id_unit': '""',
                 'ratio': '1'
+            },
+            'RS_goods': {
+                'id': '"37c4c709-d22b-11e4-869d-0050568b35ac1"',
+                'type_good': '"37c4c709-d22b-11e4-869d-0050568b35ac1"',
+                'code': '""',
+                'name': '"item_name"'
+            },
+            'RS_types_goods': {
+                'id': '"37c4c709-d22b-11e4-869d-0050568b35ac1"',
+                'name': '"type_name"',
+                'use_mark': '1'
             }
         }
 
