@@ -2209,9 +2209,6 @@ class GroupScanDocDetailsScreen(DocDetailsScreen):
 
         return not answer.error
 
-    def scan_error_sound(self):
-        super().scan_error_sound()
-
     def set_scanner_lock(self, value: bool):
         if 'urovo' in self.hash_map.get('DEVICE_MODEL').lower():
             suClass.urovo_set_lock_trigger(value)
@@ -2245,7 +2242,7 @@ class GroupScanDocDetailsScreenNew(DocDetailsScreen):
             listeners[self.listener]()
 
     def _barcode_scanned(self):
-        if self.hash_map.get("event") == "onResultPositive":
+        if self._is_result_positive(self.listener):
             barcode = self.hash_map.get('fld_barcode')
         else:
             barcode = self.hash_map.get('barcode_camera')
@@ -2253,7 +2250,8 @@ class GroupScanDocDetailsScreenNew(DocDetailsScreen):
         if not barcode:
             return
 
-        self.barcode_worker = BarcodeWorker(id_doc=self.id_doc, **self._get_barcode_process_params(),
+        self.barcode_worker = BarcodeWorker(id_doc=self.id_doc,
+                                            **self._get_barcode_process_params(),
                                             use_scanning_queue=True)
         result = self.barcode_worker.process_the_barcode(barcode)
 
@@ -2262,7 +2260,8 @@ class GroupScanDocDetailsScreenNew(DocDetailsScreen):
             return result.error
 
         if not self.hash_map.get_bool('send_document_lines_running'):
-            self.hash_map.run_event_async('send_post_lines_data', post_execute_method='after_send_post_lines_data')
+            self.hash_map.run_event_async('send_post_lines_data',
+                                          post_execute_method='after_send_post_lines_data')
             self.hash_map.put('send_document_lines_running', True)
 
     def go_back(self):
@@ -2270,7 +2269,8 @@ class GroupScanDocDetailsScreenNew(DocDetailsScreen):
 
     def send_post_lines_data(self):
         send_data = self.queue_service.get_send_document_lines(self.id_doc)
-        validated_send_data = list((dict((key, value) for key, value in d.items() if key not in ['row_key', 'sent'])
+        validated_send_data = list((dict((key, value) for key, value in d.items()
+                                         if key not in ['row_key', 'sent'])
                                     for d in send_data))
         if not validated_send_data:
             validated_send_data = [{}]
@@ -2278,16 +2278,18 @@ class GroupScanDocDetailsScreenNew(DocDetailsScreen):
         http_result = self.hs_service.send_document_lines(self.id_doc, validated_send_data)
 
         if http_result.status_code != 200:
-            self.db_service.log_error("Ошибка соединения при отправке данных группового сканирования товара.")
+            self.db_service.log_error("Ошибка соединения при отправке "
+                                      "данных группового сканирования товара.")
             return
         if not http_result.data.get('data'):
             return
 
         for element in http_result.data['data']:
-            table_line = self.db_service.get_table_line('RS_docs_table', {'id_doc': element['id_doc'],
-                                                                          'id_good': element['id_good'],
-                                                                          'id_properties': element['id_properties'],
-                                                                          'id_unit': element['id_unit']})
+            table_line = self.db_service.get_table_line('RS_docs_table', filters={
+                'id_doc': element['id_doc'],
+                'id_good': element['id_good'],
+                'id_properties': element['id_properties'],
+                'id_unit': element['id_unit']})
             if table_line:
                 table_line['qtty'] = element['qtty']
                 table_line['sent'] = 1
@@ -2302,15 +2304,16 @@ class GroupScanDocDetailsScreenNew(DocDetailsScreen):
         self.on_start()
 
     def after_send_data(self):
-        unsent_lines = self.queue_service.get_send_document_lines(self.id_doc)
-        if unsent_lines and self._check_connection():
-            self.hash_map.run_event_async('send_post_lines_data', post_execute_method='after_send_post_lines_data')
+        if self.queue_service.has_unsent_lines(self.id_doc) and self._check_connection():
+            self.hash_map.run_event_async('send_post_lines_data',
+                                          post_execute_method='after_send_post_lines_data')
 
     @staticmethod
     def create_new_table_line(element):
         new_table_line = element
         del new_table_line['table_type']
-        new_table_line.update({'d_qtty': new_table_line['qtty'], 'id_series': '', 'id_price': '', 'sent': 1,
+        new_table_line.update({'d_qtty': new_table_line['qtty'],
+                               'id_series': '', 'id_price': '', 'sent': 1,
                                'qtty_plan': None})
         return new_table_line
 

@@ -103,3 +103,7 @@ class ScanningQueueService:
         doc_id_list = [x.doc_id for x in sent_data]
         self.provider.table.update({'sent': sent}, doc_ids=doc_id_list)
 
+    def has_unsent_lines(self, id_doc) -> bool:
+        qtty = self.provider.count(id_doc=id_doc, sent=False)
+        return True if qtty > 0 else False
+
