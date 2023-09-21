@@ -52,9 +52,18 @@ class Screen(ABC):
     def on_post_start(self):
         pass
 
-    @abstractmethod
     def show(self, args=None):
-        pass
+        self._validate_screen_values()
+        self.hash_map.show_screen(self.screen_name, args)
+
+    def show_process_result(self, args=None):
+        self._validate_screen_values()
+        self.hash_map.show_process_result(self.process_name, self.screen_name, args)
+
+    def _clear_screen_values(self):
+        for key in self.screen_values:
+            self.hash_map.remove(key)
+
 
     def toast(self, text):
         self.hash_map.toast(text)
@@ -5885,6 +5894,92 @@ class SeriesAdrItem(SeriesAdrList):
                   'cell': self.hash_map['cell']
                   }
         self.service.save_table_str(params)
+
+# ==================== SelectItemScreen =============================
+
+class SelectItemScreen(Screen):
+    process_name = 'SelectItemProcess'
+    screen_name = 'SelectItemScreen'
+    def __init__(self, hash_map: HashMap, rs_settings):
+        super().__init__(hash_map, rs_settings)
+        self.screen_values = {
+            'table_name': hash_map['table_name'],
+            'fields': hash_map.get_json('fields'),
+            'result_listener': hash_map['result_listener'] or 'select_success',
+        }
+        self.return_value_key = 'selected_card'
+        self.db_service = db_services.SelectItemService(self.screen_values['table_name'])
+
+    def on_start(self):
+        if self.screen_values.get('table_name'):
+            cards_data = self.db_service.get_select_data()
+            cards = self._get_cards(cards_data)
+
+            self.hash_map['cards_data'] = cards.to_json()
+            self.hash_map['return_selected_data'] = ''
+
+    def on_input(self):
+        listeners = {
+            'CardsClick': self._cards_click,
+            'ON_BACK_PRESSED': self._finish_process,
+        }
+        if self.listener in listeners:
+            listeners[self.listener]()
+
+        self.hash_map.no_refresh()
+
+    def show(self, args=None):
+        self.show_process_result()
+        self.hash_map['SetResultListener'] = self.screen_values['result_listener']
+
+    def on_post_start(self):
+        pass
+
+    def _get_cards(self, cards_data):
+        card_title_text_size = self.rs_settings.get('CardTitleTextSize')
+        card_text_size = self.rs_settings.get('CardTextSize')
+
+        fields_views = []
+        for field in self.screen_values['fields']:
+            fields_views.append(
+                widgets.LinearLayout(
+                    widgets.TextView(
+                        Value=f'@{field}',
+                        width='match_parent',
+                        gravity_horizontal='center',
+                        TextSize=card_title_text_size,
+                        TextColor='#000000',
+                    ),
+                    orientation='horizontal',
+                    width='match_parent',
+                )
+            )
+
+        cards = widgets.CustomCards(
+            widgets.LinearLayout(
+                widgets.LinearLayout(
+                    *fields_views,
+                    orientation='vertical',
+                    width='match_parent',
+                )
+            ),
+            options=widgets.Options().options,
+            cardsdata=cards_data
+        )
+        return cards
+
+    def _cards_click(self):
+        self.hash_map[self.return_value_key] = self.hash_map['selected_card_data']
+        self._finish_process()
+
+    def _finish_process(self):
+        self._clear_screen_values()
+        self.hash_map.remove('return_selected_data')
+        self.hash_map.remove('selected_card_data')
+        self.hash_map.remove('cards_data')
+        self.hash_map.put('FinishProcessResult')
+
+# ^^^^^^^^^^^^^^^^^^^^^ SelectItemScreen ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 # ^^^^^^^^^^^^^^^^^^^^^ Series ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
