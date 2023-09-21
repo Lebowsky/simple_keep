@@ -20,6 +20,7 @@ class HashMap:
     """
 
     def __init__(self, hash_map=None, debug: bool = False):
+        self.listener = None
         self.hash_map = hash_map
         self.debug_mode = debug
 
@@ -41,9 +42,20 @@ class HashMap:
     def finish_process_result(self):
         self.hash_map.put('FinishProcessResult', '')
 
-    def show_process_result(self, process, screen):
+    @property
+    def listener(self):
+        return self['listener']
+
+    @listener.setter
+    def listener(self, v):
+        pass
+
+    def show_process_result(self, process, screen, data: dict):
         if process and screen:
             self.hash_map.put('ShowProcessResult', f'{process}|{screen}')
+
+            if data:
+                self.put_data(data)
 
     def set_result_listener(self, listener):
         if listener and isinstance(listener, str):
@@ -331,6 +343,12 @@ class HashMap:
             {"query": query, 'params': params},
             to_json=True
         )
+
+    def back_screen(self):
+        self['BackScreen'] = ''
+
+    def no_refresh(self):
+        self['NoRefresh'] = ''
 
 
 class RsDoc(Rs_doc):
