@@ -35,6 +35,8 @@ def create_screen(hash_map: HashMap):
     return current_screen
 
 
+
+
 # =============== Main events =================
 
 
@@ -178,9 +180,15 @@ def docs_on_select(hash_map: HashMap):
     screen.on_input()
 
 
+
+# @HashMap()
+# def doc_details_on_start(hash_map: HashMap):
+#     screen: ui_models.GroupScanDocDetailsScreen = create_screen(hash_map)
+#     screen.on_start()
+
 @HashMap()
 def doc_details_on_start(hash_map: HashMap):
-    screen: ui_models.GroupScanDocDetailsScreen = create_screen(hash_map)
+    screen: ui_models.GroupScanDocDetailsScreenNew = create_screen(hash_map)
     screen.on_start()
 
 
@@ -189,12 +197,14 @@ def doc_details_listener(hash_map: HashMap):
     screen = create_screen(hash_map)
     screen.on_input()
 
+
 @HashMap()
 def doc_details_before_process_barcode(hash_map):
     """ Обработчик для синхронного запроса и обновления данных после сканирования и перед обработкой ШК"""
 
     screen = ui_models.GroupScanDocDetailsScreen(hash_map, rs_settings)
     screen.before_process_barcode()
+
 
 @HashMap()
 def doc_run_post_barcode_scanned(hash_map):
@@ -204,6 +214,7 @@ def doc_run_post_barcode_scanned(hash_map):
     screen.hash_map.remove('toast')
     screen.post_barcode_scanned()
 
+
 @HashMap()
 def doc_scan_error_sound(hash_map):
     """ Звуковые сигналы ошибок сканирования"""
@@ -211,12 +222,27 @@ def doc_scan_error_sound(hash_map):
     screen = ui_models.GroupScanDocDetailsScreen(hash_map, rs_settings)
     screen.scan_error_sound()
 
+
 @HashMap()
 def highlight_scanned_item(hash_map: HashMap):
     """ Обработчик для отмены раскраски отсканированного товара """
-
     screen = ui_models.DocDetailsScreen(hash_map, rs_settings)
     screen.disable_highlight()
+
+
+@HashMap()
+def send_post_lines_data(hash_map: HashMap):
+    """ Отправка на 1С выбранных в nosql строк post-запросом """
+    screen = ui_models.GroupScanDocDetailsScreenNew(hash_map, rs_settings)
+    screen.send_post_lines_data()
+
+
+@HashMap()
+def after_send_post_lines_data(hash_map: HashMap):
+    """ После отправки-обработки post-запроса """
+    screen = ui_models.GroupScanDocDetailsScreenNew(hash_map, rs_settings)
+    screen.after_send_data()
+
 
 @HashMap()
 def adr_docs_on_start(hash_map: HashMap):
@@ -228,6 +254,7 @@ def adr_docs_on_start(hash_map: HashMap):
 def adr_doc_on_select(hash_map: HashMap):
     screen: ui_models.AdrDocsListScreen = create_screen(hash_map)
     screen.on_input()
+
 
 @HashMap()
 def adr_doc_details_on_start(hash_map: HashMap):
@@ -302,9 +329,25 @@ def doc_units_on_input(hash_map):
     screen = ui_models.DocGoodSelectUnit(hash_map, rs_settings)
     screen.on_input()
 
+@HashMap()
+def barcode_error_screen_listener(hash_map: HashMap):
+    if hash_map['listener'] in ['ON_BACK_PRESSED', 'btn_continue_scan']:
+        hash_map.show_screen("Документ товары")
 
 
 # ^^^^^^^^^^^^^^^^^ Documents ^^^^^^^^^^^^^^^^^
+
+@HashMap()
+def select_item_on_start(hash_map: HashMap):
+    ui_models.SelectItemScreen(hash_map, rs_settings).on_start()
+
+@HashMap()
+def select_item_on_input(hash_map: HashMap):
+    ui_models.SelectItemScreen(hash_map, rs_settings).on_input()
+
+@HashMap()
+def select_item_result(hash_map: HashMap):
+    hash_map.toast('select_item_result')
 
 # =============== Goods =================
 
@@ -317,9 +360,7 @@ def goods_on_start(hash_map):
 @HashMap()
 def goods_on_input(hash_map: HashMap):
     screen: ui_models.GoodsListScreen = ui_models.GoodsListScreen(hash_map, rs_settings)
-    # screen: ui_models.GoodsListScreen = create_screen(hash_map)
     screen.on_input()
-    # hash_map.toast(f'{hash_map.get_current_screen()} {hash_map.get_current_process()}')
 
 
 @HashMap()
@@ -584,12 +625,12 @@ def documents_settings_on_input(hash_map):
     screen = ui_models.DocumentsSettings(hash_map, rs_settings)
     screen.on_input()
 
-
 @HashMap()
 def documents_settings_on_start(hash_map):
     """Процесс: Параметры. Экран: Настройки документов"""
     screen = ui_models.DocumentsSettings(hash_map, rs_settings)
     screen.on_start()
+
 # ^^^^^^^^^^^^^^^^^ Settings ^^^^^^^^^^^^^^^^^
 
 # =============== Html =================
@@ -629,16 +670,6 @@ def file_browser_on_start(hash_map):
 def file_browser_on_input(hash_map):
     screen: ui_models.SimpleFileBrowser = ui_models.SimpleFileBrowser(hash_map, rs_settings)
     screen.on_input()
-
-# =============== UniversalCards =================
-
-@HashMap()
-def universal_cards_on_start(hash_map):
-    screen = ui_models.UniversalCardsScreen(hash_map=hash_map, rs_settings=rs_settings)
-    screen.on_start()
-
-
-# ^^^^^^^^^^^^^^^^^ UniversalCards ^^^^^^^^^^^^^^^^^
 
 
 # =============== Debug =================
