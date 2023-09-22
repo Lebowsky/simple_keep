@@ -3313,6 +3313,18 @@
                                 "type": "MenuItem",
                                 "Value": "Ввести штрихкод",
                                 "Variable": "btn_barcodes"
+                            },
+                            {
+                                "type": "MenuItem",
+                                "Value": "Cинхронизировать данные с 1С",
+                                "Variable": "sync_doc",
+                                "style_name": ""
+                            },
+                            {
+                                "type": "MenuItem",
+                                "Value": "Отправить все сканы на 1С",
+                                "Variable": "send_all_scan_lines",
+                                "style_name": ""
                             }
                         ],
                         "Handlers": [
@@ -9291,21 +9303,6 @@
                 "method": "beep",
                 "postExecute": "",
                 "alias": ""
-            }
-        ],
-        "RecognitionTemplates": [
-            {
-                "name": "Артикул",
-                "TypeRecognition": "Text",
-                "NumberRecognition": false,
-                "DateRecognition": false,
-                "PlateNumberRecognition": false,
-                "mesure_qty": "1",
-                "min_freq": "1",
-                "min_length": "3",
-                "max_length": "20",
-                "values_list": "@list_art",
-                "result_var": "good_id"
             }
         ]
     }

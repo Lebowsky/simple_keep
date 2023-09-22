@@ -2236,7 +2236,8 @@ class GroupScanDocDetailsScreenNew(DocDetailsScreen):
         listeners = {
             'barcode': self._barcode_scanned,
             'ON_BACK_PRESSED': self.go_back,
-            'sync_doc': self._sync_doc
+            'sync_doc': self._sync_doc,
+            'send_all_scan_lines': self.send_all_scan_lines_call_handler
         }
         if self.listener in listeners:
             listeners[self.listener]()
@@ -2267,15 +2268,15 @@ class GroupScanDocDetailsScreenNew(DocDetailsScreen):
     def go_back(self):
         self.hash_map.show_screen('Документы')
 
-    def send_post_lines_data(self):
-        send_data = self.queue_service.get_send_document_lines(self.id_doc)
+    def send_post_lines_data(self, sent=False):
+        send_data = self.queue_service.get_document_lines(self.id_doc, sent=sent)
         validated_send_data = list((dict((key, value) for key, value in d.items()
                                          if key not in ['row_key', 'sent'])
                                     for d in send_data))
         if not validated_send_data:
             validated_send_data = [{}]
 
-        http_result = self.hs_service.send_document_lines(self.id_doc, validated_send_data)
+        http_result = self.hs_service.send_document_lines(self.id_doc, validated_send_data, timeout=8)
 
         if http_result.status_code != 200:
             self.db_service.log_error("Ошибка соединения при отправке "
@@ -2438,6 +2439,18 @@ class GroupScanDocDetailsScreenNew(DocDetailsScreen):
             self.hash_map.run_event_progress('send_post_lines_data')
         else:
             self.toast('Нет соединения с сервером 1С')
+
+    def send_all_scan_lines_call_handler(self):
+        if self._check_connection():
+            self.hash_map.run_event_progress('send_all_scan_lines')
+        else:
+            self.toast('Нет соединения с сервером 1С')
+
+    def send_all_scan_lines_run(self):
+        self.send_post_lines_data()
+
+    def send_unsent_lines_run(self):
+        self.send_post_lines_data(sent=False)
 
 
 class DocumentsDocDetailScreen(DocDetailsScreen):
@@ -2639,6 +2652,7 @@ class DocumentsDocDetailScreen(DocDetailsScreen):
 
     def _get_doc_barcode_data(self, args):
         return self.service.get_doc_barcode_data(args)
+
 
 class AdrDocDetailsScreen(DocDetailsScreen):
     screen_name = 'Документ товары'
@@ -3119,7 +3133,6 @@ class AdrDocDetailsScreen(DocDetailsScreen):
         # self.hash_map.show_process_result(SeriesList.process_name, SeriesList.screen_name)
         self.hash_map['back_screen'] = self.hash_map.get_current_screen()
         self.hash_map.show_screen(SeriesAdrList.screen_name)
-
 
 
 class FlowDocDetailsScreen(DocDetailsScreen):
