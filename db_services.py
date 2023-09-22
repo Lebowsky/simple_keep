@@ -894,6 +894,10 @@ class DocService:
 
         return result    
 
+    def mark_verified(self, value=1):
+        self.provider.table_name = self.docs_table_name
+        self.provider.update({'verified': value}, {'id_doc': self.doc_id})
+
 class SeriesService(DbService):
     doc_basic_table_name = 'RS_docs_table'
     doc_basic_handler_name = 'RS_docs'
@@ -1291,8 +1295,16 @@ class AdrDocService(DocService):
     def get_current_cell(self):
         pass
 
-    def get_doc_details_data(self, first_elem, items_on_page, row_filters=None, search_string=None, id_doc='',
-                             curCell='', ) -> list:
+    def get_doc_details_data(
+            self,
+            first_elem,
+            items_on_page,
+            row_filters=None,
+            search_string=None,
+            id_doc='',
+            cell=''
+    ) -> list:
+
         select_query = '''SELECT
             RS_adr_docs_table.id,
             RS_adr_docs_table.id_doc,
@@ -1330,7 +1342,7 @@ class AdrDocService(DocService):
 
         basic_where = f"""WHERE id_doc = :id_doc and table_type = :table_type"""
 
-        cur_cell_condition = '''and (id_cell=:current_cell OR id_cell="" OR id_cell is Null)''' if curCell else ''
+        cur_cell_condition = '''and (id_cell=:current_cell OR id_cell="" OR id_cell is Null)''' if cell else ''
         row_filters_condition = """AND qtty != COALESCE(qtty_plan, '0') """ if row_filters else ''
         search_string_condition = f"""AND good_name LIKE '%{search_string}%'""" if search_string else ''
 
@@ -1344,14 +1356,18 @@ class AdrDocService(DocService):
         order_by = f"""ORDER BY RS_cells.name, RS_adr_docs_table.last_updated DESC"""
         limit = f'LIMIT {items_on_page} OFFSET {first_elem}'
         query_text = f"{select_query} {where_full} {order_by} {limit}"
-        # self.table_type = 'out'  #****** ОТЛАДОЧНОЕ
+
         params_dict = {'id_doc': id_doc, 'NullValue': None, 'EmptyString': '', 'table_type': self.table_type}
-        if curCell:
-            params_dict['current_cell'] = curCell
+        if cell:
+            params_dict['current_cell'] = cell
         res = self._get_query_result(query_text, params_dict, return_dict=True)
         return res
 
     def clear_barcode_data(self, id_doc):
+        _filter = {'id_doc': id_doc}
+        self.provider.table_name = 'RS_docs_series'
+        self.provider.delete(_filter=_filter)
+
         query_text = ('Update RS_adr_docs_table Set qtty = 0 Where id_doc=:id_doc',
                       'Delete From RS_adr_docs_table Where id_doc=:id_doc and is_plan = "False"')
         try:
@@ -1405,6 +1421,13 @@ class AdrDocService(DocService):
 
         return data
 
+    def find_cell(self, barcode):
+        # TODO не учитывается вариант с одинаковыми ШК серий
+        self.provider.table_name = 'RS_cells'
+        res = self.provider.select({'barcode': barcode})
+
+        if res:
+            return res[0]
 
 class FlowDocService(DocService):
 
