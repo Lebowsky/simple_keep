@@ -403,7 +403,7 @@ class DocService:
             LEFT JOIN RS_countragents as RS_countragents
                 ON RS_countragents.id = {self.docs_table_name}.id_countragents
                 '''
-
+        joins += f'''LEFT JOIN RS_barc_flow ON {self.docs_table_name}.id_doc = RS_barc_flow.id_doc'''
         where = ''
 
         if doc_status:
@@ -422,14 +422,15 @@ class DocService:
                 where = 'WHERE doc_type=?'
             else:
                 where += ' AND doc_type=?'
-
+        
+        where += '''AND RS_barc_flow.id_doc IS NULL'''
+        
         query_text = f'''
             {query_text}
             {joins}
             {where}
             ORDER BY {self.docs_table_name}.doc_date
         '''
-
         result = self._get_query_result(query_text, args_tuple, return_dict=True)
         return result
 

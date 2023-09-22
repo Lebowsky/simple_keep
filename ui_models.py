@@ -2411,8 +2411,14 @@ class DocumentsDocDetailScreen(DocDetailsScreen):
             if current_elem_filter:
                 current_elem = current_elem_filter[0]
 
-            current_str = self.hash_map["selected_card_position"]
-            table_lines_qtty = self.hash_map['table_lines_qtty']
+            doc_rows = self.service.get_doc_rows_count(self.id_doc)['doc_rows']
+            doc_data = self.service.get_doc_details_data(self.id_doc, 0, doc_rows)
+            doc_data.insert(0, {})
+            current_element = self.hash_map.get_json('selected_card_data')
+            doc_position = self._find_matching_good(doc_data, current_element['id_good'], 
+                                                            current_element['id_properties'], 
+                                                            current_element['id_unit'])
+            self.hash_map.put('doc_data', doc_data, to_json=True)
 
             # текущий элемент не найден или это заголовок таблицы
             if current_elem is None or 'good_name' not in current_elem:
@@ -2437,13 +2443,15 @@ class DocumentsDocDetailScreen(DocDetailsScreen):
                 'good_property': current_elem['properties_name'],
                 'good_price': current_elem['price'],
                 'good_unit': current_elem['units_name'],
-                'good_str': f'{current_str} / {table_lines_qtty}',
+                'good_str': f'{doc_position} / {doc_rows}',
                 'qtty_plan': current_elem['qtty_plan'],
                 'good_plan': current_elem['qtty_plan'],
                 'key': current_elem['key'],
                 'price': current_elem['price'],
                 'price_type': current_elem['price_name'],
                 'qtty': current_elem['qtty'] if current_elem['qtty'] and float(current_elem['qtty']) != 0 else '',
+                'selected_card_position': doc_position,
+                'doc_rows': doc_rows
             }
             self._fill_none_values(
                 put_data,
@@ -2477,6 +2485,8 @@ class DocumentsDocDetailScreen(DocDetailsScreen):
                 cards['customcards']['cardsdata'].append(row)
 
             self.hash_map.put('barcode_cards', cards, to_json=True)
+            self.hash_map['Show_btn_next_good'] = '1'
+            self.hash_map['Show_btn_previous_good'] = '1'
             self.hash_map.show_screen("Товар выбор")
 
         elif listener == 'barcode' or self._is_result_positive('ВвестиШтрихкод'):
@@ -2585,6 +2595,17 @@ class DocumentsDocDetailScreen(DocDetailsScreen):
     def _get_doc_barcode_data(self, args):
         return self.service.get_doc_barcode_data(args)
 
+    def _match_record(self, record, id_good, id_property, id_unit):
+        return (record['id_good'] == id_good and
+                record['id_properties'] == id_property and
+                record['id_unit'] == id_unit)
+
+    def _find_matching_good(self, table_data, id_good, id_property, id_unit):
+        for i, record in enumerate(table_data[1:], start=1):
+            if self._match_record(record, id_good, id_property, id_unit):
+                return i
+        return None
+    
 class AdrDocDetailsScreen(DocDetailsScreen):
     screen_name = 'Документ товары'
     process_name = 'Адресное хранение'
@@ -3477,6 +3498,8 @@ class BaseGoodSelect(Screen):
             self._save_new_delta()
             self._set_delta(reset=True)
             self.hash_map.put('new_qtty', '')
+            self.hash_map.put('selected_card_position', '')
+            self.hash_map.put('items_on_page')
             self.hash_map.show_screen("Документ товары")
         elif listener == 'btn_print':
             self.print_ticket()
@@ -3499,14 +3522,14 @@ class BaseGoodSelect(Screen):
         pass
     
     def _handle_btn_ok(self):
-        if int(self.hash_map.get('new_qtty')) < 0:
+        if float(self.hash_map.get('new_qtty')) < 0:
             self.hash_map.toast('Итоговое количество меньше 0')
             self.hash_map.playsound('error')
             self._set_delta(reset=True)
             return
         control = self.hash_map.get_bool('control')
         if control:
-            if int(self.hash_map.get('new_qtty')) > int(self.hash_map.get('qtty_plan')):
+            if float(self.hash_map.get('new_qtty')) > float(self.hash_map.get('qtty_plan')):
                 self.toast('Количество план в документе превышено')
                 self.hash_map.playsound('error')
                 self._set_delta(reset=True)
@@ -3524,7 +3547,7 @@ class BaseGoodSelect(Screen):
         self.hash_map.put('new_qtty', '')
 
     def _handle_choice_by_article(self, current_elem, qtty):
-        if int(qtty) == int(current_elem['qtty']):
+        if float(qtty) == float(current_elem['qtty']):
             self.hash_map.show_screen("ВыборТовараАртикул")
             return
         finded_goods_cards = self.hash_map.get('finded_goods_cards', from_json=True)
@@ -3536,7 +3559,7 @@ class BaseGoodSelect(Screen):
         self.hash_map.show_screen("ВыборТовараАртикул")
 
     def _handle_choice_by_other(self, current_elem, qtty):
-        if int(qtty) != int(current_elem['qtty']):
+        if float(qtty) != float(current_elem['qtty']):
             update_data = {
                 'sent': 0,
                 'qtty': float(qtty) if qtty else 0,
@@ -3548,10 +3571,10 @@ class BaseGoodSelect(Screen):
         
     def _validate_delta_input(self):
         try:
-            int(self.hash_map.get('delta'))
+            float(self.hash_map.get('delta'))
             return True
         except:
-            self.toast('Введенное значение не является целым числом')
+            self.toast('Введенное значение не является валидным числом')
             self.hash_map.playsound('error')
             self._set_delta(reset=True)
 
@@ -3601,11 +3624,11 @@ class BaseGoodSelect(Screen):
                 return
         
         current_elem = self._get_current_elem()
-            
         qtty = new_qtty
         # price = self.hash_map.get('price') or 0  # это не используется
 
         if self.hash_map.get('parent_screen') == 'ВыборТовараАртикул':
+            current_elem = self.hash_map.get_json('selected_card_data')
             if qtty == float(current_elem['qtty']) if current_elem['qtty'] else 0:
                 self.hash_map.show_screen("ВыборТовараАртикул")
                 return
@@ -3658,13 +3681,21 @@ class BaseGoodSelect(Screen):
             delta_field = widgets.ModernField(default_text='', input_type=3)
             self.hash_map.put('new_qtty', self.hash_map.get('qtty'))
         else:
-            delta = int(self.hash_map.get('delta')) + value if self.hash_map.get('delta') else value
+            delta = float(self.hash_map.get('delta')) + value if self.hash_map.get('delta') else value
+            delta = self._format_quantity(delta)
             delta_field = widgets.ModernField(default_text=delta, input_type=3)
             self._set_result_qtty(delta)
         self.hash_map.put('delta', delta_field.to_json())
 
+    def _format_quantity(self, qtty):
+        if qtty % 1 == 0:
+            return int(qtty)
+        else:
+            return qtty
+
     def _set_result_qtty(self, delta):
-        new_qtty = str(int(self.hash_map.get('qtty')) + delta)
+        new_qtty = float(self.hash_map.get('qtty')) + delta
+        new_qtty = str(self._format_quantity(new_qtty))
         self.hash_map.put('new_qtty', new_qtty)
 
     def print_ticket(self):
@@ -3711,20 +3742,7 @@ class GoodsSelectScreen(BaseGoodSelect):
     def on_start(self):
         super().on_start()
         
-        doc_rows = self.service.get_doc_rows_count(self.id_doc)['doc_rows']
-        doc_data = self.service.get_doc_details_data(self.id_doc, 0, doc_rows)
-        doc_data.insert(0, {})
-        self.hash_map.put('doc_rows', doc_rows)    
-        self.hash_map.put('doc_data', doc_data, to_json=True)
-
-        current_str = int(self.hash_map.get('selected_card_position'))
-        current_page = int(self.hash_map.get('current_page'))
-        items_on_page = int(self.hash_map.get('items_on_page'))
-        doc_position = (current_page - 1) * items_on_page + current_str
-        self.hash_map.put('good_str', f'{doc_position} / {doc_rows}')
-        self.hash_map.put('selected_card_position', doc_position)
-
-    def on_input(self):
+    def on_input(self):    
         super().on_input()
 
         listener = self.listener
@@ -3751,25 +3769,21 @@ class GoodsSelectScreen(BaseGoodSelect):
         return current_elem
 
     def _goods_selector(self, action, index = None):
-        selected_card_position = int(self.hash_map.get('selected_card_position'))
-        table_lines_qtty = int(self.hash_map.get('doc_rows'))
-        table_data = self.hash_map.get('doc_data', from_json=True)
+        
+        global_position = int(self.hash_map.get('selected_card_position'))
+
+        doc_rows = int(self.hash_map.get('doc_rows'))
+        doc_data = self.hash_map.get('doc_data', from_json=True)
         
         if action == 'next':
-            if selected_card_position != table_lines_qtty:
-                pos = selected_card_position + 1
-            else:
-                pos = selected_card_position + 1 - table_lines_qtty
+            pos = global_position + 1 if global_position < doc_rows else 1
         elif action == 'previous':
-            if selected_card_position != 1:
-                pos = selected_card_position - 1
-            else:
-                pos = selected_card_position + table_lines_qtty - 1
+            pos = global_position - 1 if global_position > 1 else doc_rows
         elif action == 'index' and index:
             pos = index
 
         current_str = pos
-        current_elem = table_data[pos]
+        current_elem = doc_data[pos]
 
         # текущий элемент не найден или это заголовок таблицы
         if current_elem is None or 'good_name' not in current_elem:
@@ -3785,7 +3799,7 @@ class GoodsSelectScreen(BaseGoodSelect):
             'good_property': current_elem['properties_name'],
             'good_price': current_elem['price'] if 'price' in current_elem else '',
             'good_unit': current_elem['units_name'],
-            'good_str': f'{current_str} / {table_lines_qtty}',
+            'good_str': f'{current_str} / {doc_rows}',
             'qtty_plan': self._format_quantity(current_elem['qtty_plan']) if current_elem['qtty_plan'] else 0,
             'good_plan': current_elem['qtty_plan'],
             'key': current_elem['id'],
@@ -3803,6 +3817,7 @@ class GoodsSelectScreen(BaseGoodSelect):
         self._save_new_delta()
         self.hash_map.put("selected_card_position", current_str)
         self.hash_map.put_data(put_data)
+        self._set_delta(reset=True)
 
     def _handle_found_barcode(self, res, id_good, id_property, id_unit):
         id_good_br, id_property_br, id_unit_br, ratio = res['id_good'], res['id_property'], res['id_unit'], int(res['ratio'])
@@ -3821,12 +3836,6 @@ class GoodsSelectScreen(BaseGoodSelect):
                 return True
 
         return False
-
-    def _format_quantity(self, qtty):
-        if qtty % 1 == 0:
-            return int(qtty)
-        else:
-            return qtty
     
 class AdrGoodsSelectScreen(BaseGoodSelect):
     def __init__(self, hash_map: HashMap, rs_settings):
@@ -3963,27 +3972,35 @@ class GoodsSelectArticle(Screen):
                 self.hash_map.delete('finded_goods_cards')
                 self.hash_map.show_screen('Документ товары')
                 return
-            current_element = json.loads(self.hash_map.get('selected_card_data'))
-            selected_card_position = self.hash_map["selected_card_position"]
-            table_lines_qtty = self.hash_map['table_lines_qtty']
+            doc_rows = self.service.get_doc_rows_count(self.id_doc)['doc_rows']
+            doc_data = self.service.get_doc_details_data(self.id_doc, 0, doc_rows)
+            doc_data.insert(0, {})
+            current_element = self.hash_map.get_json('selected_card_data')
+            doc_position = self._find_matching_good(doc_data, current_element['id_good'], 
+                                                            current_element['id_property'], 
+                                                            current_element['unit'])
+            self.hash_map.put('doc_data', doc_data, to_json=True)
+            self.hash_map['Show_btn_next_good'] = '-1'
+            self.hash_map['Show_btn_previous_good'] = '-1'
             put_data = {
                 'Doc_data': f'{self.hash_map["doc_type"]} № {self.hash_map["doc_n"]} от {self.hash_map["doc_date"]}',
                 'Good': current_element['name'],
                 'id_good': current_element['id_good'],
-                'id_unit': current_element['id_unit'],
-                'id_property': current_element['id_properties'],
+                'id_unit': current_element['unit'],
+                'id_property': current_element['id_property'],
                 'good_art': current_element['art'],
                 'good_sn': current_element['series_name'],
                 'good_property': current_element['property_name'],
                 'good_price': current_element['price'],
                 'good_unit': current_element['units_name'],
-                'good_str': f'{selected_card_position} / {table_lines_qtty}',
+                'good_str': f'{doc_position} / {doc_rows}',
                 'qtty_plan': current_element['qtty_plan'],
                 'good_plan': current_element['qtty_plan'],
                 'key': current_element['key'],
                 'price': current_element['price'],
                 'price_type': current_element['price_name'],
                 'qtty': current_element['qtty'] if current_element['qtty'] and float(current_element['qtty']) != 0 else '',
+                'selected_card_position': doc_position,
             }
             self.hash_map.put_data(put_data)
             self.hash_map.show_screen("Товар выбор")
@@ -4108,9 +4125,10 @@ class GoodsSelectArticle(Screen):
 
     def _get_goods_list_data(self, goods_list: List[Dict]) -> List[Dict]:
         cards_data = []
-
         for record in goods_list:
             single_card_data = {
+                'id_good': record['id_good'],
+                'id_property': record['id_property'],
                 'key': record['doc_table_id'],
                 'code': record.get('code', '—'),
                 'name': record['name'],
@@ -4139,6 +4157,17 @@ class GoodsSelectArticle(Screen):
         self.service.update_doc_table_row(data=update_data, row_id=row_id)
         self.service.set_doc_status_to_upload(self.hash_map.get('id_doc'))
 
+    def _match_record(self, record, id_good, id_property, id_unit):
+        return (record['id_good'] == id_good and
+                record['id_properties'] == id_property and
+                record['id_unit'] == id_unit)
+
+    def _find_matching_good(self, table_data, id_good, id_property, id_unit):
+        for i, record in enumerate(table_data[1:], start=1):
+            if self._match_record(record, id_good, id_property, id_unit):
+                return i
+        return None
+    
 # ^^^^^^^^^^^^^^^^^^^^^ Goods select ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 

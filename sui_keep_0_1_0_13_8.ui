@@ -511,7 +511,7 @@
                                                         "orientation": "horizontal",
                                                         "height": "wrap_content",
                                                         "width": "match_parent",
-                                                        "weight": "7",
+                                                        "weight": "6",
                                                         "Elements": [
                                                             {
                                                                 "Value": "@good_str",
@@ -522,7 +522,10 @@
                                                                 "TextColor": "#000000",
                                                                 "type": "TextView"
                                                             }
-                                                        ]
+                                                        ],
+                                                        "BackgroundColor": "",
+                                                        "StrokeWidth": "",
+                                                        "Padding": ""
                                                     }
                                                 ]
                                             },
@@ -650,80 +653,47 @@
                                     {
                                         "type": "LinearLayout",
                                         "Variable": "",
-                                        "orientation": "",
+                                        "orientation": "horizontal",
                                         "height": "wrap_content",
                                         "width": "match_parent",
                                         "weight": "0",
                                         "Elements": [
                                             {
-                                                "type": "LinearLayout",
-                                                "Variable": "",
-                                                "orientation": "vertical",
+                                                "Value": "<",
+                                                "Variable": "btn_previous_good",
                                                 "height": "wrap_content",
-                                                "width": "match_parent",
-                                                "weight": "2",
-                                                "Elements": [
-                                                    {
-                                                        "Value": "<",
-                                                        "Variable": "btn_previous_good",
-                                                        "height": "wrap_content",
-                                                        "width": "match_parent",
-                                                        "weight": "0",
-                                                        "TextBold": true,
-                                                        "TextItalic": false,
-                                                        "TextSize": "21",
-                                                        "type": "Button"
-                                                    }
-                                                ]
-                                            },
-                                            {
-                                                "type": "LinearLayout",
-                                                "Variable": "",
-                                                "orientation": "horizontal",
-                                                "height": "wrap_content",
-                                                "width": "match_parent",
+                                                "width": "wrap_content",
                                                 "weight": "1",
-                                                "Elements": [
-                                                    {
-                                                        "Value": "@Good",
-                                                        "Variable": "",
-                                                        "height": "wrap_content",
-                                                        "width": "wrap_content",
-                                                        "weight": "0",
-                                                        "TextBold": true,
-                                                        "TextItalic": false,
-                                                        "TextSize": "24",
-                                                        "TextColor": "#7A005C",
-                                                        "type": "TextView"
-                                                    }
-                                                ],
-                                                "BackgroundColor": "",
-                                                "StrokeWidth": "",
-                                                "Padding": ""
+                                                "TextBold": true,
+                                                "TextItalic": false,
+                                                "TextSize": "21",
+                                                "type": "Button"
                                             },
                                             {
-                                                "type": "LinearLayout",
+                                                "Value": "@Good",
                                                 "Variable": "",
-                                                "orientation": "",
                                                 "height": "wrap_content",
                                                 "width": "match_parent",
-                                                "weight": "2",
-                                                "Elements": [
-                                                    {
-                                                        "Value": ">",
-                                                        "Variable": "btn_next_good",
-                                                        "height": "wrap_content",
-                                                        "width": "match_parent",
-                                                        "weight": "0",
-                                                        "TextBold": true,
-                                                        "TextItalic": false,
-                                                        "TextSize": "21",
-                                                        "type": "Button"
-                                                    }
-                                                ],
-                                                "BackgroundColor": "",
-                                                "StrokeWidth": "",
-                                                "Padding": ""
+                                                "orientation": "",
+                                                "weight": "5",
+                                                "TextBold": true,
+                                                "TextItalic": false,
+                                                "TextSize": "24",
+                                                "TextColor": "#7A005C",
+                                                "type": "TextView"
+                                            },
+                                            {
+                                                "Value": ">",
+                                                "Variable": "btn_next_good",
+                                                "height": "wrap_content",
+                                                "width": "wrap_content",
+                                                "orientation": "",
+                                                "weight": "1",
+                                                "TextBold": true,
+                                                "TextItalic": false,
+                                                "TextSize": "21",
+                                                "TextColor": "",
+                                                "type": "Button"
                                             }
                                         ],
                                         "BackgroundColor": "",
@@ -892,7 +862,7 @@
                                                                 "orientation": "vertical",
                                                                 "height": "wrap_content",
                                                                 "width": "match_parent",
-                                                                "weight": "2",
+                                                                "weight": "4",
                                                                 "Elements": [
                                                                     {
                                                                         "Value": "",
@@ -949,7 +919,7 @@
                                                                 "orientation": "",
                                                                 "height": "wrap_content",
                                                                 "width": "match_parent",
-                                                                "weight": "2",
+                                                                "weight": "4",
                                                                 "Elements": [
                                                                     {
                                                                         "Value": "",
@@ -971,7 +941,10 @@
                                                         "StrokeWidth": "",
                                                         "Padding": "center"
                                                     }
-                                                ]
+                                                ],
+                                                "BackgroundColor": "",
+                                                "StrokeWidth": "",
+                                                "Padding": ""
                                             },
                                             {
                                                 "type": "LinearLayout",
@@ -1004,7 +977,10 @@
                                                     }
                                                 ]
                                             }
-                                        ]
+                                        ],
+                                        "BackgroundColor": "",
+                                        "StrokeWidth": "",
+                                        "Padding": ""
                                     },
                                     {
                                         "type": "LinearLayout",
@@ -1063,7 +1039,7 @@
                                                         "Variable": "delta",
                                                         "height": "wrap_content",
                                                         "width": "match_parent",
-                                                        "orientation": "",
+                                                        "orientation": "horizontal",
                                                         "weight": "1",
                                                         "TextBold": false,
                                                         "TextItalic": false,
@@ -1120,7 +1096,10 @@
                                                     }
                                                 ]
                                             }
-                                        ]
+                                        ],
+                                        "BackgroundColor": "",
+                                        "StrokeWidth": "",
+                                        "Padding": ""
                                     },
                                     {
                                         "Value": "@barcode_cards",
@@ -1139,18 +1118,13 @@
                             },
                             {
                                 "type": "MenuItem",
-                                "Value": "Ввести штрихкод",
+                                "Value": "Добавить штрихкод",
                                 "Variable": "btn_doc_good_barcode"
                             },
                             {
                                 "type": "MenuItem",
                                 "Value": "Серии",
                                 "Variable": "btn_series_show"
-                            },
-                            {
-                                "type": "barcode",
-                                "Value": "",
-                                "Variable": "barcode_good_select"
                             }
                         ],
                         "Handlers": [
