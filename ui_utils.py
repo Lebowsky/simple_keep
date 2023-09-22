@@ -441,6 +441,7 @@ class BarcodeWorker:
         self.mark_update_data = {}
         self.docs_table_update_data = {}
         self.queue_update_data = {}
+        self.is_adr_doc = kwargs.get('is_adr_doc', False)
 
     def process_the_barcode(self, barcode):
         self.process_result.barcode = barcode
@@ -505,7 +506,6 @@ class BarcodeWorker:
                 self._insert_doc_table_data(new_device_qtty)
             else:
                 self._insert_doc_table_data(new_device_qtty)
-
 
     def _insert_mark_data(self):
         self.mark_update_data = {

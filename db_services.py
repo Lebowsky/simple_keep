@@ -94,11 +94,26 @@ class BarcodeService(DbService):
     def add_barcode(self, barcode_data):
         self.provider.create(barcode_data)
 
-    def get_barcode_data(self, barcode_info, id_doc):
+    def get_barcode_data(self, barcode_info, id_doc, is_adr_doc=False, id_cell=''):
         if barcode_info.scheme == 'GS1':
             search_value = barcode_info.gtin
         else:
             search_value = barcode_info.barcode
+
+        if is_adr_doc and not id_cell:
+            raise ValueError('id_cell must be specified for Adr docs')
+
+        params = {
+            'price_field': 'NULL' if is_adr_doc else 'doc_table.price',
+            'id_price_field': 'NULL' if is_adr_doc else 'doc_table.id_price',
+            'd_qtty_field': 'NULL' if is_adr_doc else 'doc_table.d_qtty',
+            'docs_table': 'RS_adr_docs_table' if is_adr_doc else 'RS_docs_table',
+            'cell_condition': f'AND doc_table.id_cell = "{id_cell}"' if is_adr_doc else '',
+            'id_doc': id_doc,
+            'gtin': barcode_info.gtin,
+            'series': barcode_info.serial,
+            'barcode': search_value,
+        }
 
         q = '''
             SELECT 
@@ -111,11 +126,11 @@ class BarcodeService(DbService):
                 IFNULL(doc_barcodes.id, 0) AS mark_id,
                 IFNULL(goods.use_mark, false) AS use_mark,
                 IFNULL(doc_table.id, '') AS row_key,
-                IFNULL(doc_table.d_qtty, 0.0) AS d_qtty,
+                IFNULL({d_qtty_field}, 0.0) AS d_qtty,
                 IFNULL(doc_table.qtty, 0.0) AS qtty,
                 IFNULL(doc_table.qtty_plan, 0.0) AS qtty_plan,
-                IFNULL(doc_table.price, 0.0) AS price,
-                IFNULL(doc_table.id_price, '') AS id_price
+                IFNULL({price_field}, 0.0) AS price,
+                IFNULL({id_price_field}, '') AS id_price
             FROM RS_barcodes AS barcodes
             LEFT JOIN 
                     (SELECT 
@@ -126,19 +141,19 @@ class BarcodeService(DbService):
                     JOIN RS_types_goods AS types_goods ON goods.type_good = types_goods.id) AS goods
                 ON barcodes.id_good = goods.id_goods
             
-            LEFT JOIN RS_docs_table AS doc_table 
+            LEFT JOIN {docs_table} AS doc_table 
                 ON barcodes.id_good = doc_table.id_good
                      AND barcodes.id_property = doc_table.id_properties
                      AND barcodes.id_unit = doc_table.id_unit
-                     AND doc_table.id_doc = "{}"
+                     AND doc_table.id_doc = "{id_doc}"
+                     {cell_condition}
                      
             LEFT JOIN RS_docs_barcodes as doc_barcodes
-                ON doc_barcodes.id_doc = "{}"
-                    AND doc_barcodes.GTIN = "{}"
-                    AND doc_barcodes.Series = "{}"
+                ON doc_barcodes.id_doc = "{id_doc}"
+                    AND doc_barcodes.GTIN = "{gtin}"
+                    AND doc_barcodes.Series = "{series}"
                 
-            WHERE barcodes.barcode = "{}"'''.format(
-            id_doc, id_doc, barcode_info.gtin, barcode_info.serial, search_value)
+            WHERE barcodes.barcode = "{barcode}"'''.format(**params)
 
         result = self.provider.sql_query(q)
         if result:
