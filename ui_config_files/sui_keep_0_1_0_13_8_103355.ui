@@ -17,11 +17,11 @@
                         "type": "Operation",
                         "Name": "Плитки",
                         "Timer": false,
+                        "hideToolBarScreen": false,
                         "hideBottomBarScreen": true,
                         "noScroll": false,
                         "handleKeyUp": false,
                         "noConfirmation": false,
-                        "hideToolBarScreen": false,
                         "Elements": [
                             {
                                 "orientation": "vertical",
@@ -69,20 +69,17 @@
                                 "method": "tiles_on_input",
                                 "postExecute": ""
                             }
-                        ],
-                        "onlineOnStart": false,
-                        "onlineOnAfterStart": false,
-                        "onlineOnInput": false
+                        ]
                     },
                     {
                         "type": "Operation",
                         "Name": "Документы",
                         "Timer": false,
+                        "hideToolBarScreen": false,
                         "hideBottomBarScreen": true,
                         "noScroll": false,
                         "handleKeyUp": false,
                         "noConfirmation": true,
-                        "hideToolBarScreen": false,
                         "Elements": [
                             {
                                 "type": "LinearLayout",
@@ -145,20 +142,17 @@
                                 "method": "docs_on_select",
                                 "postExecute": ""
                             }
-                        ],
-                        "onlineOnStart": false,
-                        "onlineOnAfterStart": false,
-                        "onlineOnInput": false
+                        ]
                     },
                     {
                         "type": "Operation",
                         "Name": "Документ товары",
                         "Timer": false,
+                        "hideToolBarScreen": false,
                         "hideBottomBarScreen": true,
                         "noScroll": false,
                         "handleKeyUp": false,
                         "noConfirmation": true,
-                        "hideToolBarScreen": false,
                         "Elements": [
                             {
                                 "type": "LinearLayout",
@@ -426,20 +420,17 @@
                                 "method": "doc_details_listener",
                                 "postExecute": ""
                             }
-                        ],
-                        "onlineOnStart": false,
-                        "onlineOnAfterStart": false,
-                        "onlineOnInput": false
+                        ]
                     },
                     {
                         "type": "Operation",
                         "Name": "Товар выбор",
                         "Timer": false,
+                        "hideToolBarScreen": false,
                         "hideBottomBarScreen": true,
                         "noScroll": false,
                         "handleKeyUp": false,
                         "noConfirmation": true,
-                        "hideToolBarScreen": false,
                         "Elements": [
                             {
                                 "type": "LinearLayout",
@@ -1169,20 +1160,17 @@
                                 "method": "elem_viev_on_click",
                                 "postExecute": ""
                             }
-                        ],
-                        "onlineOnStart": false,
-                        "onlineOnAfterStart": false,
-                        "onlineOnInput": false
+                        ]
                     },
                     {
                         "type": "Operation",
                         "Name": "Удаление штрихкода",
                         "Timer": false,
+                        "hideToolBarScreen": false,
                         "hideBottomBarScreen": true,
                         "noScroll": false,
                         "handleKeyUp": false,
                         "noConfirmation": false,
-                        "hideToolBarScreen": false,
                         "Elements": [
                             {
                                 "type": "LinearLayout",
@@ -1279,20 +1267,17 @@
                                 "method": "delete_barcode_screen_click",
                                 "postExecute": ""
                             }
-                        ],
-                        "onlineOnStart": false,
-                        "onlineOnAfterStart": false,
-                        "onlineOnInput": false
+                        ]
                     },
                     {
                         "type": "Operation",
                         "Name": "Ошибка сканера",
                         "Timer": false,
+                        "hideToolBarScreen": false,
                         "hideBottomBarScreen": true,
                         "noScroll": false,
                         "handleKeyUp": false,
                         "noConfirmation": false,
-                        "hideToolBarScreen": false,
                         "Elements": [
                             {
                                 "type": "LinearLayout",
@@ -1355,20 +1340,17 @@
                                 "method": "barcode_error_screen_listener",
                                 "postExecute": ""
                             }
-                        ],
-                        "onlineOnStart": false,
-                        "onlineOnAfterStart": false,
-                        "onlineOnInput": false
+                        ]
                     },
                     {
                         "type": "Operation",
                         "Name": "ВвестиШтрихкод",
                         "Timer": false,
+                        "hideToolBarScreen": false,
                         "hideBottomBarScreen": false,
                         "noScroll": false,
                         "handleKeyUp": false,
                         "noConfirmation": false,
-                        "hideToolBarScreen": false,
                         "Elements": [
                             {
                                 "type": "LinearLayout",
@@ -1397,20 +1379,17 @@
                                 ]
                             }
                         ],
-                        "Handlers": [],
-                        "onlineOnStart": false,
-                        "onlineOnAfterStart": false,
-                        "onlineOnInput": false
+                        "Handlers": []
                     },
                     {
                         "type": "Operation",
                         "Name": "ПотокШтрихкодовДокумента",
                         "Timer": false,
+                        "hideToolBarScreen": false,
                         "hideBottomBarScreen": true,
                         "noScroll": false,
                         "handleKeyUp": false,
                         "noConfirmation": false,
-                        "hideToolBarScreen": false,
                         "Elements": [
                             {
                                 "type": "LinearLayout",
@@ -1523,20 +1502,17 @@
                                 "method": "barcode_flow_listener",
                                 "postExecute": ""
                             }
-                        ],
-                        "onlineOnStart": false,
-                        "onlineOnAfterStart": false,
-                        "onlineOnInput": false
+                        ]
                     },
                     {
                         "type": "Operation",
                         "Name": "ВыборТовараАртикул",
                         "Timer": false,
+                        "hideToolBarScreen": false,
                         "hideBottomBarScreen": true,
                         "noScroll": false,
                         "handleKeyUp": false,
                         "noConfirmation": true,
-                        "hideToolBarScreen": false,
                         "Elements": [
                             {
                                 "type": "LinearLayout",
@@ -1589,20 +1565,17 @@
                                 "method": "select_good_article_on_start",
                                 "postExecute": ""
                             }
-                        ],
-                        "onlineOnStart": false,
-                        "onlineOnAfterStart": false,
-                        "onlineOnInput": false
+                        ]
                     },
                     {
                         "type": "Operation",
                         "Name": "ТоварШтрихкоды",
                         "Timer": false,
+                        "hideToolBarScreen": false,
                         "hideBottomBarScreen": true,
                         "noScroll": false,
                         "handleKeyUp": false,
                         "noConfirmation": false,
-                        "hideToolBarScreen": false,
                         "Elements": [
                             {
                                 "type": "barcode",
@@ -1821,20 +1794,17 @@
                                 "method": "barcode_register_doc_on_start",
                                 "postExecute": ""
                             }
-                        ],
-                        "onlineOnStart": false,
-                        "onlineOnAfterStart": false,
-                        "onlineOnInput": false
+                        ]
                     },
                     {
                         "type": "Operation",
                         "Name": "Выбор характеристик",
                         "Timer": false,
+                        "hideToolBarScreen": false,
                         "hideBottomBarScreen": true,
                         "noScroll": false,
                         "handleKeyUp": false,
                         "noConfirmation": false,
-                        "hideToolBarScreen": false,
                         "Elements": [
                             {
                                 "type": "LinearLayout",
@@ -1876,20 +1846,17 @@
                                 "method": "doc_properties_on_input",
                                 "postExecute": ""
                             }
-                        ],
-                        "onlineOnStart": false,
-                        "onlineOnAfterStart": false,
-                        "onlineOnInput": false
+                        ]
                     },
                     {
                         "type": "Operation",
                         "Name": "Выбор упаковки",
                         "Timer": false,
+                        "hideToolBarScreen": false,
                         "hideBottomBarScreen": true,
                         "noScroll": false,
                         "handleKeyUp": false,
                         "noConfirmation": false,
-                        "hideToolBarScreen": false,
                         "Elements": [
                             {
                                 "type": "LinearLayout",
@@ -1928,20 +1895,17 @@
                                 "method": "doc_units_on_input",
                                 "postExecute": ""
                             }
-                        ],
-                        "onlineOnStart": false,
-                        "onlineOnAfterStart": false,
-                        "onlineOnInput": false
+                        ]
                     },
                     {
                         "type": "Operation",
                         "Name": "Такой штрихкод уже есть",
                         "Timer": false,
+                        "hideToolBarScreen": false,
                         "hideBottomBarScreen": false,
                         "noScroll": false,
                         "handleKeyUp": false,
                         "noConfirmation": false,
-                        "hideToolBarScreen": false,
                         "Elements": [
                             {
                                 "type": "LinearLayout",
@@ -2003,20 +1967,17 @@
                                 ]
                             }
                         ],
-                        "Handlers": [],
-                        "onlineOnStart": false,
-                        "onlineOnAfterStart": false,
-                        "onlineOnInput": false
+                        "Handlers": []
                     },
                     {
                         "type": "Operation",
                         "Name": "Выбор серии",
                         "Timer": false,
+                        "hideToolBarScreen": false,
                         "hideBottomBarScreen": true,
                         "noScroll": false,
                         "handleKeyUp": false,
                         "noConfirmation": true,
-                        "hideToolBarScreen": false,
                         "Elements": [
                             {
                                 "type": "LinearLayout",
@@ -2643,20 +2604,17 @@
                                 "method": "series_list_on_input",
                                 "postExecute": ""
                             }
-                        ],
-                        "onlineOnStart": false,
-                        "onlineOnAfterStart": false,
-                        "onlineOnInput": false
+                        ]
                     },
                     {
                         "type": "Operation",
                         "Name": "Заполнение серии",
                         "Timer": false,
+                        "hideToolBarScreen": true,
                         "hideBottomBarScreen": true,
                         "noScroll": false,
                         "handleKeyUp": false,
                         "noConfirmation": true,
-                        "hideToolBarScreen": true,
                         "Elements": [
                             {
                                 "type": "LinearLayout",
@@ -2934,10 +2892,7 @@
                                 "method": "series_item_on_input",
                                 "postExecute": ""
                             }
-                        ],
-                        "onlineOnStart": false,
-                        "onlineOnAfterStart": false,
-                        "onlineOnInput": false
+                        ]
                     }
                 ]
             },
@@ -2954,11 +2909,11 @@
                         "type": "Operation",
                         "Name": "Плитки",
                         "Timer": false,
+                        "hideToolBarScreen": false,
                         "hideBottomBarScreen": true,
                         "noScroll": false,
                         "handleKeyUp": false,
                         "noConfirmation": false,
-                        "hideToolBarScreen": false,
                         "Elements": [
                             {
                                 "orientation": "vertical",
@@ -3006,20 +2961,17 @@
                                 "method": "tiles_on_input",
                                 "postExecute": ""
                             }
-                        ],
-                        "onlineOnStart": false,
-                        "onlineOnAfterStart": false,
-                        "onlineOnInput": false
+                        ]
                     },
                     {
                         "type": "Operation",
                         "Name": "Документы",
                         "Timer": false,
+                        "hideToolBarScreen": false,
                         "hideBottomBarScreen": true,
                         "noScroll": false,
                         "handleKeyUp": false,
                         "noConfirmation": true,
-                        "hideToolBarScreen": false,
                         "Elements": [
                             {
                                 "type": "LinearLayout",
@@ -3082,20 +3034,17 @@
                                 "method": "docs_on_select",
                                 "postExecute": ""
                             }
-                        ],
-                        "onlineOnStart": false,
-                        "onlineOnAfterStart": false,
-                        "onlineOnInput": false
+                        ]
                     },
                     {
                         "type": "Operation",
                         "Name": "Документ товары",
                         "Timer": false,
+                        "hideToolBarScreen": false,
                         "hideBottomBarScreen": true,
                         "noScroll": false,
                         "handleKeyUp": false,
                         "noConfirmation": true,
-                        "hideToolBarScreen": false,
                         "Elements": [
                             {
                                 "type": "LinearLayout",
@@ -3331,20 +3280,17 @@
                                 "method": "doc_details_listener",
                                 "postExecute": ""
                             }
-                        ],
-                        "onlineOnStart": false,
-                        "onlineOnAfterStart": false,
-                        "onlineOnInput": false
+                        ]
                     },
                     {
                         "type": "Operation",
                         "Name": "Ошибка сканера",
                         "Timer": false,
+                        "hideToolBarScreen": false,
                         "hideBottomBarScreen": true,
                         "noScroll": false,
                         "handleKeyUp": false,
                         "noConfirmation": false,
-                        "hideToolBarScreen": false,
                         "Elements": [
                             {
                                 "type": "LinearLayout",
@@ -3407,20 +3353,17 @@
                                 "method": "barcode_error_screen_listener",
                                 "postExecute": ""
                             }
-                        ],
-                        "onlineOnStart": false,
-                        "onlineOnAfterStart": false,
-                        "onlineOnInput": false
+                        ]
                     },
                     {
                         "type": "Operation",
                         "Name": "ВвестиШтрихкод",
                         "Timer": false,
+                        "hideToolBarScreen": false,
                         "hideBottomBarScreen": false,
                         "noScroll": false,
                         "handleKeyUp": false,
                         "noConfirmation": false,
-                        "hideToolBarScreen": false,
                         "Elements": [
                             {
                                 "type": "LinearLayout",
@@ -3449,20 +3392,17 @@
                                 ]
                             }
                         ],
-                        "Handlers": [],
-                        "onlineOnStart": false,
-                        "onlineOnAfterStart": false,
-                        "onlineOnInput": false
+                        "Handlers": []
                     },
                     {
                         "type": "Operation",
                         "Name": "Подтвердите действие",
                         "Timer": false,
+                        "hideToolBarScreen": false,
                         "hideBottomBarScreen": false,
                         "noScroll": false,
                         "handleKeyUp": false,
                         "noConfirmation": false,
-                        "hideToolBarScreen": false,
                         "Elements": [
                             {
                                 "type": "LinearLayout",
@@ -3485,10 +3425,7 @@
                                 ]
                             }
                         ],
-                        "Handlers": [],
-                        "onlineOnStart": false,
-                        "onlineOnAfterStart": false,
-                        "onlineOnInput": false
+                        "Handlers": []
                     }
                 ]
             },
@@ -3505,11 +3442,11 @@
                         "type": "Operation",
                         "Name": "Документы",
                         "Timer": false,
+                        "hideToolBarScreen": false,
                         "hideBottomBarScreen": true,
                         "noScroll": false,
                         "handleKeyUp": false,
                         "noConfirmation": true,
-                        "hideToolBarScreen": false,
                         "Elements": [
                             {
                                 "type": "LinearLayout",
@@ -3572,20 +3509,17 @@
                                 "method": "adr_doc_on_select",
                                 "postExecute": ""
                             }
-                        ],
-                        "onlineOnStart": false,
-                        "onlineOnAfterStart": false,
-                        "onlineOnInput": false
+                        ]
                     },
                     {
                         "type": "Operation",
                         "Name": "Документ товары",
                         "Timer": false,
+                        "hideToolBarScreen": false,
                         "hideBottomBarScreen": true,
                         "noScroll": false,
                         "handleKeyUp": false,
                         "noConfirmation": false,
-                        "hideToolBarScreen": false,
                         "Elements": [
                             {
                                 "type": "LinearLayout",
@@ -3887,20 +3821,17 @@
                                 "method": "adr_doc_details_on_input",
                                 "postExecute": ""
                             }
-                        ],
-                        "onlineOnStart": false,
-                        "onlineOnAfterStart": false,
-                        "onlineOnInput": false
+                        ]
                     },
                     {
                         "type": "Operation",
                         "Name": "Товар выбор",
                         "Timer": false,
+                        "hideToolBarScreen": false,
                         "hideBottomBarScreen": true,
                         "noScroll": false,
                         "handleKeyUp": false,
                         "noConfirmation": true,
-                        "hideToolBarScreen": false,
                         "Elements": [
                             {
                                 "type": "LinearLayout",
@@ -4361,20 +4292,17 @@
                                 "method": "adr_elem_viev_on_click",
                                 "postExecute": ""
                             }
-                        ],
-                        "onlineOnStart": false,
-                        "onlineOnAfterStart": false,
-                        "onlineOnInput": false
+                        ]
                     },
                     {
                         "type": "Operation",
                         "Name": "Ошибка сканера",
                         "Timer": false,
+                        "hideToolBarScreen": false,
                         "hideBottomBarScreen": true,
                         "noScroll": false,
                         "handleKeyUp": false,
                         "noConfirmation": false,
-                        "hideToolBarScreen": false,
                         "Elements": [
                             {
                                 "type": "LinearLayout",
@@ -4437,20 +4365,17 @@
                                 "method": "barcode_error_screen_listener",
                                 "postExecute": ""
                             }
-                        ],
-                        "onlineOnStart": false,
-                        "onlineOnAfterStart": false,
-                        "onlineOnInput": false
+                        ]
                     },
                     {
                         "type": "Operation",
                         "Name": "ВвестиШтрихкод",
                         "Timer": false,
+                        "hideToolBarScreen": false,
                         "hideBottomBarScreen": false,
                         "noScroll": false,
                         "handleKeyUp": false,
                         "noConfirmation": false,
-                        "hideToolBarScreen": false,
                         "Elements": [
                             {
                                 "type": "LinearLayout",
@@ -4479,20 +4404,17 @@
                                 ]
                             }
                         ],
-                        "Handlers": [],
-                        "onlineOnStart": false,
-                        "onlineOnAfterStart": false,
-                        "onlineOnInput": false
+                        "Handlers": []
                     },
                     {
                         "type": "Operation",
                         "Name": "Выбор серии",
                         "Timer": false,
+                        "hideToolBarScreen": false,
                         "hideBottomBarScreen": true,
                         "noScroll": false,
                         "handleKeyUp": false,
                         "noConfirmation": true,
-                        "hideToolBarScreen": false,
                         "Elements": [
                             {
                                 "type": "LinearLayout",
@@ -5119,20 +5041,17 @@
                                 "method": "adr_series_list_on_input",
                                 "postExecute": ""
                             }
-                        ],
-                        "onlineOnStart": false,
-                        "onlineOnAfterStart": false,
-                        "onlineOnInput": false
+                        ]
                     },
                     {
                         "type": "Operation",
                         "Name": "Заполнение серии",
                         "Timer": false,
+                        "hideToolBarScreen": true,
                         "hideBottomBarScreen": true,
                         "noScroll": false,
                         "handleKeyUp": false,
                         "noConfirmation": true,
-                        "hideToolBarScreen": true,
                         "Elements": [
                             {
                                 "type": "LinearLayout",
@@ -5410,10 +5329,7 @@
                                 "method": "adr_series_item_on_input",
                                 "postExecute": ""
                             }
-                        ],
-                        "onlineOnStart": false,
-                        "onlineOnAfterStart": false,
-                        "onlineOnInput": false
+                        ]
                     }
                 ]
             },
@@ -5430,11 +5346,11 @@
                         "type": "Operation",
                         "Name": "Плитки",
                         "Timer": false,
+                        "hideToolBarScreen": false,
                         "hideBottomBarScreen": true,
                         "noScroll": false,
                         "handleKeyUp": false,
                         "noConfirmation": false,
-                        "hideToolBarScreen": false,
                         "Elements": [
                             {
                                 "orientation": "vertical",
@@ -5482,20 +5398,17 @@
                                 "method": "flow_tiles_on_select",
                                 "postExecute": ""
                             }
-                        ],
-                        "onlineOnStart": false,
-                        "onlineOnAfterStart": false,
-                        "onlineOnInput": false
+                        ]
                     },
                     {
                         "type": "Operation",
                         "Name": "Документы",
                         "Timer": false,
+                        "hideToolBarScreen": false,
                         "hideBottomBarScreen": true,
                         "noScroll": false,
                         "handleKeyUp": false,
                         "noConfirmation": true,
-                        "hideToolBarScreen": false,
                         "Elements": [
                             {
                                 "type": "LinearLayout",
@@ -5558,20 +5471,17 @@
                                 "method": "flow_docs_on_select",
                                 "postExecute": ""
                             }
-                        ],
-                        "onlineOnStart": false,
-                        "onlineOnAfterStart": false,
-                        "onlineOnInput": false
+                        ]
                     },
                     {
                         "type": "Operation",
                         "Name": "ПотокШтрихкодовДокумента",
                         "Timer": false,
+                        "hideToolBarScreen": false,
                         "hideBottomBarScreen": true,
                         "noScroll": false,
                         "handleKeyUp": false,
                         "noConfirmation": false,
-                        "hideToolBarScreen": false,
                         "Elements": [
                             {
                                 "type": "LinearLayout",
@@ -5696,20 +5606,17 @@
                                 "method": "barcode_flow_listener",
                                 "postExecute": ""
                             }
-                        ],
-                        "onlineOnStart": false,
-                        "onlineOnAfterStart": false,
-                        "onlineOnInput": false
+                        ]
                     },
                     {
                         "type": "Operation",
                         "Name": "ВвестиШтрихкод",
                         "Timer": false,
+                        "hideToolBarScreen": false,
                         "hideBottomBarScreen": false,
                         "noScroll": false,
                         "handleKeyUp": false,
                         "noConfirmation": false,
-                        "hideToolBarScreen": false,
                         "Elements": [
                             {
                                 "type": "LinearLayout",
@@ -5738,20 +5645,17 @@
                                 ]
                             }
                         ],
-                        "Handlers": [],
-                        "onlineOnStart": false,
-                        "onlineOnAfterStart": false,
-                        "onlineOnInput": false
+                        "Handlers": []
                     },
                     {
                         "type": "Operation",
                         "Name": "ШаблонРаспознавания",
                         "Timer": false,
+                        "hideToolBarScreen": false,
                         "hideBottomBarScreen": true,
                         "noScroll": false,
                         "handleKeyUp": false,
                         "noConfirmation": false,
-                        "hideToolBarScreen": false,
                         "Elements": [
                             {
                                 "type": "LinearLayout",
@@ -5812,10 +5716,7 @@
                                 ]
                             }
                         ],
-                        "Handlers": [],
-                        "onlineOnStart": false,
-                        "onlineOnAfterStart": false,
-                        "onlineOnInput": false
+                        "Handlers": []
                     }
                 ]
             },
@@ -5832,11 +5733,11 @@
                         "type": "Operation",
                         "Name": "Справочник",
                         "Timer": false,
+                        "hideToolBarScreen": false,
                         "hideBottomBarScreen": true,
                         "noScroll": false,
                         "handleKeyUp": false,
                         "noConfirmation": true,
-                        "hideToolBarScreen": false,
                         "Elements": [
                             {
                                 "type": "LinearLayout",
@@ -5872,10 +5773,7 @@
                                 "method": "universal_cards_listener",
                                 "postExecute": ""
                             }
-                        ],
-                        "onlineOnStart": false,
-                        "onlineOnAfterStart": false,
-                        "onlineOnInput": false
+                        ]
                     }
                 ]
             },
@@ -5891,11 +5789,11 @@
                         "type": "Operation",
                         "Name": "Товары список",
                         "Timer": false,
+                        "hideToolBarScreen": false,
                         "hideBottomBarScreen": true,
                         "noScroll": false,
                         "handleKeyUp": false,
                         "noConfirmation": true,
-                        "hideToolBarScreen": false,
                         "Elements": [
                             {
                                 "type": "LinearLayout",
@@ -5972,20 +5870,17 @@
                                 "method": "goods_on_input",
                                 "postExecute": ""
                             }
-                        ],
-                        "onlineOnStart": false,
-                        "onlineOnAfterStart": false,
-                        "onlineOnInput": false
+                        ]
                     },
                     {
                         "type": "Operation",
                         "Name": "Карточка товара",
                         "Timer": false,
+                        "hideToolBarScreen": false,
                         "hideBottomBarScreen": true,
                         "noScroll": false,
                         "handleKeyUp": false,
                         "noConfirmation": false,
-                        "hideToolBarScreen": false,
                         "Elements": [
                             {
                                 "type": "LinearLayout",
@@ -6210,20 +6105,17 @@
                                 "method": "good_card_post_start",
                                 "postExecute": ""
                             }
-                        ],
-                        "onlineOnStart": false,
-                        "onlineOnAfterStart": false,
-                        "onlineOnInput": false
+                        ]
                     },
                     {
                         "type": "Operation",
                         "Name": "Выбор категории товаров ",
                         "Timer": false,
+                        "hideToolBarScreen": false,
                         "hideBottomBarScreen": true,
                         "noScroll": false,
                         "handleKeyUp": false,
                         "noConfirmation": false,
-                        "hideToolBarScreen": false,
                         "Elements": [
                             {
                                 "type": "LinearLayout",
@@ -6259,20 +6151,17 @@
                                 "method": "select_type_goods_on_input",
                                 "postExecute": ""
                             }
-                        ],
-                        "onlineOnStart": false,
-                        "onlineOnAfterStart": false,
-                        "onlineOnInput": false
+                        ]
                     },
                     {
                         "type": "Operation",
                         "Name": "ТоварШтрихкоды",
                         "Timer": false,
+                        "hideToolBarScreen": false,
                         "hideBottomBarScreen": true,
                         "noScroll": false,
                         "handleKeyUp": false,
                         "noConfirmation": false,
-                        "hideToolBarScreen": false,
                         "Elements": [
                             {
                                 "type": "barcode",
@@ -6491,20 +6380,17 @@
                                 "method": "barcode_register_item_on_start",
                                 "postExecute": ""
                             }
-                        ],
-                        "onlineOnStart": false,
-                        "onlineOnAfterStart": false,
-                        "onlineOnInput": false
+                        ]
                     },
                     {
                         "type": "Operation",
                         "Name": "Выбор характеристик",
                         "Timer": false,
+                        "hideToolBarScreen": false,
                         "hideBottomBarScreen": true,
                         "noScroll": false,
                         "handleKeyUp": false,
                         "noConfirmation": false,
-                        "hideToolBarScreen": false,
                         "Elements": [
                             {
                                 "type": "LinearLayout",
@@ -6546,20 +6432,17 @@
                                 "method": "item_properties_on_input",
                                 "postExecute": ""
                             }
-                        ],
-                        "onlineOnStart": false,
-                        "onlineOnAfterStart": false,
-                        "onlineOnInput": false
+                        ]
                     },
                     {
                         "type": "Operation",
                         "Name": "Выбор упаковки",
                         "Timer": false,
+                        "hideToolBarScreen": false,
                         "hideBottomBarScreen": true,
                         "noScroll": false,
                         "handleKeyUp": false,
                         "noConfirmation": false,
-                        "hideToolBarScreen": false,
                         "Elements": [
                             {
                                 "type": "LinearLayout",
@@ -6598,20 +6481,17 @@
                                 "method": "item_units_on_input",
                                 "postExecute": ""
                             }
-                        ],
-                        "onlineOnStart": false,
-                        "onlineOnAfterStart": false,
-                        "onlineOnInput": false
+                        ]
                     },
                     {
                         "type": "Operation",
                         "Name": "Такой штрихкод уже есть",
                         "Timer": false,
+                        "hideToolBarScreen": false,
                         "hideBottomBarScreen": false,
                         "noScroll": false,
                         "handleKeyUp": false,
                         "noConfirmation": false,
-                        "hideToolBarScreen": false,
                         "Elements": [
                             {
                                 "type": "LinearLayout",
@@ -6673,10 +6553,7 @@
                                 ]
                             }
                         ],
-                        "Handlers": [],
-                        "onlineOnStart": false,
-                        "onlineOnAfterStart": false,
-                        "onlineOnInput": false
+                        "Handlers": []
                     }
                 ]
             },
@@ -6692,11 +6569,11 @@
                         "type": "Operation",
                         "Name": "Проверить остатки",
                         "Timer": false,
+                        "hideToolBarScreen": false,
                         "hideBottomBarScreen": true,
                         "noScroll": false,
                         "handleKeyUp": false,
                         "noConfirmation": false,
-                        "hideToolBarScreen": false,
                         "Elements": [
                             {
                                 "type": "LinearLayout",
@@ -7001,20 +6878,17 @@
                                 "method": "balances_on_input",
                                 "postExecute": ""
                             }
-                        ],
-                        "onlineOnStart": false,
-                        "onlineOnAfterStart": false,
-                        "onlineOnInput": false
+                        ]
                     },
                     {
                         "type": "Operation",
                         "Name": "Выбор склада",
                         "Timer": false,
+                        "hideToolBarScreen": false,
                         "hideBottomBarScreen": true,
                         "noScroll": false,
                         "handleKeyUp": false,
                         "noConfirmation": false,
-                        "hideToolBarScreen": false,
                         "Elements": [
                             {
                                 "type": "LinearLayout",
@@ -7055,10 +6929,7 @@
                                 "method": "wh_select_on_input",
                                 "postExecute": ""
                             }
-                        ],
-                        "onlineOnStart": false,
-                        "onlineOnAfterStart": false,
-                        "onlineOnInput": false
+                        ]
                     }
                 ]
             },
@@ -7074,11 +6945,11 @@
                         "type": "Operation",
                         "Name": "Проверка цен",
                         "Timer": false,
+                        "hideToolBarScreen": false,
                         "hideBottomBarScreen": true,
                         "noScroll": false,
                         "handleKeyUp": false,
                         "noConfirmation": false,
-                        "hideToolBarScreen": false,
                         "Elements": [
                             {
                                 "type": "LinearLayout",
@@ -7413,20 +7284,17 @@
                                 "method": "prices_on_input",
                                 "postExecute": ""
                             }
-                        ],
-                        "onlineOnStart": false,
-                        "onlineOnAfterStart": false,
-                        "onlineOnInput": false
+                        ]
                     },
                     {
                         "type": "Operation",
                         "Name": "Выбор типа цены",
                         "Timer": false,
+                        "hideToolBarScreen": false,
                         "hideBottomBarScreen": true,
                         "noScroll": false,
                         "handleKeyUp": false,
                         "noConfirmation": false,
-                        "hideToolBarScreen": false,
                         "Elements": [
                             {
                                 "type": "LinearLayout",
@@ -7467,20 +7335,17 @@
                                 "method": "price_types_on_input",
                                 "postExecute": ""
                             }
-                        ],
-                        "onlineOnStart": false,
-                        "onlineOnAfterStart": false,
-                        "onlineOnInput": false
+                        ]
                     },
                     {
                         "type": "Operation",
                         "Name": "Выбор характеристик",
                         "Timer": false,
+                        "hideToolBarScreen": false,
                         "hideBottomBarScreen": true,
                         "noScroll": false,
                         "handleKeyUp": false,
                         "noConfirmation": false,
-                        "hideToolBarScreen": false,
                         "Elements": [
                             {
                                 "type": "LinearLayout",
@@ -7521,20 +7386,17 @@
                                 "method": "properties_on_input",
                                 "postExecute": ""
                             }
-                        ],
-                        "onlineOnStart": false,
-                        "onlineOnAfterStart": false,
-                        "onlineOnInput": false
+                        ]
                     },
                     {
                         "type": "Operation",
                         "Name": "Выбор упаковки",
                         "Timer": false,
+                        "hideToolBarScreen": false,
                         "hideBottomBarScreen": true,
                         "noScroll": false,
                         "handleKeyUp": false,
                         "noConfirmation": false,
-                        "hideToolBarScreen": false,
                         "Elements": [
                             {
                                 "type": "LinearLayout",
@@ -7575,20 +7437,17 @@
                                 "method": "units_on_input",
                                 "postExecute": ""
                             }
-                        ],
-                        "onlineOnStart": false,
-                        "onlineOnAfterStart": false,
-                        "onlineOnInput": false
+                        ]
                     },
                     {
                         "type": "Operation",
                         "Name": "Таблица цен",
                         "Timer": false,
+                        "hideToolBarScreen": false,
                         "hideBottomBarScreen": true,
                         "noScroll": false,
                         "handleKeyUp": false,
                         "noConfirmation": false,
-                        "hideToolBarScreen": false,
                         "Elements": [
                             {
                                 "type": "LinearLayout",
@@ -7653,10 +7512,7 @@
                                 "method": "prices_table_on_input",
                                 "postExecute": ""
                             }
-                        ],
-                        "onlineOnStart": false,
-                        "onlineOnAfterStart": false,
-                        "onlineOnInput": false
+                        ]
                     }
                 ]
             },
@@ -7672,11 +7528,11 @@
                         "type": "Operation",
                         "Name": "Настройки и обмен",
                         "Timer": false,
+                        "hideToolBarScreen": false,
                         "hideBottomBarScreen": true,
                         "noScroll": false,
                         "handleKeyUp": false,
                         "noConfirmation": true,
-                        "hideToolBarScreen": false,
                         "Elements": [
                             {
                                 "type": "LinearLayout",
@@ -7835,20 +7691,17 @@
                                 "method": "settings_on_click",
                                 "postExecute": ""
                             }
-                        ],
-                        "onlineOnStart": false,
-                        "onlineOnAfterStart": false,
-                        "onlineOnInput": false
+                        ]
                     },
                     {
                         "type": "Operation",
                         "Name": "СписокФайлов",
                         "Timer": false,
+                        "hideToolBarScreen": false,
                         "hideBottomBarScreen": true,
                         "noScroll": false,
                         "handleKeyUp": false,
                         "noConfirmation": true,
-                        "hideToolBarScreen": false,
                         "Elements": [
                             {
                                 "type": "LinearLayout",
@@ -7877,20 +7730,17 @@
                                 "method": "file_list_on_start",
                                 "postExecute": ""
                             }
-                        ],
-                        "onlineOnStart": false,
-                        "onlineOnAfterStart": false,
-                        "onlineOnInput": false
+                        ]
                     },
                     {
                         "type": "Operation",
                         "Name": "Настройки Шрифтов",
                         "Timer": false,
+                        "hideToolBarScreen": false,
                         "hideBottomBarScreen": true,
                         "noScroll": false,
                         "handleKeyUp": false,
                         "noConfirmation": true,
-                        "hideToolBarScreen": false,
                         "Elements": [
                             {
                                 "type": "LinearLayout",
@@ -8006,20 +7856,17 @@
                                 "method": "font_size_settings_listener",
                                 "postExecute": ""
                             }
-                        ],
-                        "onlineOnStart": false,
-                        "onlineOnAfterStart": false,
-                        "onlineOnInput": false
+                        ]
                     },
                     {
                         "type": "Operation",
                         "Name": "Тест сканера",
                         "Timer": false,
+                        "hideToolBarScreen": false,
                         "hideBottomBarScreen": true,
                         "noScroll": false,
                         "handleKeyUp": false,
                         "noConfirmation": true,
-                        "hideToolBarScreen": false,
                         "Elements": [
                             {
                                 "type": "LinearLayout",
@@ -8123,20 +7970,17 @@
                                 "method": "test_barcode_listener",
                                 "postExecute": ""
                             }
-                        ],
-                        "onlineOnStart": false,
-                        "onlineOnAfterStart": false,
-                        "onlineOnInput": false
+                        ]
                     },
                     {
                         "type": "Operation",
                         "Name": "Ошибки",
                         "Timer": false,
+                        "hideToolBarScreen": false,
                         "hideBottomBarScreen": true,
                         "noScroll": false,
                         "handleKeyUp": false,
                         "noConfirmation": true,
-                        "hideToolBarScreen": false,
                         "Elements": [
                             {
                                 "type": "LinearLayout",
@@ -8203,20 +8047,17 @@
                                 "method": "settings_errors_on_click",
                                 "postExecute": ""
                             }
-                        ],
-                        "onlineOnStart": false,
-                        "onlineOnAfterStart": false,
-                        "onlineOnInput": false
+                        ]
                     },
                     {
                         "type": "Operation",
                         "Name": "Настройки http соединения",
                         "Timer": false,
+                        "hideToolBarScreen": false,
                         "hideBottomBarScreen": true,
                         "noScroll": false,
                         "handleKeyUp": false,
                         "noConfirmation": true,
-                        "hideToolBarScreen": false,
                         "Elements": [
                             {
                                 "type": "LinearLayout",
@@ -8324,20 +8165,17 @@
                                 "method": "http_settings_on_click",
                                 "postExecute": ""
                             }
-                        ],
-                        "onlineOnStart": false,
-                        "onlineOnAfterStart": false,
-                        "onlineOnInput": false
+                        ]
                     },
                     {
                         "type": "Operation",
                         "Name": "Настройка звука",
                         "Timer": false,
+                        "hideToolBarScreen": false,
                         "hideBottomBarScreen": true,
                         "noScroll": false,
                         "handleKeyUp": false,
                         "noConfirmation": true,
-                        "hideToolBarScreen": false,
                         "Elements": [
                             {
                                 "type": "LinearLayout",
@@ -8389,20 +8227,17 @@
                                 "method": "sound_settings_listener",
                                 "postExecute": ""
                             }
-                        ],
-                        "onlineOnStart": false,
-                        "onlineOnAfterStart": false,
-                        "onlineOnInput": false
+                        ]
                     },
                     {
                         "type": "Operation",
                         "Name": "Настройки документов",
                         "Timer": false,
+                        "hideToolBarScreen": false,
                         "hideBottomBarScreen": true,
                         "noScroll": false,
                         "handleKeyUp": false,
                         "noConfirmation": true,
-                        "hideToolBarScreen": false,
                         "Elements": [
                             {
                                 "type": "LinearLayout",
@@ -8478,10 +8313,7 @@
                                 "method": "documents_settings_on_input",
                                 "postExecute": ""
                             }
-                        ],
-                        "onlineOnStart": false,
-                        "onlineOnAfterStart": false,
-                        "onlineOnInput": false
+                        ]
                     }
                 ]
             },
@@ -8497,11 +8329,11 @@
                         "type": "Operation",
                         "Name": "Отладочный экран",
                         "Timer": false,
+                        "hideToolBarScreen": true,
                         "hideBottomBarScreen": true,
                         "noScroll": false,
                         "handleKeyUp": false,
                         "noConfirmation": true,
-                        "hideToolBarScreen": true,
                         "Elements": [
                             {
                                 "type": "LinearLayout",
@@ -8647,10 +8479,7 @@
                                 "method": "debug_on_start",
                                 "postExecute": ""
                             }
-                        ],
-                        "onlineOnStart": false,
-                        "onlineOnAfterStart": false,
-                        "onlineOnInput": false
+                        ]
                     }
                 ]
             },
@@ -8667,11 +8496,11 @@
                         "type": "Operation",
                         "Name": "Список шаблонов",
                         "Timer": false,
+                        "hideToolBarScreen": true,
                         "hideBottomBarScreen": true,
                         "noScroll": false,
                         "handleKeyUp": false,
                         "noConfirmation": true,
-                        "hideToolBarScreen": true,
                         "Elements": [
                             {
                                 "type": "LinearLayout",
@@ -8736,20 +8565,17 @@
                                 "method": "template_list_on_input",
                                 "postExecute": ""
                             }
-                        ],
-                        "onlineOnStart": false,
-                        "onlineOnAfterStart": false,
-                        "onlineOnInput": false
+                        ]
                     },
                     {
                         "type": "Operation",
                         "Name": "Результат",
                         "Timer": false,
+                        "hideToolBarScreen": false,
                         "hideBottomBarScreen": true,
                         "noScroll": false,
                         "handleKeyUp": false,
                         "noConfirmation": true,
-                        "hideToolBarScreen": false,
                         "Elements": [
                             {
                                 "type": "LinearLayout",
@@ -8951,20 +8777,17 @@
                                 "method": "html_view_on_start",
                                 "postExecute": ""
                             }
-                        ],
-                        "onlineOnStart": false,
-                        "onlineOnAfterStart": false,
-                        "onlineOnInput": false
+                        ]
                     },
                     {
                         "type": "Operation",
                         "Name": "НастройкаСоответствияДиалог",
                         "Timer": false,
+                        "hideToolBarScreen": false,
                         "hideBottomBarScreen": false,
                         "noScroll": false,
                         "handleKeyUp": false,
                         "noConfirmation": false,
-                        "hideToolBarScreen": false,
                         "Elements": [
                             {
                                 "type": "LinearLayout",
@@ -8985,10 +8808,7 @@
                                 ]
                             }
                         ],
-                        "Handlers": [],
-                        "onlineOnStart": false,
-                        "onlineOnAfterStart": false,
-                        "onlineOnInput": false
+                        "Handlers": []
                     }
                 ]
             },
@@ -9005,11 +8825,11 @@
                         "type": "Operation",
                         "Name": "Проводник файлов",
                         "Timer": false,
+                        "hideToolBarScreen": true,
                         "hideBottomBarScreen": true,
                         "noScroll": false,
                         "handleKeyUp": false,
                         "noConfirmation": true,
-                        "hideToolBarScreen": true,
                         "Elements": [
                             {
                                 "type": "LinearLayout",
@@ -9071,10 +8891,7 @@
                                 "method": "file_browser_on_input",
                                 "postExecute": ""
                             }
-                        ],
-                        "onlineOnStart": false,
-                        "onlineOnAfterStart": false,
-                        "onlineOnInput": false
+                        ]
                     }
                 ]
             },
@@ -9091,16 +8908,13 @@
                         "type": "Operation",
                         "Name": "Выбор серии",
                         "Timer": false,
+                        "hideToolBarScreen": false,
                         "hideBottomBarScreen": true,
                         "noScroll": false,
                         "handleKeyUp": false,
                         "noConfirmation": true,
-                        "hideToolBarScreen": false,
                         "Elements": [],
-                        "Handlers": [],
-                        "onlineOnStart": false,
-                        "onlineOnAfterStart": false,
-                        "onlineOnInput": false
+                        "Handlers": []
                     }
                 ]
             },
@@ -9156,11 +8970,11 @@
                         "type": "Operation",
                         "Name": "SelectItemScreen",
                         "Timer": false,
+                        "hideToolBarScreen": false,
                         "hideBottomBarScreen": true,
                         "noScroll": true,
                         "handleKeyUp": false,
                         "noConfirmation": true,
-                        "hideToolBarScreen": false,
                         "Elements": [
                             {
                                 "type": "LinearLayout",
@@ -9199,10 +9013,7 @@
                                 "method": "select_item_on_input",
                                 "postExecute": ""
                             }
-                        ],
-                        "onlineOnStart": false,
-                        "onlineOnAfterStart": false,
-                        "onlineOnInput": false
+                        ]
                     }
                 ]
             }
