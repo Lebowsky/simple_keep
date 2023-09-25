@@ -367,11 +367,12 @@ class TestBarcodeService(unittest.TestCase):
             'use_mark': 0,
             'row_key': 1,
             'qtty': 1.0,
-            'd_qtty': 0.0,
+            'd_qtty': 1.0,
             'qtty_plan': 5.0,
         }
 
-        actual = sut.get_barcode_data(barcode_info, id_doc, is_adr_doc=True, id_cell='some_cell')
+        actual = sut.get_barcode_data(
+            barcode_info, id_doc, is_adr_doc=True, id_cell='some_cell', table_type='in')
 
         self.assertEqual(expect, actual)
 

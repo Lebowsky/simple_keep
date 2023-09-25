@@ -94,7 +94,7 @@ class BarcodeService(DbService):
     def add_barcode(self, barcode_data):
         self.provider.create(barcode_data)
 
-    def get_barcode_data(self, barcode_info, id_doc, is_adr_doc=False, id_cell=''):
+    def get_barcode_data(self, barcode_info, id_doc, is_adr_doc=False, id_cell='', table_type=''):
         if barcode_info.scheme == 'GS1':
             search_value = barcode_info.gtin
         else:
@@ -103,12 +103,17 @@ class BarcodeService(DbService):
         if is_adr_doc and not id_cell:
             raise ValueError('id_cell must be specified for Adr docs')
 
+        if is_adr_doc and not table_type:
+            raise ValueError('table_type must be specified for Adr docs')
+
         params = {
             'price_field': 'NULL' if is_adr_doc else 'doc_table.price',
             'id_price_field': 'NULL' if is_adr_doc else 'doc_table.id_price',
-            'd_qtty_field': 'NULL' if is_adr_doc else 'doc_table.d_qtty',
+            'd_qtty_field': 'doc_table.qtty' if is_adr_doc else 'doc_table.d_qtty',
+            'use_mark_field': 'NULL' if is_adr_doc else 'goods.use_mark',
             'docs_table': 'RS_adr_docs_table' if is_adr_doc else 'RS_docs_table',
             'cell_condition': f'AND doc_table.id_cell = "{id_cell}"' if is_adr_doc else '',
+            'table_type_condition': f'AND doc_table.table_type = "{table_type}"' if is_adr_doc else '',
             'id_doc': id_doc,
             'gtin': barcode_info.gtin,
             'series': barcode_info.serial,
@@ -124,7 +129,7 @@ class BarcodeService(DbService):
                 barcodes.ratio AS ratio,
                 IFNULL(doc_barcodes.approved, 0) AS approved,
                 IFNULL(doc_barcodes.id, 0) AS mark_id,
-                IFNULL(goods.use_mark, false) AS use_mark,
+                IFNULL({use_mark_field}, false) AS use_mark,
                 IFNULL(doc_table.id, '') AS row_key,
                 IFNULL({d_qtty_field}, 0.0) AS d_qtty,
                 IFNULL(doc_table.qtty, 0.0) AS qtty,
@@ -147,6 +152,7 @@ class BarcodeService(DbService):
                      AND barcodes.id_unit = doc_table.id_unit
                      AND doc_table.id_doc = "{id_doc}"
                      {cell_condition}
+                     {table_type_condition}
                      
             LEFT JOIN RS_docs_barcodes as doc_barcodes
                 ON doc_barcodes.id_doc = "{id_doc}"
@@ -178,10 +184,11 @@ class BarcodeService(DbService):
         else:
             return '0000000000011'
 
-    @staticmethod
-    def replace_or_create_table(table_name, docs_table_update_data):
-        provider = SqlQueryProvider(table_name=table_name)
-        provider.replace(docs_table_update_data)
+
+    def replace_or_create_table(self, table_name, docs_table_update_data):
+        self.provider.table_name = table_name
+        self.provider.replace(docs_table_update_data)
+
 
     @staticmethod
     def insert_no_sql(queue_update_data):
