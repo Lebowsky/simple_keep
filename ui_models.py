@@ -3381,13 +3381,13 @@ class FlowDocDetailsScreen(DocDetailsScreen):
             barcode = str(self.hash_map.get('fld_barcode'))
         else:
             barcode = str(self.hash_map.get('barcode_camera'))
-        
+
         if barcode:
             doc_details = self._sort_table_by_barcode(doc_details, barcode)
-        
+
         table_data = [{}]
         # self.hash_map.toast(self.hash_map.get('added_goods'))
-        
+
         for record in doc_details:
 
             product_row = {'key': str(record['barcode']), 'barcode': str(record['barcode']),
@@ -3395,7 +3395,7 @@ class FlowDocDetailsScreen(DocDetailsScreen):
                            'qtty': str(record['qtty']),
                            '_layout': self._get_doc_table_row_view()}
 
-            product_row['_layout'].BackgroundColor = '#FFFFFF' if record['name'] is not None else "#FBE9E7" 
+            product_row['_layout'].BackgroundColor = '#FFFFFF' if record['name'] is not None else "#FBE9E7"
 
             # это не работает судя по всему потому что нет в hash_map ключа added_goods
             if self._added_goods_has_key(product_row['key']):
@@ -3406,15 +3406,15 @@ class FlowDocDetailsScreen(DocDetailsScreen):
         return table_data
 
     def _sort_table_by_barcode(self, table, barcode):
-        
+
         for i, row in enumerate(table):
             if str(row.get('barcode')) == barcode:
                 del table[i]
                 table.insert(0, row)
-                break  
+                break
 
-        return table 
-    
+        return table
+
     def _set_vision_settings(self) -> None:
         """Устанавливает настройки для кнопки распознавания текста"""
         num_amount = self.rs_settings.get('ocr_serial_template_num_amount') or 10
@@ -3500,7 +3500,7 @@ class BaseGoodSelect(Screen):
         super().__init__(hash_map, rs_settings)
         self.id_doc = self.hash_map['id_doc']
         self.service = DocService(self.id_doc)
-    
+
     def on_start(self):
         # Режим работы с мультимедиа и файлами по ссылкам (флаг mm_local)
         self.hash_map['mm_local'] = ''
@@ -3536,7 +3536,7 @@ class BaseGoodSelect(Screen):
         elif listener == 'btn_print':
             self.print_ticket()
         elif listener == 'barcode':
-            self._process_the_barcode()    
+            self._process_the_barcode()
         elif listener == "CardsClick":
             current_elem = self.hash_map.get_json('selected_card_data')
             self.print_ticket()
@@ -3552,7 +3552,7 @@ class BaseGoodSelect(Screen):
 
     def show(self, args=None):
         pass
-    
+
     def _handle_btn_ok(self):
         if int(self.hash_map.get('new_qtty')) < 0:
             self.hash_map.toast('Итоговое количество меньше 0')
@@ -3600,7 +3600,7 @@ class BaseGoodSelect(Screen):
             self.service.update_doc_table_row(data=update_data, row_id=row_id)
             self.service.set_doc_status_to_upload(self.hash_map.get('id_doc'))
             self.hash_map.show_screen("Документ товары")
-        
+
     def _validate_delta_input(self):
         try:
             int(self.hash_map.get('delta'))
@@ -3654,9 +3654,9 @@ class BaseGoodSelect(Screen):
                 self.hash_map.playsound('error')
                 self._set_delta(reset=True)
                 return
-        
+
         current_elem = self._get_current_elem()
-            
+
         qtty = new_qtty
         # price = self.hash_map.get('price') or 0  # это не используется
 
@@ -3688,7 +3688,7 @@ class BaseGoodSelect(Screen):
     def _process_the_barcode(self):
         barcode = self.hash_map.get('barcode_good_select')
         allowed_fact_input = self.rs_settings.get('allow_fact_input')
-        
+
         if not (barcode and allowed_fact_input):
             self.hash_map.playsound('error')
             self.hash_map.toast('Штрихкод не найден в документе!') # пока тост, модалка очищает дельту
@@ -3705,7 +3705,7 @@ class BaseGoodSelect(Screen):
             return
         self.hash_map.playsound('error')
         self.hash_map.toast(f'Штрихкод не найден в документе!') # пока тост, модалка очищает дельту
-        #self.hash_map.show_dialog(listener='barcode_not_found', title='Штрихкод не найден в документе!')        
+        #self.hash_map.show_dialog(listener='barcode_not_found', title='Штрихкод не найден в документе!')
 
     def _set_delta(self, value: int = 0, reset: bool = False):
         """Создаем (обнуляем) поле ввода"""
@@ -3762,14 +3762,14 @@ class GoodsSelectScreen(BaseGoodSelect):
 
     def __init__(self, hash_map: HashMap, rs_settings):
         super().__init__(hash_map, rs_settings)
-        
+
     def on_start(self):
         super().on_start()
-        
+
         doc_rows = self.service.get_doc_rows_count(self.id_doc)['doc_rows']
         doc_data = self.service.get_doc_details_data(self.id_doc, 0, doc_rows)
         doc_data.insert(0, {})
-        self.hash_map.put('doc_rows', doc_rows)    
+        self.hash_map.put('doc_rows', doc_rows)
         self.hash_map.put('doc_data', doc_data, to_json=True)
 
         current_str = int(self.hash_map.get('selected_card_position'))
@@ -3809,7 +3809,7 @@ class GoodsSelectScreen(BaseGoodSelect):
         selected_card_position = int(self.hash_map.get('selected_card_position'))
         table_lines_qtty = int(self.hash_map.get('doc_rows'))
         table_data = self.hash_map.get('doc_data', from_json=True)
-        
+
         if action == 'next':
             if selected_card_position != table_lines_qtty:
                 pos = selected_card_position + 1
@@ -3867,7 +3867,7 @@ class GoodsSelectScreen(BaseGoodSelect):
             return True
 
         if id_good != id_good_br:
-            table_data = self.hash_map.get('doc_data', from_json=True) 	 
+            table_data = self.hash_map.get('doc_data', from_json=True)
             match_index = self._find_matching_good(table_data, id_good_br, id_property_br, id_unit_br)
 
             if match_index is not None:
@@ -3882,13 +3882,13 @@ class GoodsSelectScreen(BaseGoodSelect):
             return int(qtty)
         else:
             return qtty
-    
+
 class AdrGoodsSelectScreen(BaseGoodSelect):
     def __init__(self, hash_map: HashMap, rs_settings):
         super().__init__(hash_map, rs_settings)
         self.id_doc = self.hash_map['id_doc']
         self.service = AdrDocService()
-    
+
 class GoodBarcodeRegister(Screen):
     screen_name = 'ТоварШтрихкоды'
     process_name = 'Документы'
@@ -4215,9 +4215,9 @@ class GoodsListScreen(Screen):
     def on_input(self):
         listener = self.listener
         if listener == "CardsClick":
-            self.hash_map.put('selected_good_id', self.hash_map.get("selected_card_key"))
-            self.hash_map.put('barcode', '')
-            self.hash_map.show_screen("Карточка товара")
+            self.hash_map['item_id'] = self.hash_map.get("selected_card_key")
+            ItemCard(self.hash_map, self.rs_settings).show()
+
         elif listener == "select_goods_type":
             self.hash_map.show_screen("Выбор категории товаров")
         elif listener == "ON_BACK_PRESSED":
@@ -4293,15 +4293,8 @@ class GoodsListScreen(Screen):
             barcode = self.hash_map.get('barcode')
             values = self.service.get_values_from_barcode("barcode", barcode)
             if values:
-                item_id = values[0]['id_good']
-                item_values = self.service.get_goods_list_data(item_id=item_id)[0]
-                self.hash_map.put("selected_good_id", item_id)
-                self.hash_map.put("good_name", item_values['name'])
-                self.hash_map.put("good_art", item_values['art'] if item_values['art'] else "—")
-                self.hash_map.put("good_code", item_values['code'])
-                self.hash_map.put("good_descr", item_values['description'] if item_values['description'] else "—")
-                self.hash_map.put("good_type", item_values['type_good'])
-                self.hash_map.show_screen('Карточка товара')
+                self.hash_map['item_id'] = values[0]['id_good']
+                ItemCard(self.hash_map, self.rs_settings).show()
             else:
                 self.toast('Товар не распознан по штрихкоду')
                 self.hash_map.playsound('error')
@@ -4382,10 +4375,27 @@ class ItemCard(Screen):
 
     def __init__(self, hash_map, rs_settings):
         super().__init__(hash_map, rs_settings)
+        self.screen_values = {
+            'item_id': self.hash_map['item_id'],
+        }
         self.service = GoodsService()
 
     def on_start(self):
-        pass
+        item_data = None
+        if self.screen_values['item_id']:
+            item_data = self.service.get_goods_list_data(item_id=self.screen_values['item_id'])
+
+
+        if item_data:
+            item_values = item_data[0]
+            put_data = {
+                "good_name": item_values['name'],
+                "good_art": item_values['art'] if item_values['art'] else "—",
+                "good_code": item_values['code'],
+                "good_descr": item_values['description'] if item_values['description'] else "—",
+                "good_type": item_values['type_good'],
+            }
+            self.hash_map.put_data(put_data)
 
     def on_input(self):
         listeners = {
@@ -4399,59 +4409,65 @@ class ItemCard(Screen):
         if self.listener in listeners:
             listeners[self.listener]()
 
+        self.hash_map.no_refresh()
+
     def on_post_start(self):
-        selected_good_id = self.hash_map.get("selected_good_id")
-        barcode = self.hash_map.get('barcode')
-        if barcode:
-            goods_barcode = self.service.get_values_from_barcode("barcode", barcode)
-        elif selected_good_id:  # Выбор товара через карточку
-            goods_barcode = self.service.get_values_from_barcode("id_good", selected_good_id)
+        if self.screen_values['item_id']:
+            item_properties = self.service.get_values_from_barcode("id_good", self.screen_values['item_id'])
 
-        if goods_barcode:
-            variants_cards_data = self._get_variants_cards_data(goods_barcode)
-            variants_cards = self._get_variants_cards_view(variants_cards_data)
-            self.hash_map['barcode_cards'] = variants_cards.to_json()
-            self.hash_map.put("load_info", "")
-        else:
-            self.hash_map.put("load_info", "Данные о характеристиках отсутствуют")
+            if item_properties:
+                variants_cards_data = self._get_variants_cards_data(item_properties)
+                variants_cards = self._get_variants_cards_view(variants_cards_data)
+                self.hash_map['barcode_cards'] = variants_cards.to_json()
+                self.hash_map.put("load_info", "")
+            else:
+                self.hash_map.put("load_info", "Данные о характеристиках отсутствуют")
 
-    def show(self, args=None):
-        pass
+            self.hash_map.remove('item_id')
 
     def _back_screen(self):
-        if self.hash_map.get('barcode_cards'):
-            self.hash_map.put('barcode_cards', '')
-        self.hash_map.show_screen("Товары список")
+        self._clear_screen_values()
+        self.hash_map.remove('barcode_cards')
+        self.hash_map.show_screen(self.hash_map['parent_screen'])
 
     def _to_balances(self):
-        dict_data = {'input_item_id': self.hash_map.get('selected_good_id'),
-                     'item_art_input': self.hash_map.get('good_art'),
-                     'selected_object_name': f'{self.hash_map.get("good_name")}, {self.hash_map.get("good_code")}',
-                     'object_name': self.hash_map.get('good_name'),
-                     "return_to_item_card": "true",
-                     'ShowProcessResult': 'Остатки|Проверить остатки', "noRefresh": ''}
+        dict_data = {
+            'input_item_id': self.hash_map.get('selected_good_id'),
+            'item_art_input': self.hash_map.get('good_art'),
+            'selected_object_name': f'{self.hash_map.get("good_name")}, {self.hash_map.get("good_code")}',
+            'object_name': self.hash_map.get('good_name'),
+            "return_to_item_card": "true",
+            'ShowProcessResult': 'Остатки|Проверить остатки',
+            "noRefresh": ''
+        }
         self.hash_map.put_data(dict_data)
 
     def _to_prices(self):
-        dict_data = {'input_good_id': self.hash_map.get('selected_good_id'),
-                     'input_good_art': self.hash_map.get('good_art'),
-                     'prices_object_name': f'{self.hash_map.get("good_name")}, {self.hash_map.get("good_code")}',
-                     "return_to_item_card": "true",
-                     'object_name': self.hash_map.get('good_name'),
-                     'ShowProcessResult': 'Цены|Проверка цен', "noRefresh": ''}
+        dict_data = {
+            'input_good_id': self.hash_map.get('selected_good_id'),
+            'input_good_art': self.hash_map.get('good_art'),
+            'prices_object_name': f'{self.hash_map.get("good_name")}, {self.hash_map.get("good_code")}',
+            "return_to_item_card": "true",
+            'object_name': self.hash_map.get('good_name'),
+            'ShowProcessResult': 'Цены|Проверка цен',
+            "noRefresh": ''
+        }
         self.hash_map.put_data(dict_data)
 
 
     @staticmethod
-    def _get_variants_cards_data(goods_barcode):
+    def _get_variants_cards_data(item_properties):
         variants_cards_data = []
-        i = 0
-        for element in goods_barcode:
-            c = {"key": str(i), "barcode": element['barcode'],
-                 "properties": element['property'] if element['property'] else "",
-                 "unit": element['unit'], "series": element['series']}
-            variants_cards_data.append(c)
-            i += 1
+        for i, element in enumerate(item_properties):
+            variants_cards_data.append(
+                {
+                    "key": str(i),
+                    "barcode": element['barcode'],
+                    "properties": element['property'] if element['property'] else "",
+                    "unit": element['unit'],
+                    "series": element['series']
+                }
+            )
         return variants_cards_data
 
     def _get_variants_cards_view(self, cards_data):
@@ -4565,11 +4581,19 @@ class GoodsBalancesItemCard(Screen):
         self.table_type = 'warehouses'
 
     def on_start(self):
-        self._set_visibility_on_start(['error_msg', 'selected_object_name', 'selected_cell_name', 'selected_wh_name',
-                                       'item_barcode'])
+        self._set_visibility_on_start(
+            [
+                'error_msg',
+                'selected_object_name',
+                'selected_cell_name',
+                'selected_wh_name',
+                'item_barcode'
+            ]
+        )
         if not self.hash_map.get('balances_table'):
             self.hash_map.put("Show_get_balances_controls", "1")
             self.hash_map.put("Show_show_filters", "-1")
+
         if self.hash_map.get_bool('new_art'):
             self._check_item_variants()
 
@@ -4596,9 +4620,13 @@ class GoodsBalancesItemCard(Screen):
             self.hash_map.put("Show_show_filters", "-1")
         elif listener == "CardsClick":
             card_data = self.hash_map.get('selected_card_data', from_json=True)
-            self.hash_map.put_data({'selected_object_name': f"{card_data['name']}, {card_data['code']}",
-                                    "input_item_id": card_data['id'], 'item_code': card_data['code'],
-                                    'variant_selected': True})
+            self.hash_map.put_data(
+                {
+                    'selected_object_name': f"{card_data['name']}, {card_data['code']}",
+                    "input_item_id": card_data['id'], 'item_code': card_data['code'],
+                    'variant_selected': True
+                }
+            )
             self.hash_map.remove('new_art')
         elif self._is_result_positive('Выберите вариант товара:'):
             self.hash_map.put("Show_get_balances_controls", "1")
@@ -4610,10 +4638,12 @@ class GoodsBalancesItemCard(Screen):
         pass
 
     def _get_balances(self):
-        if self.hash_map.get('item_art_input') != self.hash_map.get('good_art') and not \
-                self.hash_map.get_bool('variant_selected'):
+        if (self.hash_map.get('item_art_input') != self.hash_map.get('good_art')
+            and not self.hash_map.get_bool('variant_selected')):
+
             self.hash_map.put('new_art', True)
             self.validate_input()
+
         raw_balances_data = self._get_balances_data()
         balances_data = self._prepare_table_data(raw_balances_data)
         balances_table = self._get_balances_table_view(balances_data)
@@ -4674,8 +4704,12 @@ class GoodsBalancesItemCard(Screen):
 
     def _identify_barcode_balances(self):
         no_data = False
-        barcode_data = self.service.get_values_by_field(table_name="RS_barcodes", field='barcode',
-                                                        field_value=self.hash_map.get('barcode'))
+        barcode_data = self.service.get_values_by_field(
+            table_name="RS_barcodes",
+            field='barcode',
+            field_value=self.hash_map.get('barcode')
+        )
+
         if barcode_data:
             self.hash_map.put('item_barcode', self.hash_map.get('barcode'))
 
@@ -4685,7 +4719,12 @@ class GoodsBalancesItemCard(Screen):
             if barcode_data[0].get('id_good'):
                 item_id = barcode_data[0]['id_good']
 
-                item_data = self.service.get_values_by_field(table_name="RS_goods", field='id', field_value=item_id)
+                item_data = self.service.get_values_by_field(
+                    table_name="RS_goods",
+                    field='id',
+                    field_value=item_id
+                )
+
                 if item_data[0]:
                     self.hash_map.put('input_item_id', item_id)
                     if item_data[0]['art']:
@@ -4698,8 +4737,10 @@ class GoodsBalancesItemCard(Screen):
 
         else:
             self.hash_map.put('item_barcode', '')
-            cell_data = self.service.get_values_by_field(table_name="RS_cells", field='barcode',
-                                                         field_value=self.hash_map.get('barcode'))
+            cell_data = self.service.get_values_by_field(
+                table_name="RS_cells", field='barcode',
+                field_value=self.hash_map.get('barcode')
+            )
 
             if cell_data:
                 self.hash_map.put('selected_cell_id', cell_data[0]['id'])
@@ -4866,8 +4907,11 @@ class GoodsBalancesItemCard(Screen):
     def _check_item_variants(self):
         item_art_input = self.hash_map.get('item_art_input')
         if item_art_input:
-            item_values_result = self.service.get_values_by_field(table_name='RS_goods', field='art',
-                                                                  field_value=item_art_input)
+            item_values_result = self.service.get_values_by_field(
+                table_name='RS_goods', field='art',
+                field_value=item_art_input
+            )
+
             if item_values_result:
                 if len(item_values_result) > 1:
                     self.hash_map.put('return_selected_data', '')
