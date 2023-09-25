@@ -363,6 +363,42 @@ class TestBarcodeService(unittest.TestCase):
 
         self.assertEqual(expect, actual)
 
+    def test_get_table_line_success(self):
+        self.data_creator.insert_data('RS_docs_table')
+        filters = {
+            'id_doc': '37c4c709-d22b-11e4-869d-0050568b35ac1',
+            'id_good': '37c4c709-d22b-11e4-869d-0050568b35ac1',
+            'id_properties': '',
+            'id_unit': ''
+        }
+
+        expect = {'id': 1, 'id_doc': '37c4c709-d22b-11e4-869d-0050568b35ac1',
+                   'id_good': '37c4c709-d22b-11e4-869d-0050568b35ac1',
+                   'id_properties': '', 'id_series': '', 'id_unit': '',
+                   'qtty': 1.0, 'd_qtty': None, 'qtty_plan': 5.0, 'price': None,
+                   'id_price': None, 'sent': 0,
+                   'is_plan': 'True', 'id_cell': None, 'use_series': 0}
+
+        sut = BarcodeService()
+        actual = sut.get_table_line(table_name='RS_docs_table', filters=filters)
+        del actual['last_updated']
+
+        self.assertEqual(expect, actual)
+
+    def test_get_table_line_empty(self):
+        self.data_creator.insert_data('RS_docs_table')
+        filters = {
+            'id_doc': '37c4c709-d22b-11e4-869d-0050568b35ac1',
+            'id_good': '37c4c709-d22b-11e4-869d-0050568b35ac1',
+            'id_properties': 'sssssssssssss',
+            'id_unit': ''
+        }
+
+        sut = BarcodeService()
+        actual = sut.get_table_line(table_name='RS_docs_table', filters=filters)
+
+        self.assertIsNone(actual)
+
 
 class DataCreator:
     def __init__(self):

@@ -1082,6 +1082,7 @@ class DocsListScreen(Screen):
         self.service = DocService()
         self.screen_values = {}
         self.popup_menu_data = ''
+        self.queue_service = ScanningQueueService()
 
     def on_start(self) -> None:
         doc_types = self.service.get_doc_types()
@@ -1245,6 +1246,7 @@ class DocsListScreen(Screen):
 
         try:
             self.service.delete_doc(id_doc)
+            self.queue_service.remove_doc_lines(id_doc)
         except Exception as e:
             self.hash_map.error_log(e.args[0])
             result = False
@@ -1348,6 +1350,7 @@ class DocumentsDocsListScreen(DocsListScreen):
         elif self._is_result_positive('confirm_clear_barcode_data'):
             id_doc = self.get_id_doc()
             res = self._clear_barcode_data(id_doc)
+            self.queue_service.remove_doc_lines(id_doc)
             if res.get('result'):
                 self.toast('Данные пересчета и маркировки очищены')
                 self.service.set_doc_status_to_upload(id_doc)
@@ -2218,9 +2221,6 @@ class GroupScanDocDetailsScreen(DocDetailsScreen):
 
         return not answer.error
 
-    def scan_error_sound(self):
-        super().scan_error_sound()
-
     def set_scanner_lock(self, value: bool):
         if 'urovo' in self.hash_map.get('DEVICE_MODEL').lower():
             suClass.urovo_set_lock_trigger(value)
@@ -2246,23 +2246,23 @@ class GroupScanDocDetailsScreenNew(DocDetailsScreen):
     def on_input(self) -> None:
         super().on_input()
         listeners = {
-            'barcode': self._barcode_scanned,
+            'barcode': lambda: self._group_barcode_scanned(self.hash_map.get('barcode_camera')),
+            'btn_barcodes': lambda: self.hash_map.show_dialog(listener="ВвестиШтрихкод"),
             'ON_BACK_PRESSED': self.go_back,
-            'sync_doc': self._sync_doc
+            'sync_doc': self._sync_doc,
+            'send_all_scan_lines': self.send_all_scan_lines_call_handler,
         }
         if self.listener in listeners:
             listeners[self.listener]()
+        elif self._is_result_positive('ВвестиШтрихкод'):
+            self._group_barcode_scanned(self.hash_map.get('fld_barcode'))
 
-    def _barcode_scanned(self):
-        if self.hash_map.get("event") == "onResultPositive":
-            barcode = self.hash_map.get('fld_barcode')
-        else:
-            barcode = self.hash_map.get('barcode_camera')
-
+    def _group_barcode_scanned(self, barcode):
         if not barcode:
             return
 
-        self.barcode_worker = BarcodeWorker(id_doc=self.id_doc, **self._get_barcode_process_params(),
+        self.barcode_worker = BarcodeWorker(id_doc=self.id_doc,
+                                            **self._get_barcode_process_params(),
                                             use_scanning_queue=True)
         result = self.barcode_worker.process_the_barcode(barcode)
 
@@ -2271,32 +2271,39 @@ class GroupScanDocDetailsScreenNew(DocDetailsScreen):
             return result.error
 
         if not self.hash_map.get_bool('send_document_lines_running'):
-            self.hash_map.run_event_async('send_post_lines_data', post_execute_method='after_send_post_lines_data')
+            self.hash_map.run_event_async('send_post_lines_data',
+                                          post_execute_method='after_send_post_lines_data')
             self.hash_map.put('send_document_lines_running', True)
 
     def go_back(self):
         self.hash_map.show_screen('Документы')
 
-    def send_post_lines_data(self):
-        send_data = self.queue_service.get_send_document_lines(self.id_doc)
-        validated_send_data = list((dict((key, value) for key, value in d.items() if key not in ['row_key', 'sent'])
+    def send_post_lines_data(self, sent=None):
+        send_data = self.queue_service.get_document_lines(self.id_doc, sent=sent)
+        validated_send_data = list((dict((key, value) for key, value in d.items()
+                                         if key not in ['row_key', 'sent'])
                                     for d in send_data))
         if not validated_send_data:
             validated_send_data = [{}]
 
-        http_result = self.hs_service.send_document_lines(self.id_doc, validated_send_data)
+        if sent is False:
+            http_result = self.hs_service.send_document_lines(self.id_doc, validated_send_data, timeout=8)
+        else:
+            http_result = self.hs_service.send_all_document_lines(self.id_doc, validated_send_data, timeout=8)
 
         if http_result.status_code != 200:
-            self.db_service.log_error("Ошибка соединения при отправке данных группового сканирования товара.")
+            self.db_service.log_error("Ошибка соединения при отправке "
+                                      "данных группового сканирования товара.")
             return
         if not http_result.data.get('data'):
             return
 
         for element in http_result.data['data']:
-            table_line = self.db_service.get_table_line('RS_docs_table', {'id_doc': element['id_doc'],
-                                                                          'id_good': element['id_good'],
-                                                                          'id_properties': element['id_properties'],
-                                                                          'id_unit': element['id_unit']})
+            table_line = self.db_service.get_table_line('RS_docs_table', filters={
+                'id_doc': element['id_doc'],
+                'id_good': element['id_good'],
+                'id_properties': element['id_properties'],
+                'id_unit': element['id_unit']})
             if table_line:
                 table_line['qtty'] = element['qtty']
                 table_line['sent'] = 1
@@ -2311,15 +2318,16 @@ class GroupScanDocDetailsScreenNew(DocDetailsScreen):
         self.on_start()
 
     def after_send_data(self):
-        unsent_lines = self.queue_service.get_send_document_lines(self.id_doc)
-        if unsent_lines and self._check_connection():
-            self.hash_map.run_event_async('send_post_lines_data', post_execute_method='after_send_post_lines_data')
+        if self.queue_service.has_unsent_lines(self.id_doc) and self._check_connection():
+            self.hash_map.run_event_async('send_post_lines_data',
+                                          post_execute_method='after_send_post_lines_data')
 
     @staticmethod
     def create_new_table_line(element):
         new_table_line = element
         del new_table_line['table_type']
-        new_table_line.update({'d_qtty': new_table_line['qtty'], 'id_series': '', 'id_price': '', 'sent': 1,
+        new_table_line.update({'d_qtty': new_table_line['qtty'],
+                               'id_series': '', 'id_price': '', 'sent': 1,
                                'qtty_plan': None})
         return new_table_line
 
@@ -2444,6 +2452,18 @@ class GroupScanDocDetailsScreenNew(DocDetailsScreen):
             self.hash_map.run_event_progress('send_post_lines_data')
         else:
             self.toast('Нет соединения с сервером 1С')
+
+    def send_all_scan_lines_call_handler(self):
+        if self._check_connection():
+            self.hash_map.run_event_progress('send_all_scan_lines')
+        else:
+            self.toast('Нет соединения с сервером 1С')
+
+    def send_all_scan_lines_run(self):
+        self.send_post_lines_data()
+
+    def send_unsent_lines_run(self):
+        self.send_post_lines_data(sent=False)
 
 
 class DocumentsDocDetailScreen(DocDetailsScreen):
@@ -2645,6 +2665,7 @@ class DocumentsDocDetailScreen(DocDetailsScreen):
 
     def _get_doc_barcode_data(self, args):
         return self.service.get_doc_barcode_data(args)
+
 
 class AdrDocDetailsScreen(DocDetailsScreen):
     screen_name = 'Документ товары'
@@ -3125,7 +3146,6 @@ class AdrDocDetailsScreen(DocDetailsScreen):
         # self.hash_map.show_process_result(SeriesList.process_name, SeriesList.screen_name)
         self.hash_map['back_screen'] = self.hash_map.get_current_screen()
         self.hash_map.show_screen(SeriesAdrList.screen_name)
-
 
 
 class FlowDocDetailsScreen(DocDetailsScreen):
