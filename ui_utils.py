@@ -50,7 +50,7 @@ class HashMap:
     def listener(self, v):
         pass
 
-    def show_process_result(self, process, screen, data: dict):
+    def show_process_result(self, process, screen, data: dict = None):
         if process and screen:
             self.hash_map.put('ShowProcessResult', f'{process}|{screen}')
 
@@ -441,7 +441,7 @@ class BarcodeWorker:
         self.mark_update_data = {}
         self.docs_table_update_data = {}
         self.queue_update_data = {}
-        self.is_adr_doc = kwargs.get('is_adr_doc', False)
+
 
     def process_the_barcode(self, barcode):
         self.process_result.barcode = barcode
@@ -450,6 +450,7 @@ class BarcodeWorker:
         if self.barcode_info.error:
             self._set_process_result_info('invalid_barcode')
             return self.process_result
+
         self.barcode_data = self._get_barcode_data()
 
         if self.barcode_data:
@@ -461,7 +462,10 @@ class BarcodeWorker:
         return self.process_result
 
     def _get_barcode_data(self):
-        barcode_data = self.db_service.get_barcode_data(self.barcode_info, self.id_doc)
+        barcode_data = self.db_service.get_barcode_data(
+            id_doc=self.id_doc,
+            barcode_info=self.barcode_info
+        )
         return barcode_data or {}
 
     def check_barcode(self):
@@ -509,7 +513,6 @@ class BarcodeWorker:
 
     def _insert_mark_data(self):
         self.mark_update_data = {
-            'id': self.barcode_data['mark_id'],
             'id_doc': self.id_doc,
             'id_good': self.barcode_data['id_good'],
             'id_property': self.barcode_data['id_property'],
@@ -520,6 +523,9 @@ class BarcodeWorker:
             'gtin': self.barcode_info.gtin,
             'series': self.barcode_info.serial
         }
+
+        if self.barcode_data['mark_id']:
+            self.mark_update_data['id'] = self.barcode_data['mark_id']
 
     def _insert_doc_table_data(self, qty):
 
@@ -562,7 +568,6 @@ class BarcodeWorker:
 
         if self.mark_update_data:
             self.db_service.replace_or_create_table(table_name="RS_docs_barcodes", docs_table_update_data=self.mark_update_data)
-
 
         if self.docs_table_update_data:
             self.db_service.replace_or_create_table(table_name="RS_docs_table", docs_table_update_data=self.docs_table_update_data)
@@ -627,7 +632,6 @@ class BarcodeWorker:
 
     def parse(self, barcode: str):
         return BarcodeParser(barcode).parse()
-        # return {'SCHEME': 'EAN13', 'BARCODE': barcode, 'GTIN': barcode, 'SERIAL': ''}
 
     @dataclass
     class ProcessTheBarcodeResult:
@@ -636,6 +640,61 @@ class BarcodeWorker:
         barcode: str = ''
         row_key: str = ''
 
+class BarcodeAdrWorker(BarcodeWorker):
+    def __init__(self, id_doc, **kwargs):
+        super().__init__(id_doc, **kwargs)
+        self.is_adr_doc = True
+        self.id_cell = kwargs.get('id_cell', '')
+        self.table_type = kwargs.get('table_type', '')
+
+    def _get_barcode_data(self):
+        barcode_data = self.db_service.get_barcode_data(
+            id_doc=self.id_doc,
+            barcode_info=self.barcode_info,
+            is_adr_doc=self.is_adr_doc,
+            id_cell=self.id_cell,
+            table_type=self.table_type
+        )
+
+        return barcode_data or {}
+
+    def _check_mark_in_document(self):
+        pass
+
+    def _insert_mark_data(self):
+        pass
+
+    def _insert_doc_table_data(self, qty):
+
+        self.docs_table_update_data = {
+            'id_doc': self.id_doc,
+            'id_good': self.barcode_data['id_good'],
+            'id_properties': self.barcode_data['id_property'],
+            'id_series': self.barcode_data['id_series'],
+            'id_unit': self.barcode_data['id_unit'],
+            'qtty': float(qty),
+            'qtty_plan': self.barcode_data['qtty_plan'],
+            'last_updated': (datetime.now() - timedelta(hours=self.user_tmz)).strftime("%Y-%m-%d %H:%M:%S"),
+            'id_cell': self.id_cell,
+            'table_type': self.table_type,
+        }
+
+        if self.barcode_data['row_key']:
+            self.docs_table_update_data['id'] = self.barcode_data['row_key']
+
+    def _insert_queue_data(self):
+        pass
+
+    def update_document_barcode_data(self):
+        if self.process_result.error:
+            return
+
+        if self.docs_table_update_data:
+            self.db_service.replace_or_create_table(
+                table_name="RS_adr_docs_table",
+                docs_table_update_data=self.docs_table_update_data)
+
+        self._set_process_result_info('success_barcode')
 
 class BarcodeParser:
     def __init__(self, barcode):
