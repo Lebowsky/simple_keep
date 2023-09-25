@@ -198,10 +198,17 @@ class BarcodeService(DbService):
     @staticmethod
     def get_table_line(table_name, filters: dict = None):
         provider = SqlQueryProvider(table_name=table_name)
-        query = f"""SELECT * FROM {table_name} WHERE """
-        for field in list(filters):
-            query += f"""{field}='{filters[field]}' AND """
-        query = query[:-4] if query.endswith('AND ') else query
+        select_part = f"""SELECT * FROM {table_name}"""
+        query = select_part
+        if filters:
+            i = 0
+            filters_part = """ WHERE """
+            for field in list(filters):
+                filters_part += f"""{field}='{filters[field]}'""" if i == 0 else \
+                    f""" AND {field}='{filters[field]}'"""
+                i += 1
+            query = f"""{select_part} {filters_part}"""
+
         result = provider.sql_query(query, '')
         return result[0] if result else None
 
@@ -211,8 +218,8 @@ class BarcodeService(DbService):
         provider.update(data=table_line)
 
     def log_error(self, error_msg):
-        error_text = f"Работа с штрихкодами:" \
-                     f"{error_msg}"
+        error_text = f"""Работа с штрихкодами:
+            {error_msg}"""
         super()._write_error_on_log(error_text)
 
 
@@ -719,6 +726,7 @@ class DocService:
         query_text = ('Update RS_docs_barcodes Set approved = 0 Where id_doc=:id_doc',
                       'Delete From RS_docs_barcodes Where  id_doc=:id_doc And is_plan = 0',
                       'Update RS_docs_table Set qtty = 0 Where id_doc=:id_doc',
+                      'Update RS_docs_table Set d_qtty = 0 Where id_doc=:id_doc',
                       'Delete From RS_docs_table Where id_doc=:id_doc and is_plan = "False"',
                       'Delete From RS_barc_flow Where id_doc = :id_doc')
         try:

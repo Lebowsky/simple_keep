@@ -234,7 +234,14 @@ def highlight_scanned_item(hash_map: HashMap):
 def send_post_lines_data(hash_map: HashMap):
     """ Отправка на 1С выбранных в nosql строк post-запросом """
     screen = ui_models.GroupScanDocDetailsScreenNew(hash_map, rs_settings)
-    screen.send_post_lines_data()
+    screen.send_unsent_lines_run()
+
+
+@HashMap()
+def send_all_scan_lines(hash_map: HashMap):
+    """ Отправка на 1С всех nosql строк товара post-запросом """
+    screen = ui_models.GroupScanDocDetailsScreenNew(hash_map, rs_settings)
+    screen.send_all_scan_lines_run()
 
 
 @HashMap()

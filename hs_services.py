@@ -97,6 +97,25 @@ class HsService:
 
         return self.http_answer
 
+    def send_all_document_lines(self, id_doc, data, **kwargs):
+        if not data:
+            return {'empty': True}
+
+        kwargs['data'] = data if isinstance(data, str) else json.dumps(data)
+
+        self._hs = 'document_lines_rewrite'
+        self._method = requests.post
+        self.params['id_doc'] = id_doc
+
+        answer = self._send_request(kwargs)
+        if answer['status_code'] == 200:
+            json_data = json.loads(answer.get('text'))
+            answer['data'] = json_data
+
+        self.http_answer = self._create_http_answer(answer)
+
+        return self.http_answer
+
     def reset_exchange(self, **kwargs):
         self._hs = 'reset_exchange'
         self._method = requests.post
