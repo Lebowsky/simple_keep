@@ -3262,6 +3262,16 @@
                                 "type": "MenuItem",
                                 "Value": "Ввести штрихкод",
                                 "Variable": "btn_barcodes"
+                            },
+                            {
+                                "type": "MenuItem",
+                                "Value": "Cинхронизировать данные с 1С",
+                                "Variable": "sync_doc"
+                            },
+                            {
+                                "type": "MenuItem",
+                                "Value": "Отправить все сканы на 1С",
+                                "Variable": "send_all_scan_lines"
                             }
                         ],
                         "Handlers": [
