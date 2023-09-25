@@ -99,7 +99,7 @@ class ScanningQueueService:
         data = self.provider.search(id_doc=id_doc, sent=False)
         return data
 
-    def update_sent_lines(self, data: list, sent=True):
-        for row in data:
-            row['sent'] = sent
-            self.provider.update(data=row, id_doc=row['id_doc'], row_id=row['row_id'])
+    def update_sent_lines(self, sent_data: list, sent=True):
+        doc_id_list = [x.doc_id for x in sent_data]
+        self.provider.table.update({'sent': sent}, doc_ids=doc_id_list)
+

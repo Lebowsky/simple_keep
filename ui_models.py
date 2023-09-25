@@ -1,7 +1,6 @@
 import re
 from abc import ABC, abstractmethod
 import json
-import base64
 from json.decoder import JSONDecodeError
 import os
 from pathlib import Path
@@ -52,9 +51,18 @@ class Screen(ABC):
     def on_post_start(self):
         pass
 
-    @abstractmethod
     def show(self, args=None):
-        pass
+        self._validate_screen_values()
+        self.hash_map.show_screen(self.screen_name, args)
+
+    def show_process_result(self, args=None):
+        self._validate_screen_values()
+        self.hash_map.show_process_result(self.process_name, self.screen_name, args)
+
+    def _clear_screen_values(self):
+        for key in self.screen_values:
+            self.hash_map.remove(key)
+
 
     def toast(self, text):
         self.hash_map.toast(text)
@@ -1605,6 +1613,7 @@ class FlowDocScreen(DocsListScreen):
     def on_start(self):
         super().on_start()
 
+
     def on_input(self):
         if self.listener == "CardsClick":
             args = self._get_selected_card_put_data()
@@ -2209,7 +2218,124 @@ class GroupScanDocDetailsScreen(DocDetailsScreen):
 
         return not answer.error
 
-    def __get_doc_table_view(self, table_data):
+    def scan_error_sound(self):
+        super().scan_error_sound()
+
+    def set_scanner_lock(self, value: bool):
+        if 'urovo' in self.hash_map.get('DEVICE_MODEL').lower():
+            suClass.urovo_set_lock_trigger(value)
+
+    def can_launch_timer(self):
+        return False
+
+
+class GroupScanDocDetailsScreenNew(DocDetailsScreen):
+    screen_name = 'Документ товары'
+    process_name = 'Групповая обработка'
+
+    def __init__(self, hash_map, rs_settings):
+        super().__init__(hash_map, rs_settings)
+        self.hs_service = hs_services.HsService(self.get_http_settings())
+        self.db_service = db_services.BarcodeService()
+        self.queue_service = ScanningQueueService()
+
+    def on_start(self):
+        super()._on_start()
+        self.hash_map.put('stop_timer_update', 'true')
+
+    def on_input(self) -> None:
+        super().on_input()
+        listeners = {
+            'barcode': self._barcode_scanned,
+            'ON_BACK_PRESSED': self.go_back,
+            'sync_doc': self._sync_doc
+        }
+        if self.listener in listeners:
+            listeners[self.listener]()
+
+    def _barcode_scanned(self):
+        if self.hash_map.get("event") == "onResultPositive":
+            barcode = self.hash_map.get('fld_barcode')
+        else:
+            barcode = self.hash_map.get('barcode_camera')
+
+        if not barcode:
+            return
+
+        self.barcode_worker = BarcodeWorker(id_doc=self.id_doc, **self._get_barcode_process_params(),
+                                            use_scanning_queue=True)
+        result = self.barcode_worker.process_the_barcode(barcode)
+
+        if result.error:
+            self._process_error_scan_barcode(result)
+            return result.error
+
+        if not self.hash_map.get_bool('send_document_lines_running'):
+            self.hash_map.run_event_async('send_post_lines_data', post_execute_method='after_send_post_lines_data')
+            self.hash_map.put('send_document_lines_running', True)
+
+    def go_back(self):
+        self.hash_map.show_screen('Документы')
+
+    def send_post_lines_data(self):
+        send_data = self.queue_service.get_send_document_lines(self.id_doc)
+        validated_send_data = list((dict((key, value) for key, value in d.items() if key not in ['row_key', 'sent'])
+                                    for d in send_data))
+        if not validated_send_data:
+            validated_send_data = [{}]
+
+        http_result = self.hs_service.send_document_lines(self.id_doc, validated_send_data)
+
+        if http_result.status_code != 200:
+            self.db_service.log_error("Ошибка соединения при отправке данных группового сканирования товара.")
+            return
+        if not http_result.data.get('data'):
+            return
+
+        for element in http_result.data['data']:
+            table_line = self.db_service.get_table_line('RS_docs_table', {'id_doc': element['id_doc'],
+                                                                          'id_good': element['id_good'],
+                                                                          'id_properties': element['id_properties'],
+                                                                          'id_unit': element['id_unit']})
+            if table_line:
+                table_line['qtty'] = element['qtty']
+                table_line['sent'] = 1
+                self.db_service.replace_or_create_table('RS_docs_table', table_line)
+            else:
+                new_table_line = self.create_new_table_line(element)
+                self.db_service.replace_or_create_table('RS_docs_table', new_table_line)
+
+        self.queue_service.update_sent_lines(send_data)
+        self.hash_map.put('send_document_lines_running', False)
+        self.hash_map.refresh_screen()
+        self.on_start()
+
+    def after_send_data(self):
+        unsent_lines = self.queue_service.get_send_document_lines(self.id_doc)
+        if unsent_lines and self._check_connection():
+            self.hash_map.run_event_async('send_post_lines_data', post_execute_method='after_send_post_lines_data')
+
+    @staticmethod
+    def create_new_table_line(element):
+        new_table_line = element
+        del new_table_line['table_type']
+        new_table_line.update({'d_qtty': new_table_line['qtty'], 'id_series': '', 'id_price': '', 'sent': 1,
+                               'qtty_plan': None})
+        return new_table_line
+
+    def _get_barcode_process_params(self):
+        return {
+            'have_qtty_plan': self.hash_map.get_bool('have_qtty_plan'),
+            'have_zero_plan': self.hash_map.get_bool('have_zero_plan'),
+            'have_mark_plan': self.hash_map.get_bool('have_mark_plan'),
+            'control': self.hash_map.get_bool('control')
+        }
+
+    def _process_error_scan_barcode(self, scan_result):
+        self.hash_map.toast(scan_result.description)
+        self.hash_map.playsound('error')
+
+    def _get_doc_table_view(self, table_data):
         table_view = widgets.CustomTable(
             widgets.LinearLayout(
                 self.LinearLayout(
@@ -2239,7 +2365,7 @@ class GroupScanDocDetailsScreen(DocDetailsScreen):
 
         return table_view
 
-    def __get_doc_table_row_view(self):
+    def _get_doc_table_row_view(self):
         row_view = widgets.LinearLayout(
             widgets.LinearLayout(
                 widgets.LinearLayout(
@@ -2300,89 +2426,24 @@ class GroupScanDocDetailsScreen(DocDetailsScreen):
 
         return row_view
 
-    def scan_error_sound(self):
-        super().scan_error_sound()
+    def _check_connection(self):
+        try:
+            self.hs_service.communication_test(timeout=1)
+            answer = self.hs_service.http_answer
+        except Exception as e:
+            answer = self.hs_service.HttpAnswer(
+                error=True,
+                error_text=str(e.args[0]),
+                status_code=404,
+                url=self.hs_service.url)
 
-    def set_scanner_lock(self, value: bool):
-        if 'urovo' in self.hash_map.get('DEVICE_MODEL').lower():
-            suClass.urovo_set_lock_trigger(value)
+        return not answer.error
 
-    def can_launch_timer(self):
-        return False
-
-class GroupScanDocDetailsScreenNew(DocDetailsScreen):
-    def __init__(self, hash_map, rs_settings):
-        super().__init__(hash_map, rs_settings)
-        self.hs_service = hs_services.HsService(self.get_http_settings())
-        self.db_service = db_services.BarcodeService()
-        self.queue_service = ScanningQueueService()
-
-    def on_start(self):
-        super()._on_start()
-
-    def on_input(self) -> None:
-        super().on_input()
-        listeners = {
-            'barcode': self._barcode_scanned,
-        }
-        if self.listener in listeners:
-            listeners[self.listener]()
-
-    def _barcode_scanned(self):
-        if self.hash_map.get("event") == "onResultPositive":
-            barcode = self.hash_map.get('fld_barcode')
+    def _sync_doc(self):
+        if self._check_connection():
+            self.hash_map.run_event_progress('send_post_lines_data')
         else:
-            barcode = self.hash_map.get('barcode_camera')
-
-        if not barcode:
-            return
-
-        barcode_worker = BarcodeWorker(id_doc=self.id_doc, **self._get_barcode_process_params(),
-                                       use_scanning_queue=True)
-        # print(barcode_worker)
-        result = barcode_worker.process_the_barcode(barcode)
-        if result.error:
-            self._process_error_scan_barcode(result)
-            return result.error
-
-        send_data = self.queue_service.get_send_document_lines(self.id_doc)
-        return send_data
-        # http_result = self.hs_service.send_document_lines(self.id_doc, send_data)
-        # hash_map.put('send_document_lines_running', True)
-        # if http_result.status_code == 200:
-        #     # barcode_worker.update_document_barcode_data()
-        #     # barcode_worker.
-        # hash_map.put('send_document_lines_running', False)
-
-        # process the barcode
-        # barcode_worker = BarcodeWorker(
-        #     self.id_doc, **self._get_barcode_process_params())
-        #
-        # result = barcode_worker.process_the_barcode(barcode)
-        # if result.error:
-        #     self._process_error_scan_barcode(result)
-        #     return
-
-        # run after_scan_processing async http post -> hs.send_document_lines()
-        # hash_map.put('send_document_lines_running', True)
-        # if 200 update barc queue
-        #   update RS_docs_table
-        #   update queue sent status
-        # hash_map.put('send_document_lines_running', False)
-
-    def after_scan_processing(self):
-        pass
-
-    def _get_barcode_process_params(self):
-        return {
-            'have_qtty_plan': self.hash_map.get_bool('have_qtty_plan'),
-            'have_zero_plan': self.hash_map.get_bool('have_zero_plan'),
-            'have_mark_plan': self.hash_map.get_bool('have_mark_plan'),
-            'control': self.hash_map.get_bool('control')
-        }
-
-    def _process_error_scan_barcode(self, scan_result):
-        self.hash_map.toast(scan_result.description)
+            self.toast('Нет соединения с сервером 1С')
 
 
 class DocumentsDocDetailScreen(DocDetailsScreen):
@@ -5701,7 +5762,7 @@ class SeriesAdrList(Screen):
             self.hash_map.show_screen("Заполнение серии", self.params)
         elif listener == "ON_BACK_PRESSED":
             real_qtty = self.service.get_adr_total_qtty()
-            self.service.set_total_qtty(real_qtty)
+            self.service.set_adr_total_qtty(real_qtty)
             # self.hash_map.importing(json.loads(self.rs_settings.get('_stored_hash')))
             # self.hash_map.put("FinishProcess", "")
             self.hash_map.show_screen(self.hash_map.get('back_screen'))
@@ -5866,6 +5927,92 @@ class SeriesAdrItem(SeriesAdrList):
                   'cell': self.hash_map['cell']
                   }
         self.service.save_table_str(params)
+
+# ==================== SelectItemScreen =============================
+
+class SelectItemScreen(Screen):
+    process_name = 'SelectItemProcess'
+    screen_name = 'SelectItemScreen'
+    def __init__(self, hash_map: HashMap, rs_settings):
+        super().__init__(hash_map, rs_settings)
+        self.screen_values = {
+            'table_name': hash_map['table_name'],
+            'fields': hash_map.get_json('fields'),
+            'result_listener': hash_map['result_listener'] or 'select_success',
+        }
+        self.return_value_key = 'selected_card'
+        self.db_service = db_services.SelectItemService(self.screen_values['table_name'])
+
+    def on_start(self):
+        if self.screen_values.get('table_name'):
+            cards_data = self.db_service.get_select_data()
+            cards = self._get_cards(cards_data)
+
+            self.hash_map['cards_data'] = cards.to_json()
+            self.hash_map['return_selected_data'] = ''
+
+    def on_input(self):
+        listeners = {
+            'CardsClick': self._cards_click,
+            'ON_BACK_PRESSED': self._finish_process,
+        }
+        if self.listener in listeners:
+            listeners[self.listener]()
+
+        self.hash_map.no_refresh()
+
+    def show(self, args=None):
+        self.show_process_result()
+        self.hash_map['SetResultListener'] = self.screen_values['result_listener']
+
+    def on_post_start(self):
+        pass
+
+    def _get_cards(self, cards_data):
+        card_title_text_size = self.rs_settings.get('CardTitleTextSize')
+        card_text_size = self.rs_settings.get('CardTextSize')
+
+        fields_views = []
+        for field in self.screen_values['fields']:
+            fields_views.append(
+                widgets.LinearLayout(
+                    widgets.TextView(
+                        Value=f'@{field}',
+                        width='match_parent',
+                        gravity_horizontal='center',
+                        TextSize=card_title_text_size,
+                        TextColor='#000000',
+                    ),
+                    orientation='horizontal',
+                    width='match_parent',
+                )
+            )
+
+        cards = widgets.CustomCards(
+            widgets.LinearLayout(
+                widgets.LinearLayout(
+                    *fields_views,
+                    orientation='vertical',
+                    width='match_parent',
+                )
+            ),
+            options=widgets.Options().options,
+            cardsdata=cards_data
+        )
+        return cards
+
+    def _cards_click(self):
+        self.hash_map[self.return_value_key] = self.hash_map['selected_card_data']
+        self._finish_process()
+
+    def _finish_process(self):
+        self._clear_screen_values()
+        self.hash_map.remove('return_selected_data')
+        self.hash_map.remove('selected_card_data')
+        self.hash_map.remove('cards_data')
+        self.hash_map.put('FinishProcessResult')
+
+# ^^^^^^^^^^^^^^^^^^^^^ SelectItemScreen ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 # ^^^^^^^^^^^^^^^^^^^^^ Series ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -6871,127 +7018,6 @@ class MainEvents:
 
 # ^^^^^^^^^^^^^^^^^^^^^ Main events ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-# ==================== Universal cards =============================
-
-class UniversalCardsScreen(Screen):
-    def __init__(self, hash_map:HashMap, rs_settings):
-        super().__init__(hash_map, rs_settings)
-
-        self.card_text_size = 24
-        self.fields_aliases = self._get_fields_aliases()
-        self.screen_values = {
-            'table_for_select': hash_map['table_for_select'],
-        }
-        self.table_name = self.screen_values['table_for_select']
-        self.table_name = 'RS_goods'
-
-    def on_start(self):
-        filter_value = self.hash_map['SearchString']
-        if filter_value:
-            filter_fields = (self.hash_map['filter_fields'] or '').split(';')
-        else:
-            filter_fields = []
-
-        self.hash_map['cards'] = self._get_table_cards().to_json()
-
-    def on_input(self):
-        pass
-
-    def on_post_start(self):
-        pass
-
-    def show(self, args=None):
-        self._validate_screen_values()
-        self.hash_map.show_screen(self.screen_name, args)
-
-    def _get_table_cards(self):
-        service = UniversalCardsService()
-        fields, views_data = service.get_views_data(self.table_name)
-        return self._get_cards_view(fields, views_data)
-
-    def _get_field_view(self, field, value):
-        aliases = self.fields_aliases.get(field)
-
-        view = widgets.TextView(
-            Value=f'@{value}',
-        )
-        if aliases:
-            view = widgets.TextView(
-                Value=f'@{value}',
-                TextSize=self.rs_settings.get(aliases['TextSize']) or self.card_text_size,
-                TextBold=aliases['TextBold'],
-            )
-        return view
-
-    def _get_card_view(self, fields):
-        card_fields = []
-        for field, link in fields.items():
-            card_fields.append(self._get_field_view(field, link))
-
-        return card_fields
-
-    def _get_cards_view(self, fields, cards_data):
-        card_view = self._get_card_view(fields)
-        cards_view = widgets.CustomCards(
-            widgets.LinearLayout(
-                widgets.LinearLayout(
-                    widgets.LinearLayout(
-                        *card_view,
-                        width='match_parent',
-                        weight=1
-                    ),
-                    height='match_parent',
-                    width='match_parent',
-                    orientation='horizontal'
-                ),
-                height='match_parent',
-                width='match_parent'
-            ),
-            options=widgets.Options(override_search=True).options,
-            cardsdata=cards_data
-        )
-
-        return cards_view
-    def _get_fields_aliases(self):
-        return {
-            'id_good':{'name':'Номенклатура', 'TextSize':'TitleTextSize', "TextBold": True},
-            'type_good': {'name':'Тип номенклатуры', 'TextSize':'CardTextSize', "TextBold": False},
-            'unit':{'name': 'Единица измерения', 'TextSize':'CardTextSize', "TextBold": False},
-            'id_property':{'name': 'Характеристика', 'TextSize':'CardTextSize', "TextBold": False},
-            'id_series': {'name':'Серия', 'TextSize':'CardTextSize', "TextBold": False},
-            'id_unit':{'name': 'Единица измерения', 'TextSize':'CardTextSize', "TextBold": False},
-            'id_countragents':{'name': 'Контрагент', 'TextSize':'CardTextSize', "TextBold": False},
-            'id_warehouse':{'name': 'Склад', 'TextSize':'CardTextSize', "TextBold": False},
-            'id_doc':{'name': 'Номенклатура', 'TextSize':'TitleTextSize', "TextBold": True},
-            'id_cell':{'name': 'Ячейка', 'TextSize':'CardTextSize', "TextBold": False},
-            'id':{'name': 'key', 'TextSize':'CardTextSize', "TextBold": False},
-            'name':{'name': 'Наименование', 'TextSize':'TitleTextSize', "TextBold": True},
-            'code':{'name': 'Код', 'TextSize':'CardTextSize', "TextBold": False},
-            'art':{'name': 'Артикул', 'TextSize':'CardTextSize', "TextBold": False},
-            'description':{'name': 'Описание', 'TextSize':'CardDateTextSize', "TextBold": False},
-            'qtty':{'name': 'Количество', 'TextSize':'CardTextSize', "TextBold": True},
-            'qtty_plan':{'name': 'Количество план', 'TextSize':'CardTextSize', "TextBold": True},
-            'barcode':{'name': 'Штрихкод', 'TextSize':'CardTextSize', "TextBold": False},
-            'full_name':{'name': 'Полное наименование', 'TextSize':'CardTextSize', "TextBold": False},
-            'inn':{'name': 'ИНН', 'TextSize':'TitleTextSize', "TextBold": False},
-            'kpp':{'name': 'КПП', 'TextSize':'TitleTextSize', "TextBold": False},
-            'mark_code':{'name': 'Штрихкод', 'TextSize':'CardTextSize', "TextBold": False},
-            'id_price_types':{'name': 'Тип цены', 'TextSize':'TitleTextSize', "TextBold": False},
-            'price':{'name': 'Цена', 'TextSize':'TitleTextSize', "TextBold": True},
-            'id_owner':{'name': 'Владелец', 'TextSize':'CardTextSize', "TextBold": False},
-            'best_before':{'name': 'Годен до:', 'TextSize':'CardTextSize', "TextBold": False},
-            'number':{'name':'Номер', 'TextSize':'CardTextSize', "TextBold": False},
-            'production_date':{'name':'Дата производства', 'TextSize':'CardTextSize', "TextBold": False},
-            'use_mark':{'name':'Использовать маркировку', 'TextSize':'CardTextSize', "TextBold": False},
-            'nominator':{'name':'Номинатор', 'TextSize':'CardTextSize', "TextBold": True},
-            'denominator':{'name':'Деноминатор', 'TextSize':'CardTextSize', "TextBold": True},
-            'log': {'name': 'Ошибка', 'TextSize': 'CardTextSize', "TextBold": False}
-            }
-
-        return list
-
-
-# ^^^^^^^^^^^^^^^^^^^^^ Universal cards ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 class ScreensFactory:
     screens = [GoodsSelectScreen,
@@ -7006,6 +7032,7 @@ class ScreensFactory:
         DocumentsTiles,
         GroupScanDocsListScreen,
         DocumentsDocsListScreen,
+        GroupScanDocDetailsScreenNew,
         GroupScanDocDetailsScreen,
         DocumentsDocDetailScreen,
         ErrorLogScreen,

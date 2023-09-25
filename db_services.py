@@ -111,9 +111,11 @@ class BarcodeService(DbService):
                 IFNULL(doc_barcodes.id, 0) AS mark_id,
                 IFNULL(goods.use_mark, false) AS use_mark,
                 IFNULL(doc_table.id, '') AS row_key,
+                IFNULL(doc_table.d_qtty, 0.0) AS d_qtty,
                 IFNULL(doc_table.qtty, 0.0) AS qtty,
-                IFNULL(doc_table.qtty_plan, 0.0) AS qtty_plan
-                
+                IFNULL(doc_table.qtty_plan, 0.0) AS qtty_plan,
+                IFNULL(doc_table.price, 0.0) AS price,
+                IFNULL(doc_table.id_price, '') AS id_price
             FROM RS_barcodes AS barcodes
             LEFT JOIN 
                     (SELECT 
@@ -128,14 +130,14 @@ class BarcodeService(DbService):
                 ON barcodes.id_good = doc_table.id_good
                      AND barcodes.id_property = doc_table.id_properties
                      AND barcodes.id_unit = doc_table.id_unit
-                     AND doc_table.id_doc = {}
+                     AND doc_table.id_doc = "{}"
                      
             LEFT JOIN RS_docs_barcodes as doc_barcodes
-                ON doc_barcodes.id_doc = {}
-                    AND doc_barcodes.GTIN = {}
-                    AND doc_barcodes.Series = {}
+                ON doc_barcodes.id_doc = "{}"
+                    AND doc_barcodes.GTIN = "{}"
+                    AND doc_barcodes.Series = "{}"
                 
-            WHERE barcodes.barcode = {}'''.format(
+            WHERE barcodes.barcode = "{}"'''.format(
             id_doc, id_doc, barcode_info.gtin, barcode_info.serial, search_value)
 
         result = self.provider.sql_query(q)
@@ -162,7 +164,7 @@ class BarcodeService(DbService):
             return '0000000000011'
 
     @staticmethod
-    def update_table(table_name, docs_table_update_data):
+    def replace_or_create_table(table_name, docs_table_update_data):
         provider = SqlQueryProvider(table_name=table_name)
         provider.replace(docs_table_update_data)
 
@@ -170,6 +172,26 @@ class BarcodeService(DbService):
     def insert_no_sql(queue_update_data):
         provider = ScanningQueueService()
         provider.save_scanned_row_data(queue_update_data)
+
+    @staticmethod
+    def get_table_line(table_name, filters: dict = None):
+        provider = SqlQueryProvider(table_name=table_name)
+        query = f"""SELECT * FROM {table_name} WHERE """
+        for field in list(filters):
+            query += f"""{field}='{filters[field]}' AND """
+        query = query[:-4] if query.endswith('AND ') else query
+        result = provider.sql_query(query, '')
+        return result[0] if result else None
+
+    @staticmethod
+    def update_line_qtty(table_line):
+        provider = SqlQueryProvider(table_name='RS_docs_table')
+        provider.update(data=table_line)
+
+    def log_error(self, error_msg):
+        error_text = f"Работа с штрихкодами:" \
+                     f"{error_msg}"
+        super()._write_error_on_log(error_text)
 
 
 class DocService:
@@ -616,6 +638,7 @@ class DocService:
             RS_series.name as series_name,
             RS_docs_table.id_unit,
             RS_units.name as units_name,
+            RS_docs_table.d_qtty,
             RS_docs_table.qtty,
             RS_docs_table.qtty_plan,
             RS_docs_table.price,
@@ -883,8 +906,8 @@ class SeriesService(DbService):
             params = {}
 
     def get_series_by_barcode(self, barcode):
-        #TODO Add properties to where
-        params = [self.params.get('id_doc'), self.params.get('id_good'), barcode,
+
+        params = [self.params.get('id_doc'), self.params.get('id_good'), self.params.get('id_properties'), barcode,
                   barcode]  # self.params.get('id_warehouse'),
         q = '''
         SELECT id,
@@ -901,7 +924,8 @@ class SeriesService(DbService):
            cell
         FROM RS_docs_series
         WHERE RS_docs_series.id_doc = ? AND 
-            RS_docs_series.id_good = ? 
+            RS_docs_series.id_good = ? AND 
+            RS_docs_series.id_properties = ? 
             AND (name = ? OR number = ?)'''
         return get_query_result(q, params, True)
 
@@ -979,7 +1003,8 @@ class SeriesService(DbService):
 
 
     def get_series_by_adr_doc_and_goods(self):
-        params = (self.params.get('id_doc'), self.params.get('id_good'), self.params.get('cell'))  # , self.params.get('id_warehouse')
+        curr_cell = self.params.get('cell') if self.params.get('cell') else self.params.get('id_cell')
+        params = (self.params.get('id_doc'), self.params.get('id_good'), curr_cell)  # , self.params.get('id_warehouse')
 
         q = '''
             SELECT 
@@ -1045,7 +1070,7 @@ class SeriesService(DbService):
     def add_new_series_in_doc_series_table(self, barcode):
         params = (
         self.params.get('id_doc'), self.params.get('id_good'), self.params.get('id_properties'), self.params.get('id_warehouse'), 1,
-                barcode, barcode, self.params.get('cell'))
+                barcode, barcode, self.params.get('id_cell'))
         q = 'INSERT INTO RS_docs_series (id_doc, id_good, id_properties, id_warehouse, qtty, name, number, cell) VALUES(?,?,?,?,?,?,?,?)'
         return get_query_result(q, params)
 
@@ -1076,6 +1101,7 @@ class SeriesService(DbService):
            {table_name}.qtty_plan,
                      '''
         q = q + f''' {table_name}.id_cell, 
+                 {table_name}.id_cell as cell, 
                 RS_cells.name as cell_name, 
                 0 as price,
                 Null as id_price,''' if is_adr else q +  f'''
@@ -1186,12 +1212,12 @@ class SeriesService(DbService):
         return True
 
     def get_total_qtty(self):
-        #TODO Add properties th where
-        params = (self.params.get('id_doc'), self.params.get('id_good'))
+
+        params = (self.params.get('id_doc'), self.params.get('id_good'), self.params.get('id_properties'))
         q = '''
         SELECT 
         sum(qtty) FROM RS_docs_series
-         WHERE id_doc = ? AND id_good = ?'''
+         WHERE id_doc = ? AND id_good = ? AND id_properties = ?'''
         res = get_query_result(q, params)
         if res:
             return res[0][0]
@@ -1200,12 +1226,12 @@ class SeriesService(DbService):
 
 
     def get_adr_total_qtty(self):
-        # TODO Add properties th where
-        params = (self.params.get('id_doc'), self.params.get('id_good'), self.params.get('cell'))
+
+        params = (self.params.get('id_doc'), self.params.get('id_good'),self.params.get('id_properties'), self.params.get('cell'))
         q = '''
         SELECT 
         sum(qtty) FROM RS_docs_series
-         WHERE id_doc = ? AND id_good = ? AND cell = ?'''
+         WHERE id_doc = ? AND id_good = ? AND id_properties = ? AND cell = ?'''
         res = get_query_result(q, params)
         if res:
             return res[0][0]
@@ -1214,13 +1240,13 @@ class SeriesService(DbService):
 
 
     def set_total_qtty(self, qtty):
-        # TODO Add properties th where
-        params = (qtty, self.params.get('id_doc'), self.params.get('id_good'))
+
+        params = (qtty, self.params.get('id_doc'), self.params.get('id_good'), self.params.get('id_properties'))
         q = '''
         UPDATE RS_docs_table
         SET qtty = ?
         WHERE (RS_docs_table.id_series IS NULL OR RS_docs_table.id_series="" ) 
-        AND RS_docs_table.id_doc = ? AND RS_docs_table.id_good = ? 
+        AND RS_docs_table.id_doc = ? AND RS_docs_table.id_good = ? AND RS_docs_table.id_properties = ?
         '''
         res = get_query_result(q, params)
 
@@ -1230,21 +1256,28 @@ class SeriesService(DbService):
 
 
     def set_adr_total_qtty(self, qtty):
-        # TODO Add properties th where
-        params = (qtty, self.params.get('id_doc'), self.params.get('id_good'), self.params.get('cell'))
+
+        params = (qtty, self.params.get('id_doc'), self.params.get('id_good'), self.params.get('id_properties'), self.params.get('cell'))
         q = '''
         UPDATE RS_adr_docs_table
         SET qtty = ?
         WHERE (RS_adr_docs_table.id_series IS NULL OR RS_adr_docs_table.id_series="" ) 
-        AND RS_adr_docs_table.id_doc = ? AND RS_adr_docs_table.id_good = ? AND RS_adr_docs_table.cell = ?
+        AND RS_adr_docs_table.id_doc = ? AND RS_adr_docs_table.id_good = ? AND  RS_adr_docs_table.id_properties = ? AND RS_adr_docs_table.id_cell = ?
         '''
         res = get_query_result(q, params)
 
 
-        AdrDocService.set_doc_status_to_upload(self.params.get('id_doc'))
+        AdrDocService(doc_id = self.params.get('id_doc'), cur_cell = self.params.get('cell')).set_doc_status_to_upload(doc_id = self.params.get('id_doc'))
         return True
 
+class SelectItemService(DbService):
+    def __init__(self, table_name):
+        super().__init__()
+        self.table_name = table_name
 
+    def get_select_data(self, **cond) -> list:
+        self.provider.table_name = self.table_name
+        return self.provider.select(cond)
 
 class AdrDocService(DocService):
     def __init__(self, doc_id='', cur_cell='', table_type='in'):
@@ -1355,7 +1388,21 @@ class AdrDocService(DocService):
 
             goods = self.provider.sql_query(q, id_doc)
             doc_data['RS_adr_docs_table'] = goods
+
+
+            fields = ['id_doc', 'id_good', 'id_series', 'id_warehouse', 'cell', 'qtty', 'name', 'best_before', 'number',
+                      'production_date']
+            q = '''
+                SELECT {}
+                FROM RS_docs_series
+                WHERE id_doc = ?
+            '''.format(','.join(fields))
+
+            series_table = self.provider.sql_query(q, id_doc)
+            doc_data['RS_docs_series'] = series_table
+
             data.append(doc_data)
+
 
         return data
 
@@ -1709,7 +1756,10 @@ class SqlQueryProvider:
         if self._table_name:
             return self._table_name
         else:
-            raise ValueError('table_name must be specified')
+            raise ValueError(f'{self}: table_name must be specified')
+
+    def __repr__(self):
+        return f'SqlQueryProvider(table_name={self._table_name})'
 
     @table_name.setter
     def table_name(self, v):
