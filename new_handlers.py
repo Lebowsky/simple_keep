@@ -246,13 +246,13 @@ def after_send_post_lines_data(hash_map: HashMap):
 
 @HashMap()
 def adr_docs_on_start(hash_map: HashMap):
-    screen: ui_models.AdrDocsListScreen = create_screen(hash_map)
+    screen = ui_models.AdrDocsListScreen(hash_map, rs_settings)
     screen.on_start()
 
 
 @HashMap()
 def adr_doc_on_select(hash_map: HashMap):
-    screen: ui_models.AdrDocsListScreen = create_screen(hash_map)
+    screen = ui_models.AdrDocsListScreen(hash_map, rs_settings)
     screen.on_input()
 
 

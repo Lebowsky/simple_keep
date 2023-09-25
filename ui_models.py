@@ -11,7 +11,7 @@ from typing import Dict, List, Optional, Tuple
 import db_services
 import hs_services
 import printing_factory
-from ui_utils import HashMap, RsDoc, BarcodeWorker, get_ip_address
+from ui_utils import HashMap, RsDoc, BarcodeWorker, get_ip_address, BarcodeAdrWorker
 from db_services import (DocService, ErrorService, GoodsService, BarcodeService, AdrDocService, TimerService,
                          UniversalCardsService, SqlQueryProvider)
 from tiny_db_services import ScanningQueueService, TinyNoSQLProvider
@@ -1796,6 +1796,18 @@ class DocDetailsScreen(Screen):
 
         return res
 
+    def _get_barcode_process_params(self):
+        return {
+            'have_qtty_plan': self.hash_map.get_bool('have_qtty_plan'),
+            'have_zero_plan': self.hash_map.get_bool('have_zero_plan'),
+            'have_mark_plan': self.hash_map.get_bool('have_mark_plan'),
+            'control': self.hash_map.get_bool('control')
+        }
+
+    def _process_error_scan_barcode(self, scan_result):
+        self.hash_map.toast(scan_result.description)
+        self.hash_map.playsound('error')
+
     def _set_visibility_on_start(self):
         _vars = ['warehouse', 'countragent']
 
@@ -2046,7 +2058,6 @@ class DocDetailsScreen(Screen):
     def _get_have_mark_plan(self):
         count = self.service.get_count_mark_codes(id_doc=self.id_doc)
         return count > 0
-
 
     def open_series_screen(self, id_doc, current_elem):
         current_elem['id_doc'] = id_doc
@@ -2699,11 +2710,31 @@ class AdrDocDetailsScreen(DocDetailsScreen):
         else:
             self._listener_not_implemented()
 
-
     def _cards_click(self):
         self._fill_one_string_screen()
 
     def _barcode_listener(self, barcode):
+        if self._update_current_cell(barcode):
+            return
+
+        barcode_process_params = self._get_barcode_process_params()
+        barcode_process_params['is_adr_doc'] = True
+        barcode_process_params['id_cell'] = self.current_cell
+        barcode_process_params['table_type'] = self.table_type
+
+        self.barcode_worker = BarcodeAdrWorker(
+            id_doc=self.id_doc,
+            **barcode_process_params,
+            use_scanning_queue=False
+        )
+
+        result = self.barcode_worker.process_the_barcode(barcode)
+
+        if result.error:
+            self._process_error_scan_barcode(result)
+            return result.error
+
+    def _update_current_cell(self, barcode):
         current_cell = self.hash_map.get('current_cell_id')
         doc_cell = self.service.find_cell(barcode)
 
@@ -2711,52 +2742,12 @@ class AdrDocDetailsScreen(DocDetailsScreen):
             self.hash_map.put('current_cell', doc_cell['name'])
             self.hash_map.put('current_cell_id', doc_cell['id'])
             self.current_cell = doc_cell['id']
-            return
+            return True
 
         if not current_cell and not doc_cell:
             self.hash_map.playsound('warning')
             self.hash_map.put('toast', 'Не найдена ячейка')
-            return
-
-        have_qtty_plan = self.hash_map.get_bool('have_qtty_plan')
-        have_zero_plan = self.hash_map.get_bool('have_zero_plan')
-        have_mark_plan = self.hash_map.get_bool('have_mark_plan')
-        control = self.hash_map.get_bool('control')
-
-        doc = ui_global.Rs_adr_doc
-        doc.id_doc = self.hash_map.get('id_doc')
-        res = doc.process_the_barcode(
-            doc,
-            barcode,
-            have_qtty_plan,
-            have_zero_plan,
-            control,
-            self.hash_map.get('current_cell_id'),
-            self.table_type
-        )
-
-        if res is None:
-            self.hash_map.put('scanned_barcode', barcode)
-            self.hash_map.playsound('error')
-            self.hash_map.put('ShowScreen', 'Ошибка сканера')
-        elif res['Error']:
-            self.hash_map.playsound('warning')
-            if res['Error'] == 'AlreadyScanned':
-                self.hash_map.put('barcode', json.dumps({'barcode': res['Barcode'], 'doc_info': res['doc_info']}))
-                self.hash_map.put('ShowScreen', 'Удаление штрихкода')
-            elif res['Error'] == 'QuantityPlanReached':
-                self.hash_map.put('toast', res['Descr'])
-            elif res['Error'] == 'Zero_plan_error':
-                self.hash_map.put('toast', res['Descr'])
-            elif res['Error'] == 'Must_use_series':
-                self.open_series_screen(doc.id_doc, res)
-                return res
-            else:
-                self.hash_map.put('toast', res['Descr'])  # + ' '+ res['Barcode']
-        else:
-            self.hash_map.put('toast', 'Товар добавлен в документ')
-
-        self.service.set_doc_status_to_upload(self.id_doc)
+            return True
 
     def _doc_mark_verified(self):
         self.service.mark_verified()
