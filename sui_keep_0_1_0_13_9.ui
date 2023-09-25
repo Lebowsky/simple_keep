@@ -5706,8 +5706,32 @@
                                         "type": "TextView"
                                     },
                                     {
+                                        "Value": "Минимальное количество обнаружений",
+                                        "Variable": "",
+                                        "height": "wrap_content",
+                                        "width": "match_parent",
+                                        "weight": "0",
+                                        "type": "TextView"
+                                    },
+                                    {
+                                        "Value": "@ocr_serial_template_min_rec_amount",
+                                        "Variable": "ocr_serial_template_min_rec_amount",
+                                        "height": "wrap_content",
+                                        "width": "match_parent",
+                                        "weight": "0",
+                                        "type": "EditTextNumeric"
+                                    },
+                                    {
                                         "Value": "Непрерывное распознавание",
-                                        "Variable": "continuous_recognition",
+                                        "Variable": "ocr_serial_template_continuous_recognition",
+                                        "height": "wrap_content",
+                                        "width": "wrap_content",
+                                        "weight": "0",
+                                        "type": "CheckBox"
+                                    },
+                                    {
+                                        "Value": "Учитывать префикс",
+                                        "Variable": "ocr_serial_template_use_prefix",
                                         "height": "wrap_content",
                                         "width": "wrap_content",
                                         "weight": "0",
