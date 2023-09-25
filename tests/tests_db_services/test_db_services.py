@@ -267,10 +267,13 @@ class TestBarcodeService(unittest.TestCase):
             'id_series': '',
             'id_unit': '',
             'mark_id': 0,
+            'id_price': '',
+            'price': 0.0,
             'ratio': 1,
             'approved': 0,
             'use_mark': 0,
             'row_key': '',
+            'd_qtty': 0.0,
             'qtty': 0.0,
             'qtty_plan': 0.0,
         }
@@ -295,10 +298,13 @@ class TestBarcodeService(unittest.TestCase):
             'id_series': '',
             'id_unit': '',
             'mark_id': 0,
+            'id_price': '',
+            'price': 0.0,
             'ratio': 1,
             'approved': 0,
             'use_mark': 0,
             'row_key': 1,
+            'd_qtty': 0.0,
             'qtty': 1.0,
             'qtty_plan': 5.0,
         }
@@ -323,15 +329,50 @@ class TestBarcodeService(unittest.TestCase):
             'id_series': '',
             'id_unit': '',
             'mark_id': 3,
+            'id_price': '',
+            'price': 0.0,
             'ratio': 1,
             'approved': '0',
             'use_mark': 0,
             'row_key': 1,
             'qtty': 1.0,
+            'd_qtty': 0.0,
             'qtty_plan': 5.0,
         }
 
         actual = sut.get_barcode_data(barcode_info, id_doc)
+
+        self.assertEqual(expect, actual)
+
+    def test_must_getting_barcode_data_ean13_with_mark_use_adr_doc_table(self):
+        self.data_creator.insert_data('RS_barcodes', 'RS_adr_docs_table', 'RS_docs_barcodes')
+        barcode_info = BarcodeParser.BarcodeInfo(
+            barcode='2000000025988',
+            gtin='07623900408085',
+            serial='tEjE+7q'
+        )
+        id_doc = '37c4c709-d22b-11e4-869d-0050568b35ac1'
+
+        sut = BarcodeService()
+        expect = {
+            'id_good': '37c4c709-d22b-11e4-869d-0050568b35ac1',
+            'id_property': '',
+            'id_series': '',
+            'id_unit': '',
+            'mark_id': 3,
+            'id_price': '',
+            'price': 0.0,
+            'ratio': 1,
+            'approved': '0',
+            'use_mark': 0,
+            'row_key': 1,
+            'qtty': 1.0,
+            'd_qtty': 1.0,
+            'qtty_plan': 5.0,
+        }
+
+        actual = sut.get_barcode_data(
+            barcode_info, id_doc, is_adr_doc=True, id_cell='some_cell', table_type='in')
 
         self.assertEqual(expect, actual)
 
@@ -351,11 +392,14 @@ class TestBarcodeService(unittest.TestCase):
             'id_series': '',
             'id_unit': '',
             'mark_id': 0,
+            'id_price': '',
+            'price': 0.0,
             'ratio': 1,
             'approved': 0,
             'use_mark': 1,
             'row_key': 1,
             'qtty': 1.0,
+            'd_qtty': 0.0,
             'qtty_plan': 5.0,
         }
 
@@ -438,7 +482,7 @@ class DataCreator:
                 'id_properties': '""',
                 'id_series': '""',
                 'id_unit': '""',
-                'id_cell': '""',
+                'id_cell': '"some_cell"',
                 'table_type': '"in"',
                 'qtty': '1',
                 'qtty_plan': '5',
