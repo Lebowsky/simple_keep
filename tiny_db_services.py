@@ -110,5 +110,9 @@ class ScanningQueueService:
         qtty = self.provider.count(id_doc=id_doc, sent=False)
         return True if qtty > 0 else False
 
+    def remove_doc_lines(self, id_doc):
+        self.provider.remove(id_doc=id_doc)
+
+
 
 

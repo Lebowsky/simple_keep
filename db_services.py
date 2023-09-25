@@ -704,6 +704,7 @@ class DocService:
         query_text = ('Update RS_docs_barcodes Set approved = 0 Where id_doc=:id_doc',
                       'Delete From RS_docs_barcodes Where  id_doc=:id_doc And is_plan = 0',
                       'Update RS_docs_table Set qtty = 0 Where id_doc=:id_doc',
+                      'Update RS_docs_table Set d_qtty = 0 Where id_doc=:id_doc',
                       'Delete From RS_docs_table Where id_doc=:id_doc and is_plan = "False"',
                       'Delete From RS_barc_flow Where id_doc = :id_doc')
         try:

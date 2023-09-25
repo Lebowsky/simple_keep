@@ -196,5 +196,18 @@ class TestScanningQueueService(unittest.TestCase):
         new_result = sut.get_document_lines(id_doc='123', sent=False)
         self.assertEqual(expect, len(new_result))
 
+    def test_must_remove_specific_doc_lines(self):
+        expect = 0
+
+        self.provider.insert_multiple(initial_data)
+        sut = ScanningQueueService(provider=self.provider)
+
+        sut.remove_doc_lines(id_doc='123')
+        actual_123_lines = len(sut.get_document_lines(id_doc='123'))
+        actual_124_lines = len(sut.get_document_lines(id_doc='124'))
+
+        self.assertEqual(expect, actual_123_lines)
+        self.assertGreater(actual_124_lines, 0)
+
 
 
