@@ -3967,7 +3967,7 @@ class GoodItemBarcodeRegister(GoodBarcodeRegister):
             self.hash_map.remove("scanned_barcode")
             self.hash_map['property_select'] = ''
             self.hash_map['unit_select'] = ''
-            self.hash_map.show_screen("Карточка товара")
+            self.hash_map.back_screen()
         elif listener == 'property_select':
             self.hash_map.show_screen('Выбор характеристик')
         elif listener == 'unit_select':
@@ -4454,7 +4454,6 @@ class ItemCard(Screen):
         }
         self.hash_map.put_data(dict_data)
 
-
     @staticmethod
     def _get_variants_cards_data(item_properties):
         variants_cards_data = []
@@ -4634,9 +4633,6 @@ class GoodsBalancesItemCard(Screen):
     def on_post_start(self):
         pass
 
-    def show(self, args=None):
-        pass
-
     def _get_balances(self):
         if (self.hash_map.get('item_art_input') != self.hash_map.get('good_art')
             and not self.hash_map.get_bool('variant_selected')):
@@ -4667,11 +4663,17 @@ class GoodsBalancesItemCard(Screen):
             item_values_result = self.service.get_values_by_field(table_name='RS_goods', field='art',
                                                                   field_value=item_art_input)
             if item_values_result:
-                self.hash_map.put_data({'object_name': item_values_result[0]['name'],
-                                        'input_item_id': item_values_result[0]['id'],
-                                        'selected_object_name': f'{item_values_result[0]["name"]}, {item_values_result[0]["code"]}',
-                                        'item_code': item_values_result[0]['code'], 'error_msg': '',
-                                        'item_art_input': self.hash_map.get('item_art_input'), 'item_barcode': ''})
+                self.hash_map.put_data(
+                    {
+                        'object_name': item_values_result[0]['name'],
+                        'input_item_id': item_values_result[0]['id'],
+                        'selected_object_name': f'{item_values_result[0]["name"]}, {item_values_result[0]["code"]}',
+                        'item_code': item_values_result[0]['code'],
+                        'error_msg': '',
+                        'item_art_input': self.hash_map.get('item_art_input'),
+                        'item_barcode': ''
+                    }
+                )
 
             else:
                 if item_art_input != '—' and self.hash_map.get('return_to_item_card'):
@@ -4767,27 +4769,13 @@ class GoodsBalancesItemCard(Screen):
             self.hash_map[name] = '1' if self.hash_map[v] else '-1'
 
     def _get_balances_data(self):
+        data = self.hs_service.get_balances_goods(
+            id_good=self.hash_map.get('input_item_id'),
+            id_cell=self.hash_map.get('selected_cell_id'),
+            id_warehouse=self.hash_map.get('selected_wh_id')
+        ).data
 
-        data = self.hs_service.get_balances_goods(id_good=self.hash_map.get('input_item_id'),
-                                                  id_cell=self.hash_map.get('selected_cell_id'),
-                                                  id_warehouse=self.hash_map.get('selected_wh_id')).data
         return data
-
-    class TextView(widgets.TextView):
-        def __init__(self, value):
-            super().__init__()
-            self.TextSize = '15'
-            self.TextBold = True
-            self.width = 'match_parent'
-            self.Value = value
-
-    class LinearLayout(widgets.LinearLayout):
-        def __init__(self, *args, **kwargs):
-            super().__init__(*args, **kwargs)
-            self.orientation = 'horizontal'
-            self.height = "match_parent"
-            self.width = "match_parent"
-            self.StrokeWidth = 1
 
     def _get_balances_table_view(self, data):
         table_view = widgets.CustomTable(
@@ -4940,6 +4928,22 @@ class GoodsBalancesItemCard(Screen):
                         listener='Выберите вариант товара:',
                         buttons=['Выбрать', 'Отмена']
                     )
+
+    class TextView(widgets.TextView):
+        def __init__(self, value):
+            super().__init__()
+            self.TextSize = '15'
+            self.TextBold = True
+            self.width = 'match_parent'
+            self.Value = value
+
+    class LinearLayout(widgets.LinearLayout):
+        def __init__(self, *args, **kwargs):
+            super().__init__(*args, **kwargs)
+            self.orientation = 'horizontal'
+            self.height = "match_parent"
+            self.width = "match_parent"
+            self.StrokeWidth = 1
 
 
 class SelectWH(Screen):
