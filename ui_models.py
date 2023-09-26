@@ -4991,79 +4991,6 @@ class GoodsBalancesItemCard(Screen):
             self.width = "match_parent"
             self.StrokeWidth = 1
 
-
-class SelectWH(Screen):
-    screen_name = 'Выбор склада'
-    process_name = 'Остатки'
-
-    def __init__(self, hash_map, rs_settings):
-        super().__init__(hash_map, rs_settings)
-        self.service = GoodsService()
-
-    def on_start(self):
-        cards_data = self._get_data(table_name='RS_warehouses')
-        cards = self._get_cards(cards_data)
-        self.hash_map.put('wh_cards', cards.to_json())
-
-    def on_input(self):
-        listener = self.listener
-
-        if listener == "CardsClick":
-            self.hash_map['selected_wh_id'] = self.hash_map.get("selected_card_key")
-            wh_name = self.service.get_values_by_field(table_name='RS_warehouses', field='id',
-                                                       field_value=self.hash_map.get
-                                                       ("selected_card_key"))[0]['name']
-            self.hash_map['wh_select'] = wh_name
-            self.hash_map['selected_wh_name'] = wh_name
-            self.hash_map.show_screen('Проверить остатки')
-
-        elif listener == "ON_BACK_PRESSED" or 'go_back':
-            self.hash_map['selected_wh_id'] = ''
-            self.hash_map['selected_wh_name'] = ''
-            self.hash_map['wh_select'] = ''
-            self.hash_map.show_screen('Проверить остатки')
-
-    def on_post_start(self):
-        pass
-
-    def show(self, args=None):
-        pass
-
-    def _get_data(self, table_name):
-        raw_data = self.service.get_select_data(table_name)
-        cards_data = []
-        for element in raw_data:
-            card_data = {
-                'key': element['id'],
-                'name': element['name']
-            }
-            cards_data.append(card_data)
-        return cards_data
-
-    def _get_cards(self, cards_data):
-        card_title_text_size = self.rs_settings.get('CardTitleTextSize')
-        card_text_size = self.rs_settings.get('CardTextSize')
-
-        cards = widgets.CustomCards(
-            widgets.LinearLayout(
-                widgets.LinearLayout(
-                    widgets.TextView(
-                        Value='@name',
-                        width='match_parent',
-                        gravity_horizontal='center',
-                        TextSize=card_title_text_size,
-                        TextColor='#000000'
-                    ),
-                    orientation='horizontal',
-                    width='match_parent',
-                ))
-            ,
-            options=widgets.Options().options,
-            cardsdata=cards_data
-        )
-        return cards
-
-
 # ^^^^^^^^^^^^^^^^^^^^^ GoodsBalances ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 
@@ -5358,41 +5285,6 @@ class GoodsPricesItemCard(GoodsBalancesItemCard):
             self.width = "match_parent"
             self.StrokeWidth = 1
 
-class SelectPriceType(SelectWH):
-    screen_name = 'Выбор типа цены'
-    process_name = 'Цены'
-
-    def __init__(self, hash_map, rs_settings):
-        super().__init__(hash_map, rs_settings)
-        self.service = GoodsService()
-
-    def on_start(self):
-        cards_data = self._get_data(table_name='RS_price_types')
-        price_type_cards = self._get_cards(cards_data)
-        self.hash_map.put('price_type_cards', price_type_cards.to_json())
-
-    def on_input(self):
-        listener = self.listener
-
-        if listener == "CardsClick":
-            selected_price_type_id = self.hash_map.get("selected_card_key")
-            selected_type_name = self.service.get_values_by_field(
-                table_name='RS_price_types',
-                field='id',
-                field_value=self.hash_map.get("selected_card_key"))[0]['name']
-
-            self.hash_map.put('selected_price_type_id', selected_price_type_id)
-            self.hash_map['price_type_select'] = selected_type_name
-            self.hash_map['selected_price_type_name'] = selected_type_name
-            self.hash_map.show_screen('Проверка цен')
-
-        elif listener == "ON_BACK_PRESSED" or 'back_to_prices':
-            self.hash_map['selected_price_type_id'] = ''
-            self.hash_map['price_type_select'] = ''
-            self.hash_map['selected_price_type_name'] = ''
-            self.hash_map.show_screen('Проверка цен')
-
-
 class SelectProperties(GoodsPricesItemCard):
     screen_name = 'Выбор характеристик'
     process_name = 'Цены'
@@ -5607,7 +5499,6 @@ class DocGoodSelectUnit(SelectUnit):
             self.hash_map['unit_select'] = ''
             self.hash_map.put('selected_unit_name', '')
             self.hash_map.show_screen('ТоварШтрихкоды')
-
 
 class ItemGoodSelectUnit(DocGoodSelectUnit):
     screen_name = 'Выбор упаковки'
@@ -7187,7 +7078,6 @@ class ScreensFactory:
         SoundSettings,
         GoodsBalancesItemCard,
         GoodsPricesItemCard,
-        SelectPriceType,
         SelectProperties,
         SelectUnit,
         GoodBarcodeRegister,

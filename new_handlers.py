@@ -433,6 +433,7 @@ def item_units_on_start(hash_map):
 def item_units_on_input(hash_map):
     screen = ui_models.ItemGoodSelectUnit(hash_map, rs_settings)
     screen.on_input()
+
 # ^^^^^^^^^^^^^^^^^ Goods ^^^^^^^^^^^^^^^^^
 
 # ==================== GoodsBalances =============================
@@ -445,17 +446,6 @@ def balances_on_start(hash_map):
 @HashMap()
 def balances_on_input(hash_map):
     screen = ui_models.GoodsBalancesItemCard(hash_map, rs_settings)
-    screen.on_input()
-
-
-@HashMap()
-def wh_select_on_start(hash_map):
-    screen: ui_models.SelectWH = create_screen(hash_map)
-    screen.on_start()
-
-@HashMap()
-def wh_select_on_input(hash_map):
-    screen = ui_models.SelectWH(hash_map, rs_settings)
     screen.on_input()
 
 
@@ -473,18 +463,6 @@ def prices_on_start(hash_map):
 def prices_on_input(hash_map):
     screen = ui_models.GoodsPricesItemCard(hash_map, rs_settings)
     screen.on_input()
-
-
-@HashMap()
-def price_types_on_start(hash_map):
-    screen: ui_models.SelectPriceType = create_screen(hash_map)
-    screen.on_start()
-
-@HashMap()
-def price_types_on_input(hash_map):
-    screen = ui_models.SelectPriceType(hash_map, rs_settings)
-    screen.on_input()
-
 
 @HashMap()
 def properties_on_start(hash_map):
