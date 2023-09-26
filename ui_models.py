@@ -47,22 +47,29 @@ class Screen(ABC):
     def on_input(self):
         pass
 
-    @abstractmethod
     def on_post_start(self):
-        pass
+        return self.hash_map.remove(f'{self.__class__.__name__}_init')
 
     def show(self, args=None):
+        if args:
+            self.hash_map.put_data(args)
+
         self._validate_screen_values()
-        self.hash_map.show_screen(self.screen_name, args)
+        self.init_screen()
+        self.hash_map.show_screen(self.screen_name)
+
+    def init_screen(self):
+        self.hash_map.put(f'{self.__class__.__name__}_init')
+        return self
 
     def show_process_result(self, args=None):
         self._validate_screen_values()
+        self.init_screen()
         self.hash_map.show_process_result(self.process_name, self.screen_name, args)
 
     def _clear_screen_values(self):
         for key in self.screen_values:
             self.hash_map.remove(key)
-
 
     def toast(self, text):
         self.hash_map.toast(text)
@@ -107,6 +114,10 @@ class Screen(ABC):
 
     def _listener_not_implemented(self):
         raise NotImplementedError (f'listener {self.listener} not implemented')
+
+    def _is_init_handler(self):
+        return self.hash_map.containsKey(f'{self.__class__.__name__}_init')
+
 
     class TextView(widgets.TextView):
         def __init__(self, value, rs_settings):
@@ -4198,6 +4209,7 @@ class GoodsSelectArticle(Screen):
 
 
 # ==================== Goods(Process) =============================
+
 class GoodsListScreen(Screen):
     screen_name = 'Товары список'
     process_name = 'Товары'
@@ -4215,22 +4227,14 @@ class GoodsListScreen(Screen):
     def on_input(self):
         listener = self.listener
         if listener == "CardsClick":
-            self.hash_map['item_id'] = self.hash_map.get("selected_card_key")
-            ItemCard(self.hash_map, self.rs_settings).show()
-
+            screen_values = {'item_id': self.hash_map['selected_card_key']}
+            ItemCard(self.hash_map, self.rs_settings).show(args=screen_values)
         elif listener == "select_goods_type":
             self.hash_map.show_screen("Выбор категории товаров")
         elif listener == "ON_BACK_PRESSED":
             self.hash_map.put("FinishProcess", "")
         elif listener == 'barcode':
             self._identify_barcode_goods()
-
-    def on_post_start(self):
-        pass
-
-    def show(self, args=None):
-        self._validate_screen_values()
-        self.hash_map.show_screen(self.screen_name, args)
 
     def _get_goods_list_data(self, selected_good_type=None) -> list:
         results = self.service.get_goods_list_data(selected_good_type)
@@ -4381,21 +4385,7 @@ class ItemCard(Screen):
         self.service = GoodsService()
 
     def on_start(self):
-        item_data = None
-        if self.screen_values['item_id']:
-            item_data = self.service.get_goods_list_data(item_id=self.screen_values['item_id'])
-
-
-        if item_data:
-            item_values = item_data[0]
-            put_data = {
-                "good_name": item_values['name'],
-                "good_art": item_values['art'] if item_values['art'] else "—",
-                "good_code": item_values['code'],
-                "good_descr": item_values['description'] if item_values['description'] else "—",
-                "good_type": item_values['type_good'],
-            }
-            self.hash_map.put_data(put_data)
+        pass
 
     def on_input(self):
         listeners = {
@@ -4412,7 +4402,7 @@ class ItemCard(Screen):
         self.hash_map.no_refresh()
 
     def on_post_start(self):
-        if self.screen_values['item_id']:
+        if self._is_init_handler():
             item_properties = self.service.get_values_from_barcode("id_good", self.screen_values['item_id'])
 
             if item_properties:
@@ -4423,7 +4413,22 @@ class ItemCard(Screen):
             else:
                 self.hash_map.put("load_info", "Данные о характеристиках отсутствуют")
 
-            self.hash_map.remove('item_id')
+            super().on_post_start()
+
+    def init_screen(self):
+        super().init_screen()
+
+        item_data = self.service.get_item_data_by_id(item_id=self.screen_values['item_id'])
+
+        if item_data:
+            put_data = {
+                "good_name": item_data['name'],
+                "good_art": item_data['art'] if item_data['art'] else "—",
+                "good_code": item_data['code'],
+                "good_descr": item_data['description'] if item_data['description'] else "—",
+                "good_type": item_data['type_good'],
+            }
+            self.hash_map.put_data(put_data)
 
     def _back_screen(self):
         self._clear_screen_values()
@@ -4432,7 +4437,7 @@ class ItemCard(Screen):
 
     def _to_balances(self):
         dict_data = {
-            'input_item_id': self.hash_map.get('selected_good_id'),
+            'input_item_id': self.hash_map.get('item_id'),
             'item_art_input': self.hash_map.get('good_art'),
             'selected_object_name': f'{self.hash_map.get("good_name")}, {self.hash_map.get("good_code")}',
             'object_name': self.hash_map.get('good_name'),
@@ -4444,7 +4449,7 @@ class ItemCard(Screen):
 
     def _to_prices(self):
         dict_data = {
-            'input_good_id': self.hash_map.get('selected_good_id'),
+            'input_good_id': self.hash_map.get('item_id'),
             'input_good_art': self.hash_map.get('good_art'),
             'prices_object_name': f'{self.hash_map.get("good_name")}, {self.hash_map.get("good_code")}',
             "return_to_item_card": "true",
@@ -4563,8 +4568,6 @@ class ItemCardOfflineScreen(ItemCard):
     def _print_ticket(self):
         self.hash_map.show_dialog('print_ticket_not_available_modal', title='В этом продукте печать недоступна')
 
-
-
 # ^^^^^^^^^^^^^^^^^^^^^ Goods(Process) ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 # ==================== GoodsBalances =============================
@@ -4643,9 +4646,16 @@ class GoodsBalancesItemCard(Screen):
         raw_balances_data = self._get_balances_data()
         balances_data = self._prepare_table_data(raw_balances_data)
         balances_table = self._get_balances_table_view(balances_data)
-        self.hash_map.put_data({'balances_table': balances_table.to_json(), 'Show_get_balances_controls': '-1',
-                                'Show_show_filters': '1', 'property_id': '', 'from_barcode': False, 'item_code': '',
-                                'variant_selected': False})
+
+        self.hash_map.put_data({
+                'balances_table': balances_table.to_json(),
+                'Show_get_balances_controls': '-1',
+                'Show_show_filters': '1',
+                'property_id': '',
+                'from_barcode': False,
+                'item_code': '',
+                'variant_selected': False
+            })
 
     def validate_input(self):
         self._process_input_item_art()
@@ -4653,15 +4663,22 @@ class GoodsBalancesItemCard(Screen):
 
         if not (self.hash_map.get('item_art_input') or self.hash_map.get('cell_input') or self.hash_map.get('wh_select')
                 or self.hash_map.get('selected_cell_id')):
-            self.hash_map.put_data({'balances_tables': '', 'object_name': '', 'cell_name': '',
-                                    'error_msg': "Должен быть выбран склад, товар или ячейка"})
+
+            self.hash_map.put_data({
+                    'balances_tables': '',
+                    'object_name': '',
+                    'cell_name': '',
+                    'error_msg': "Должен быть выбран склад, товар или ячейка"
+                })
 
     def _process_input_item_art(self):
-
         item_art_input = self.hash_map.get('item_art_input')
+
         if self.hash_map.get('item_art_input'):
-            item_values_result = self.service.get_values_by_field(table_name='RS_goods', field='art',
-                                                                  field_value=item_art_input)
+            item_values_result = self.service.get_values_by_field(
+                table_name='RS_goods', field='art',
+                field_value=item_art_input
+            )
             if item_values_result:
                 self.hash_map.put_data(
                     {
@@ -4677,7 +4694,7 @@ class GoodsBalancesItemCard(Screen):
 
             else:
                 if item_art_input != '—' and self.hash_map.get('return_to_item_card'):
-                    self.hash_map.put('error_msg', " Товар с артикулом " + "'" + item_art_input + "'" + " не найден")
+                    self.hash_map.put('error_msg', f" Товар с артикулом '{item_art_input}'  не найден")
         else:
             self.hash_map.put('input_item_id', '')
             self.hash_map.put('object_name', '')
@@ -4685,20 +4702,23 @@ class GoodsBalancesItemCard(Screen):
 
     def _process_input_cell(self):
         if self.hash_map.get('cell_input'):
-            cell_values_result = self.service.get_values_by_field(table_name='RS_cells', field='name',
-                                                                  field_value=self.hash_map.get('cell_input'))
+            cell_values_result = self.service.get_values_by_field(
+                table_name='RS_cells',
+                field='name',
+                field_value=self.hash_map.get('cell_input')
+            )
+
             if cell_values_result:
                 self.table_type = 'cells'
                 self.hash_map.put('selected_cell_id', cell_values_result[0]['id'])
                 self.hash_map.put('cell_name', self.hash_map.get('cell_input'))
 
             else:
-                if self.hash_map.get('error_msg'):
-                    self.hash_map.put('error_msg', self.hash_map.get('error_msg') + "\n" + " Ячейка c именем " + "'" +
-                                      self.hash_map.get('cell_input') + "'" + " не найдена")
-                else:
-                    self.hash_map.put('error_msg', " Ячейка c именем " + "'" + self.hash_map.get('cell_input') + "'" + " не найдена")
-
+                current_error = f"{self.hash_map['error_msg']}\n" if self.hash_map['error_msg'] else ''
+                error_text = '{}Ячейка c именем {} не найдена'.format(
+                    current_error, self.hash_map['cell_input']
+                )
+                self.hash_map['error_msg'] = error_text
         else:
             self.hash_map.put('selected_cell_id', '')
             self.hash_map.put('cell_name', '')
@@ -4769,6 +4789,7 @@ class GoodsBalancesItemCard(Screen):
             self.hash_map[name] = '1' if self.hash_map[v] else '-1'
 
     def _get_balances_data(self):
+        self.toast(self.hash_map.get('input_item_id'))
         data = self.hs_service.get_balances_goods(
             id_good=self.hash_map.get('input_item_id'),
             id_cell=self.hash_map.get('selected_cell_id'),
@@ -4776,6 +4797,33 @@ class GoodsBalancesItemCard(Screen):
         ).data
 
         return data
+
+    def _prepare_table_data(self, raw_balances_data):
+        table_data = [{}]
+        for el in raw_balances_data:
+            storage_name = str(el['name_warehouse']) if self.table_type == 'warehouses' else str(el['name_cell'])
+
+            item_layout = self._get_item_table_row_view({
+                'storage_name_len': len(storage_name),
+                'item_name_len': len(el['name_good'])
+            })
+
+            table_row = {
+                'key': str(el['id_good']),
+                'item_name': str(el['name_good']),
+                'storage_name': storage_name,
+                'qtty': str(el['qtty']),
+                'properties': str(el['name_property'] or '—'),
+                '_layout': item_layout
+            }
+
+            if self.hash_map.get('property_id'):
+                if self.hash_map.get('property_id') == str(el['id_property']):
+                    table_data.append(table_row)
+            else:
+                table_data.append(table_row)
+
+        return table_data
 
     def _get_balances_table_view(self, data):
         table_view = widgets.CustomTable(
@@ -4807,26 +4855,6 @@ class GoodsBalancesItemCard(Screen):
         )
 
         return table_view
-
-    def _prepare_table_data(self, raw_balances_data):
-        table_data = [{}]
-        for el in raw_balances_data:
-            storage_name = str(el['name_warehouse']) if self.table_type == 'warehouses' else str(el['name_cell'])
-            table_row = {'key': str(el['id_good']),
-                         'item_name': str(el['name_good']),
-                         'storage_name': storage_name,
-                         'qtty': str(el['qtty']),
-                         'properties': str(el['name_property'] or '—'),
-                         '_layout': self._get_item_table_row_view({'storage_name_len': len(storage_name),
-                                                                   'item_name_len': len(el['name_good'])})}
-            if self.hash_map.get('property_id'):
-                """Фильтруем по взятой характеристике"""
-                if self.hash_map.get('property_id') == str(el['id_property']):
-                    table_data.append(table_row)
-            else:
-                table_data.append(table_row)
-
-        return table_data
 
     def _get_item_table_row_view(self, row_data):
         row_view = widgets.LinearLayout(
@@ -5022,6 +5050,7 @@ class SelectWH(Screen):
 
 
 # ==================== GoodsPrices =============================
+
 class GoodsPricesItemCard(GoodsBalancesItemCard):
     screen_name = 'Проверка цен'
     process_name = 'Цены'
@@ -5073,7 +5102,6 @@ class GoodsPricesItemCard(GoodsBalancesItemCard):
         prices_data = self._prepare_table_data(raw_prices_data)
         prices_table = self._get_prices_table_view(prices_data)
         self.hash_map.put('prices_table', prices_table.to_json())
-        # self.hash_map.show_screen("Таблица цен")
         self.hash_map.put("Show_get_prices_controls", "-1")
         self.hash_map.put("Show_show_filters", "1")
 
@@ -5086,25 +5114,27 @@ class GoodsPricesItemCard(GoodsBalancesItemCard):
 
     def _process_input_good_art(self):
         item_art_input = self.hash_map.get('input_good_art')
+        put_data = {
+            'input_good_id': '',
+            'prices_object_name': '',
+            'error_msg': ''
+        }
+
         if item_art_input:
-            item_values_result = self.service.get_values_by_field(table_name='RS_goods', field='art',
-                                                                  field_value=item_art_input)
+            item_values_result = self.service.get_values_by_field(
+                table_name='RS_goods', field='art', field_value=item_art_input)
+
             if item_values_result:
-                self.hash_map.put('prices_object_name', item_values_result[0]['name'])
-                self.hash_map.put('input_good_id', item_values_result[0]['id'])
-                if item_values_result[0]['id'] != self.hash_map.get('selected_good_id'):
-                    self.hash_map.put('prices_object_name', '')
-                self.hash_map.put('prices_object_name', f'{item_values_result[0]["name"]}, '
-                                                        f'{item_values_result[0]["code"]}')
-                self.hash_map.put('good_code', item_values_result[0]['code'])
-                self.hash_map.put('error_msg', "")
-                self.hash_map.put('item_art_input', self.hash_map.get('item_art_input'))
+                put_data = {
+                    'input_good_id': item_values_result[0]['id'],
+                    'good_code': item_values_result[0]['code'],
+                    'prices_object_name': f'{item_values_result[0]["name"]}, 'f'{item_values_result[0]["code"]}'
+                }
             else:
                 if item_art_input != '—' and self.hash_map.get('return_to_item_card'):
-                    self.hash_map.put('error_msg', " Товар с артикулом " + "'" + item_art_input + "'" + " не найден")
-        else:
-            self.hash_map.put('input_good_id', '')
-            self.hash_map.put('prices_object_name', '')
+                    self.hash_map.put('error_msg', f" Товар с артикулом '{item_art_input}' не найден")
+
+        self.hash_map.put_data(put_data)
 
     def _identify_barcode_prices(self):
         self.hash_map.put('barcode_info', str(self.hash_map.get('barcode')))
@@ -5170,21 +5200,19 @@ class GoodsPricesItemCard(GoodsBalancesItemCard):
                                                 id_price_type=self.hash_map.get('selected_price_type_id')).data
         return data
 
-    class TextView(widgets.TextView):
-        def __init__(self, value):
-            super().__init__()
-            self.TextSize = '15'
-            self.TextBold = True
-            self.width = 'match_parent'
-            self.Value = value
+    def _prepare_table_data(self, raw_balances_data):
 
-    class LinearLayout(widgets.LinearLayout):
-        def __init__(self, *args, **kwargs):
-            super().__init__(*args, **kwargs)
-            self.orientation = 'horizontal'
-            self.height = "match_parent"
-            self.width = "match_parent"
-            self.StrokeWidth = 1
+        table_data = [{}]
+        for el in raw_balances_data:
+            table_row = {'key': str(el['id_good']),
+                         'price_type': str(el['name_price_type']),
+                         'price': str(el['price']),
+                         'unit': str(el['name_unit']) or '—',
+                         'properties': str(el['name_property'] or '—'),
+                         '_layout': self._get_item_table_row_view(el)}
+            table_data.append(table_row)
+
+        return table_data
 
     def _get_prices_table_view(self, data):
         table_view = widgets.CustomTable(
@@ -5216,20 +5244,6 @@ class GoodsPricesItemCard(GoodsBalancesItemCard):
         )
 
         return table_view
-
-    def _prepare_table_data(self, raw_balances_data):
-
-        table_data = [{}]
-        for el in raw_balances_data:
-            table_row = {'key': str(el['id_good']),
-                         'price_type': str(el['name_price_type']),
-                         'price': str(el['price']),
-                         'unit': str(el['name_unit']) or '—',
-                         'properties': str(el['name_property'] or '—'),
-                         '_layout': self._get_item_table_row_view(el)}
-            table_data.append(table_row)
-
-        return table_data
 
     def _get_item_table_row_view(self, row_data):
 
@@ -5285,6 +5299,21 @@ class GoodsPricesItemCard(GoodsBalancesItemCard):
 
         return row_view
 
+    class TextView(widgets.TextView):
+        def __init__(self, value):
+            super().__init__()
+            self.TextSize = '15'
+            self.TextBold = True
+            self.width = 'match_parent'
+            self.Value = value
+
+    class LinearLayout(widgets.LinearLayout):
+        def __init__(self, *args, **kwargs):
+            super().__init__(*args, **kwargs)
+            self.orientation = 'horizontal'
+            self.height = "match_parent"
+            self.width = "match_parent"
+            self.StrokeWidth = 1
 
 class SelectPriceType(SelectWH):
     screen_name = 'Выбор типа цены'

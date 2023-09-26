@@ -360,13 +360,13 @@ def select_item_result(hash_map: HashMap):
 
 @HashMap()
 def goods_on_start(hash_map):
-    screen: ui_models.GoodsListScreen = create_screen(hash_map)
-    screen.on_start()
+    screen = ui_models.GoodsListScreen(hash_map, rs_settings)
+    screen.init_screen().on_start()
 
 
 @HashMap()
 def goods_on_input(hash_map: HashMap):
-    screen: ui_models.GoodsListScreen = ui_models.GoodsListScreen(hash_map, rs_settings)
+    screen = ui_models.GoodsListScreen(hash_map, rs_settings)
     screen.on_input()
 
 
