@@ -53,19 +53,24 @@ class Screen(ABC):
     def show(self, args=None):
         if args:
             self.hash_map.put_data(args)
+            self._init_screen_values()
 
         self._validate_screen_values()
         self.init_screen()
         self.hash_map.show_screen(self.screen_name)
 
+    def show_process_result(self, args=None):
+        if args:
+            self.hash_map.put_data(args)
+            self._init_screen_values()
+
+        self._validate_screen_values()
+        self.init_screen()
+        self.hash_map.show_process_result(self.process_name, self.screen_name)
+
     def init_screen(self):
         self.hash_map.put(f'{self.__class__.__name__}_init')
         return self
-
-    def show_process_result(self, args=None):
-        self._validate_screen_values()
-        self.init_screen()
-        self.hash_map.show_process_result(self.process_name, self.screen_name, args)
 
     def _clear_screen_values(self):
         for key in self.screen_values:
@@ -118,6 +123,9 @@ class Screen(ABC):
     def _is_init_handler(self):
         return self.hash_map.containsKey(f'{self.__class__.__name__}_init')
 
+    def _init_screen_values(self):
+        for k in self.screen_values:
+            self.screen_values[k] = self.hash_map[k]
 
     class TextView(widgets.TextView):
         def __init__(self, value, rs_settings):
@@ -4600,11 +4608,12 @@ class GoodsBalancesItemCard(Screen):
             self._check_item_variants()
 
     def on_input(self):
-
         listener = self.listener
 
         if listener == 'wh_select':
-            self.hash_map.show_screen('Выбор склада')
+            self._select_wh()
+        elif listener == 'wh_select_success':
+            self._select_wh_result()
         elif listener == 'get_balance_btn':
             self._get_balances()
         elif listener == 'barcode':
@@ -4633,9 +4642,6 @@ class GoodsBalancesItemCard(Screen):
         elif self._is_result_positive('Выберите вариант товара:'):
             self.hash_map.put("Show_get_balances_controls", "1")
 
-    def on_post_start(self):
-        pass
-
     def _get_balances(self):
         if (self.hash_map.get('item_art_input') != self.hash_map.get('good_art')
             and not self.hash_map.get_bool('variant_selected')):
@@ -4656,6 +4662,18 @@ class GoodsBalancesItemCard(Screen):
                 'item_code': '',
                 'variant_selected': False
             })
+
+    def _select_wh(self):
+        self.hash_map['table_name'] = 'RS_warehouses'
+        self.hash_map['result_listener'] = 'wh_select_success'
+        self.hash_map.put('fields', ['name'], to_json=True)
+        SelectItemScreen(self.hash_map, self.rs_settings).show()
+
+    def _select_wh_result(self):
+        selected_wh = self.hash_map.get_json('selected_card')
+        if selected_wh:
+            self.hash_map['wh_select'] = selected_wh.get('name')
+            self.hash_map.remove('selected_card')
 
     def validate_input(self):
         self._process_input_item_art()
@@ -5061,6 +5079,7 @@ class GoodsPricesItemCard(GoodsBalancesItemCard):
     def on_start(self):
         self._set_visibility_on_start(['prices_error_msg', 'prices_object_name', 'selected_price_type_name',
                                        'selected_property_name', 'selected_unit_name', 'barcode_info'])
+
         if not self.hash_map.get('prices_table'):
             self.hash_map.put("Show_get_prices_controls", "1")
             self.hash_map.put("Show_show_filters", "-1")
@@ -5070,11 +5089,17 @@ class GoodsPricesItemCard(GoodsBalancesItemCard):
         listener = self.listener
 
         if listener == 'price_type_select':
-            self.hash_map.show_screen('Выбор типа цены')
+            self._select_item()
         elif listener == 'property_select':
-            self.hash_map.show_screen('Выбор характеристик')
+            self._select_item()
         elif listener == 'unit_select':
-            self.hash_map.show_screen('Выбор упаковки')
+            self._select_item()
+        elif listener == 'price_type_select_success':
+            self._select_item_result('price_type_select')
+        elif listener == 'property_select_success':
+            self._select_item_result('property_select')
+        elif listener == 'unit_select_success':
+            self._select_item_result('unit_select')
         elif listener == 'get_prices_btn':
             self._get_prices()
         elif listener == 'barcode':
@@ -5095,6 +5120,24 @@ class GoodsPricesItemCard(GoodsBalancesItemCard):
 
     def show(self, args=None):
         pass
+
+    def _select_item(self):
+        item_tables = {
+            'price_type_select': 'RS_price_types',
+            'property_select': 'RS_properties',
+            'unit_select': 'RS_units',
+        }
+        item_type = self.listener
+        self.hash_map['table_name'] = item_tables[item_type]
+        self.hash_map['result_listener'] = f'{item_type}_success'
+        self.hash_map.put('fields', ['name'], to_json=True)
+        SelectItemScreen(self.hash_map, self.rs_settings).show()
+
+    def _select_item_result(self, field_name):
+        selected_item = self.hash_map.get_json('selected_card')
+        if selected_item:
+            self.hash_map[field_name] = selected_item.get('name')
+            self.hash_map.remove('selected_card')
 
     def _get_prices(self):
         self._validate_input()
@@ -5333,9 +5376,11 @@ class SelectPriceType(SelectWH):
 
         if listener == "CardsClick":
             selected_price_type_id = self.hash_map.get("selected_card_key")
-            selected_type_name = self.service.get_values_by_field(table_name='RS_price_types', field='id',
-                                                                  field_value=self.hash_map.get("selected_card_key"))[
-                0]['name']
+            selected_type_name = self.service.get_values_by_field(
+                table_name='RS_price_types',
+                field='id',
+                field_value=self.hash_map.get("selected_card_key"))[0]['name']
+
             self.hash_map.put('selected_price_type_id', selected_price_type_id)
             self.hash_map['price_type_select'] = selected_type_name
             self.hash_map['selected_price_type_name'] = selected_type_name
@@ -6023,23 +6068,21 @@ class SeriesAdrItem(SeriesAdrList):
 class SelectItemScreen(Screen):
     process_name = 'SelectItemProcess'
     screen_name = 'SelectItemScreen'
+
     def __init__(self, hash_map: HashMap, rs_settings):
         super().__init__(hash_map, rs_settings)
         self.screen_values = {
             'table_name': hash_map['table_name'],
             'fields': hash_map.get_json('fields'),
             'result_listener': hash_map['result_listener'] or 'select_success',
+            'return_value_key': hash_map['return_value_key'] or 'selected_card',
+            'title': hash_map['title'] or 'Выбор значения',
         }
-        self.return_value_key = 'selected_card'
         self.db_service = db_services.SelectItemService(self.screen_values['table_name'])
 
     def on_start(self):
-        if self.screen_values.get('table_name'):
-            cards_data = self.db_service.get_select_data()
-            cards = self._get_cards(cards_data)
+        self.hash_map.set_title(self.screen_values['title'])
 
-            self.hash_map['cards_data'] = cards.to_json()
-            self.hash_map['return_selected_data'] = ''
 
     def on_input(self):
         listeners = {
@@ -6051,9 +6094,16 @@ class SelectItemScreen(Screen):
 
         self.hash_map.no_refresh()
 
+    def init_screen(self):
+        cards_data = self.db_service.get_select_data()
+        cards = self._get_cards(cards_data)
+
+        self.hash_map['cards_data'] = cards.to_json()
+        self.hash_map['return_selected_data'] = ''
+
     def show(self, args=None):
         self.hash_map['SetResultListener'] = self.screen_values['result_listener']
-        self.show_process_result()
+        self.show_process_result(args)
 
     def on_post_start(self):
         pass
@@ -6089,7 +6139,7 @@ class SelectItemScreen(Screen):
         return cards
 
     def _cards_click(self):
-        self.hash_map[self.return_value_key] = self.hash_map['selected_card_data']
+        self.hash_map[self.screen_values['return_value_key']] = self.hash_map['selected_card_data']
         self._finish_process()
 
     def _finish_process(self):
@@ -6097,7 +6147,10 @@ class SelectItemScreen(Screen):
         self.hash_map.remove('return_selected_data')
         self.hash_map.remove('selected_card_data')
         self.hash_map.remove('cards_data')
+        self.hash_map.remove('return_value_key')
+        self.hash_map.remove('title')
         self.hash_map.put('FinishProcessResult')
+
 
 # ^^^^^^^^^^^^^^^^^^^^^ SelectItemScreen ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -7133,7 +7186,6 @@ class ScreensFactory:
         BarcodeTestScreen,
         SoundSettings,
         GoodsBalancesItemCard,
-        SelectWH,
         GoodsPricesItemCard,
         SelectPriceType,
         SelectProperties,
