@@ -4043,29 +4043,8 @@ class GoodsSelectArticle(Screen):
                 self.hash_map.delete('finded_goods_cards')
                 self.hash_map.show_screen('Документ товары')
                 return
-            current_element = json.loads(self.hash_map.get('selected_card_data'))
-            selected_card_position = self.hash_map["selected_card_position"]
-            table_lines_qtty = self.hash_map['table_lines_qtty']
-            put_data = {
-                'Doc_data': f'{self.hash_map["doc_type"]} № {self.hash_map["doc_n"]} от {self.hash_map["doc_date"]}',
-                'Good': current_element['name'],
-                'id_good': current_element['id_good'],
-                'id_unit': current_element['id_unit'],
-                'id_property': current_element['id_properties'],
-                'good_art': current_element['art'],
-                'good_sn': current_element['series_name'],
-                'good_property': current_element['property_name'],
-                'good_price': current_element['price'],
-                'good_unit': current_element['units_name'],
-                'good_str': f'{selected_card_position} / {table_lines_qtty}',
-                'qtty_plan': current_element['qtty_plan'],
-                'good_plan': current_element['qtty_plan'],
-                'key': current_element['key'],
-                'price': current_element['price'],
-                'price_type': current_element['price_name'],
-                'qtty': current_element['qtty'] if current_element['qtty'] and float(current_element['qtty']) != 0 else '',
-            }
-            self.hash_map.put_data(put_data)
+
+            self.hash_map.put('was_clicked', '1')
             self.hash_map.show_screen("Товар выбор")
 
         elif listener == 'ON_BACK_PRESSED':
@@ -4104,7 +4083,7 @@ class GoodsSelectArticle(Screen):
 
         v_layout_1 = widgets.LinearLayout(
                 widgets.TextView(
-                    Value='@name',
+                    Value='@good_name',
                     width='match_parent',
                     gravity_horizontal='left',
                     TextSize=card_title_text_size,
@@ -4119,7 +4098,7 @@ class GoodsSelectArticle(Screen):
                     TextSize=card_text_size,
                 ),
                 widgets.TextView(
-                    Value='@unit',
+                    Value='@unit_id',
                     TextSize=card_text_size,
                 ),
                 widgets.TextView(
@@ -4127,7 +4106,7 @@ class GoodsSelectArticle(Screen):
                     TextSize=card_text_size,
                 ),
                 widgets.TextView(
-                    Value='@property_name',
+                    Value='@properties_name',
                     TextSize=card_text_size,
                 ),
                 orientation='vertical',
@@ -4188,20 +4167,21 @@ class GoodsSelectArticle(Screen):
 
     def _get_goods_list_data(self, goods_list: List[Dict]) -> List[Dict]:
         cards_data = []
-
         for record in goods_list:
             single_card_data = {
+                'id_good': record['id_good'],
+                'id_properties': record['id_property'],
                 'key': record['doc_table_id'],
                 'code': record.get('code', '—'),
-                'name': record['name'],
+                'good_name': record['name'],
                 'art': record.get('art', '—'),
                 'description': record.get('description', '—'),
-                'unit': record.get('id_unit', '—'),
+                'id_unit': record.get('id_unit'),
                 'units_name': record['unit_name'],
                 'type_good': record.get('type_good', '—'),
                 'qtty_plan': record['qtty_plan'],
                 'qtty': record['qtty'],
-                'property_name': record['property_name'],
+                'properties_name': record['property_name'],
                 'series_name': record['series_name'],
                 'price': record['price'],
                 'price_name': record['price_name'],
@@ -6078,6 +6058,7 @@ class SettingsScreen(Screen):
             'path',
             'delete_files',
             'allow_overscan',
+            'offline_mode'
         ]
 
         put_data = {key: self.rs_settings.get(key) for key in settings_keys}
@@ -6128,10 +6109,12 @@ class SettingsScreen(Screen):
         use_mark = self.hash_map.get('use_mark') or 'false'
         path = self.hash_map.get('path') or '//storage/emulated/0/Android/data/ru.travelfood.simple_ui/'
         allow_fact_input = self.hash_map.get_bool('allow_fact_input') or False
+        offline_mode = self.hash_map.get_bool('offline_mode') or False
 
         self.rs_settings.put('use_mark', use_mark, True)
         self.rs_settings.put('path', path, True)
         self.rs_settings.put('allow_fact_input', allow_fact_input, True)
+        self.rs_settings.put('offline_mode', offline_mode, True)
 
     def _show_screen(self, screen_name) -> None:
         self.hash_map.show_screen(screen_name)
@@ -7028,6 +7011,7 @@ class MainEvents:
             'log_name': 'log.json',
             'timer_is_disabled': False,
             'allow_fact_input': False,
+            'offline_mode': False,
             'delete_old_docs': False
         }
 
