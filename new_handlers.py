@@ -234,7 +234,14 @@ def highlight_scanned_item(hash_map: HashMap):
 def send_post_lines_data(hash_map: HashMap):
     """ Отправка на 1С выбранных в nosql строк post-запросом """
     screen = ui_models.GroupScanDocDetailsScreenNew(hash_map, rs_settings)
-    screen.send_post_lines_data()
+    screen.send_unsent_lines_run()
+
+
+@HashMap()
+def send_all_scan_lines(hash_map: HashMap):
+    """ Отправка на 1С всех nosql строк товара post-запросом """
+    screen = ui_models.GroupScanDocDetailsScreenNew(hash_map, rs_settings)
+    screen.send_all_scan_lines_run()
 
 
 @HashMap()
@@ -246,13 +253,13 @@ def after_send_post_lines_data(hash_map: HashMap):
 
 @HashMap()
 def adr_docs_on_start(hash_map: HashMap):
-    screen: ui_models.AdrDocsListScreen = create_screen(hash_map)
+    screen = ui_models.AdrDocsListScreen(hash_map, rs_settings)
     screen.on_start()
 
 
 @HashMap()
 def adr_doc_on_select(hash_map: HashMap):
-    screen: ui_models.AdrDocsListScreen = create_screen(hash_map)
+    screen = ui_models.AdrDocsListScreen(hash_map, rs_settings)
     screen.on_input()
 
 
