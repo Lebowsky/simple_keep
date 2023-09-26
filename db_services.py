@@ -201,12 +201,10 @@ class BarcodeService(DbService):
         select_part = f"""SELECT * FROM {table_name}"""
         query = select_part
         if filters:
-            i = 0
             filters_part = """ WHERE """
-            for field in list(filters):
-                filters_part += f"""{field}='{filters[field]}'""" if i == 0 else \
-                    f""" AND {field}='{filters[field]}'"""
-                i += 1
+            for count, field_name in enumerate(list(filters)):
+                filters_part += f"""{field_name}='{filters[field_name]}'""" if count == 0 else \
+                    f""" AND {field_name}='{filters[field_name]}'"""
             query = f"""{select_part} {filters_part}"""
 
         result = provider.sql_query(query, '')

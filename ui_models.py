@@ -2259,6 +2259,10 @@ class GroupScanDocDetailsScreenNew(DocDetailsScreen):
     def on_start(self):
         super()._on_start()
         self.hash_map.put('stop_timer_update', 'true')
+        if not self.hash_map.get('stop_sync_doc') and \
+                not self.rs_settings.get('offline_mode'):
+            self._sync_doc()
+        self.hash_map.put('stop_sync_doc', 'true')
 
     def on_input(self) -> None:
         super().on_input()
@@ -2287,12 +2291,14 @@ class GroupScanDocDetailsScreenNew(DocDetailsScreen):
             self._process_error_scan_barcode(result)
             return result.error
 
-        if not self.hash_map.get_bool('send_document_lines_running'):
+        if not self.hash_map.get_bool('send_document_lines_running') and \
+                not self.rs_settings.get('offline_mode'):
             self.hash_map.run_event_async('send_post_lines_data',
                                           post_execute_method='after_send_post_lines_data')
             self.hash_map.put('send_document_lines_running', True)
 
     def go_back(self):
+        self.hash_map.remove('stop_sync_doc')
         self.hash_map.show_screen('Документы')
 
     def send_post_lines_data(self, sent=None):
@@ -6025,6 +6031,7 @@ class SettingsScreen(Screen):
             'path',
             'delete_files',
             'allow_overscan',
+            'offline_mode'
         ]
 
         put_data = {key: self.rs_settings.get(key) for key in settings_keys}
@@ -6075,10 +6082,12 @@ class SettingsScreen(Screen):
         use_mark = self.hash_map.get('use_mark') or 'false'
         path = self.hash_map.get('path') or '//storage/emulated/0/Android/data/ru.travelfood.simple_ui/'
         allow_fact_input = self.hash_map.get_bool('allow_fact_input') or False
+        offline_mode = self.hash_map.get_bool('offline_mode') or False
 
         self.rs_settings.put('use_mark', use_mark, True)
         self.rs_settings.put('path', path, True)
         self.rs_settings.put('allow_fact_input', allow_fact_input, True)
+        self.rs_settings.put('offline_mode', offline_mode, True)
 
     def _show_screen(self, screen_name) -> None:
         self.hash_map.show_screen(screen_name)
@@ -6975,6 +6984,7 @@ class MainEvents:
             'log_name': 'log.json',
             'timer_is_disabled': False,
             'allow_fact_input': False,
+            'offline_mode': False,
             'delete_old_docs': False
         }
 
