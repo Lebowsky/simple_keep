@@ -497,8 +497,11 @@ class BarcodeWorker:
             return
 
         new_device_qtty = self.barcode_data['d_qtty'] + self.barcode_data['ratio']
+        new_overall_qtty = self.barcode_data['qtty'] + self.barcode_data['ratio']
+
         if self.barcode_data['row_key']:
-            if self.have_qtty_plan and self.control and self.barcode_data['qtty_plan'] < new_device_qtty:
+            if self.have_qtty_plan and self.control and self.barcode_data['qtty_plan'] < \
+                    max(new_device_qtty, new_overall_qtty):
                 self._set_process_result_info('quantity_plan_reached')
 
         elif self.have_zero_plan and self.control:
