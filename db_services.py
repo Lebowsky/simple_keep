@@ -1601,19 +1601,18 @@ class GoodsService(DbService):
     def get_goods_list_data(self, goods_type='', item_id='') -> list:
         query_text = f"""
             SELECT
-            RS_goods.id,
-            ifnull(RS_goods.code, '—') as code,
-            RS_goods.name,
-            RS_goods.art,
-            ifnull(RS_units.name,'—') as unit,
-            ifnull(RS_types_goods.name, '—') as type_good,
-            ifnull(RS_goods.description,'—') as description
-            
+                RS_goods.id,
+                IFNULL(RS_goods.code, '—') AS code,
+                RS_goods.name,
+                RS_goods.art,
+                IFNULL(RS_units.name,'—') AS unit,
+                IFNULL(RS_types_goods.name, '—') AS type_good,
+                IFNULL(RS_goods.description,'—') AS description
             FROM RS_goods
             LEFT JOIN RS_types_goods
-            ON RS_types_goods.id = RS_goods.type_good
+                ON RS_types_goods.id = RS_goods.type_good
             LEFT JOIN RS_units
-            ON RS_units.id = RS_goods.unit
+                ON RS_units.id = RS_goods.unit
             """
         where = '' if not goods_type else 'WHERE RS_goods.type_good=?'
         if where == '' and item_id:
@@ -1634,6 +1633,28 @@ class GoodsService(DbService):
 
         result = self._sql_query(query_text, args)
         return result
+
+    def get_item_data_by_id(self, item_id):
+        query_text = f"""
+            SELECT
+                RS_goods.id,
+                IFNULL(RS_goods.code, '—') AS code,
+                RS_goods.name,
+                RS_goods.art,
+                IFNULL(RS_units.name,'—') AS unit,
+                IFNULL(RS_types_goods.name, '—') AS type_good,
+                IFNULL(RS_goods.description,'—') AS description
+            FROM RS_goods
+            LEFT JOIN RS_types_goods
+                ON RS_types_goods.id = RS_goods.type_good
+            LEFT JOIN RS_units
+                ON RS_units.id = RS_goods.unit
+            WHERE RS_goods.id = "{item_id}"
+            
+            LIMIT 1
+            """
+        result = self._sql_query(query_text)
+        return result[0] if result else {}
 
     def get_all_goods_types_data(self):
         query_text = 'SELECT id,name FROM RS_types_goods'
