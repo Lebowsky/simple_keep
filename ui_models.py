@@ -4679,7 +4679,8 @@ class GoodsBalancesItemCard(Screen):
         selected_wh = self.hash_map.get_json('selected_card')
         if selected_wh:
             self.hash_map['wh_select'] = selected_wh.get('name')
-            self.hash_map.remove('selected_card')
+        else:
+            self.hash_map['wh_select'] = ''
 
     def validate_input(self):
         self._process_input_item_art()
@@ -5009,8 +5010,9 @@ class GoodsPricesItemCard(GoodsBalancesItemCard):
         super().__init__(hash_map, rs_settings)
 
     def on_start(self):
-        self._set_visibility_on_start(['prices_error_msg', 'prices_object_name', 'selected_price_type_name',
-                                       'selected_property_name', 'selected_unit_name', 'barcode_info'])
+        self._set_visibility_on_start(
+            ['prices_error_msg', 'prices_object_name', 'selected_price_type_name',
+            'selected_property_name', 'selected_unit_name', 'barcode_info'])
 
         if not self.hash_map.get('prices_table'):
             self.hash_map.put("Show_get_prices_controls", "1")
@@ -5066,10 +5068,11 @@ class GoodsPricesItemCard(GoodsBalancesItemCard):
         SelectItemScreen(self.hash_map, self.rs_settings).show()
 
     def _select_item_result(self, field_name):
-        selected_item = self.hash_map.get_json('selected_card')
-        if selected_item:
-            self.hash_map[field_name] = selected_item.get('name')
-            self.hash_map.remove('selected_card')
+        selected_card = self.hash_map.get_json('selected_card')
+        if selected_card:
+            self.hash_map[field_name] = selected_card.get('name')
+        else:
+            self.hash_map[field_name] = ''
 
     def _get_prices(self):
         self._validate_input()
@@ -5983,7 +5986,7 @@ class SelectItemScreen(Screen):
     def on_input(self):
         listeners = {
             'CardsClick': self._cards_click,
-            'ON_BACK_PRESSED': self._finish_process,
+            'ON_BACK_PRESSED': self._back_screen,
         }
         if self.listener in listeners:
             listeners[self.listener]()
@@ -6036,6 +6039,10 @@ class SelectItemScreen(Screen):
 
     def _cards_click(self):
         self.hash_map[self.screen_values['return_value_key']] = self.hash_map['selected_card_data']
+        self._finish_process()
+
+    def _back_screen(self):
+        self.hash_map[self.screen_values['return_value_key']] = ''
         self._finish_process()
 
     def _finish_process(self):
