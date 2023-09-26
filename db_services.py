@@ -201,12 +201,10 @@ class BarcodeService(DbService):
         select_part = f"""SELECT * FROM {table_name}"""
         query = select_part
         if filters:
-            i = 0
             filters_part = """ WHERE """
-            for field in list(filters):
-                filters_part += f"""{field}='{filters[field]}'""" if i == 0 else \
-                    f""" AND {field}='{filters[field]}'"""
-                i += 1
+            for count, field_name in enumerate(list(filters)):
+                filters_part += f"""{field_name}='{filters[field_name]}'""" if count == 0 else \
+                    f""" AND {field_name}='{filters[field_name]}'"""
             query = f"""{select_part} {filters_part}"""
 
         result = provider.sql_query(query, '')
@@ -454,7 +452,7 @@ class DocService:
             LEFT JOIN RS_countragents as RS_countragents
                 ON RS_countragents.id = {self.docs_table_name}.id_countragents
                 '''
-
+        joins += f'''LEFT JOIN RS_barc_flow ON {self.docs_table_name}.id_doc = RS_barc_flow.id_doc'''
         where = ''
 
         if doc_status:
@@ -473,14 +471,15 @@ class DocService:
                 where = 'WHERE doc_type=?'
             else:
                 where += ' AND doc_type=?'
-
+        
+        where += '''AND RS_barc_flow.id_doc IS NULL'''
+        
         query_text = f'''
             {query_text}
             {joins}
             {where}
             ORDER BY {self.docs_table_name}.doc_date
         '''
-
         result = self._get_query_result(query_text, args_tuple, return_dict=True)
         return result
 
