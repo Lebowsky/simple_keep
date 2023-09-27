@@ -4008,7 +4008,7 @@ class BarcodeRegistrationScreen(Screen):
         result = hs.send_barcodes(data=[barcode_data], timeout=5)
         self.toast('run')
         if result.error:
-            buffer = tiny_db_services.ExchangeQueueBuffer('barcodes')
+            buffer = ExchangeQueueBuffer('barcodes')
             buffer.save_data_to_send(barcode_data, pk='barcode')
 
     def _check_barcode(self, barcode):
