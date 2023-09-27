@@ -1,4 +1,4 @@
-from typing import Optional
+from typing import Optional, Callable, Union
 from dataclasses import dataclass
 
 import requests
@@ -268,6 +268,14 @@ class HsService:
                 answer_data['error_text'] = error_text
 
         return self.HttpAnswer(**answer_data)
+
+    def get_method_by_path(self, path) -> Union[Callable, None]:
+        methods = {
+            'barcodes': self.send_barcodes,
+            'documents': self.send_documents
+        }
+
+        return methods.get(path)
 
     @dataclass
     class HttpAnswer:
