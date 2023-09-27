@@ -69,7 +69,6 @@ def on_sql_error(hash_map):
     model.on_sql_error()
 
 
-
 @HashMap()
 def on_close_app(hash_map):
     # Попытка очистки кэша при выходе с приложения
@@ -308,13 +307,19 @@ def adr_elem_viev_on_click(hash_map):
 
 @HashMap()
 def barcode_register_doc_on_click(hash_map):
-    screen = ui_models.GoodBarcodeRegister(hash_map, rs_settings)
+    screen = ui_models.BarcodeRegistrationScreen(hash_map, rs_settings)
     screen.on_input()
 
 @HashMap()
 def barcode_register_doc_on_start(hash_map):
-    screen = ui_models.GoodBarcodeRegister(hash_map, rs_settings)
+    screen = ui_models.BarcodeRegistrationScreen(hash_map, rs_settings)
     screen.on_start()
+
+@HashMap()
+def barcode_register_async_save_barcode(hash_map):
+    screen = ui_models.BarcodeRegistrationScreen(hash_map, rs_settings)
+    screen.save_barcode()
+
 
 @HashMap()
 def doc_properties_on_start(hash_map):
@@ -406,12 +411,12 @@ def offline_good_card_on_input(hash_map):
 
 @HashMap()
 def barcode_register_item_on_input(hash_map):
-    screen = ui_models.GoodItemBarcodeRegister(hash_map, rs_settings)
+    screen = ui_models.ItemBarcodeRegistrationScreen(hash_map, rs_settings)
     screen.on_input()
 
 @HashMap()
 def barcode_register_item_on_start(hash_map):
-    screen: ui_models.GoodItemBarcodeRegister = create_screen(hash_map)
+    screen: ui_models.ItemBarcodeRegistrationScreen = create_screen(hash_map)
     screen.on_start()
 
 @HashMap()
@@ -671,3 +676,18 @@ def debug_listener(hash_map, _files=None, _data=None):
     screen.on_input()
 
 # ^^^^^^^^^^^^^^^^^ Debug ^^^^^^^^^^^^^^^^^
+
+@HashMap()
+def test_btn(hash_map: HashMap):
+    screen_values = {
+        'item_id' : '190a7469-3325-4d33-b5ec-28a63ac83b06-80260015e9b8c48d11e2c83af93e112a',
+        # 'property_id': '89c162bd-68ef-4693-a4a8-19238fa23c62-91e914dae9b19a4811e86a591b603c1c',
+        'property_id': '',
+        'unit_id': ''
+        # 'unit_id': '254a3240-79c0-4a3f-9259-5122c9ddd71b-80260015e9b8c48d11e2c83af93e1132'
+    }
+    screen = ui_models.BarcodeRegistrationScreen(hash_map, rs_settings)
+    screen.show_process_result(screen_values)
+#
+
+
