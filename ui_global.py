@@ -13,7 +13,7 @@ query_list = queue.Queue()
 # Вот таким незатейливым методом определяем, мы запустились на компе или на ТСД **
 # Ну и в зависимости от, используем базу ****
 if os.path.exists('//data/data/ru.travelfood.simple_ui/databases/'): #локально
-    db_path = '//data/data/ru.travelfood.simple_ui/databases/SimpleKeep'  # rightscan'
+    db_path = '//data/data/ru.travelfood.simple_ui/databases/SimpleKeep.db'  # rightscan'
 else:
     db_path = file_abs_path = os.path.abspath('./SimpleKeep.db')  # D:\PythonProjects\RightScan\SUI_noPony\
 
