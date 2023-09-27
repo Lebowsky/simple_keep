@@ -50,13 +50,6 @@ class HashMap:
     def listener(self, v):
         pass
 
-    def show_process_result(self, process, screen, data: dict = None):
-        if process and screen:
-            self.hash_map.put('ShowProcessResult', f'{process}|{screen}')
-
-            if data:
-                self.put_data(data)
-
     def set_result_listener(self, listener):
         if listener and isinstance(listener, str):
             self.hash_map.put('SetResultListener', listener)
@@ -293,6 +286,13 @@ class HashMap:
         self.put('ShowScreen', name)
         if data:
             self.put_data(data)
+
+    def show_process_result(self, process, screen, data: dict = None):
+        if process and screen:
+            self.hash_map.put('ShowProcessResult', f'{process}|{screen}')
+
+            if data:
+                self.put_data(data)
 
     def show_dialog(self, listener, title='', buttons=None):
         self.put("ShowDialog", listener)
