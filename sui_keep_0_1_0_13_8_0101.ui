@@ -8154,7 +8154,7 @@
                                                         "Variable": "",
                                                         "height": "wrap_content",
                                                         "width": "wrap_content",
-                                                        "weight": "0",
+                                                        "weight": "1",
                                                         "TextBold": false,
                                                         "TextItalic": false,
                                                         "type": "TextView"
@@ -8163,7 +8163,7 @@
                                                         "Value": "@device_list",
                                                         "Variable": "device_value",
                                                         "height": "wrap_content",
-                                                        "width": "match_parent",
+                                                        "width": "wrap_content",
                                                         "orientation": "horizontal",
                                                         "weight": "1",
                                                         "TextBold": false,
@@ -8175,11 +8175,24 @@
                                                 ]
                                             },
                                             {
+                                                "Value": "<!DOCTYPE html> <html lang=\"en\"> <head>     <meta charset=\"UTF-8\">     <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">     <title>Purple Horizontal Line</title>     <style>         .horizontal-line {             width: 100%;             height: 1px; /* Adjust the thickness of the line as needed */             background-color: purple; /* Purple color */         }     </style> </head> <body>     <div class=\"horizontal-line\"></div> </body> </html>",
+                                                "Variable": "",
+                                                "height": "wrap_content",
+                                                "width": "match_parent",
+                                                "orientation": "horizontal",
+                                                "weight": "1",
+                                                "TextBold": false,
+                                                "TextItalic": false,
+                                                "TextSize": "",
+                                                "TextColor": "",
+                                                "type": "html"
+                                            },
+                                            {
                                                 "type": "LinearLayout",
                                                 "Variable": "scan_layout_edit",
                                                 "orientation": "vertical",
                                                 "height": "wrap_content",
-                                                "width": "wrap_content",
+                                                "width": "match_parent",
                                                 "weight": "1",
                                                 "Elements": [
                                                     {
@@ -8256,7 +8269,7 @@
                                                         "Variable": "",
                                                         "orientation": "horizontal",
                                                         "height": "wrap_content",
-                                                        "width": "wrap_content",
+                                                        "width": "match_parent",
                                                         "weight": "1",
                                                         "Elements": [
                                                             {
@@ -8286,6 +8299,19 @@
                                                         "BackgroundColor": "",
                                                         "StrokeWidth": "",
                                                         "Padding": ""
+                                                    },
+                                                    {
+                                                        "Value": "Сохранить",
+                                                        "Variable": "btn_save_handmade_settings",
+                                                        "height": "wrap_content",
+                                                        "width": "match_parent",
+                                                        "orientation": "horizontal",
+                                                        "weight": "1",
+                                                        "TextBold": false,
+                                                        "TextItalic": false,
+                                                        "TextSize": "",
+                                                        "TextColor": "",
+                                                        "type": "Button"
                                                     }
                                                 ],
                                                 "BackgroundColor": "",
@@ -8297,7 +8323,7 @@
                                                 "Variable": "scan_layout_view",
                                                 "orientation": "vertical",
                                                 "height": "wrap_content",
-                                                "width": "wrap_content",
+                                                "width": "match_parent",
                                                 "weight": "1",
                                                 "Elements": [
                                                     {
@@ -8329,7 +8355,7 @@
                                                                 "TextItalic": false,
                                                                 "TextSize": "",
                                                                 "TextColor": "",
-                                                                "type": "EditTextText"
+                                                                "type": "TextView"
                                                             }
                                                         ]
                                                     },
@@ -8362,7 +8388,7 @@
                                                                 "TextItalic": false,
                                                                 "TextSize": "",
                                                                 "TextColor": "",
-                                                                "type": "EditTextText"
+                                                                "type": "TextView"
                                                             }
                                                         ],
                                                         "BackgroundColor": "",
@@ -8398,7 +8424,7 @@
                                                                 "TextItalic": false,
                                                                 "TextSize": "",
                                                                 "TextColor": "",
-                                                                "type": "EditTextText"
+                                                                "type": "TextView"
                                                             }
                                                         ],
                                                         "BackgroundColor": "",
@@ -8425,18 +8451,18 @@
                         ],
                         "Handlers": [
                             {
-                                "event": "onInput",
-                                "action": "run",
-                                "type": "python",
-                                "method": "test_barcode_listener",
-                                "postExecute": ""
-                            },
-                            {
                                 "event": "onStart",
-                                "listener": "",
                                 "action": "run",
                                 "type": "python",
                                 "method": "test_barcode_on_start",
+                                "postExecute": ""
+                            },
+                            {
+                                "event": "onInput",
+                                "listener": "",
+                                "action": "run",
+                                "type": "python",
+                                "method": "test_barcode_listener",
                                 "postExecute": ""
                             }
                         ],

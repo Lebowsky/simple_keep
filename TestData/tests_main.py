@@ -184,7 +184,12 @@ def adr_series_item_on_start(hash_map):
 def adr_series_item_on_input(hash_map):
     main.adr_series_list_on_input(hash_map)
 
+def test_barcode_on_start(hash_map):
+    main.test_barcode_on_start(hash_map)
 
+
+def test_barcode_listener(hash_map):
+    main.test_barcode_listener(hash_map)
 
 class hashMap:
     d = {}
