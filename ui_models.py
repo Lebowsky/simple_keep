@@ -7,24 +7,25 @@ from pathlib import Path
 import time
 from datetime import datetime
 from typing import Dict, List, Optional, Tuple
-
+import shutil
 import db_services
 import hs_services
-import printing_factory
+from printing_factory import HTMLDocument, PrintService, bt
 from ui_utils import HashMap, RsDoc, BarcodeWorker, get_ip_address, BarcodeAdrWorker
-from db_services import (DocService, ErrorService, GoodsService, BarcodeService, AdrDocService, TimerService,
+from db_services import (DocService, ErrorService, GoodsService, BarcodeService,
+                         AdrDocService, TimerService,
                          UniversalCardsService, SqlQueryProvider)
 from tiny_db_services import ScanningQueueService, TinyNoSQLProvider
 from hs_services import HsService
 from ru.travelfood.simple_ui import SimpleUtilites as suClass
 
-#import http_exchange
+# import http_exchange
 from http_exchange import post_changes_to_server
-#from PIL import Image
 import widgets
 import ui_global
 import base64
 from java import jclass
+
 noClass = jclass("ru.travelfood.simple_ui.NoSQL")
 
 
@@ -147,144 +148,151 @@ class Screen(ABC):
 
 # ==================== Pritnting screens =============================
 class HtmlView(Screen):
-
     screen_name = 'Результат'
     process_name = 'Печать'
 
     def __init__(self, hash_map: HashMap, rs_settings):
         super().__init__(hash_map, rs_settings)
-        self.params = json.loads(self.hash_map.get('print_parameters'))
-        self.param_name_for_settings = self.hash_map['template_settings_name'] #self.hash_map['current_operation_name'] + '/' + self.hash_map['current_screen_name']
-        self.hash_map.put('noRefresh','')
+        self.print_ncl = noClass("print_ncl")
 
-    def on_start(self, ):
-        # Если установлен шаблон в настройках печати, ищем его в локальных файлах
-        if self.params.get('file_name') and self.params.get('full_path'):
-            pass
-        else: #Файл шаблона не найден, возвращаемся обратно
-            self.hash_map.toast('Не найден файл шаблона')
-            self.hash_map.finish_process_result()
-            return
+    def on_start(self):
+        lable_full_path = self.print_ncl.get('lable_full_path')
+        barcode_width = self.hash_map.get('barcode_width')
+        barcode_width = str(int(float(barcode_width))) if barcode_width else '20'
+        barcode_height = self.hash_map.get('barcode_height')
+        barcode_height = str(int(float(barcode_height))) if barcode_height else '20'
+        barcode_left = self.hash_map.get('barcode_left')
+        barcode_left = str(int(float(barcode_left))) if barcode_left else '0'
+        barcode_right = self.hash_map.get('barcode_right')
+        barcode_right = str(int(float(barcode_right))) if barcode_right else '0'
+        barcode_up = self.hash_map.get('barcode_up')
+        barcode_up = str(int(float(barcode_up))) if barcode_up else '0'
+        barcode_down = self.hash_map.get('barcode_down')
+        barcode_down = str(int(float(barcode_down))) if barcode_down else '0'
+        barcode_type = self.hash_map.get('barcode_type_click') or 'ean13'
 
-        if not (self.params.get('picture_with') and self.params.get('picture_highth')):
-            self.params['picture_highth'] = '20'
-            self.params['picture_with'] = '20'
-            self.hash_map['picture_highth'] = '20'
-            self.hash_map['picture_with'] = '20'
-
-        # Список допустимых видов штрихкода
-        # barcode_types = ['ean13', 'ean8', 'ean8-guard',  'ean13-guard', 'ean', 'gtin', 'ean14', 'jan', 'upc', 'upca', 'isbn', 'isbn13',
-        #  'gs1', 'isbn10', 'issn', 'code39', 'pzn', 'code128', 'itf', 'gs1_128', 'codabar', 'nw-7']
         barcode_types = ['ean13', 'code39', 'code128', 'qr-code']
-        self.hash_map.put('barcode_types', ';'.join(barcode_types))
-        # self.params['template_folder'], self.params['template'] = self.get_template_by_default(rs_settings= self.rs_settings)
-        template_dir, template_file = self.get_template_by_default(self.params)
-        html_doc = printing_factory.HTMLDocument(template_dir, template_file).get_template()
-        self.hash_map.put('html', html_doc)
 
-        doc_details = self.get_details_data()
-        print_parameters = self.hash_map.get('print_parameters')
-        if print_parameters:
-            print_parameters = json.loads(print_parameters)
-            self.fill_knowing_values(doc_details, print_parameters)
+        template_dir, template_file = os.path.split(lable_full_path)
+        html_doc_params = HTMLDocument.find_template_variables(template_dir, template_file)
+        doc_details = self.get_details_data(html_doc_params)
+
+        data_for_printing = {elem['key']: elem['value'] for elem in doc_details}
+        data_for_printing.update(barcode='123123123123')
+        list_for_choose = ';'.join(data_for_printing.keys())
+
         table_data = self._prepare_table_data(doc_details)
         table_view = self._get_doc_table_view(table_data=table_data)
-        self.hash_map['matching_table'] = table_view.to_json()
 
-        # Создаем список параметров в виде листа, для последующей передачи в форму выбора
+        html = HTMLDocument(template_dir, template_file).create_html(
+            data_for_printing, barcode_type=barcode_type)
 
-        list_excludes = ('file_name', 'full_path', 'picture_with', 'picture_highth')
-        list_fc = [x for x in list(self.params.keys()) if x not in list_excludes]
-        list_fc.insert(0,'-пустое значение-')
+        html = HTMLDocument.inject_css_style(
+            html,
+            width=barcode_width,
+            height=barcode_height,
+            x=str(int(barcode_right) - int(barcode_left)),
+            y=str(int(barcode_down) - int(barcode_up)),
+        )
+        self.hash_map.put('barcode_width', barcode_width)
+        self.hash_map.put('barcode_height', barcode_height)
+        self.hash_map.put('barcode_left', barcode_left)
+        self.hash_map.put('barcode_right', barcode_right)
+        self.hash_map.put('barcode_up', barcode_up)
+        self.hash_map.put('barcode_down', barcode_down)
+        self.hash_map.put('barcode_types', ';'.join(barcode_types))
+        self.hash_map.put('html', html)
+        self.hash_map.put('data_for_printing_keys', list_for_choose)
+        self.hash_map.put('matching_table', table_view.to_json())
+        self.hash_map.refresh_screen()
 
-        list_for_choose = ';'.join(list_fc)
-        self.hash_map.put('str_field', list_for_choose)
-
-        #self.hash_map.finish_process_result()
-
-
-    def get_details_data(self, matching_table=None):
-        #Распарсим шаблон и вытащим переменные
-        if matching_table:
-            return matching_table
-        template_dir, template_file = self.get_template_by_default(self.params)
-        html_doc_params = printing_factory.HTMLDocument(template_dir, template_file).find_template_variables()
-
-        #Загрузим, настройки соответствия и если их нет то подставим пустые значения
-        json_text = self.rs_settings.get(self.param_name_for_settings)
-        if json_text:
-            saved_template_params = json.loads(json_text)
-            dict_lookup = {d['key']: d['value'] for d in saved_template_params}
-        else:
-            dict_lookup = {}
-        return_list = []
+    def get_details_data(self, html_doc_params: set) -> List[Dict]:
+        matching_table = self.hash_map.get('matching_table')
+        if not matching_table:
+            return [{'key': elem, 'value': elem} for elem in html_doc_params]
+        matching_table = json.loads(matching_table)
+        matching_table_data = matching_table['customtable']['tabledata']
+        result = []
         for elem in html_doc_params:
-            value = dict_lookup.get(elem, '-пустое значение-')
-            return_list.append({'key':elem, 'value':value})
-
-        return return_list
-
-    def fill_knowing_values(self, doc_details, parameters):
-        for d in doc_details:
-            if d['key'] in parameters.keys():
-                d['value'] =  d['key']
+            value = elem
+            for data in matching_table_data:
+                if data.get('key') == elem:
+                    value = data['value']
+            result.append({'key': elem, 'value': value})
+        return result
 
     def on_input(self):
-        super().on_input()
         if self.listener == 'ON_BACK_PRESSED':
-            #self.hash_map.remove('matching_table')
-            #self.hash_map.put('run_screen', '2')
-            self.hash_map.finish_process_result()
+            self.hash_map.show_screen('Список шаблонов')
 
-        elif self.listener ==  'btn_cancel':
-            #self.hash_map.remove('matching_table')
-            #self.hash_map.put('run_screen','2')
-            self.hash_map.finish_process_result()
+        elif self.listener == 'btn_cancel':
+            self.hash_map.show_screen('Список шаблонов')
 
         elif self.listener == 'btn_save':
-
-            jlist = json.loads(self.hash_map.get("matching_table"))
-            current_table = jlist['customtable']['tabledata']
+            matching_table = json.loads(self.hash_map.get("matching_table"))
+            current_table = matching_table['customtable']['tabledata']
             current_table.pop(0)
             for el in current_table:
                 if el.get('key'):
                     el.pop('_layout')
 
-            settings_for_wrote = {'full_path' : self.params.get('full_path'),
-            'file_name' : self.params.get('file_name'),
-            'picture_with':self.hash_map.get('picture_with'),
-            'picture_highth': self.hash_map.get('picture_highth'),
-            'print_params' : current_table }
+            self.print_ncl.put('barcode_width', self.hash_map.get('barcode_width'),True)
+            self.print_ncl.put('barcode_height', self.hash_map.get('barcode_height'),True)
+            self.print_ncl.put('barcode_left', self.hash_map.get('barcode_left'),True)
+            self.print_ncl.put('barcode_right', self.hash_map.get('barcode_right'),True)
+            self.print_ncl.put('barcode_up', self.hash_map.get('barcode_up'),True)
+            self.print_ncl.put('barcode_down', self.hash_map.get('barcode_down'),True)
+            self.print_ncl.put('matching_table', json.dumps(current_table), True)
+            self.print_ncl.put('barcode_type', self.hash_map.get('barcode_type_click'),True)
+            self.print_ncl.put('current_label_template_name', self.print_ncl.get('lable_file_name'), True)
+            self.print_ncl.put('current_label_template_path', self.print_ncl.get('lable_full_path'), True)
+            html = self.hash_map.get('html')
 
-            current_table_json = json.dumps(settings_for_wrote)
+            old_preview_tmp = self.print_ncl.get('preview_label_template_image_temp')
+            if old_preview_tmp and os.path.exists(old_preview_tmp):
+                os.remove(old_preview_tmp)
+            self.print_ncl.delete('preview_label_template_image_temp')
 
-            self.rs_settings.put(self.param_name_for_settings, current_table_json, False)  #current_table_json
-            #self.hash_map.remove('matching_table')
-            #self.hash_map.put('run_screen','2')
-            self.hash_map.finish_process_result()
+            old_preview = self.print_ncl.get('preview_label_template_image')
+            if old_preview and os.path.exists(old_preview):
+                os.remove(old_preview)
+            self.hash_map.put('PrintPreview', html)
+            self.hash_map.put('PrintToBitmap')
 
-        elif self.listener == "TableClick" or self.listener =='CardsClick':
-                current_str = self.hash_map.get("selected_card_position")
-                jlist = json.loads(self.hash_map.get("matching_table"))
-                current_elem = jlist['customtable']['tabledata'][int(current_str)]
-                name = str(current_elem['key'])
-                self.hash_map.put("field", name)
-                self.hash_map.put('list_field', str(self.hash_map.get('str_field')))
-                self.hash_map.put('ShowDialog', 'НастройкаСоответствияДиалог')
-                self.hash_map.put("ShowDialogStyle",
-                            json.dumps({"title": name, "yes": "Да", "no": "Нет"}))
+        elif self.listener == 'PrintBitmap':
+            path_to_png = self.hash_map.get('PrintBitmapPath')
+            self.print_ncl.put('preview_label_template_image', path_to_png, True)
+            self.hash_map.beep()
+            self.hash_map.toast('Шаблон сохранён')
+            self.hash_map.show_screen('Настройки печати Шаблоны')
+
+        elif self.listener == 'CardsClick':
+            card_position = int(self.hash_map.get("selected_card_position"))
+            if card_position == 0:
+                return
+            matching_table = json.loads(self.hash_map.get("matching_table"))
+            current_elem = matching_table['customtable']['tabledata'][card_position]
+            self.hash_map.put('list_field', self.hash_map.get('data_for_printing_keys'))
+            self.hash_map.show_dialog('НастройкаСоответствияДиалог',
+                                      title=current_elem['key'], buttons=['Да', 'Нет'])
 
         elif self.hash_map.get("event") == 'onResultPositive':
-            key_card = int(self.hash_map.get('selected_card_position'))
-
-            jrecord = json.loads(self.hash_map.get("matching_table"))
-            rec = jrecord['customtable']['tabledata'][key_card]
-            # for elem in rec:
-            #     if elem.get('key') == key_card:
-            rec['value'] = self.hash_map.get('select_field')
-            #self._set_background_row_color(rec)
-            self.hash_map.put("matching_table", json.dumps(jrecord, ensure_ascii=False).encode('utf8').decode())
+            card_position = int(self.hash_map.get('selected_card_position'))
+            matching_table = json.loads(self.hash_map.get("matching_table"))
+            current_elem = matching_table['customtable']['tabledata'][card_position]
+            current_elem['value'] = self.hash_map.get('select_field')
+            self.hash_map.put("matching_table",
+                              json.dumps(matching_table, ensure_ascii=False).encode(
+                                  'utf8').decode())
+            self.on_start()
             self.hash_map.refresh_screen()
+
+        elif self.listener == 'barcode_type_click':
+            self.on_start()
+            self.hash_map.refresh_screen()
+        elif self.listener == 'select_field':
+            pass
+
 
     def on_post_start(self):
         pass
@@ -292,36 +300,13 @@ class HtmlView(Screen):
     def show(self, args=None):
         pass
 
-    @staticmethod
-    def get_template_by_default(print_params: dict):
-
-        file_name = ''
-        if 'full_path' not in print_params:
-            raise ValueError("Ключа 'full_path' не найдено в настройках.")
-        else:
-            file_name = print_params['full_path']
-
-        if file_name and os.path.exists(file_name):
-            return os.path.split(file_name)
-        else:
-            #return os.path.split(file_name) #DEBUG, must delete
-            raise ValueError(f'Файл шаблона {file_name} не найден')
-
-
-
-    def _prepare_table_data(self, details):
+    def _prepare_table_data(self, details: List[dict]):
         table_data = [{}]
         for record in details:
-            product_row = {'key': str(record['key']), 'value': str(record['value']),
-                           '_layout': self._get_doc_table_row_view()}
-
-            self._set_background_row_color(product_row)
-
-            # if self._added_goods_has_key(product_row['key']):
-            #     table_data.insert(1, product_row)
-            # else:
-            table_data.append(product_row)
-
+            record.update(_layout=self._get_doc_table_row_view())
+            background_color = "#FFFFFF" if record['value'] else '#FBE9E7'
+            record['_layout'].BackgroundColor = background_color
+            table_data.append(record)
         return table_data
 
     def _get_doc_table_view(self, table_data):
@@ -329,7 +314,7 @@ class HtmlView(Screen):
             widgets.LinearLayout(
                 self.LinearLayout(
                     self.TextView('Ключ', self.rs_settings),
-                    weight=3
+                    weight=1
                 ),
                 self.LinearLayout(
                     self.TextView('Значение', self.rs_settings),
@@ -361,7 +346,7 @@ class HtmlView(Screen):
                     StrokeWidth=1
                 ),
                 width='match_parent',
-                weight=3,
+                weight=1,
                 StrokeWidth=1
             ),
             widgets.LinearLayout(
@@ -382,16 +367,6 @@ class HtmlView(Screen):
 
         return row_view
 
-
-    def _set_background_row_color(self, product_row):
-        background_color = '#FBE9E7' #FBE9E7  "#FFF9C4"
-        value = product_row['value']
-
-        if value:
-            background_color = "#FFFFFF"
-
-        product_row['_layout'].BackgroundColor = background_color
-
     @staticmethod
     def show_screen(hash_map, data_for_printing):
         if data_for_printing:
@@ -399,126 +374,58 @@ class HtmlView(Screen):
             # if self.params:
             hash_map.show_process_result('Печать', 'Результат')
 
-    @staticmethod
-    def print_from_any_screen(hash_map, rs_settings, template_name, data_for_printing):
-        if not data_for_printing:
-            return
-        else:
-            str_table_view = rs_settings.get(template_name)
-            if str_table_view:  #Нашли настройки для вызвавшего экрана
-                params_match = json.loads(str_table_view)
-                data_for_printing = HtmlView.replase_params_names(data_for_printing, params_match.get('print_params'))
-                template_directory, template_file  = HtmlView.get_template_by_default(params_match)
-                #hash_map.toast(f'Путь:{template_directory}  Файл:{template_file}')
-                htmlresult = printing_factory.HTMLDocument(template_directory, template_file).create_html(data_for_printing)
-                htmlresult = printing_factory.HTMLDocument.inject_css_style(htmlresult, params_match)
-                # with open(suClass.get_temp_dir() + '//template.html', 'w', encoding='utf-8') as file:
-                #     file.write(htmlresult)
-                # self.params['template'],self.params['template_folder']
-
-                hash_map.put("PrintPreview", htmlresult)
-
-            else:  #Вызываем этот экан средствами симпла, для настройки параметров
-                hash_map.put('print_parameters', json.dumps(data_for_printing))
-                hash_map['template_settings_name'] = template_name
-                #hash_map.show_process_result('Печать', 'Результат')
-                hash_map.show_process_result('Печать', 'Список шаблонов')
-
-
-    @staticmethod
-    def replase_params_names(data_for_printing, params_match):
-        new_data = {}
-
-        for match in params_match:
-            if match['value'] in data_for_printing.keys():
-                new_key = match['key']
-                new_value = data_for_printing[match['value']]
-                new_data[new_key] = new_value
-        return new_data
-
 
 class TemplatesList(Screen):
     screen_name = 'Список шаблонов'
     process_name = 'Печать'
 
-    def __init__(self,hash_map: HashMap, rs_settings):
+    def __init__(self, hash_map: HashMap, rs_settings):
         super().__init__(hash_map, rs_settings)
-
-        self.hs_service = HsService(self.get_http_settings())
-        self.print_parameters = json.loads(self.hash_map.get('print_parameters'))
-
+        self.print_ncl = noClass("print_ncl")
 
     def on_start(self):
-        current_template_js = self.rs_settings.get('current_template')
-        if current_template_js:
-            current_template = json.loads(current_template_js) if current_template_js else None
-            if current_template:
-                self.hash_map.put('current_template', current_template.get('name') or '')
-            else:
-                self.hash_map.put('current_template','-не определено-')
-        else:
-            self.hash_map.put('current_template', '-не определено-')
-
-        target_dir = suClass.get_temp_dir()
-        list_data = self.get_all_files_from_patch(target_dir)
-
+        list_data = self.get_all_files_from_patch()
+        if not list_data:
+            self.hash_map.toast('Список шаблонов пуст')
+            self.hash_map.show_screen('Настройки печати Шаблоны')
+            return
         doc_cards = self._get_doc_cards_view(list_data)
         self.hash_map['templates_cards'] = doc_cards.to_json()
-
+        self.hash_map.delete('matching_table')
 
     def on_input(self):
         if self.listener == 'ON_BACK_PRESSED':
-            self.hash_map.finish_process_result()
-        elif self.listener == 'btn_get_http_templates':
-            self.get_from_server_write_on_disc()
-        elif self.hash_map.get('onClick')== 'btn_get_http_templates':
-            self.get_from_server_write_on_disc()
-            self.hash_map.put('onClick','')
-        elif self.listener == 'LayoutAction':
-            self._layout_action()
+            self.hash_map.show_screen('Настройки печати Шаблоны')
+
         elif self.listener == 'CardsClick':
-
-            #selected_card = json.loads(self.hash_map.get('selected_card_data'))
-            current_str = self.hash_map.get("selected_card_position")
-            jlist = json.loads(self.hash_map.get("templates_cards"))
-            selected_card = jlist['customcards']['cardsdata'][int(current_str)]
-
-            if selected_card and isinstance(selected_card, dict):
-                self.print_parameters['file_name'] = selected_card.get('file_name')
-                self.print_parameters['full_path'] = selected_card.get('full_path')
-                self.hash_map.put('print_parameters', json.dumps(self.print_parameters))
-                # self.rs_settings.put('current_template',json.dumps(file_parameters),False)
-
-                self.hash_map.put('current_template', selected_card.get('file_name'))
-
-                # self.delete_template_settings(self.rs_settings)
-                self.hash_map.show_screen('Результат')  # .show_process_result('Печать', 'Результат')
-
+            card_position = self.hash_map.get("selected_card_position")
+            jlist = self.hash_map.get("templates_cards")
+            if not jlist:
+                raise Exception('TemplatesList, on_input, jlist, empty templates_cards')
+            jlist = json.loads(jlist)
+            selected_card = jlist['customcards']['cardsdata'][int(card_position)]
+            self.print_ncl.put('lable_file_name', selected_card.get('file_name'), True)
+            self.print_ncl.put('lable_full_path', selected_card.get('full_path'), True)
+            self.hash_map.show_screen('Результат')
 
     def on_post_start(self):
         pass
 
-
-    def show(self):
+    def show(self, args=None):
         pass
 
-
     def _get_doc_cards_view(self, table_data):
-
         card_title_text_size = self.rs_settings.get('CardTitleTextSize')
         card_date_text_size = self.rs_settings.get('CardDateTextSize')
 
         doc_cards = widgets.CustomCards(
             widgets.LinearLayout(
-
                 widgets.LinearLayout(
                     widgets.TextView(
                         Value='@file_name',
                         TextBold=True,
                         TextSize=card_title_text_size
                     ),
-
-
                     orientation="horizontal"
                 ),
                 widgets.LinearLayout(
@@ -531,10 +438,7 @@ class TemplatesList(Screen):
                         TextSize=card_date_text_size
                     )
                 ),
-
                 width="match_parent"
-
-
             ),
             options=widgets.Options().options,
             cardsdata=table_data
@@ -542,52 +446,12 @@ class TemplatesList(Screen):
 
         return doc_cards
 
-    @staticmethod
-    def correct_filename(filename):
-
-        illegal_chars = ['<', '>', ':', '"',"'", '/', '\\', '|', '?', '*', "<", ">", '\x00']
-        for char in illegal_chars:
-            filename = filename.replace(char, '')
-        return filename
-
-
-    def get_from_server_write_on_disc(self):
-        answer = self.hs_service.get_templates()
-        output_folder = suClass.get_temp_dir()
-        #self.hash_map.notification(output_folder,'Путь',True)
-        # Create the output folder if it doesn't exist
-        if not os.path.exists(output_folder):
-            os.makedirs(output_folder)
-        if answer['status_code'] == 200:
-            data_list = answer['data']
-        else:
-            reason = answer['error_pool']
-            raise f'Ошибка соединения с сервером: {reason}'
-
-        for data_dict in data_list:
-            file_name = self.correct_filename(data_dict['name']) + '.htm'
-            file_path = os.path.join(output_folder, file_name)
-
-            # Decode the BASE64 encoded HTML data
-            #html_data = printing_factory.HTMLDocument(file_name, file_path).inject_css_style(base64.b64decode(data_dict['html']).decode('utf-8'))
-
-            # Write the HTML data to the file
-            try:
-                with open(file_path, 'w', encoding='utf-8') as file:
-                    file.write(base64.b64decode(data_dict['html']).decode('utf-8'))
-            except:
-                raise f'Ошибка сохранения файла {file_path}'
-        #     print(f'Saved {file_name}')
-        #
-        # print('All files saved.')
-
-
-    @staticmethod
-    def get_all_files_from_patch(folder_path, mask=''):
-
+    def get_all_files_from_patch(self):
+        templates_dir = self.print_ncl.get('label_templates_dir')
+        folder_path = templates_dir or os.path.join(suClass.get_temp_dir(), 'labels')
+        self.print_ncl.put('label_templates_dir', folder_path, True)
         html_files_info = []
 
-        # Walk through the folder and its subdirectories
         for root, dirs, files in os.walk(folder_path):
             for file in files:
                 if file.lower().endswith('.htm'):  # and mask in file:
@@ -601,29 +465,12 @@ class TemplatesList(Screen):
                     file_info = {
                         'full_path': file_path,
                         'file_name': file,
-                        'file_size': f'{file_size_kb:.2f} KB',  # Format file size with 2 decimal places
+                        'file_size': f'{file_size_kb:.2f} KB',
+                        # Format file size with 2 decimal places
                         'creation_time': formatted_creation_time
                     }
                     html_files_info.append(file_info)
-
-        # print(html_files_info)
         return html_files_info
-
-    def _layout_action(self):
-        selected_card = None
-        if self.hash_map.get('layout_listener') == 'Задать по умолчанию':
-            selected_card = json.loads(self.hash_map.get('card_data'))
-
-            if selected_card and isinstance(selected_card, dict):
-                self.print_parameters['file_name'] = selected_card.get('file_name')
-                self.print_parameters['full_path'] = selected_card.get('full_path')
-                self.hash_map.put('print_parameters', json.dumps(self.print_parameters))
-                # self.rs_settings.put('current_template',json.dumps(file_parameters),False)
-
-                self.hash_map.put('current_template', selected_card.get('file_name'))
-
-                # self.delete_template_settings(self.rs_settings)
-                self.hash_map.show_screen('Результат')  # .show_process_result('Печать', 'Результат')
 
 
 class SimpleFileBrowser(Screen):
@@ -632,7 +479,8 @@ class SimpleFileBrowser(Screen):
 
     def __init__(self, hash_map: HashMap, rs_settings):
         super().__init__(hash_map, rs_settings)
-        self.hs_service = hs_services.DebugService(ip_host=self.hash_map.get('ip_host'))  # '192.168.1.77'
+        self.hs_service = hs_services.DebugService(
+            ip_host=self.hash_map.get('ip_host'))  # '192.168.1.77'
 
     def on_start(self):
         if not self.hash_map.get('current_dir'):
@@ -658,7 +506,8 @@ class SimpleFileBrowser(Screen):
             jlist = self.hash_map.get_json("templates_cards")
             current_elem = jlist['customcards']['cardsdata'][int(current_str)]
             if current_elem['item_type'] == 'Folder':
-                self.hash_map['current_dir'] = current_directory / current_elem['file_name']
+                self.hash_map['current_dir'] = current_directory / current_elem[
+                    'file_name']
                 self.hash_map.refresh_screen()
 
 
@@ -745,7 +594,8 @@ class SimpleFileBrowser(Screen):
                 'item_type': item_type,
                 'full_path': str(directory_path.joinpath(file_path)),
                 'file_name': file_path,
-                'file_size': f'{file_size_kb:.2f} KB',  # Format file size with 2 decimal places
+                'file_size': f'{file_size_kb:.2f} KB',
+                # Format file size with 2 decimal places
                 'creation_time': formatted_creation_time
             }
             files_info.append(file_info)
@@ -1336,6 +1186,7 @@ class GroupScanDocsListScreen(DocsListScreen):
 
     def can_launch_timer(self):
         return False
+
 
 class DocumentsDocsListScreen(DocsListScreen):
     screen_name = 'Документы'
@@ -3143,15 +2994,11 @@ class FlowDocDetailsScreen(DocDetailsScreen):
             current_str = self.hash_map.get("selected_card_position")
             jlist = json.loads(self.hash_map.get("doc_barc_flow"))
             current_elem = jlist['customtable']['tabledata'][int(current_str)]
-            data_dict = {'barcode': current_elem['barcode'],
-                         'Номенклатура': current_elem['name'],
-                         'qtty': current_elem['qtty'], 'Характеристика': ''}
+            data = {'barcode': current_elem['barcode'],
+                    'Номенклатура': current_elem['name'],
+                    'qtty': current_elem['qtty'], 'Характеристика': ''}
 
-            HtmlView.print_from_any_screen(
-                self.hash_map,
-                self.rs_settings,
-                self.printing_template_name,
-                data_for_printing=data_dict)
+            PrintService.print(self.hash_map, data)
 
         elif listener == "BACK_BUTTON":
             self.hash_map.remove('rows_filter')
@@ -3234,6 +3081,9 @@ class FlowDocDetailsScreen(DocDetailsScreen):
 
         elif listener == 'vision':
             FlowDocDetailsScreen.ocr_nosql.destroy()
+
+        elif listener == 'ПечатьПревью':
+            self.hash_map.put('RefreshScreen', '')
 
     def _barcode_flow_on_start(self):
 
@@ -3684,7 +3534,6 @@ class BaseGoodSelect(Screen):
                 self.hash_map.put('new_qtty', str(qtty))
                 self.hash_map.put('qtty', str(qtty))
 
-
     def _process_the_barcode(self):
         barcode = self.hash_map.get('barcode_good_select')
         allowed_fact_input = self.rs_settings.get('allow_fact_input')
@@ -3735,20 +3584,14 @@ class BaseGoodSelect(Screen):
 
         barcode = db_services.BarcodeService().get_barcode_from_doc_table(self.hash_map.get('key'))
 
-        param_list = {'Дата_док': 'Doc_data', 'Номенклатура': 'Good', 'Артикул': 'good_art',
-                      'Серийный номер': 'good_sn', 'Характеристика': 'good_property'
-            , 'Цена': 'good_price', 'ЕдИзм': 'good_unit', 'Ключ': 'key', 'Валюта': 'price_type'}
-        for key in param_list.keys():
-            param_list[key] = self.hash_map.get(param_list[key])
-        if barcode:
-            param_list['barcode'] = barcode
-        else:
-            param_list['barcode'] = '0000000000000'
-        HtmlView.print_from_any_screen(
-            self.hash_map,
-            self.rs_settings,
-            self.printing_template_name,
-            data_for_printing=param_list)
+        data = {'Дата_док': 'Doc_data', 'Номенклатура': 'Good',
+                'Артикул': 'good_art', 'Серийный номер': 'good_sn',
+                'Характеристика': 'good_property', 'Цена': 'good_price',
+                'ЕдИзм': 'good_unit', 'Ключ': 'key', 'Валюта': 'price_type'}
+        for key in data:
+            data[key] = self.hash_map.get(data[key])
+        data['barcode'] = barcode if barcode else '0000000000000'
+        PrintService.print(self.hash_map, data)
 
     def open_series_screen(self, id_doc, current_elem):
         current_elem['id'] = current_elem.get('key')
@@ -3830,7 +3673,7 @@ class GoodsSelectScreen(BaseGoodSelect):
         return current_elem
 
     def _goods_selector(self, action, index = None):
-        
+
         global_position = index if index else int(self.hash_map.get('selected_card_position'))
 
         doc_rows = int(self.hash_map.get('doc_rows'))
@@ -3909,7 +3752,7 @@ class GoodsSelectScreen(BaseGoodSelect):
                 return True
 
         return False
-    
+
 class AdrGoodsSelectScreen(BaseGoodSelect):
     def __init__(self, hash_map: HashMap, rs_settings):
         super().__init__(hash_map, rs_settings)
@@ -4026,6 +3869,7 @@ class GoodItemBarcodeRegister(GoodBarcodeRegister):
                         print("Возникла ошибка при добавлении в БД:", result)
         elif self._is_result_positive('Такой штрихкод уже есть'):
             self.hash_map.remove("scanned_barcode")
+
 
 class GoodsSelectArticle(Screen):
     screen_name = 'ВыборТовараАртикул'
@@ -4530,18 +4374,14 @@ class ItemCard(Screen):
     def _print_ticket(self):
         current_card = self._get_selected_card_data()
 
-        data_dict = {
+        data = {
             'barcode': current_card.get('barcode', '0000000000000'),
             'Номенклатура': self.hash_map.get('good_name'),
             'Характеристика': current_card.get('properties', ''),
             'Упаковка': current_card.get('unit', '')
         }
 
-        HtmlView.print_from_any_screen(
-            self.hash_map,
-            self.rs_settings,
-            self.printing_template_name,
-            data_for_printing=data_dict)
+        PrintService.print(self.hash_map, data)
 
     def _get_selected_card_data(self) -> dict:
         result = {}
@@ -5451,6 +5291,7 @@ class SelectUnit(GoodsPricesItemCard):
 
             self.hash_map.show_screen('Проверка цен')
 
+
 class DocGoodSelectUnit(SelectUnit):
     screen_name = 'Выбор упаковки'
     process_name = 'Документы'
@@ -6074,6 +5915,7 @@ class SettingsScreen(Screen):
             'btn_size': lambda: self._show_screen('Настройки Шрифтов'),
             'btn_sound_settings': lambda: self._show_screen('Настройка звука'),
             'btn_documents_settings': lambda: self._show_screen('Настройки документов'),
+            'btn_print_settings': lambda: self.hash_map.put('StartProcess', 'Печать'),
             'btn_test_barcode': lambda: self._show_screen('Тест сканера'),
             'btn_err_log': lambda: self._show_screen('Ошибки'),
             'btn_upload_docs': self._upload_docs,
@@ -6543,6 +6385,452 @@ class DocumentsSettings(Screen):
         self.hash_map.put('doc_settings_confirm_delete_old_docs', init_flag)
 
 
+class PrintSettings(Screen):
+    screen_name = 'Настройки печати'
+    process_name = 'Печать'
+
+    def __init__(self, hash_map: HashMap, rs_settings):
+        super().__init__(hash_map, rs_settings)
+        self.print_ncl = noClass('print_ncl')
+
+    def on_start(self):
+        print_through = self.print_ncl.get('print_through')
+        self.hash_map.put('check_box_bluetooth_print',
+                          str(print_through == 'BT').lower())
+        self.hash_map.put('check_box_wifi_print', str(print_through == 'WiFi').lower())
+
+    def on_input(self):
+        listener = self.listener
+        if listener == 'btn_bluetooth_printer_settings':
+            self.hash_map.show_screen('Настройки печати Bluetooth')
+        elif listener == 'btn_wifi_printer_settings':
+            self.hash_map.show_screen('Настройки печати WiFi')
+        elif listener == 'btn_label_templates_settings':
+            self.hash_map.show_screen('Настройки печати Шаблоны')
+        elif listener == 'check_box_bluetooth_print':
+            self.print_ncl.put('print_through', 'BT', True)
+            self.hash_map.toast('Печать через Bluetooth')
+        elif listener == 'check_box_wifi_print':
+            self.print_ncl.put('print_through', 'WiFi', True)
+            self.hash_map.toast('Печать через WiFi')
+        elif listener == 'ON_BACK_PRESSED':
+            self.hash_map.finish_process()
+
+    def on_post_start(self):
+        pass
+
+    def show(self, args=None):
+        pass
+
+
+class PrintBluetoothSettings(Screen):
+    screen_name = 'Настройки печати Bluetooth'
+    process_name = 'Печать'
+
+    def __init__(self, hash_map: HashMap, rs_settings):
+        super().__init__(hash_map, rs_settings)
+        self.bt_ncl = noClass("bt_settings")
+
+    def on_start(self):
+        printer = self.bt_ncl.get("default_printer") or 'Не выбран'
+        self.hash_map.put('default_printer', printer)
+
+    def on_input(self):
+        listener = self.listener
+        if listener == 'btn_show_connected':
+            devices = self.hash_map.get("BTResult")
+            devices = json.loads(devices) if devices else []
+            jcards = {"cards": []}
+
+            for device in devices:
+                card = {"key": device.get("address"),
+                        "items": [
+                            {
+                                "key": "Устройство",
+                                "value": device.get("name"),
+                                "size": "15",
+                                "color": "#1b31c2",
+                                "caption_size": "12",
+                                "caption_color": "#1b31c2"
+                            },
+                            {
+                                "key": "MAC",
+                                "value": device.get("address"),
+                                "size": "15",
+                                "color": "#131e61",
+                                "caption_size": "12",
+                                "caption_color": "#1b31c2"
+                            },
+                            {
+                                "key": "state",
+                                "value": device.get("state"),
+                                "size": "15",
+                                "color": "#131e61",
+                                "caption_size": "12",
+                                "caption_color": "#1b31c2"
+                            }
+                        ]}
+
+                jcards["cards"].append(card)
+
+            self.hash_map.put("cards", json.dumps(jcards))
+
+        elif listener == 'btn_stop_scan':
+            if self.bt_ncl.get('scanning'):
+                self.bt_ncl.put('scanning', False, True)
+                self.hash_map.put('BTStopScan', '')
+                self.hash_map.toast('Сканирование остановлено')
+
+        elif listener == 'btn_bt_disconnect':
+            if self.bt_ncl.get('default_printer'):
+                try:
+                    bt.close_socket()
+                    self.hash_map.delete('default_printer')
+                    self.bt_ncl.delete('default_printer')
+                    self.hash_map.put('default_printer', 'Не выбран')
+                    self.hash_map.toast('Принтер отключен')
+                except Exception as e:
+                    self.hash_map.toast('Нет подключенных принтеров')
+            else:
+                self.hash_map.toast('Нет подключенных принтеров')
+        elif listener == 'btn_start_scan':
+            bt_discover_handlers = [{
+                "action": "run", "type": "set",
+                "method": "beep;toast=@BTDiscoverResult",
+                "postExecute": ""
+            }]
+            self.bt_ncl.put('scanning', True, True)
+            self.hash_map.put("BTStartScan", "")
+            self.hash_map.put("BTDiscoverHandlers", json.dumps(bt_discover_handlers))
+
+            self.hash_map.toast('Сканирование')
+
+        elif listener == 'CardsClick':
+            bt_handlers = [
+                {"action": "run", "type": "python", "method": "bluetooth_error"}
+            ]
+
+            mac = self.hash_map.get("selected_card_key")
+            device = bt.get_device(mac)
+            if device is None:
+                self.hash_map.toast("Не получилось подключиться к устройству")
+                return
+            self.hash_map.toast('тест')
+            connected = bt.connect_to_client(device, json.dumps(bt_handlers))
+            if not connected:
+                self.hash_map.toast("Устройство не является принтером")
+                return
+            self.bt_ncl.put("default_printer", mac, False)
+            self.hash_map.put("default_printer", mac)
+            self.hash_map.beep()
+            self.hash_map.toast('Успешно')
+
+        elif listener == 'btn_test_print':
+            if self.bt_ncl.get('default_printer'):
+                zpl = '^XA^CFA,30^FO10,50^FDTest^FS^BY3,2,120^FO10,150^BC^FD12345678^FS^XZ'
+                sent, result = PrintService.print_bt(zpl)
+                self.hash_map.toast(result)
+            else:
+                self.hash_map.toast('Нет подключенных принтеров')
+        elif listener == 'ON_BACK_PRESSED':
+            self.hash_map.show_screen('Настройки печати')
+
+    def on_post_start(self):
+        pass
+
+    def show(self, args=None):
+        pass
+
+
+class PrintWiFiSettings(Screen):
+    screen_name = 'Настройки печати WiFi'
+    process_name = 'Печать'
+
+    def __init__(self, hash_map: HashMap, rs_settings):
+        super().__init__(hash_map, rs_settings)
+        self.print_ncl = noClass("print_ncl")
+
+    def on_start(self):
+        import re
+        ip = self.print_ncl.get('current_ip')
+        if ip:
+            self.hash_map.put('wi_fi_ip', ip)
+            self.hash_map.put('info_wifi_current_ip',
+                              f'IP подключенного принтера: {ip}')
+        else:
+            ip = self.hash_map.get('wi_fi_ip')
+            if ip:
+                pattern = r'^(\d{1,3}\.){3}\d{1,3}$'
+                if not re.match(pattern, ip):
+                    self.hash_map.delete('wi_fi_ip')
+                    self.hash_map.toast('Неверный формат IP')
+                    self.hash_map.put('info_wifi_current_ip',
+                                      f'Нет подключенного принтера')
+                    return
+                self.hash_map.put('info_wifi_current_ip',
+                                  f'IP подключенного принтера: {ip}')
+            else:
+                self.hash_map.put('info_wifi_current_ip', f'Нет подключенного принтера')
+
+    def on_input(self):
+        listener = self.listener
+        if listener == 'btn_wifi_save_ip':
+            self._wifi_save_ip()
+        elif listener == 'btn_wifi_delete_ip':
+            self._wifi_delete_ip()
+        elif listener == 'btn_test_wi_fi':
+            self.hash_map.toast('Тест печати')
+            self._test_wi_fi()
+        elif listener == 'btn_wi_fi_print_zpl':
+            self.hash_map.toast('Тест zpl')
+            self._print_zpl()
+        elif listener == 'ON_BACK_PRESSED':
+            self.hash_map.show_screen('Настройки печати')
+
+    def on_post_start(self):
+        pass
+
+    def show(self, args=None):
+        pass
+
+    def _wifi_save_ip(self):
+        import re
+        ip = self.hash_map.get('wi_fi_ip')
+        if not ip:
+            self.hash_map.toast('Не указан ip')
+            return
+        pattern = r'^(\d{1,3}\.){3}\d{1,3}$'
+        if not re.match(pattern, ip):
+            self.hash_map.delete('wi_fi_ip')
+            self.hash_map.toast('Неверный формат IP')
+            return
+        self.print_ncl.put('current_ip', ip, True)
+        self.hash_map.beep()
+        self.hash_map.toast('IP принтера записан')
+
+    def _wifi_delete_ip(self):
+        ip = self.print_ncl.get('current_ip')
+        if not ip:
+            self.hash_map.toast('Не указан ip')
+            return
+        self.hash_map.delete('wi_fi_ip')
+        self.print_ncl.delete('current_ip')
+        self.hash_map.toast('IP принтера удалён')
+
+    def _print_zpl(self):
+        zpl = self.hash_map.get('wi_fi_zpl_input')
+        if not zpl:
+            self.hash_map.toast('Нет zpl кода для печати')
+            return
+        self.print_ncl.put('wifi_data_to_print', zpl, True)
+        self.hash_map.run_event_async('print_wifi')
+
+    def _test_wi_fi(self):
+        zpl = '^XA^CFA,30^FO10,50^FDTest^FS^BY3,2,120^FO10,150^BC^FD12345678^FS^XZ'
+        self.print_ncl.put('wifi_data_to_print', zpl, True)
+        self.hash_map.run_event_async('print_wifi')
+
+
+class PrintLabelTemplatesSettings(Screen):
+    screen_name = 'Настройки печати Шаблоны'
+    process_name = 'Печать'
+
+    def __init__(self, hash_map: HashMap, rs_settings):
+        super().__init__(hash_map, rs_settings)
+        self.print_ncl = noClass("print_ncl")
+        self.hs_service = HsService(self.get_http_settings())
+
+    def on_start(self):
+        template = self.print_ncl.get('current_label_template_name') or 'Нет'
+        self.hash_map.put('current_label_template_name', f'Текущий шаблон: {template}')
+        path_to_label_preview_image = self.print_ncl.get('preview_label_template_image')
+        if not path_to_label_preview_image:
+            return
+        temp_preview = self.print_ncl.get('preview_label_template_image_temp')
+        path = temp_preview if temp_preview else path_to_label_preview_image
+        self.hash_map.put('preview_label_template_image', '~' + path)
+
+    def on_input(self):
+        listener = self.listener
+        if listener == 'btn_get_labels':
+            self._get_labels()
+        elif listener == 'btn_select_label_template':
+            self.hash_map.show_screen('Список шаблонов')
+        elif listener == 'btn_delete_template_settings':
+            self.delete_template_settings()
+        elif listener == 'btn_label_template_size_settings':
+            if not self.print_ncl.get('current_label_template_path'):
+                self.hash_map.toast('Сначала нужно выбрать шаблон')
+                return
+            self.hash_map.show_screen('Настройки печати Размеры')
+        elif listener == 'ON_BACK_PRESSED':
+            self.hash_map.show_screen('Настройки печати')
+
+    def on_post_start(self):
+        pass
+
+    def show(self, args=None):
+        pass
+
+    def _get_labels(self):
+        try:
+            answer = self.hs_service.get_templates()
+            if answer['status_code'] != 200:
+                reason = answer['error_pool']
+                raise f'Ошибка соединения с сервером: {reason}'
+
+            output_folder = os.path.join(suClass.get_temp_dir(), 'labels')
+
+            os.makedirs(output_folder, exist_ok=True)
+
+            data_list = answer['data']
+            self.hash_map.toast(f'data_list:{type(data_list)}, {data_list}')
+
+            for data_dict in data_list:
+                file_name = self._correct_filename(data_dict['name']) + '.htm'
+                file_path = os.path.join(output_folder, file_name)
+
+                try:
+                    with open(file_path, 'w', encoding='utf-8') as file:
+                        file.write(base64.b64decode(data_dict['html']).decode('utf-8'))
+                except Exception as e:
+                    self.hash_map.toast(
+                        f'Ошибка сохранения файла {file_path}: {str(e)}')
+                    raise f'Ошибка сохранения файла {file_path}: {str(e)}'
+            self.print_ncl.put('label_templates_dir', output_folder, True)
+            self.hash_map.toast('Шаблоны загружены')
+        except Exception as e:
+            self.hash_map.toast(str(e))
+
+    @staticmethod
+    def _correct_filename(filename):
+        illegal_chars = ['<', '>', ':', '"', "'", '/', '\\', '|', '?', '*', "<", ">",
+                         '\x00']
+        for char in illegal_chars:
+            filename = filename.replace(char, '')
+        return filename
+
+    def delete_template_settings(self):
+        self.print_ncl.delete('barcode_width')
+        self.print_ncl.delete('barcode_height')
+        self.print_ncl.delete('barcode_left')
+        self.print_ncl.delete('barcode_right')
+        self.print_ncl.delete('barcode_up')
+        self.print_ncl.delete('barcode_down')
+        self.print_ncl.delete('matching_table')
+        self.print_ncl.delete('barcode_type')
+        self.print_ncl.delete('current_label_template_name')
+        self.print_ncl.delete('current_label_template_path')
+
+        old_preview_tmp = self.print_ncl.get('preview_label_template_image_temp')
+        if old_preview_tmp and os.path.exists(old_preview_tmp):
+            os.remove(old_preview_tmp)
+        self.print_ncl.delete('preview_label_template_image_temp')
+        old_preview = self.print_ncl.get('preview_label_template_image')
+        if old_preview and os.path.exists(old_preview):
+            os.remove(old_preview)
+        self.print_ncl.delete('preview_label_template_image')
+
+
+class PrintTemplateSizeSettings(Screen):
+    screen_name = 'Настройки печати Размеры'
+    process_name = 'Печать'
+
+    def __init__(self, hash_map: HashMap, rs_settings):
+        super().__init__(hash_map, rs_settings)
+        self.print_ncl = noClass("print_ncl")
+
+    def on_start(self):
+        width_template = self.hash_map.get('width_print_template')
+        width_template = int(float(width_template)) if width_template else 50
+        height_template = self.hash_map.get('height_print_template')
+        height_template = int(float(height_template)) if height_template else 50
+        dpmm = self.hash_map.get('dpmm_print_template')
+        dpmm = int(dpmm) if dpmm else 8
+        image_height = self.hash_map.get('image_height_print_template')
+        image_height = int(float(image_height)) if image_height else 50
+        image_width = self.hash_map.get('image_width_print_template')
+        image_width = int(float(image_width)) if image_width else 50
+        ll = self.hash_map.get('image_ll_print_template')
+        ll = int(float(ll)) if ll else 15
+        pw = self.hash_map.get('image_pw_print_template')
+        pw = int(float(pw)) if pw else 1000
+        y = self.hash_map.get('image_y_print_template')
+        y = int(float(y)) if y else 0
+        x = self.hash_map.get('image_x_print_template')
+        x = int(float(x)) if x else 0
+
+        path_to_img = self.print_ncl.get('preview_label_template_image')
+        zpldata = PrintService.make_zpl_from_label(
+            image_width_print_template=image_width,
+            image_height_print_template=image_height,
+            dpmm_print_template=dpmm,
+            image_ll_print_template=ll,
+            image_pw_print_template=pw,
+            image_x_print_template=x,
+            image_y_print_template=y,
+            path_to_img=path_to_img
+        )
+        self.print_ncl.put('zpldata', zpldata, True)
+        success, answer = PrintService.zpl_to_png_from_api(
+            zpldata, dpmm, width_template, height_template)
+        if not success:
+            return
+
+        path, ext = os.path.splitext(path_to_img)
+        preview_path = path + '_preview' + ext
+        with open(preview_path, 'wb') as out_file:
+            shutil.copyfileobj(answer, out_file)
+            self.print_ncl.put('preview_label_template_image_temp',
+                               preview_path, True)
+        self.hash_map.put('image_print', '~' + preview_path)
+        self.hash_map.put('width_print_template', str(width_template))
+        self.hash_map.put('height_print_template', str(height_template))
+        self.hash_map.put('image_width_print_template', str(image_width))
+        self.hash_map.put('image_height_print_template', str(image_height))
+        self.hash_map.put('dpmm_print_template', str(dpmm))
+        self.hash_map.put('image_ll_print_template', str(ll))
+        self.hash_map.put('image_pw_print_template', str(pw))
+        self.hash_map.put('image_x_print_template', str(x))
+        self.hash_map.put('image_y_print_template', str(y))
+        self.hash_map.refresh_screen()
+
+    def on_input(self):
+        listener = self.hash_map.get('listener')
+
+        if listener == 'ON_BACK_PRESSED':
+            self.hash_map.show_screen('Настройки печати Шаблоны')
+
+        elif listener == 'btn_save_template_sizes':
+            template = dict(
+                image_height_print_template=self.print_ncl.get('image_height_print_template'),
+                image_width_print_template=self.print_ncl.get('image_width_print_template'),
+                dpmm_print_template=self.print_ncl.get('dpmm_print_template'),
+                image_x_print_template=self.print_ncl.get('image_x_print_template'),
+                image_y_print_template=self.print_ncl.get('image_y_print_template'),
+                image_ll_print_template=self.print_ncl.get('image_ll_print_template'),
+                image_pw_print_template=self.print_ncl.get('image_pw_print_template'),
+            )
+            self.print_ncl.put('saved_print_template', json.dumps(template), True)
+            self.hash_map.toast('Шаблон сохранён')
+
+        elif listener == 'btn_delete_print_template':
+            self.print_ncl.delete('saved_print_template')
+            self.hash_map.toast('Шаблон удалён')
+
+        elif listener == 'btn_sent_to_print':
+            zpldata = self.print_ncl.get('zpldata')
+            if not zpldata:
+                self.hash_map.toast('')
+            PrintService.print_zpl(zpldata, self.hash_map)
+
+    def on_post_start(self):
+        pass
+
+    def show(self, args=None):
+        pass
+
+
 class ErrorLogScreen(Screen):
     screen_name = 'Ошибки'
     process_name = 'Параметры'
@@ -6801,7 +7089,7 @@ class ActiveCVArticleRecognition(Screen):
         self.hash_map.add_to_cv_list(current_object, 'yellow_list')
 
         self.hash_map.put(
-            'art_info','Найденные артикулы: ' + self.hash_map.get('finded_articles'))
+            'art_info', 'Найденные артикулы: ' + self.hash_map.get('finded_articles'))
 
     def on_post_start(self):
         pass
