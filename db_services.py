@@ -189,6 +189,23 @@ class BarcodeService(DbService):
         self.provider.table_name = table_name
         self.provider.replace(docs_table_update_data)
 
+    def get_barcodes_by_goods_id(self, goods_id) -> list:
+        q = f'''
+            SELECT 
+                barcodes.barcode,
+                IFNULL(props.name, '') AS property,
+                IFNULL(units.name, '') AS unit
+
+                FROM RS_barcodes AS barcodes
+                LEFT JOIN RS_properties AS props
+                    ON barcodes.id_property = props.id
+                LEFT JOIN RS_units AS units
+                    ON barcodes.id_unit = units.id
+                
+                WHERE barcodes.id_good = '{goods_id}'
+        '''
+
+        return self._sql_query(q)
 
     @staticmethod
     def insert_no_sql(queue_update_data):

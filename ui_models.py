@@ -3686,7 +3686,6 @@ class BaseGoodSelect(Screen):
                 self.hash_map.put('new_qtty', str(qtty))
                 self.hash_map.put('qtty', str(qtty))
 
-
     def _process_the_barcode(self):
         barcode = self.hash_map.get('barcode_good_select')
         allowed_fact_input = self.rs_settings.get('allow_fact_input')
@@ -3942,6 +3941,11 @@ class BarcodeRegistrationScreen(Screen):
             self.hash_map['property_select'] = init_data['property']
             self.hash_map['unit_select'] = init_data['unit']
 
+            self.hash_map['property_select_id'] = self.screen_values['property_id']
+            self.hash_map['unit_select_id'] = self.screen_values['unit_id']
+
+            self._fill_barcodes_table(self.screen_values['item_id'])
+
     def on_start(self):
         pass
 
@@ -3977,6 +3981,7 @@ class BarcodeRegistrationScreen(Screen):
         selected_card = self.hash_map.get_json('selected_card')
         if selected_card:
             self.hash_map[field_name] = selected_card.get('name')
+            self.hash_map[f'{field_name}_id'] = selected_card.get('id')
         else:
             self.hash_map[field_name] = ''
 
@@ -3986,30 +3991,26 @@ class BarcodeRegistrationScreen(Screen):
 
     def _handle_ok(self):
         scanned_barcode = self.hash_map.get("scanned_barcode")
-        if scanned_barcode is None:
+        if not scanned_barcode:
             self.hash_map.toast("Штрихкод не отсканирован")
         elif self._check_barcode(scanned_barcode):
-            self.hash_map.run_event_async('barcode_register_async_save_barcode')
-            # self._save_barcode(scanned_barcode)
-            self._finish_process()
+            item_id = self.hash_map.get("item_id")
+            barcode_data = {
+                "id_good": item_id,
+                "barcode": scanned_barcode,
+                "id_property": self.hash_map.get("property_select_id") or '',
+                "id_unit": self.hash_map.get("unit_select_id") or '',
+            }
 
-    def save_barcode(self):
-        scanned_barcode = self.hash_map['scanned_barcode']
-        barcode_data = {
-            "id_good": self.hash_map.get("id_good"),
-            "barcode": scanned_barcode,
-            "id_property": self.hash_map.get('selected_property_id'),
-            "id_unit": self.hash_map.get('selected_unit_id'),
-        }
+            self._save_barcode(barcode_data)
+            self._fill_barcodes_table(item_id)
+            self.hash_map.refresh_screen()
 
-        # self.service.add_barcode(barcode_data)
+    def _save_barcode(self, barcode_data):
+        self.service.add_barcode(barcode_data)
 
-        hs = hs_services.HsService(self.get_http_settings())
-        result = hs.send_barcodes(data=[barcode_data], timeout=5)
-        self.toast('run')
-        if result.error:
-            buffer = ExchangeQueueBuffer('barcodes')
-            buffer.save_data_to_send(barcode_data, pk='barcode')
+        buffer = ExchangeQueueBuffer('barcodes')
+        buffer.save_data_to_send(barcode_data, pk='barcode')
 
     def _check_barcode(self, barcode):
         barcode_data = self.goods_service.get_values_from_barcode("barcode", barcode)
@@ -4023,6 +4024,105 @@ class BarcodeRegistrationScreen(Screen):
             self.hash_map['scanned_barcode'] = barcode
 
         return True
+
+    def _fill_barcodes_table(self, item_id):
+        # barcodes_data = self.service.get_barcodes_by_goods_id(self.screen_values['item_id'])
+        barcodes_data = self.service.get_barcodes_by_goods_id(item_id)
+        table_data = self._prepare_table_data(barcodes_data)
+        self.hash_map['barcodes_data'] = self._get_barcodes_table_view(table_data).to_json()
+
+    def _prepare_table_data(self, barcodes_data):
+        table_data = [{}]
+
+        for row in barcodes_data:
+            row['_layout'] = self._get_doc_table_row_view()
+            table_data.append(row)
+
+        return table_data
+
+    def _get_barcodes_table_view(self, table_data):
+        table_view = widgets.CustomTable(
+            widgets.LinearLayout(
+                self.LinearLayout(
+                    self.TextView('Штрихкод'),
+                    weight=1
+                ),
+                self.LinearLayout(
+                    self.TextView('Характеристика'),
+                    weight=1
+                ),
+                self.LinearLayout(
+                    self.TextView('Упаковка'),
+                    weight=1
+                ),
+                orientation='horizontal',
+                height="match_parent",
+                width="match_parent",
+                BackgroundColor='#FFFFFF'
+            ),
+            options=widgets.Options().options,
+            tabledata=table_data
+        )
+
+        return table_view
+
+    def _get_doc_table_row_view(self):
+        row_view = widgets.LinearLayout(
+            widgets.LinearLayout(
+                widgets.LinearLayout(
+                    self.TextView('@barcode'),
+                    width='match_parent',
+                ),
+                width='match_parent',
+                height='match_parent',
+                weight=1,
+                StrokeWidth=1
+            ),
+            widgets.LinearLayout(
+                widgets.TextView(
+                    Value='@property',
+                    TextSize=15,
+                    width='match_parent',
+                ),
+                width='match_parent',
+                height='match_parent',
+                weight=1,
+                StrokeWidth=1
+            ),
+            widgets.LinearLayout(
+                widgets.TextView(
+                    Value='@unit',
+                    TextSize=15,
+                    width='match_parent'
+                ),
+                width='match_parent',
+                height='match_parent',
+                weight=1,
+                StrokeWidth=1
+            ),
+            orientation='horizontal',
+            width='match_parent',
+            BackgroundColor='#FFFFFF',
+            StrokeWidth = 1
+        )
+
+        return row_view
+
+    class TextView(widgets.TextView):
+        def __init__(self, value):
+            super().__init__()
+            self.TextSize = '15'
+            self.TextBold = True
+            self.width = 'match_parent'
+            self.Value = value
+
+    class LinearLayout(widgets.LinearLayout):
+        def __init__(self, *args, **kwargs):
+            super().__init__(*args, **kwargs)
+            self.orientation = 'horizontal'
+            self.height = "match_parent"
+            self.width = "match_parent"
+            self.StrokeWidth = 1
 
     def _finish_process(self):
         self.hash_map.finish_process_result()
@@ -7039,7 +7139,7 @@ class MainEvents:
 
     def app_on_start(self):
 
-        self.hash_map.put('StackAddMode', '')  # Включает режим объединения переменных hash_map в таймерах
+        # self.hash_map.put('StackAddMode', '')  # Включает режим объединения переменных hash_map в таймерах
 
         # TODO Обработчики обновления!
         release = self.rs_settings.get('Release') or ''

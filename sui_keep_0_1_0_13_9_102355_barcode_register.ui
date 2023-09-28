@@ -9041,6 +9041,29 @@
                                 "BackgroundColor": "",
                                 "StrokeWidth": "",
                                 "Padding": ""
+                            },
+                            {
+                                "type": "LinearLayout",
+                                "Variable": "",
+                                "orientation": "",
+                                "height": "match_parent",
+                                "width": "match_parent",
+                                "weight": "0",
+                                "Elements": [
+                                    {
+                                        "Value": "@barcodes_data",
+                                        "Variable": "barcodes_data",
+                                        "height": "wrap_content",
+                                        "width": "match_parent",
+                                        "weight": 0,
+                                        "TextBold": false,
+                                        "TextItalic": false,
+                                        "type": "TableLayout"
+                                    }
+                                ],
+                                "BackgroundColor": "",
+                                "StrokeWidth": "",
+                                "Padding": ""
                             }
                         ],
                         "Handlers": [
@@ -9097,14 +9120,7 @@
         ],
         "Mediafile": [],
         "PyHandlers": "",
-        "PyTimerTask": [
-            {
-                "PyTimerTaskKey": "timer_update",
-                "PyTimerTaskDef": "@timer_update",
-                "PyTimerTaskPeriod": "15000",
-                "PyTimerTaskBuilIn": false
-            }
-        ],
+        "PyTimerTask": [],
         "PyFiles": [
             {
                 "PyFileKey": "database_init_queryes",

@@ -315,11 +315,6 @@ def barcode_register_doc_on_start(hash_map):
     screen = ui_models.BarcodeRegistrationScreen(hash_map, rs_settings)
     screen.on_start()
 
-@HashMap()
-def barcode_register_async_save_barcode(hash_map):
-    screen = ui_models.BarcodeRegistrationScreen(hash_map, rs_settings)
-    screen.save_barcode()
-
 
 @HashMap()
 def doc_properties_on_start(hash_map):
