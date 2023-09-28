@@ -190,6 +190,23 @@ class BarcodeService(DbService):
         self.provider.table_name = table_name
         self.provider.replace(docs_table_update_data)
 
+    def get_barcodes_by_goods_id(self, goods_id) -> list:
+        q = f'''
+            SELECT 
+                barcodes.barcode,
+                IFNULL(props.name, '') AS property,
+                IFNULL(units.name, '') AS unit
+
+                FROM RS_barcodes AS barcodes
+                LEFT JOIN RS_properties AS props
+                    ON barcodes.id_property = props.id
+                LEFT JOIN RS_units AS units
+                    ON barcodes.id_unit = units.id
+                
+                WHERE barcodes.id_good = '{goods_id}'
+        '''
+
+        return self._sql_query(q)
 
     @staticmethod
     def insert_no_sql(queue_update_data):
@@ -1658,6 +1675,30 @@ class GoodsService(DbService):
         result = self._sql_query(query_text)
         return result[0] if result else {}
 
+    def get_item_data_by_condition(self, item_id, property_id='', unit_id='') -> dict:
+        query_text = f"""
+            SELECT
+                RS_goods.id AS id,
+                RS_goods.code AS code,
+                RS_goods.name AS name,
+                RS_goods.art as art,
+                RS_goods.description AS description,
+                IFNULL(RS_units.name,'—') AS unit,
+                IFNULL(RS_properties.name,'—') AS property
+                
+            FROM RS_goods
+            
+            LEFT JOIN RS_units
+                ON RS_units.id = "{unit_id}"
+            LEFT JOIN RS_properties
+                ON RS_properties.id = "{property_id}"
+            WHERE RS_goods.id = "{item_id}"
+
+            LIMIT 1
+            """
+        result = self._sql_query(query_text)
+        return result[0] if result else {}
+
     def get_all_goods_types_data(self):
         query_text = 'SELECT id,name FROM RS_types_goods'
         self.provider.table_name = 'RS_types_goods'
@@ -1668,18 +1709,20 @@ class GoodsService(DbService):
                     SELECT
                     RS_barcodes.barcode,
                     RS_barcodes.id_good,
-                    RS_properties.name as property,
-                    ifnull(RS_series.name, '') as series,
-                    ifnull(RS_units.name, '') as unit
-                    
+                    IFNULL(RS_goods.name, '') AS name,
+                    IFNULL(RS_properties.name, '') AS property,
+                    IFNULL(RS_series.name, '') AS series,
+                    IFNULL(RS_units.name, '') AS unit
 
                     FROM RS_barcodes
+                    LEFT JOIN RS_goods
+                        ON RS_goods.id = RS_barcodes.id_good
                     LEFT JOIN RS_properties
-                    ON RS_properties.id = RS_barcodes.id_property
+                        ON RS_properties.id = RS_barcodes.id_property
                     LEFT JOIN RS_units
-                    ON RS_units.id = RS_barcodes.id_unit
+                        ON RS_units.id = RS_barcodes.id_unit
                     LEFT JOIN RS_series
-                    ON RS_series.id = RS_barcodes.id_series
+                        ON RS_series.id = RS_barcodes.id_series
                     
                     WHERE {identify_field} = '{identify_value}'
                     """
