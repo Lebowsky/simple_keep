@@ -299,7 +299,7 @@ class DebugService:
 
     def export_database(self, file):
         self._hs = 'post'
-        return self._send_request({'files': {'Rightscan': file}})
+        return self._send_request({'files': {'SimpleKeep.db': file}})
 
     def export_file(self, file_name, file):
         self._hs = 'post'

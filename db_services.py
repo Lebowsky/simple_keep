@@ -131,6 +131,7 @@ class BarcodeService(DbService):
                 IFNULL(doc_barcodes.id, 0) AS mark_id,
                 IFNULL({use_mark_field}, false) AS use_mark,
                 IFNULL(doc_table.id, '') AS row_key,
+                IFNULL(doc_table.use_series, 0) AS use_series,
                 IFNULL({d_qtty_field}, 0.0) AS d_qtty,
                 IFNULL(doc_table.qtty, 0.0) AS qtty,
                 IFNULL(doc_table.qtty_plan, 0.0) AS qtty_plan,
@@ -1440,7 +1441,8 @@ class AdrDocService(DocService):
                 'id_doc': id_doc,
             }
 
-            fields = ['id_doc', 'id_good', 'id_properties', 'id_series', 'id_unit', 'qtty', 'qtty_plan', 'table_type']
+            fields = ['id_doc', 'id_good', 'id_properties', 'id_series', 'id_unit', 'qtty', 'qtty_plan', 'table_type',
+                      'id_cell']
             q = '''
                 SELECT {}
                 FROM RS_adr_docs_table 
