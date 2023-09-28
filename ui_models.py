@@ -1827,8 +1827,11 @@ class DocDetailsScreen(Screen):
         }
 
     def _process_error_scan_barcode(self, scan_result):
-        self.hash_map.toast(scan_result.description)
-        self.hash_map.playsound('error')
+        if scan_result.error == 'use_series':
+            self.open_series_screen(self.id_doc, scan_result.barcode_data)
+        else:
+            self.hash_map.toast(scan_result.description)
+            self.hash_map.playsound('error')
 
     def _set_visibility_on_start(self):
         _vars = ['warehouse', 'countragent']
@@ -2704,9 +2707,9 @@ class AdrDocDetailsScreen(DocDetailsScreen):
         self.hash_map.put('return_selected_data')
         self.service.table_type = self.table_type
         super()._on_start()
+
     def on_input(self) -> None:
         super().on_input()
-
         listeners = {
             'CardsClick': self._cards_click,
             'btn_barcodes': lambda : self.hash_map.show_dialog(listener="ВвестиШтрихкод"),
@@ -2745,7 +2748,6 @@ class AdrDocDetailsScreen(DocDetailsScreen):
         )
 
         result = self.barcode_worker.process_the_barcode(barcode)
-
         if result.error:
             self._process_error_scan_barcode(result)
             return result.error
@@ -5740,16 +5742,14 @@ class SeriesAdrList(Screen):
         self.service.doc_basic_table_name = 'RS_adr_docs_table'
         self.service.doc_basic_handler_name = 'RS_adr_docs'
         self.popup_menu_data = 'Удалить;Изменить'
-        res = self.service.get_series_prop_by_id(self.params['id'])
+        res = self.service.get_series_prop_by_id(self.params.get('id') or self.params.get('id_good'))
         self.params.update(res)
 
         res = self.service.get_doc_prop_by_id(self.params['id_doc'])
         self.params.update(res)
 
     def on_start(self):
-        # Сохраним текущий hash_map чтобы вернуть его при выходе
-        # self.rs_settings.put('_stored_hash_', json.dumps(self.hash_map.export()), True)
-
+        self.hash_map.set_title('Серии')
         for key in self.params.keys():
             self.hash_map[key] = self.params[key]
 
