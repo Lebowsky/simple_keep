@@ -234,7 +234,14 @@ def highlight_scanned_item(hash_map: HashMap):
 def send_post_lines_data(hash_map: HashMap):
     """ Отправка на 1С выбранных в nosql строк post-запросом """
     screen = ui_models.GroupScanDocDetailsScreenNew(hash_map, rs_settings)
-    screen.send_post_lines_data()
+    screen.send_unsent_lines_run()
+
+
+@HashMap()
+def send_all_scan_lines(hash_map: HashMap):
+    """ Отправка на 1С всех nosql строк товара post-запросом """
+    screen = ui_models.GroupScanDocDetailsScreenNew(hash_map, rs_settings)
+    screen.send_all_scan_lines_run()
 
 
 @HashMap()
@@ -246,13 +253,13 @@ def after_send_post_lines_data(hash_map: HashMap):
 
 @HashMap()
 def adr_docs_on_start(hash_map: HashMap):
-    screen: ui_models.AdrDocsListScreen = create_screen(hash_map)
+    screen = ui_models.AdrDocsListScreen(hash_map, rs_settings)
     screen.on_start()
 
 
 @HashMap()
 def adr_doc_on_select(hash_map: HashMap):
-    screen: ui_models.AdrDocsListScreen = create_screen(hash_map)
+    screen = ui_models.AdrDocsListScreen(hash_map, rs_settings)
     screen.on_input()
 
 
@@ -353,13 +360,13 @@ def select_item_result(hash_map: HashMap):
 
 @HashMap()
 def goods_on_start(hash_map):
-    screen: ui_models.GoodsListScreen = create_screen(hash_map)
-    screen.on_start()
+    screen = ui_models.GoodsListScreen(hash_map, rs_settings)
+    screen.init_screen().on_start()
 
 
 @HashMap()
 def goods_on_input(hash_map: HashMap):
-    screen: ui_models.GoodsListScreen = ui_models.GoodsListScreen(hash_map, rs_settings)
+    screen = ui_models.GoodsListScreen(hash_map, rs_settings)
     screen.on_input()
 
 
@@ -426,6 +433,7 @@ def item_units_on_start(hash_map):
 def item_units_on_input(hash_map):
     screen = ui_models.ItemGoodSelectUnit(hash_map, rs_settings)
     screen.on_input()
+
 # ^^^^^^^^^^^^^^^^^ Goods ^^^^^^^^^^^^^^^^^
 
 # ==================== GoodsBalances =============================
@@ -438,17 +446,6 @@ def balances_on_start(hash_map):
 @HashMap()
 def balances_on_input(hash_map):
     screen = ui_models.GoodsBalancesItemCard(hash_map, rs_settings)
-    screen.on_input()
-
-
-@HashMap()
-def wh_select_on_start(hash_map):
-    screen: ui_models.SelectWH = create_screen(hash_map)
-    screen.on_start()
-
-@HashMap()
-def wh_select_on_input(hash_map):
-    screen = ui_models.SelectWH(hash_map, rs_settings)
     screen.on_input()
 
 
@@ -466,18 +463,6 @@ def prices_on_start(hash_map):
 def prices_on_input(hash_map):
     screen = ui_models.GoodsPricesItemCard(hash_map, rs_settings)
     screen.on_input()
-
-
-@HashMap()
-def price_types_on_start(hash_map):
-    screen: ui_models.SelectPriceType = create_screen(hash_map)
-    screen.on_start()
-
-@HashMap()
-def price_types_on_input(hash_map):
-    screen = ui_models.SelectPriceType(hash_map, rs_settings)
-    screen.on_input()
-
 
 @HashMap()
 def properties_on_start(hash_map):

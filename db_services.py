@@ -94,11 +94,31 @@ class BarcodeService(DbService):
     def add_barcode(self, barcode_data):
         self.provider.create(barcode_data)
 
-    def get_barcode_data(self, barcode_info, id_doc):
+    def get_barcode_data(self, barcode_info, id_doc, is_adr_doc=False, id_cell='', table_type=''):
         if barcode_info.scheme == 'GS1':
             search_value = barcode_info.gtin
         else:
             search_value = barcode_info.barcode
+
+        if is_adr_doc and not id_cell:
+            raise ValueError('id_cell must be specified for Adr docs')
+
+        if is_adr_doc and not table_type:
+            raise ValueError('table_type must be specified for Adr docs')
+
+        params = {
+            'price_field': 'NULL' if is_adr_doc else 'doc_table.price',
+            'id_price_field': 'NULL' if is_adr_doc else 'doc_table.id_price',
+            'd_qtty_field': 'doc_table.qtty' if is_adr_doc else 'doc_table.d_qtty',
+            'use_mark_field': 'NULL' if is_adr_doc else 'goods.use_mark',
+            'docs_table': 'RS_adr_docs_table' if is_adr_doc else 'RS_docs_table',
+            'cell_condition': f'AND doc_table.id_cell = "{id_cell}"' if is_adr_doc else '',
+            'table_type_condition': f'AND doc_table.table_type = "{table_type}"' if is_adr_doc else '',
+            'id_doc': id_doc,
+            'gtin': barcode_info.gtin,
+            'series': barcode_info.serial,
+            'barcode': search_value,
+        }
 
         q = '''
             SELECT 
@@ -109,13 +129,13 @@ class BarcodeService(DbService):
                 barcodes.ratio AS ratio,
                 IFNULL(doc_barcodes.approved, 0) AS approved,
                 IFNULL(doc_barcodes.id, 0) AS mark_id,
-                IFNULL(goods.use_mark, false) AS use_mark,
+                IFNULL({use_mark_field}, false) AS use_mark,
                 IFNULL(doc_table.id, '') AS row_key,
-                IFNULL(doc_table.d_qtty, 0.0) AS d_qtty,
+                IFNULL({d_qtty_field}, 0.0) AS d_qtty,
                 IFNULL(doc_table.qtty, 0.0) AS qtty,
                 IFNULL(doc_table.qtty_plan, 0.0) AS qtty_plan,
-                IFNULL(doc_table.price, 0.0) AS price,
-                IFNULL(doc_table.id_price, '') AS id_price
+                IFNULL({price_field}, 0.0) AS price,
+                IFNULL({id_price_field}, '') AS id_price
             FROM RS_barcodes AS barcodes
             LEFT JOIN 
                     (SELECT 
@@ -126,19 +146,20 @@ class BarcodeService(DbService):
                     JOIN RS_types_goods AS types_goods ON goods.type_good = types_goods.id) AS goods
                 ON barcodes.id_good = goods.id_goods
             
-            LEFT JOIN RS_docs_table AS doc_table 
+            LEFT JOIN {docs_table} AS doc_table 
                 ON barcodes.id_good = doc_table.id_good
                      AND barcodes.id_property = doc_table.id_properties
                      AND barcodes.id_unit = doc_table.id_unit
-                     AND doc_table.id_doc = "{}"
+                     AND doc_table.id_doc = "{id_doc}"
+                     {cell_condition}
+                     {table_type_condition}
                      
             LEFT JOIN RS_docs_barcodes as doc_barcodes
-                ON doc_barcodes.id_doc = "{}"
-                    AND doc_barcodes.GTIN = "{}"
-                    AND doc_barcodes.Series = "{}"
+                ON doc_barcodes.id_doc = "{id_doc}"
+                    AND doc_barcodes.GTIN = "{gtin}"
+                    AND doc_barcodes.Series = "{series}"
                 
-            WHERE barcodes.barcode = "{}"'''.format(
-            id_doc, id_doc, barcode_info.gtin, barcode_info.serial, search_value)
+            WHERE barcodes.barcode = "{barcode}"'''.format(**params)
 
         result = self.provider.sql_query(q)
         if result:
@@ -163,10 +184,11 @@ class BarcodeService(DbService):
         else:
             return '0000000000011'
 
-    @staticmethod
-    def replace_or_create_table(table_name, docs_table_update_data):
-        provider = SqlQueryProvider(table_name=table_name)
-        provider.replace(docs_table_update_data)
+
+    def replace_or_create_table(self, table_name, docs_table_update_data):
+        self.provider.table_name = table_name
+        self.provider.replace(docs_table_update_data)
+
 
     @staticmethod
     def insert_no_sql(queue_update_data):
@@ -176,10 +198,15 @@ class BarcodeService(DbService):
     @staticmethod
     def get_table_line(table_name, filters: dict = None):
         provider = SqlQueryProvider(table_name=table_name)
-        query = f"""SELECT * FROM {table_name} WHERE """
-        for field in list(filters):
-            query += f"""{field}='{filters[field]}' AND """
-        query = query[:-4] if query.endswith('AND ') else query
+        select_part = f"""SELECT * FROM {table_name}"""
+        query = select_part
+        if filters:
+            filters_part = """ WHERE """
+            for count, field_name in enumerate(list(filters)):
+                filters_part += f"""{field_name}='{filters[field_name]}'""" if count == 0 else \
+                    f""" AND {field_name}='{filters[field_name]}'"""
+            query = f"""{select_part} {filters_part}"""
+
         result = provider.sql_query(query, '')
         return result[0] if result else None
 
@@ -189,8 +216,8 @@ class BarcodeService(DbService):
         provider.update(data=table_line)
 
     def log_error(self, error_msg):
-        error_text = f"Работа с штрихкодами:" \
-                     f"{error_msg}"
+        error_text = f"""Работа с штрихкодами:
+            {error_msg}"""
         super()._write_error_on_log(error_text)
 
 
@@ -425,7 +452,7 @@ class DocService:
             LEFT JOIN RS_countragents as RS_countragents
                 ON RS_countragents.id = {self.docs_table_name}.id_countragents
                 '''
-
+        joins += f'''LEFT JOIN RS_barc_flow ON {self.docs_table_name}.id_doc = RS_barc_flow.id_doc'''
         where = ''
 
         if doc_status:
@@ -444,14 +471,15 @@ class DocService:
                 where = 'WHERE doc_type=?'
             else:
                 where += ' AND doc_type=?'
-
+        
+        where += '''AND RS_barc_flow.id_doc IS NULL'''
+        
         query_text = f'''
             {query_text}
             {joins}
             {where}
             ORDER BY {self.docs_table_name}.doc_date
         '''
-
         result = self._get_query_result(query_text, args_tuple, return_dict=True)
         return result
 
@@ -697,6 +725,7 @@ class DocService:
         query_text = ('Update RS_docs_barcodes Set approved = 0 Where id_doc=:id_doc',
                       'Delete From RS_docs_barcodes Where  id_doc=:id_doc And is_plan = 0',
                       'Update RS_docs_table Set qtty = 0 Where id_doc=:id_doc',
+                      'Update RS_docs_table Set d_qtty = 0 Where id_doc=:id_doc',
                       'Delete From RS_docs_table Where id_doc=:id_doc and is_plan = "False"',
                       'Delete From RS_barc_flow Where id_doc = :id_doc')
         try:
@@ -893,6 +922,10 @@ class DocService:
                 result = res[0] if res else {}
 
         return result    
+
+    def mark_verified(self, value=1):
+        self.provider.table_name = self.docs_table_name
+        self.provider.update({'verified': value}, {'id_doc': self.doc_id})
 
 class SeriesService(DbService):
     doc_basic_table_name = 'RS_docs_table'
@@ -1291,8 +1324,16 @@ class AdrDocService(DocService):
     def get_current_cell(self):
         pass
 
-    def get_doc_details_data(self, first_elem, items_on_page, row_filters=None, search_string=None, id_doc='',
-                             curCell='', ) -> list:
+    def get_doc_details_data(
+            self,
+            first_elem,
+            items_on_page,
+            row_filters=None,
+            search_string=None,
+            id_doc='',
+            cell=''
+    ) -> list:
+
         select_query = '''SELECT
             RS_adr_docs_table.id,
             RS_adr_docs_table.id_doc,
@@ -1330,7 +1371,7 @@ class AdrDocService(DocService):
 
         basic_where = f"""WHERE id_doc = :id_doc and table_type = :table_type"""
 
-        cur_cell_condition = '''and (id_cell=:current_cell OR id_cell="" OR id_cell is Null)''' if curCell else ''
+        cur_cell_condition = '''and (id_cell=:current_cell OR id_cell="" OR id_cell is Null)''' if cell else ''
         row_filters_condition = """AND qtty != COALESCE(qtty_plan, '0') """ if row_filters else ''
         search_string_condition = f"""AND good_name LIKE '%{search_string}%'""" if search_string else ''
 
@@ -1344,14 +1385,18 @@ class AdrDocService(DocService):
         order_by = f"""ORDER BY RS_cells.name, RS_adr_docs_table.last_updated DESC"""
         limit = f'LIMIT {items_on_page} OFFSET {first_elem}'
         query_text = f"{select_query} {where_full} {order_by} {limit}"
-        # self.table_type = 'out'  #****** ОТЛАДОЧНОЕ
+
         params_dict = {'id_doc': id_doc, 'NullValue': None, 'EmptyString': '', 'table_type': self.table_type}
-        if curCell:
-            params_dict['current_cell'] = curCell
+        if cell:
+            params_dict['current_cell'] = cell
         res = self._get_query_result(query_text, params_dict, return_dict=True)
         return res
 
     def clear_barcode_data(self, id_doc):
+        _filter = {'id_doc': id_doc}
+        self.provider.table_name = 'RS_docs_series'
+        self.provider.delete(_filter=_filter)
+
         query_text = ('Update RS_adr_docs_table Set qtty = 0 Where id_doc=:id_doc',
                       'Delete From RS_adr_docs_table Where id_doc=:id_doc and is_plan = "False"')
         try:
@@ -1405,6 +1450,13 @@ class AdrDocService(DocService):
 
         return data
 
+    def find_cell(self, barcode):
+        # TODO не учитывается вариант с одинаковыми ШК серий
+        self.provider.table_name = 'RS_cells'
+        res = self.provider.select({'barcode': barcode})
+
+        if res:
+            return res[0]
 
 class FlowDocService(DocService):
 
@@ -1549,19 +1601,18 @@ class GoodsService(DbService):
     def get_goods_list_data(self, goods_type='', item_id='') -> list:
         query_text = f"""
             SELECT
-            RS_goods.id,
-            ifnull(RS_goods.code, '—') as code,
-            RS_goods.name,
-            RS_goods.art,
-            ifnull(RS_units.name,'—') as unit,
-            ifnull(RS_types_goods.name, '—') as type_good,
-            ifnull(RS_goods.description,'—') as description
-            
+                RS_goods.id,
+                IFNULL(RS_goods.code, '—') AS code,
+                RS_goods.name,
+                RS_goods.art,
+                IFNULL(RS_units.name,'—') AS unit,
+                IFNULL(RS_types_goods.name, '—') AS type_good,
+                IFNULL(RS_goods.description,'—') AS description
             FROM RS_goods
             LEFT JOIN RS_types_goods
-            ON RS_types_goods.id = RS_goods.type_good
+                ON RS_types_goods.id = RS_goods.type_good
             LEFT JOIN RS_units
-            ON RS_units.id = RS_goods.unit
+                ON RS_units.id = RS_goods.unit
             """
         where = '' if not goods_type else 'WHERE RS_goods.type_good=?'
         if where == '' and item_id:
@@ -1582,6 +1633,28 @@ class GoodsService(DbService):
 
         result = self._sql_query(query_text, args)
         return result
+
+    def get_item_data_by_id(self, item_id):
+        query_text = f"""
+            SELECT
+                RS_goods.id,
+                IFNULL(RS_goods.code, '—') AS code,
+                RS_goods.name,
+                RS_goods.art,
+                IFNULL(RS_units.name,'—') AS unit,
+                IFNULL(RS_types_goods.name, '—') AS type_good,
+                IFNULL(RS_goods.description,'—') AS description
+            FROM RS_goods
+            LEFT JOIN RS_types_goods
+                ON RS_types_goods.id = RS_goods.type_good
+            LEFT JOIN RS_units
+                ON RS_units.id = RS_goods.unit
+            WHERE RS_goods.id = "{item_id}"
+            
+            LIMIT 1
+            """
+        result = self._sql_query(query_text)
+        return result[0] if result else {}
 
     def get_all_goods_types_data(self):
         query_text = 'SELECT id,name FROM RS_types_goods'

@@ -95,11 +95,24 @@ class ScanningQueueService:
         data = self.provider.search(id_doc=id_doc, row_id=row_id)
         return sum([row['qtty'] for row in data])  # or 'd_qtty'
 
-    def get_send_document_lines(self, id_doc) -> list:
-        data = self.provider.search(id_doc=id_doc, sent=False)
+    def get_document_lines(self, id_doc, sent=None) -> list:
+        if sent is not None:
+            data = self.provider.search(id_doc=id_doc, sent=sent)
+        else:
+            data = self.provider.search(id_doc=id_doc)
         return data
 
     def update_sent_lines(self, sent_data: list, sent=True):
         doc_id_list = [x.doc_id for x in sent_data]
         self.provider.table.update({'sent': sent}, doc_ids=doc_id_list)
+
+    def has_unsent_lines(self, id_doc) -> bool:
+        qtty = self.provider.count(id_doc=id_doc, sent=False)
+        return True if qtty > 0 else False
+
+    def remove_doc_lines(self, id_doc):
+        self.provider.remove(id_doc=id_doc)
+
+
+
 

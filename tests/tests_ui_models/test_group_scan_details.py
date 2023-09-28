@@ -224,5 +224,5 @@ class TestGroupScanDocDetailsScreenNew(unittest.TestCase):
         self.sut.send_post_lines_data()
         # TODO доделать
 
-
-
+    def test_send_all_scan_lines(self):
+        pass

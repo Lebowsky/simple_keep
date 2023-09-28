@@ -171,7 +171,15 @@ class TestScanningQueueService(unittest.TestCase):
         ]
         self.provider.insert_multiple(initial_data)
         sut = ScanningQueueService(provider=self.provider)
-        result = sut.get_send_document_lines(id_doc='123')
+        result = sut.get_document_lines(id_doc='123', sent=False)
+
+        self.assertEqual(expect, result)
+
+    def test_get_all_document_lines(self):
+        expect = [x for x in initial_data if x["id_doc"] == '123']
+        self.provider.insert_multiple(initial_data)
+        sut = ScanningQueueService(provider=self.provider)
+        result = sut.get_document_lines(id_doc='123')
 
         self.assertEqual(expect, result)
 
@@ -180,13 +188,26 @@ class TestScanningQueueService(unittest.TestCase):
 
         self.provider.insert_multiple(initial_data)
         sut = ScanningQueueService(provider=self.provider)
-        result = sut.get_send_document_lines(id_doc='123')
+        result = sut.get_document_lines(id_doc='123', sent=False)
         result.pop()  # Проверяем что меняет только в переданном списке (по doc_id)
 
         sut.update_sent_lines(result)
 
-        new_result = sut.get_send_document_lines(id_doc='123')
+        new_result = sut.get_document_lines(id_doc='123', sent=False)
         self.assertEqual(expect, len(new_result))
+
+    def test_must_remove_specific_doc_lines(self):
+        expect = 0
+
+        self.provider.insert_multiple(initial_data)
+        sut = ScanningQueueService(provider=self.provider)
+
+        sut.remove_doc_lines(id_doc='123')
+        actual_123_lines = len(sut.get_document_lines(id_doc='123'))
+        actual_124_lines = len(sut.get_document_lines(id_doc='124'))
+
+        self.assertEqual(expect, actual_123_lines)
+        self.assertGreater(actual_124_lines, 0)
 
 
 
