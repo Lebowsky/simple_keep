@@ -423,7 +423,7 @@ class DocService:
         doc_types = [rec[0] for rec in self._get_query_result(query)]
         return doc_types
 
-    def get_doc_view_data(self, doc_type='', doc_status='') -> list:
+    def get_doc_view_data(self, doc_type='', doc_status='', no_group_scan=None) -> list:
         fields = [
             f'{self.docs_table_name}.id_doc',
             f'{self.docs_table_name}.doc_type',
@@ -471,8 +471,11 @@ class DocService:
                 where = 'WHERE doc_type=?'
             else:
                 where += ' AND doc_type=?'
+
+        if no_group_scan and self.docs_table_name == 'RS_docs':
+            where += ' AND is_group_scan=0'
         
-        where += '''AND RS_barc_flow.id_doc IS NULL'''
+        where += ''' AND RS_barc_flow.id_doc IS NULL'''
         
         query_text = f'''
             {query_text}
@@ -523,15 +526,16 @@ class DocService:
         docs = self._get_query_result(query, (target_time, ))
         return [doc[0] for doc in docs]
 
-    def get_docs_stat(self):
-        query = f'''
+    def get_docs_stat(self, no_group_scan=None):
+        query_select = f'''
         WITH tmp AS (
             SELECT 
                 doc_type,
                 {self.docs_table_name}.id_doc,
                 1 as doc_Count,
                 IFNULL({self.docs_table_name}.sent,0) as sent,
-                IFNULL({self.docs_table_name}.verified,0) as verified, 
+                IFNULL({self.docs_table_name}.verified,0) as verified,
+                {self.docs_table_name}.is_group_scan as is_group_scan,
                 CASE WHEN IFNULL(verified,0)=0 THEN 
                     COUNT({self.details_table_name}.id)
                 ELSE 
@@ -568,8 +572,11 @@ class DocService:
             SUM(qtty_plan_verified) as qtty_plan_verified,
             SUM(qtty_plan_unverified) as qtty_plan_unverified
         FROM tmp
-        GROUP BY doc_type
         '''
+        where = "WHERE is_group_scan = '0'"
+        group = """GROUP BY doc_type"""
+        query = f"{query_select} {where} {group}" if no_group_scan and self.docs_table_name == "RS_docs" \
+            else f"{query_select} {group}"
 
         res = self._get_query_result(query, return_dict=True)
         return res
@@ -926,6 +933,7 @@ class DocService:
     def mark_verified(self, value=1):
         self.provider.table_name = self.docs_table_name
         self.provider.update({'verified': value}, {'id_doc': self.doc_id})
+
 
 class SeriesService(DbService):
     doc_basic_table_name = 'RS_docs_table'

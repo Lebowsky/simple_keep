@@ -289,6 +289,19 @@ def elem_viev_on_click(hash_map):
     screen = ui_models.GoodsSelectScreen(hash_map, rs_settings)
     screen.on_input()
 
+
+@HashMap()
+def group_elem_viev_on_start(hash_map):
+    screen = ui_models.GroupScanItemScreen(hash_map, rs_settings)
+    screen.on_start()
+
+
+@HashMap()
+def group_elem_viev_on_click(hash_map):
+    screen = ui_models.GroupScanItemScreen(hash_map, rs_settings)
+    screen.on_input()
+
+
 @HashMap()
 def offline_elem_view_on_click(hash_map):
     screen = ui_models.GoodsSelectOfflineScreen(hash_map, rs_settings)

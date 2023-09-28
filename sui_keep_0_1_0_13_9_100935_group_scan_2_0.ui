@@ -3348,6 +3348,696 @@
                     },
                     {
                         "type": "Operation",
+                        "Name": "Товар выбор",
+                        "Timer": false,
+                        "hideBottomBarScreen": true,
+                        "noScroll": false,
+                        "handleKeyUp": false,
+                        "noConfirmation": true,
+                        "hideToolBarScreen": false,
+                        "Elements": [
+                            {
+                                "type": "LinearLayout",
+                                "Variable": "",
+                                "orientation": "vertical",
+                                "height": "wrap_content",
+                                "width": "match_parent",
+                                "weight": "0",
+                                "Elements": [
+                                    {
+                                        "Value": "@Doc_data",
+                                        "Variable": "",
+                                        "height": "wrap_content",
+                                        "width": "match_parent",
+                                        "weight": "0",
+                                        "TextBold": false,
+                                        "TextItalic": false,
+                                        "TextSize": "16",
+                                        "type": "TextView"
+                                    },
+                                    {
+                                        "type": "LinearLayout",
+                                        "Variable": "",
+                                        "orientation": "vertical",
+                                        "height": "wrap_content",
+                                        "width": "match_parent",
+                                        "weight": "0",
+                                        "Elements": [
+                                            {
+                                                "type": "LinearLayout",
+                                                "Variable": "",
+                                                "orientation": "horizontal",
+                                                "height": "match_parent",
+                                                "width": "match_parent",
+                                                "weight": "0",
+                                                "Elements": [
+                                                    {
+                                                        "type": "LinearLayout",
+                                                        "Variable": "",
+                                                        "orientation": "horizontal",
+                                                        "height": "wrap_content",
+                                                        "width": "match_parent",
+                                                        "weight": "1",
+                                                        "Elements": [
+                                                            {
+                                                                "Value": "Артикул:",
+                                                                "Variable": "",
+                                                                "height": "wrap_content",
+                                                                "width": "wrap_content",
+                                                                "weight": "0",
+                                                                "TextBold": true,
+                                                                "TextColor": "#000000",
+                                                                "type": "TextView"
+                                                            },
+                                                            {
+                                                                "Value": "@good_art",
+                                                                "Variable": "",
+                                                                "height": "wrap_content",
+                                                                "width": "wrap_content",
+                                                                "weight": "0",
+                                                                "TextColor": "#000000",
+                                                                "type": "TextView"
+                                                            }
+                                                        ]
+                                                    },
+                                                    {
+                                                        "type": "LinearLayout",
+                                                        "Variable": "",
+                                                        "orientation": "horizontal",
+                                                        "height": "wrap_content",
+                                                        "width": "match_parent",
+                                                        "weight": "7",
+                                                        "Elements": [
+                                                            {
+                                                                "Value": "@good_str",
+                                                                "Variable": "",
+                                                                "height": "wrap_content",
+                                                                "width": "wrap_content",
+                                                                "weight": "0",
+                                                                "TextColor": "#000000",
+                                                                "type": "TextView"
+                                                            }
+                                                        ]
+                                                    }
+                                                ]
+                                            },
+                                            {
+                                                "type": "LinearLayout",
+                                                "Variable": "",
+                                                "orientation": "horizontal",
+                                                "height": "wrap_content",
+                                                "width": "wrap_content",
+                                                "weight": "0",
+                                                "Elements": [
+                                                    {
+                                                        "Value": "Серия:",
+                                                        "Variable": "",
+                                                        "height": "wrap_content",
+                                                        "width": "wrap_content",
+                                                        "weight": "0",
+                                                        "TextBold": true,
+                                                        "TextColor": "#000000",
+                                                        "type": "TextView"
+                                                    },
+                                                    {
+                                                        "Value": "@good_sn",
+                                                        "Variable": "",
+                                                        "height": "wrap_content",
+                                                        "width": "wrap_content",
+                                                        "weight": "0",
+                                                        "TextColor": "#000000",
+                                                        "type": "TextView"
+                                                    }
+                                                ]
+                                            },
+                                            {
+                                                "type": "LinearLayout",
+                                                "Variable": "",
+                                                "orientation": "horizontal",
+                                                "height": "wrap_content",
+                                                "width": "wrap_content",
+                                                "weight": "0",
+                                                "Elements": [
+                                                    {
+                                                        "Value": "Характеристика:",
+                                                        "Variable": "",
+                                                        "height": "wrap_content",
+                                                        "width": "wrap_content",
+                                                        "weight": "0",
+                                                        "TextBold": true,
+                                                        "TextColor": "#000000",
+                                                        "type": "TextView"
+                                                    },
+                                                    {
+                                                        "Value": "@good_property",
+                                                        "Variable": "",
+                                                        "height": "wrap_content",
+                                                        "width": "wrap_content",
+                                                        "weight": "0",
+                                                        "TextColor": "#000000",
+                                                        "type": "TextView"
+                                                    }
+                                                ]
+                                            },
+                                            {
+                                                "type": "LinearLayout",
+                                                "Variable": "",
+                                                "orientation": "horizontal",
+                                                "height": "wrap_content",
+                                                "width": "wrap_content",
+                                                "weight": "0",
+                                                "Elements": [
+                                                    {
+                                                        "Value": "Цена:",
+                                                        "Variable": "",
+                                                        "height": "wrap_content",
+                                                        "width": "wrap_content",
+                                                        "weight": "0",
+                                                        "TextBold": true,
+                                                        "TextColor": "#cc0000",
+                                                        "type": "TextView"
+                                                    },
+                                                    {
+                                                        "Value": "@good_price",
+                                                        "Variable": "",
+                                                        "height": "wrap_content",
+                                                        "width": "wrap_content",
+                                                        "weight": "0",
+                                                        "TextColor": "#cc0000",
+                                                        "type": "TextView"
+                                                    }
+                                                ]
+                                            },
+                                            {
+                                                "type": "LinearLayout",
+                                                "Variable": "",
+                                                "orientation": "horizontal",
+                                                "height": "wrap_content",
+                                                "width": "wrap_content",
+                                                "weight": "0",
+                                                "Elements": [
+                                                    {
+                                                        "Value": "Упаковка:",
+                                                        "Variable": "",
+                                                        "height": "wrap_content",
+                                                        "width": "wrap_content",
+                                                        "weight": "0",
+                                                        "TextBold": true,
+                                                        "TextColor": "#000000",
+                                                        "type": "TextView"
+                                                    },
+                                                    {
+                                                        "Value": "@good_unit",
+                                                        "Variable": "",
+                                                        "height": "wrap_content",
+                                                        "width": "wrap_content",
+                                                        "weight": "0",
+                                                        "TextColor": "#000000",
+                                                        "type": "TextView"
+                                                    }
+                                                ]
+                                            }
+                                        ],
+                                        "BackgroundColor": "",
+                                        "StrokeWidth": "",
+                                        "Padding": ""
+                                    },
+                                    {
+                                        "type": "LinearLayout",
+                                        "Variable": "",
+                                        "orientation": "",
+                                        "height": "wrap_content",
+                                        "width": "match_parent",
+                                        "weight": "0",
+                                        "Elements": [
+                                            {
+                                                "type": "LinearLayout",
+                                                "Variable": "",
+                                                "orientation": "horizontal",
+                                                "height": "wrap_content",
+                                                "width": "match_parent",
+                                                "weight": "1",
+                                                "Elements": [
+                                                    {
+                                                        "Value": "@Good",
+                                                        "Variable": "",
+                                                        "height": "wrap_content",
+                                                        "width": "wrap_content",
+                                                        "weight": "0",
+                                                        "TextBold": true,
+                                                        "TextItalic": false,
+                                                        "TextSize": "24",
+                                                        "TextColor": "#7A005C",
+                                                        "type": "TextView"
+                                                    }
+                                                ]
+                                            }
+                                        ],
+                                        "BackgroundColor": "",
+                                        "StrokeWidth": "",
+                                        "Padding": ""
+                                    },
+                                    {
+                                        "type": "LinearLayout",
+                                        "Variable": "",
+                                        "orientation": "horizontal",
+                                        "height": "wrap_content",
+                                        "width": "match_parent",
+                                        "weight": "0",
+                                        "Elements": [
+                                            {
+                                                "type": "LinearLayout",
+                                                "Variable": "",
+                                                "orientation": "vertical",
+                                                "height": "wrap_content",
+                                                "width": "match_parent",
+                                                "weight": "1",
+                                                "Elements": [
+                                                    {
+                                                        "Value": "План",
+                                                        "Variable": "",
+                                                        "height": "wrap_content",
+                                                        "width": "match_parent",
+                                                        "weight": "0",
+                                                        "type": "TextView"
+                                                    },
+                                                    {
+                                                        "Value": "@qtty_plan",
+                                                        "Variable": "qtty_plan",
+                                                        "height": "wrap_content",
+                                                        "width": "match_parent",
+                                                        "orientation": "",
+                                                        "weight": "0",
+                                                        "TextBold": false,
+                                                        "TextItalic": false,
+                                                        "TextSize": "24",
+                                                        "TextColor": "",
+                                                        "type": "TextView"
+                                                    }
+                                                ]
+                                            },
+                                            {
+                                                "type": "LinearLayout",
+                                                "Variable": "fact_qtty_input",
+                                                "orientation": "vertical",
+                                                "height": "wrap_content",
+                                                "width": "match_parent",
+                                                "weight": "1",
+                                                "Elements": [
+                                                    {
+                                                        "Value": "Факт",
+                                                        "Variable": "",
+                                                        "height": "wrap_content",
+                                                        "width": "match_parent",
+                                                        "weight": "0",
+                                                        "type": "TextView"
+                                                    },
+                                                    {
+                                                        "type": "LinearLayout",
+                                                        "Variable": "",
+                                                        "orientation": "horizontal",
+                                                        "height": "wrap_content",
+                                                        "width": "match_parent",
+                                                        "weight": "0",
+                                                        "Elements": [
+                                                            {
+                                                                "type": "LinearLayout",
+                                                                "Variable": "",
+                                                                "orientation": "vertical",
+                                                                "height": "wrap_content",
+                                                                "width": "match_parent",
+                                                                "weight": "2",
+                                                                "Elements": [
+                                                                    {
+                                                                        "Value": "",
+                                                                        "Variable": "blank_1",
+                                                                        "height": "wrap_content",
+                                                                        "width": "match_parent",
+                                                                        "weight": "0",
+                                                                        "TextBold": false,
+                                                                        "TextItalic": false,
+                                                                        "type": "TextView"
+                                                                    }
+                                                                ]
+                                                            },
+                                                            {
+                                                                "type": "LinearLayout",
+                                                                "Variable": "",
+                                                                "orientation": "horizontal",
+                                                                "height": "wrap_content",
+                                                                "width": "match_parent",
+                                                                "weight": "1",
+                                                                "Elements": [
+                                                                    {
+                                                                        "Value": "Было:",
+                                                                        "Variable": "",
+                                                                        "height": "wrap_content",
+                                                                        "width": "wrap_content",
+                                                                        "weight": "1",
+                                                                        "TextBold": false,
+                                                                        "TextItalic": false,
+                                                                        "TextSize": "18",
+                                                                        "type": "TextView"
+                                                                    },
+                                                                    {
+                                                                        "Value": "@qtty",
+                                                                        "Variable": "qtty",
+                                                                        "height": "wrap_content",
+                                                                        "width": "wrap_content",
+                                                                        "orientation": "",
+                                                                        "weight": "1",
+                                                                        "TextBold": false,
+                                                                        "TextItalic": false,
+                                                                        "TextSize": "18",
+                                                                        "TextColor": "",
+                                                                        "type": "TextView"
+                                                                    }
+                                                                ],
+                                                                "BackgroundColor": "",
+                                                                "StrokeWidth": "",
+                                                                "Padding": ""
+                                                            },
+                                                            {
+                                                                "type": "LinearLayout",
+                                                                "Variable": "",
+                                                                "orientation": "",
+                                                                "height": "wrap_content",
+                                                                "width": "match_parent",
+                                                                "weight": "2",
+                                                                "Elements": [
+                                                                    {
+                                                                        "Value": "",
+                                                                        "Variable": "blank_2",
+                                                                        "height": "wrap_content",
+                                                                        "width": "wrap_content",
+                                                                        "weight": "0",
+                                                                        "TextBold": false,
+                                                                        "TextItalic": false,
+                                                                        "type": "TextView"
+                                                                    }
+                                                                ],
+                                                                "BackgroundColor": "",
+                                                                "StrokeWidth": "",
+                                                                "Padding": ""
+                                                            }
+                                                        ],
+                                                        "BackgroundColor": "",
+                                                        "StrokeWidth": "",
+                                                        "Padding": "center"
+                                                    },
+                                                    {
+                                                        "type": "LinearLayout",
+                                                        "Variable": "",
+                                                        "orientation": "horizontal",
+                                                        "height": "wrap_content",
+                                                        "width": "match_parent",
+                                                        "weight": "0",
+                                                        "Elements": [
+                                                            {
+                                                                "type": "LinearLayout",
+                                                                "Variable": "",
+                                                                "orientation": "vertical",
+                                                                "height": "wrap_content",
+                                                                "width": "match_parent",
+                                                                "weight": "2",
+                                                                "Elements": [
+                                                                    {
+                                                                        "Value": "",
+                                                                        "Variable": "blank_left",
+                                                                        "height": "wrap_content",
+                                                                        "width": "wrap_content",
+                                                                        "weight": "0",
+                                                                        "TextBold": false,
+                                                                        "TextItalic": false,
+                                                                        "type": "TextView"
+                                                                    }
+                                                                ]
+                                                            },
+                                                            {
+                                                                "type": "LinearLayout",
+                                                                "Variable": "",
+                                                                "orientation": "",
+                                                                "height": "wrap_content",
+                                                                "width": "match_parent",
+                                                                "weight": "1",
+                                                                "Elements": [
+                                                                    {
+                                                                        "Value": "Будет:",
+                                                                        "Variable": "",
+                                                                        "height": "wrap_content",
+                                                                        "width": "wrap_content",
+                                                                        "weight": "1",
+                                                                        "TextBold": true,
+                                                                        "TextItalic": false,
+                                                                        "TextSize": "21",
+                                                                        "type": "TextView"
+                                                                    },
+                                                                    {
+                                                                        "Value": "@new_qtty",
+                                                                        "Variable": "new_qtty",
+                                                                        "height": "wrap_content",
+                                                                        "width": "wrap_content",
+                                                                        "orientation": "",
+                                                                        "weight": "1",
+                                                                        "TextBold": true,
+                                                                        "TextItalic": false,
+                                                                        "TextSize": "24",
+                                                                        "TextColor": "",
+                                                                        "type": "TextView"
+                                                                    }
+                                                                ],
+                                                                "BackgroundColor": "",
+                                                                "StrokeWidth": "",
+                                                                "Padding": ""
+                                                            },
+                                                            {
+                                                                "type": "LinearLayout",
+                                                                "Variable": "",
+                                                                "orientation": "",
+                                                                "height": "wrap_content",
+                                                                "width": "match_parent",
+                                                                "weight": "2",
+                                                                "Elements": [
+                                                                    {
+                                                                        "Value": "",
+                                                                        "Variable": "blank_right",
+                                                                        "height": "wrap_content",
+                                                                        "width": "wrap_content",
+                                                                        "weight": "0",
+                                                                        "TextBold": false,
+                                                                        "TextItalic": false,
+                                                                        "type": "TextView"
+                                                                    }
+                                                                ],
+                                                                "BackgroundColor": "",
+                                                                "StrokeWidth": "",
+                                                                "Padding": ""
+                                                            }
+                                                        ],
+                                                        "BackgroundColor": "",
+                                                        "StrokeWidth": "",
+                                                        "Padding": "center"
+                                                    }
+                                                ]
+                                            },
+                                            {
+                                                "type": "LinearLayout",
+                                                "Variable": "fact_qtty_note",
+                                                "orientation": "vertical",
+                                                "height": "wrap_content",
+                                                "width": "match_parent",
+                                                "weight": "1",
+                                                "Elements": [
+                                                    {
+                                                        "Value": "Факт",
+                                                        "Variable": "",
+                                                        "height": "wrap_content",
+                                                        "width": "match_parent",
+                                                        "weight": "0",
+                                                        "type": "TextView"
+                                                    },
+                                                    {
+                                                        "Value": "@qtty",
+                                                        "Variable": "qtty",
+                                                        "height": "wrap_content",
+                                                        "width": "match_parent",
+                                                        "orientation": "",
+                                                        "weight": "0",
+                                                        "TextBold": false,
+                                                        "TextItalic": false,
+                                                        "TextSize": "24",
+                                                        "TextColor": "#000000",
+                                                        "type": "TextView"
+                                                    }
+                                                ]
+                                            }
+                                        ]
+                                    },
+                                    {
+                                        "type": "LinearLayout",
+                                        "Variable": "fact_qtty_input",
+                                        "orientation": "vertical",
+                                        "height": "wrap_content",
+                                        "width": "match_parent",
+                                        "weight": "0",
+                                        "Elements": [
+                                            {
+                                                "Value": "Добавить:",
+                                                "Variable": "",
+                                                "height": "wrap_content",
+                                                "width": "match_parent",
+                                                "weight": "0",
+                                                "TextBold": false,
+                                                "TextItalic": false,
+                                                "TextSize": "21",
+                                                "TextColor": "#000000",
+                                                "type": "TextView"
+                                            },
+                                            {
+                                                "type": "LinearLayout",
+                                                "Variable": "fact_qtty_input",
+                                                "orientation": "horizontal",
+                                                "height": "wrap_content",
+                                                "width": "match_parent",
+                                                "weight": "0",
+                                                "Elements": [
+                                                    {
+                                                        "Value": "-5",
+                                                        "Variable": "ops_-5",
+                                                        "height": "wrap_content",
+                                                        "width": "match_parent",
+                                                        "weight": "1",
+                                                        "TextBold": false,
+                                                        "TextItalic": false,
+                                                        "TextSize": "21",
+                                                        "type": "Button"
+                                                    },
+                                                    {
+                                                        "Value": "-1",
+                                                        "Variable": "ops_-1",
+                                                        "height": "wrap_content",
+                                                        "width": "match_parent",
+                                                        "orientation": "",
+                                                        "weight": "1",
+                                                        "TextBold": false,
+                                                        "TextItalic": false,
+                                                        "TextSize": "21",
+                                                        "TextColor": "",
+                                                        "type": "Button"
+                                                    },
+                                                    {
+                                                        "Value": "@delta",
+                                                        "Variable": "delta",
+                                                        "height": "wrap_content",
+                                                        "width": "match_parent",
+                                                        "orientation": "",
+                                                        "weight": "1",
+                                                        "TextBold": false,
+                                                        "TextItalic": false,
+                                                        "TextSize": "24",
+                                                        "TextColor": "#000000",
+                                                        "type": "ModernEditText"
+                                                    },
+                                                    {
+                                                        "Value": "+1",
+                                                        "Variable": "ops_+1",
+                                                        "height": "wrap_content",
+                                                        "width": "match_parent",
+                                                        "orientation": "",
+                                                        "weight": "1",
+                                                        "TextBold": false,
+                                                        "TextItalic": false,
+                                                        "TextSize": "21",
+                                                        "TextColor": "",
+                                                        "type": "Button"
+                                                    },
+                                                    {
+                                                        "Value": "+5",
+                                                        "Variable": "ops_+5",
+                                                        "height": "wrap_content",
+                                                        "width": "match_parent",
+                                                        "orientation": "",
+                                                        "weight": "1",
+                                                        "TextBold": false,
+                                                        "TextItalic": false,
+                                                        "TextSize": "21",
+                                                        "TextColor": "",
+                                                        "type": "Button"
+                                                    }
+                                                ],
+                                                "BackgroundColor": "",
+                                                "StrokeWidth": "",
+                                                "Padding": ""
+                                            },
+                                            {
+                                                "type": "LinearLayout",
+                                                "Variable": "",
+                                                "orientation": "horizontal",
+                                                "height": "wrap_content",
+                                                "width": "match_parent",
+                                                "weight": "0",
+                                                "Elements": [
+                                                    {
+                                                        "Value": "Сохранить",
+                                                        "Variable": "btn_ok",
+                                                        "height": "wrap_content",
+                                                        "width": "match_parent",
+                                                        "weight": "1",
+                                                        "type": "Button"
+                                                    }
+                                                ]
+                                            }
+                                        ]
+                                    },
+                                    {
+                                        "Value": "@barcode_cards",
+                                        "Variable": "barcode_cards",
+                                        "height": "wrap_content",
+                                        "width": "match_parent",
+                                        "weight": "0",
+                                        "type": "CardsLayout"
+                                    }
+                                ]
+                            },
+                            {
+                                "type": "MenuItem",
+                                "Value": "Печать",
+                                "Variable": "btn_print"
+                            },
+                            {
+                                "type": "MenuItem",
+                                "Value": "Ввести штрихкод",
+                                "Variable": "btn_doc_good_barcode"
+                            },
+                            {
+                                "type": "MenuItem",
+                                "Value": "Серии",
+                                "Variable": "btn_series_show"
+                            }
+                        ],
+                        "Handlers": [
+                            {
+                                "event": "onStart",
+                                "action": "run",
+                                "type": "python",
+                                "method": "group_elem_viev_on_start",
+                                "postExecute": ""
+                            },
+                            {
+                                "event": "onInput",
+                                "listener": "",
+                                "action": "run",
+                                "type": "python",
+                                "method": "group_elem_viev_on_click",
+                                "postExecute": ""
+                            }
+                        ],
+                        "onlineOnStart": false,
+                        "onlineOnAfterStart": false,
+                        "onlineOnInput": false
+                    },
+                    {
+                        "type": "Operation",
                         "Name": "Ошибка сканера",
                         "Timer": false,
                         "hideBottomBarScreen": true,
@@ -3483,8 +4173,8 @@
                                 "weight": "0",
                                 "Elements": [
                                     {
-                                        "Value": "Вы открываете документ в режиме групповой работы. Работает только онлайн.",
-                                        "Variable": "",
+                                        "Value": "@group_scan_message",
+                                        "Variable": "group_scan_message",
                                         "height": "wrap_content",
                                         "width": "wrap_content",
                                         "weight": "0",

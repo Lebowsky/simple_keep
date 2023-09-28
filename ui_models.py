@@ -127,6 +127,7 @@ class Screen(ABC):
         for k in self.screen_values:
             self.screen_values[k] = self.hash_map[k]
 
+
     class TextView(widgets.TextView):
         def __init__(self, value, rs_settings):
             super().__init__()
@@ -1025,16 +1026,18 @@ class GroupScanTiles(Tiles):
         self.process_name = self.hash_map.get_current_process()
 
     def on_start(self) -> None:
-        if not self.hash_map.containsKey('check_connection') and not self._check_connection():
-            tiles = self._get_message_tile("Отсутствует соединение с сервером", text_color="#ff0000")
-            self.hash_map.put('tiles', tiles, to_json=True)
-            self.hash_map.refresh_screen()
-            self.hash_map['check_connection'] = False
-            return
+        if not self.rs_settings.get('offline_mode'):
+            if not self.hash_map.containsKey('check_connection') and not self._check_connection():
+                tiles = self._get_message_tile("Отсутствует соединение с сервером", text_color="#ff0000")
+                self.hash_map.put('tiles', tiles, to_json=True)
+                self.hash_map.refresh_screen()
+                self.hash_map['check_connection'] = False
+                return
 
         self.hash_map['check_connection'] = True
 
-        data = self.db_service.get_docs_stat()
+        data = self._get_docs_stat()
+
         if data:
             layout = json.loads(self._get_tile_view().to_json())
 
@@ -1080,6 +1083,8 @@ class GroupScanTiles(Tiles):
                 url=hs_service.url)
         return not answer.error
 
+    def _get_docs_stat(self):
+        return self.db_service.get_docs_stat()
 
 class DocumentsTiles(GroupScanTiles):
     screen_name = 'Плитки'
@@ -1090,6 +1095,9 @@ class DocumentsTiles(GroupScanTiles):
 
     def _check_connection(self):
         return True
+
+    def _get_docs_stat(self):
+        return self.db_service.get_docs_stat(no_group_scan=True)
 
 
 # ^^^^^^^^^^^^^^^^^^^^^ Tiles ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -1116,8 +1124,9 @@ class DocsListScreen(Screen):
         self.hash_map['selected_tile_key'] = ''
 
         list_data = self._get_doc_list_data(doc_type, doc_status)
+        prepared_data = self._prepare_table_data(list_data)
         self.hash_map['return_selected_data'] = ''
-        doc_cards = self._get_doc_cards_view(list_data, self.popup_menu_data)
+        doc_cards = self._get_doc_cards_view(prepared_data, self.popup_menu_data)
         self.hash_map['docCards'] = doc_cards.to_json()
 
     def on_input(self) -> None:
@@ -1162,9 +1171,12 @@ class DocsListScreen(Screen):
 
     def _get_doc_list_data(self, doc_type='', doc_status='') -> list:
         results = self.service.get_doc_view_data(doc_type, doc_status)
-        table_data = []
+        return results
 
-        for record in results:
+    @staticmethod
+    def _prepare_table_data(list_data):
+        table_data = []
+        for record in list_data:
             doc_status = ''
 
             if record['verified'] and record['sent']:
@@ -1316,6 +1328,11 @@ class GroupScanDocsListScreen(DocsListScreen):
     def on_input(self):
         super().on_input()
         if self.listener == "CardsClick":
+            current_mode = "офлайн" if self.rs_settings.get('offline_mode') else "онлайн"
+            self.hash_map.put('group_scan_message',
+                              f"Вы открываете документ групповую обработку документа "
+                              f"в {current_mode.upper()} режиме. Документ не будет доступен в процессе 'Документы' ")
+
             self.hash_map.show_dialog('Подтвердите действие')
             selected_card_key = self.hash_map['selected_card_key']
             self.hash_map['id_doc'] = selected_card_key
@@ -1324,6 +1341,7 @@ class GroupScanDocsListScreen(DocsListScreen):
             id_doc = self.hash_map['id_doc']
             self.service.doc_id = id_doc
             self.service.set_doc_value('verified', 1)
+            self.service.set_doc_value('is_group_scan', '1')
 
             screen_name = 'Документ товары'
             screen = ScreensFactory.create_screen(
@@ -1336,6 +1354,7 @@ class GroupScanDocsListScreen(DocsListScreen):
 
     def can_launch_timer(self):
         return False
+
 
 class DocumentsDocsListScreen(DocsListScreen):
     screen_name = 'Документы'
@@ -1404,6 +1423,10 @@ class DocumentsDocsListScreen(DocsListScreen):
         doc_number = card_data.get('number')
         return doc_number
 
+    def _get_doc_list_data(self, doc_type='', doc_status='') -> list:
+        results = self.service.get_doc_view_data(doc_type, doc_status, no_group_scan=True)
+        return results
+
 
 class AdrDocsListScreen(DocsListScreen):
     screen_name = 'Документы'
@@ -1434,8 +1457,9 @@ class AdrDocsListScreen(DocsListScreen):
         # self.hash_map['doc_type_click'] = doc_type
         self.hash_map['selected_tile_key'] = ''
         list_data = self._get_doc_list_data(doc_type, doc_status)
-        doc_cards = self._get_doc_cards_view(list_data,
-                                             popup_menu_data='Удалить;Очистить данные пересчета;Отправить повторно')
+        prepared_data = self._prepare_table_data(list_data)
+        doc_cards = self._get_doc_cards_view(prepared_data,
+            popup_menu_data='Удалить;Очистить данные пересчета;Отправить повторно')
         self.hash_map['docAdrCards'] = doc_cards.to_json()
 
     def on_input(self) -> None:
@@ -1485,11 +1509,10 @@ class AdrDocsListScreen(DocsListScreen):
                 title='Отправить документ повторно?'
             )
 
-    def _get_doc_list_data(self, doc_type='', doc_status='') -> list:
-        results = self.service.get_doc_view_data(doc_type, doc_status)
+    @staticmethod
+    def _prepare_table_data(list_data) -> list:
         table_data = []
-
-        for record in results:
+        for record in list_data:
             doc_status = ''
 
             if record['verified'] and record['sent']:
@@ -2014,7 +2037,7 @@ class DocDetailsScreen(Screen):
             ),
             widgets.LinearLayout(
                 widgets.TextView(
-                    Value='@qtty',
+                    Value='@d_qtty',
                     TextSize=15,
                     width='match_parent'
                 ),
@@ -2274,6 +2297,7 @@ class GroupScanDocDetailsScreenNew(DocDetailsScreen):
         self.hs_service = hs_services.HsService(self.get_http_settings())
         self.db_service = db_services.BarcodeService()
         self.queue_service = ScanningQueueService()
+        self.screen_values = {}
 
     def on_start(self):
         super()._on_start()
@@ -2291,6 +2315,7 @@ class GroupScanDocDetailsScreenNew(DocDetailsScreen):
             'ON_BACK_PRESSED': self.go_back,
             'sync_doc': self._sync_doc,
             'send_all_scan_lines': self.send_all_scan_lines_call_handler,
+            'CardsClick': self._cards_click
         }
         if self.listener in listeners:
             listeners[self.listener]()
@@ -2507,6 +2532,48 @@ class GroupScanDocDetailsScreenNew(DocDetailsScreen):
     def send_unsent_lines_run(self):
         self.send_post_lines_data(sent=False)
 
+    def _cards_click(self):
+        if not self.rs_settings.get('allow_fact_input'):
+            self.hash_map.refresh_screen()
+            return self.hash_map
+
+        current_elem = json.loads(self.hash_map.get('selected_card_data'))
+
+        current_str = self.hash_map["selected_card_position"]
+        table_lines_qtty = self.hash_map['table_lines_qtty']
+        title = '{} № {} от {}'.format(self.hash_map['doc_type'], self.hash_map['doc_n'], self.hash_map['doc_date'])
+
+        put_data_dict = {
+            'Doc_data': title,
+            'Good': current_elem['good_name'],
+            'id_good': None, # current_elem['id_good']
+            'id_unit': current_elem['id_unit'],
+            'id_property': current_elem['id_properties'],
+            'good_art': current_elem['art'],
+            'good_sn': current_elem['series_name'],
+            'good_property': current_elem['properties_name'],
+            'good_price': current_elem['price'],
+            'good_unit': current_elem['units_name'],
+            'good_str': f'{current_str} / {table_lines_qtty}',
+            'qtty_plan': current_elem['qtty_plan'],
+            'good_plan': current_elem['qtty_plan'],
+            'key': current_elem['key'],
+            'price': current_elem['price'],
+            'price_type': current_elem['price_name'],
+            'qtty': self._format_quantity(current_elem['d_qtty']),
+        }
+
+        screen = GroupScanItemScreen(self.hash_map, self.rs_settings)
+        screen.show(args=put_data_dict)
+
+
+    @staticmethod
+    def _format_quantity(qtty):
+        if float(qtty) % 1 == 0:
+            return int(float(qtty))
+        else:
+            return qtty
+
 
 class DocumentsDocDetailScreen(DocDetailsScreen):
     screen_name = 'Документ товары'
@@ -2678,6 +2745,7 @@ class DocumentsDocDetailScreen(DocDetailsScreen):
 
     def _get_doc_barcode_data(self, args):
         return self.service.get_doc_barcode_data(args)
+
 
 class AdrDocDetailsScreen(DocDetailsScreen):
     screen_name = 'Документ товары'
@@ -2863,7 +2931,7 @@ class AdrDocDetailsScreen(DocDetailsScreen):
         current_str = self.hash_map.get("selected_card_position")
         jlist = json.loads(self.hash_map.get("doc_goods_table"))
         current_elem = jlist['customtable']['tabledata'][int(current_str)]
-        id_doc =  self.hash_map.get('id_doc')
+        id_doc = self.hash_map.get('id_doc')
         self.hash_map.put(
             "Doc_data",
             self.hash_map.get('doc_type') + ' №' + self.hash_map.get('doc_n') + ' от' + self.hash_map.get('doc_date')
@@ -3548,9 +3616,6 @@ class BaseGoodSelect(Screen):
     def on_post_start(self):
         pass
 
-    def show(self, args=None):
-        pass
-
     def _handle_btn_ok(self):
         if float(self.hash_map.get('new_qtty')) < 0:
             self.hash_map.toast('Итоговое количество меньше 0')
@@ -3558,13 +3623,15 @@ class BaseGoodSelect(Screen):
             self._set_delta(reset=True)
             return
         control = self.hash_map.get_bool('control')
+        current_elem = self.hash_map.get_json('selected_card_data')
+
         if control:
-            if float(self.hash_map.get('new_qtty')) > float(self.hash_map.get('qtty_plan')):
+            if max(float(self.hash_map.get('new_qtty')), float(current_elem['qtty'])) \
+                    > float(self.hash_map.get('qtty_plan')):
                 self.toast('Количество план в документе превышено')
                 self.hash_map.playsound('error')
                 self._set_delta(reset=True)
                 return
-        current_elem = self.hash_map.get_json('selected_card_data')
         qtty = self.hash_map['new_qtty']
         price = self.hash_map.get('price') or 0
 
@@ -3595,7 +3662,7 @@ class BaseGoodSelect(Screen):
                 'qtty': float(qtty) if qtty else 0,
             }
             row_id = int(current_elem['key'])
-            self.service.update_doc_table_row(data=update_data, row_id=row_id)
+            self._update_doc_table_row(data=update_data, row_id=row_id)
             self.service.set_doc_status_to_upload(self.hash_map.get('id_doc'))
             self.hash_map.show_screen("Документ товары")
 
@@ -3678,10 +3745,9 @@ class BaseGoodSelect(Screen):
                     # 'price': float(price) # в Adr docs нет колонки прайс, не понятно нужна она вообще или нет
                 }
                 row_id = int(current_elem['key'])
-                self.service.update_doc_table_row(data=update_data, row_id=row_id)
+                self._update_doc_table_row(data=update_data, row_id=row_id)
                 self.hash_map.put('new_qtty', str(qtty))
                 self.hash_map.put('qtty', str(qtty))
-
 
     def _process_the_barcode(self):
         barcode = self.hash_map.get('barcode_good_select')
@@ -3765,7 +3831,6 @@ class GoodsSelectScreen(BaseGoodSelect):
     process_name = 'Документы'
     printing_template_name = 'goods_select_screen'
 
-
     def __init__(self, hash_map: HashMap, rs_settings):
         super().__init__(hash_map, rs_settings)
 
@@ -3827,7 +3892,7 @@ class GoodsSelectScreen(BaseGoodSelect):
         current_elem['key'] = current_elem.get('id')
         return current_elem
 
-    def _goods_selector(self, action, index = None):
+    def _goods_selector(self, action, index=None):
         
         global_position = index if index else int(self.hash_map.get('selected_card_position'))
 
@@ -3907,12 +3972,79 @@ class GoodsSelectScreen(BaseGoodSelect):
                 return True
 
         return False
+
+    def _update_doc_table_row(self, data, row_id):
+        update_data = {
+            'sent': 0,
+            'd_qtty': float(data['qtty']),
+        }
+        self.service.update_doc_table_row(data=update_data, row_id=row_id)
     
+
 class AdrGoodsSelectScreen(BaseGoodSelect):
     def __init__(self, hash_map: HashMap, rs_settings):
         super().__init__(hash_map, rs_settings)
         self.id_doc = self.hash_map['id_doc']
         self.service = AdrDocService()
+
+
+class GroupScanItemScreen(BaseGoodSelect):
+    screen_name = 'Товар выбор'
+    process_name = 'Групповая обработка'
+    printing_template_name = 'group_scan_select_screen'
+
+    def __init__(self, hash_map: HashMap, rs_settings):
+        super().__init__(hash_map, rs_settings)
+        self.screen_values = {}
+
+    def on_start(self):
+        super().on_start()
+
+    def show(self, args=None):
+        if args:
+            self.hash_map.put_data(args)
+            self.fill_screen_values(args)
+            self._init_screen_values()
+
+        self._validate_screen_values()
+        self.init_screen()
+        self.hash_map.show_screen(self.screen_name)
+
+    def on_input(self):
+        self.hash_map.put('stop_sync_doc', '')
+        self._clear_screen_values()
+        super().on_input()
+
+    def fill_screen_values(self, args: dict):
+        for k in args.keys():
+            self.screen_values[k] = ''
+
+    def _update_doc_table_row(self, data: Dict, row_id):
+        update_data = {
+            'sent': 0,
+            'd_qtty': float(data['qtty']),
+        }
+
+        self.service.update_doc_table_row(data=update_data, row_id=row_id)
+        self.service.set_doc_status_to_upload(self.hash_map.get('id_doc'))
+
+        insert_to_queue = {
+            "id_doc": self.hash_map.get('id_doc'),
+            "id_good": self.hash_map.get("id_good"),
+            "id_properties": self.hash_map.get("id_property"),
+            "id_series": self.hash_map.get("id_series"),
+            "id_unit": self.hash_map.get("id_unit"),
+            "id_cell": "",
+            "d_qtty": update_data["d_qtty"],
+            "sent": False,
+            "price": self.hash_map.get("good_price"),
+            "id_price": ""
+        }
+
+        barcode_worker = BarcodeWorker(self.hash_map.get("id_doc"))
+        barcode_worker.queue_update_data = insert_to_queue
+        barcode_worker.update_document_barcode_data()
+
 
 class GoodBarcodeRegister(Screen):
     screen_name = 'ТоварШтрихкоды'
