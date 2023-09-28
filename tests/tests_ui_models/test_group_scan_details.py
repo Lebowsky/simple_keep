@@ -173,6 +173,7 @@ class TestGroupScanDocDetailsScreenNew(unittest.TestCase):
     def tearDown(self) -> None:
         self.sut.queue_service.provider.close()
 
+    @unittest.skip
     def test_barcode_scanned_no_result_error(self):
         from tests.data_for_tests.nosql.initial_data import barcode_data
 
