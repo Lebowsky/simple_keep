@@ -1,4 +1,5 @@
 from java import jclass
+from printing_factory import PrintService
 from ru.travelfood.simple_ui import SimpleUtilites as suClass
 
 from ui_utils import HashMap
@@ -33,8 +34,6 @@ def create_screen(hash_map: HashMap):
         current_screen.event = hash_map['event']
 
     return current_screen
-
-
 
 
 # =============== Main events =================
@@ -629,6 +628,96 @@ def documents_settings_on_start(hash_map):
     screen = ui_models.DocumentsSettings(hash_map, rs_settings)
     screen.on_start()
 
+
+@HashMap()
+def print_bluetooth_settings_on_input(hash_map):
+    """Процесс: Печать. Экран: Настройки печати Bluetooth"""
+    screen = ui_models.PrintBluetoothSettings(hash_map, rs_settings)
+    screen.on_input()
+
+
+@HashMap()
+def print_bluetooth_settings_on_start(hash_map):
+    """Процесс: Печать. Экран: Настройки печати Bluetooth"""
+    screen = ui_models.PrintBluetoothSettings(hash_map, rs_settings)
+    screen.on_start()
+
+
+@HashMap()
+def bluetooth_error(hash_map):
+    PrintService.bluetooth_error(hash_map)
+
+
+@HashMap()
+def print_settings_on_input(hash_map):
+    """Процесс: Печать. Экран: Настройки печати"""
+    screen = ui_models.PrintSettings(hash_map, rs_settings)
+    screen.on_input()
+
+
+@HashMap()
+def print_settings_on_start(hash_map):
+    """Процесс: Печать. Экран: Настройки печати"""
+    screen = ui_models.PrintSettings(hash_map, rs_settings)
+    screen.on_start()
+
+
+@HashMap()
+def print_wifi_settings_on_input(hash_map):
+    """Процесс: Печать. Экран: Настройки печати WiFi"""
+    screen = ui_models.PrintWiFiSettings(hash_map, rs_settings)
+    screen.on_input()
+
+
+@HashMap()
+def print_wifi_settings_on_start(hash_map):
+    """Процесс: Печать. Экран: Настройки печати WiFi"""
+    screen = ui_models.PrintWiFiSettings(hash_map, rs_settings)
+    screen.on_start()
+
+
+@HashMap()
+def print_wifi(hash_map):
+    """Обработчик для печати через WiFi. Должен быть вызван асинхронно"""
+    PrintService.print_wifi(hash_map)
+
+
+@HashMap()
+def wifi_error(hash_map):
+    PrintService.wifi_error(hash_map)
+
+
+@HashMap()
+def print_label_templates_on_input(hash_map):
+    """Процесс: Печать. Экран: Настройки печати Шаблоны"""
+    screen = ui_models.PrintLabelTemplatesSettings(hash_map, rs_settings)
+    screen.on_input()
+
+
+@HashMap()
+def print_label_templates_on_start(hash_map):
+    """Процесс: Печать. Экран: Настройки печати Шаблоны"""
+    screen = ui_models.PrintLabelTemplatesSettings(hash_map, rs_settings)
+    screen.on_start()
+
+@HashMap()
+def print_label_template_size_on_input(hash_map):
+    """Процесс: Печать. Экран: Настройки печати Размеры"""
+    screen = ui_models.PrintTemplateSizeSettings(hash_map, rs_settings)
+    screen.on_input()
+
+
+@HashMap()
+def print_label_template_size_on_start(hash_map):
+    """Процесс: Печать. Экран: Настройки печати Размеры"""
+    screen = ui_models.PrintTemplateSizeSettings(hash_map, rs_settings)
+    screen.on_start()
+
+
+@HashMap()
+def print_postExecute(hash_map):
+    """Срабатывает после вызова PrintService.print и печатает ценник"""
+    PrintService.print_postExecute(hash_map)
 # ^^^^^^^^^^^^^^^^^ Settings ^^^^^^^^^^^^^^^^^
 
 # =============== Html =================
