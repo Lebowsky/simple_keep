@@ -404,35 +404,6 @@ def offline_good_card_on_input(hash_map):
     screen = ui_models.ItemCardOfflineScreen(hash_map, rs_settings)
     screen.on_input()
 
-@HashMap()
-def barcode_register_item_on_input(hash_map):
-    screen = ui_models.ItemBarcodeRegistrationScreen(hash_map, rs_settings)
-    screen.on_input()
-
-@HashMap()
-def barcode_register_item_on_start(hash_map):
-    screen: ui_models.ItemBarcodeRegistrationScreen = create_screen(hash_map)
-    screen.on_start()
-
-@HashMap()
-def item_properties_on_start(hash_map):
-    screen: ui_models.ItemGoodSelectProperties = create_screen(hash_map)
-    screen.on_start()
-
-@HashMap()
-def item_properties_on_input(hash_map):
-    screen = ui_models.ItemGoodSelectProperties(hash_map, rs_settings)
-    screen.on_input()
-
-@HashMap()
-def item_units_on_start(hash_map):
-    screen: ui_models.ItemGoodSelectUnit = create_screen(hash_map)
-    screen.on_start()
-
-@HashMap()
-def item_units_on_input(hash_map):
-    screen = ui_models.ItemGoodSelectUnit(hash_map, rs_settings)
-    screen.on_input()
 
 # ^^^^^^^^^^^^^^^^^ Goods ^^^^^^^^^^^^^^^^^
 
