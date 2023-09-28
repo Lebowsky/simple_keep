@@ -454,12 +454,17 @@ class BarcodeWorker:
         self.barcode_data = self._get_barcode_data()
 
         if self.barcode_data:
+            self._check_use_series()
             self.check_barcode()
             self.update_document_barcode_data()
         else:
             self._set_process_result_info('not_found')
 
         return self.process_result
+
+    def _check_use_series(self):
+        if self.barcode_data['use_series'] == 1:
+            self._set_process_result_info('use_series')
 
     def _get_barcode_data(self):
         barcode_data = self.db_service.get_barcode_data(
@@ -625,6 +630,10 @@ class BarcodeWorker:
             'success_mark': {
                 'error': '',
                 'description': 'Марка добавлена в документ'
+            },
+            'use_series': {
+                'error': 'use_series',
+                'description': 'Для товара необходимо отсканировать серии',
             }
         }
 

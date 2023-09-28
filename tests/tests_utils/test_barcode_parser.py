@@ -674,6 +674,38 @@ class TestBarcodeWorker(unittest.TestCase):
         self.assertFalse(sut.queue_update_data)
         self.assertFalse(sut.docs_table_update_data)
 
+    def test_cant_use_process_barcode_if_use_series(self):
+        id_doc = '96e94835-f8a0-11ed-a290-8babe363837e'
+        barcode = '2000000025988'
+        barcode_data = {
+            'id_good': 'baf54db7-7029-11e6-accf-0050568b35ac',
+            'id_property': 'c3d2a493-7026-11e6-accf-0050568b35ac',
+            'id_series': 'c3d2a493-7026-11e6-accf-0050568b35ac',
+            'id_unit': 'c3d2a493-7026-11e6-accf-0050568b35ac',
+            'ratio': 10,
+            'approved': '',
+            'mark_id': '',
+            'use_mark': True,
+            'row_key': '1',
+            'use_series': 1,
+            'qtty': 1,
+            'd_qtty': 1,
+            'qtty_plan': 5,
+            'price': 0,
+            'id_price': '',
+        }
+
+        sut = BarcodeWorker(id_doc)
+
+        sut._get_barcode_data = MagicMock(return_value=barcode_data)
+
+        result = sut.process_the_barcode(barcode)
+
+        self.assertTrue(result.error, 'use_series')
+        self.assertFalse(sut.mark_update_data)
+        self.assertFalse(sut.queue_update_data)
+        self.assertFalse(sut.docs_table_update_data)
+
     def test_update_table_data(self):
         id_doc = '96e94835-f8a0-11ed-a290-8babe363837e'
         barcode = '2000000025988'
@@ -826,3 +858,35 @@ class TestAdrBarcodeWorker(unittest.TestCase):
 
         sut.process_the_barcode(barcode)
         result = sut.update_document_barcode_data()
+
+    def test_cant_use_process_barcode_if_use_series(self):
+        id_doc = '96e94835-f8a0-11ed-a290-8babe363837e'
+        barcode = '2000000025988'
+        barcode_data = {
+            'id_good': 'baf54db7-7029-11e6-accf-0050568b35ac',
+            'id_property': 'c3d2a493-7026-11e6-accf-0050568b35ac',
+            'id_series': 'c3d2a493-7026-11e6-accf-0050568b35ac',
+            'id_unit': 'c3d2a493-7026-11e6-accf-0050568b35ac',
+            'ratio': 10,
+            'approved': '',
+            'mark_id': '',
+            'use_mark': True,
+            'row_key': '1',
+            'use_series': 1,
+            'qtty': 1,
+            'd_qtty': 1,
+            'qtty_plan': 5,
+            'price': 0,
+            'id_price': '',
+        }
+
+        sut = BarcodeAdrWorker(id_doc)
+
+        sut._get_barcode_data = MagicMock(return_value=barcode_data)
+
+        result = sut.process_the_barcode(barcode)
+
+        self.assertTrue(result.error, 'use_series')
+        self.assertFalse(sut.mark_update_data)
+        self.assertFalse(sut.queue_update_data)
+        self.assertFalse(sut.docs_table_update_data)
