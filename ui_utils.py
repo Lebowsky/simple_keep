@@ -641,6 +641,7 @@ class BarcodeWorker:
             self.process_result.error = info_data[info_key]['error']
             self.process_result.description = info_data[info_key]['description']
             self.process_result.row_key = self.barcode_data.get('row_key', 0)
+            self.process_result.barcode_data = self.barcode_data
 
     def parse(self, barcode: str):
         return BarcodeParser(barcode).parse()
@@ -651,6 +652,7 @@ class BarcodeWorker:
         description: str = ''
         barcode: str = ''
         row_key: str = ''
+        barcode_data = None
 
 class BarcodeAdrWorker(BarcodeWorker):
     def __init__(self, id_doc, **kwargs):
