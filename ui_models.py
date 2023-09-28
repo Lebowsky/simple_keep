@@ -3612,7 +3612,8 @@ class BaseGoodSelect(Screen):
         return self.hash_map.get_json('selected_card_data')
 
     def _save_new_delta(self):
-        new_qtty = float(self.hash_map.get('new_qtty')) if self.hash_map.get('new_qtty')  else 0
+        new_qtty = self._get_float_value(self.hash_map.get('new_qtty'))
+
         if new_qtty < 0:
             self.hash_map.toast('Итоговое количество меньше 0')
             self.hash_map.playsound('error')
@@ -3621,8 +3622,7 @@ class BaseGoodSelect(Screen):
 
         control = self.hash_map.get_bool('control')
         if control:
-            if new_qtty > float(
-                    self.hash_map.get('qtty_plan')):
+            if new_qtty > self._get_float_value(self.hash_map.get('qtty_plan')):
                 self.toast('Количество план в документе превышено')
                 self.hash_map.playsound('error')
                 self._set_delta(reset=True)
@@ -3633,7 +3633,7 @@ class BaseGoodSelect(Screen):
         # price = self.hash_map.get('price') or 0  # это не используется
         if self.hash_map.get('parent_screen') == 'ВыборТовараАртикул':
             current_elem = self.hash_map.get_json('selected_card_data')
-            if qtty == float(current_elem['qtty']) if current_elem['qtty'] else 0:
+            if qtty == self._get_float_value(self.hash_map.get('qtty')):
                 self.hash_map.show_screen("ВыборТовараАртикул")
                 return
             finded_goods_cards = self.hash_map.get('finded_goods_cards', from_json=True)
@@ -3646,7 +3646,7 @@ class BaseGoodSelect(Screen):
             self.hash_map.show_screen("ВыборТовараАртикул")
 
         else:
-            if qtty != float(current_elem['qtty']):
+            if qtty != self._get_float_value(self.hash_map.get('qtty')):
                 update_data = {
                     'sent': 0,
                     'qtty': qtty,
@@ -3656,8 +3656,14 @@ class BaseGoodSelect(Screen):
                 self.service.update_doc_table_row(data=update_data, row_id=row_id)
                 self.hash_map.put('new_qtty', str(qtty))
                 self.hash_map.put('qtty', str(qtty))
+        self.hash_map.toast('WORKS!!!')
 
-
+    def _get_float_value(self, value):
+        if value and re.match("^\d+\.?\d*$", value):
+            return float(value)
+        else:
+            return 0.0
+        
     def _process_the_barcode(self):
         barcode = self.hash_map.get('barcode_good_select')
         allowed_fact_input = self.rs_settings.get('allow_fact_input')
@@ -3747,7 +3753,7 @@ class GoodsSelectScreen(BaseGoodSelect):
     def on_start(self):
         super().on_start()
         #Готовим данные для первичного отображения при открытии по клику
-        if self.hash_map.get('was_clicked'):
+        if self.hash_map.get('was_clicked') == '1':
             doc_rows = self.service.get_doc_rows_count(self.id_doc)['doc_rows']
             doc_data = self.service.get_doc_details_data(self.id_doc, 0, doc_rows)
             doc_data.insert(0, {})
@@ -3774,7 +3780,7 @@ class GoodsSelectScreen(BaseGoodSelect):
 
             if doc_position:
                 self._goods_selector('index', index=doc_position)
-            self.hash_map.remove('was_clicked')
+            self.hash_map.put('was_clicked', '-1')
 
     def on_input(self):
         super().on_input()
@@ -3835,8 +3841,10 @@ class GoodsSelectScreen(BaseGoodSelect):
             # тут берем количество с экрана артикулов
             qtty = self.hash_map.get('qtty')
         else:
-            qtty = self._format_quantity(current_elem['qtty']) if current_elem['qtty'] else 0
-
+            qtty = current_elem['qtty']
+        
+        qtty = self._format_quantity(self._get_float_value(qtty))
+        
         put_data = {
             'Doc_data': title,
             'Good': current_elem['good_name'],
