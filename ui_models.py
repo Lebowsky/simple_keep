@@ -3762,7 +3762,6 @@ class BaseGoodSelect(Screen):
         # self.hash_map.show_process_result(SeriesList.process_name, SeriesList.screen_name)
         self.hash_map.show_screen(SeriesList.screen_name)
 
-
 class GoodsSelectScreen(BaseGoodSelect):
     screen_name = 'Товар выбор'
     process_name = 'Документы'
@@ -4127,8 +4126,6 @@ class BarcodeRegistrationScreen(Screen):
     def _finish_process(self):
         self.hash_map.finish_process_result()
 
-
-
 class GoodsSelectArticle(Screen):
     screen_name = 'ВыборТовараАртикул'
     process_name = 'Документы'
@@ -4302,6 +4299,7 @@ class GoodsSelectArticle(Screen):
         row_id = int(data['key'])
         self.service.update_doc_table_row(data=update_data, row_id=row_id)
         self.service.set_doc_status_to_upload(self.hash_map.get('id_doc'))
+
 
 # ^^^^^^^^^^^^^^^^^^^^^ Goods select ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -5454,40 +5452,6 @@ class SelectProperties(GoodsPricesItemCard):
             self.hash_map['selected_property_name'] = ''
             self.hash_map.show_screen('Проверка цен')
 
-class DocGoodSelectProperties(SelectProperties):
-    screen_name = 'Выбор характеристик'
-    process_name = 'Документы'
-
-    def _get_data(self):
-        table_name = "RS_properties"
-        raw_data = self.service.get_select_data(table_name)
-        cards_data = []
-        for element in raw_data:
-            card_data = {
-                'key': element['id'],
-                'name': element['name']
-            }
-            cards_data.append(card_data)
-        return cards_data
-
-    def on_input(self):
-        listener = self.listener
-
-        if listener == "CardsClick":
-            selected_property_id = self.hash_map.get("selected_card_key")
-            selected_property_name = self.service.get_values_by_field(table_name='RS_properties', field='id',
-                                                                      field_value=selected_property_id)[0]['name']
-            self.hash_map.put('selected_property_id', selected_property_id)
-            self.hash_map['property_select'] = selected_property_name
-            self.hash_map['selected_property_name'] = selected_property_name
-            self.hash_map.show_screen('ТоварШтрихкоды')
-
-        elif listener == "ON_BACK_PRESSED" or 'back_to_prices':
-            self.hash_map['selected_property_id'] = ''
-            self.hash_map['property_select'] = ''
-            self.hash_map['selected_property_name'] = ''
-            self.hash_map.show_screen('ТоварШтрихкоды')
-
 class SelectUnit(GoodsPricesItemCard):
     screen_name = 'Выбор упаковки'
     process_name = 'Цены'
@@ -5557,46 +5521,6 @@ class SelectUnit(GoodsPricesItemCard):
             self.hash_map.put('selected_unit_name', '')
 
             self.hash_map.show_screen('Проверка цен')
-
-class DocGoodSelectUnit(SelectUnit):
-    screen_name = 'Выбор упаковки'
-    process_name = 'Документы'
-
-    def _get_data(self):
-            table_name = "RS_units"
-            raw_data = self.service.get_select_data(table_name)
-            cards_data = []
-            for element in raw_data:
-                card_data = {
-                    'key': element['id'],
-                    'name': element['name']
-                }
-                cards_data.append(card_data)
-            return cards_data
-
-    def on_start(self):
-        cards_data = self._get_data()
-        properties_cards = self._get_cards(cards_data)
-        self.hash_map.put('unit_cards', properties_cards.to_json())
-
-    def on_input(self):
-        listener = self.listener
-
-        if listener == "CardsClick":
-            selected_unit_id = self.hash_map.get("selected_card_key")
-            selected_unit_name = self.service.get_values_by_field(table_name='RS_units', field='id',
-                                                                  field_value=selected_unit_id)[0]['name']
-            self.hash_map.put('selected_unit_id', selected_unit_id)
-            self.hash_map['unit_select'] = selected_unit_name
-            self.hash_map.put('selected_unit_name', selected_unit_name)
-            self.hash_map.show_screen('ТоварШтрихкоды')
-
-        elif listener == "ON_BACK_PRESSED" or 'back_to_barcode_register':
-            self.hash_map['selected_unit_id'] = ''
-            self.hash_map['unit_select'] = ''
-            self.hash_map.put('selected_unit_name', '')
-            self.hash_map.show_screen('ТоварШтрихкоды')
-
 
 # ^^^^^^^^^^^^^^^^^^^^^ GoodsPrices ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -7217,8 +7141,6 @@ class ScreensFactory:
                SelectProperties,
                SelectUnit,
                BarcodeRegistrationScreen,
-               DocGoodSelectProperties,
-               DocGoodSelectUnit,
                ]
 
     @staticmethod

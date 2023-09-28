@@ -315,27 +315,6 @@ def barcode_register_doc_on_start(hash_map):
     screen = ui_models.BarcodeRegistrationScreen(hash_map, rs_settings)
     screen.on_start()
 
-
-@HashMap()
-def doc_properties_on_start(hash_map):
-    screen: ui_models.DocGoodSelectProperties = create_screen(hash_map)
-    screen.on_start()
-
-@HashMap()
-def doc_properties_on_input(hash_map):
-    screen = ui_models.DocGoodSelectProperties(hash_map, rs_settings)
-    screen.on_input()
-
-@HashMap()
-def doc_units_on_start(hash_map):
-    screen = ui_models.DocGoodSelectUnit(hash_map, rs_settings)
-    screen.on_start()
-
-@HashMap()
-def doc_units_on_input(hash_map):
-    screen = ui_models.DocGoodSelectUnit(hash_map, rs_settings)
-    screen.on_input()
-
 @HashMap()
 def barcode_error_screen_listener(hash_map: HashMap):
     if hash_map['listener'] in ['ON_BACK_PRESSED', 'btn_continue_scan']:
