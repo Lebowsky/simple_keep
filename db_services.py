@@ -449,6 +449,7 @@ class DocService:
             f'{self.docs_table_name}.doc_date',
             f'{self.docs_table_name}.id_warehouse',
             f'ifnull(RS_warehouses.name,"") as RS_warehouse',
+            f'ifnull(RS_warehouses.name,"") as warehouse',
             f'ifnull({self.docs_table_name}.verified, 0) as verified',
             f'ifnull({self.docs_table_name}.sent, 0) as sent',
             f'{self.docs_table_name}.add_mark_selection',
@@ -490,7 +491,7 @@ class DocService:
             else:
                 where += ' AND doc_type=?'
         
-        where += '''AND RS_barc_flow.id_doc IS NULL'''
+        where += ''' AND RS_barc_flow.id_doc IS NULL'''
         
         query_text = f'''
             {query_text}
