@@ -288,11 +288,6 @@ def elem_viev_on_click(hash_map):
     screen = ui_models.GoodsSelectScreen(hash_map, rs_settings)
     screen.on_input()
 
-@HashMap()
-def offline_elem_view_on_click(hash_map):
-    screen = ui_models.GoodsSelectOfflineScreen(hash_map, rs_settings)
-    screen.on_input()
-
 
 @HashMap()
 def adr_elem_viev_on_start(hash_map):
@@ -305,35 +300,6 @@ def adr_elem_viev_on_click(hash_map):
     screen = ui_models.AdrGoodsSelectScreen(hash_map, rs_settings)
     screen.on_input()
 
-@HashMap()
-def barcode_register_doc_on_click(hash_map):
-    screen = ui_models.GoodBarcodeRegister(hash_map, rs_settings)
-    screen.on_input()
-
-@HashMap()
-def barcode_register_doc_on_start(hash_map):
-    screen = ui_models.GoodBarcodeRegister(hash_map, rs_settings)
-    screen.on_start()
-
-@HashMap()
-def doc_properties_on_start(hash_map):
-    screen: ui_models.DocGoodSelectProperties = create_screen(hash_map)
-    screen.on_start()
-
-@HashMap()
-def doc_properties_on_input(hash_map):
-    screen = ui_models.DocGoodSelectProperties(hash_map, rs_settings)
-    screen.on_input()
-
-@HashMap()
-def doc_units_on_start(hash_map):
-    screen = ui_models.DocGoodSelectUnit(hash_map, rs_settings)
-    screen.on_start()
-
-@HashMap()
-def doc_units_on_input(hash_map):
-    screen = ui_models.DocGoodSelectUnit(hash_map, rs_settings)
-    screen.on_input()
 
 @HashMap()
 def barcode_error_screen_listener(hash_map: HashMap):
@@ -403,35 +369,6 @@ def offline_good_card_on_input(hash_map):
     screen = ui_models.ItemCardOfflineScreen(hash_map, rs_settings)
     screen.on_input()
 
-@HashMap()
-def barcode_register_item_on_input(hash_map):
-    screen = ui_models.GoodItemBarcodeRegister(hash_map, rs_settings)
-    screen.on_input()
-
-@HashMap()
-def barcode_register_item_on_start(hash_map):
-    screen: ui_models.GoodItemBarcodeRegister = create_screen(hash_map)
-    screen.on_start()
-
-@HashMap()
-def item_properties_on_start(hash_map):
-    screen: ui_models.ItemGoodSelectProperties = create_screen(hash_map)
-    screen.on_start()
-
-@HashMap()
-def item_properties_on_input(hash_map):
-    screen = ui_models.ItemGoodSelectProperties(hash_map, rs_settings)
-    screen.on_input()
-
-@HashMap()
-def item_units_on_start(hash_map):
-    screen: ui_models.ItemGoodSelectUnit = create_screen(hash_map)
-    screen.on_start()
-
-@HashMap()
-def item_units_on_input(hash_map):
-    screen = ui_models.ItemGoodSelectUnit(hash_map, rs_settings)
-    screen.on_input()
 
 # ^^^^^^^^^^^^^^^^^ Goods ^^^^^^^^^^^^^^^^^
 
@@ -461,27 +398,6 @@ def prices_on_start(hash_map):
 @HashMap()
 def prices_on_input(hash_map):
     screen = ui_models.GoodsPricesItemCard(hash_map, rs_settings)
-    screen.on_input()
-
-@HashMap()
-def properties_on_start(hash_map):
-    screen: ui_models.SelectProperties = create_screen(hash_map)
-    screen.on_start()
-
-@HashMap()
-def properties_on_input(hash_map):
-    screen = ui_models.SelectProperties(hash_map, rs_settings)
-    screen.on_input()
-
-
-@HashMap()
-def units_on_start(hash_map):
-    screen: ui_models.SelectUnit = create_screen(hash_map)
-    screen.on_start()
-
-@HashMap()
-def units_on_input(hash_map):
-    screen = ui_models.SelectUnit(hash_map, rs_settings)
     screen.on_input()
 
 
