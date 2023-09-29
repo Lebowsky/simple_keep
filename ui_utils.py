@@ -154,8 +154,9 @@ class HashMap:
             self.hash_map.put(key, str(value))
 
     def put_data(self, data: dict):
-        for key, value in data.items():
-            self[key] = value
+        if data:
+            for key, value in data.items():
+                self[key] = value
 
     def containsKey(self, key):
         return self.hash_map.containsKey(key)

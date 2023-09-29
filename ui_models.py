@@ -38,6 +38,7 @@ class Screen(ABC):
         self.listener = self.hash_map['listener']
         self.event: str = self.hash_map['event']
         self.finish_process = False
+        self.parent_screen = None
 
     @abstractmethod
     def on_start(self):
@@ -51,10 +52,8 @@ class Screen(ABC):
         return self.hash_map.remove(f'{self.__class__.__name__}_init')
 
     def show(self, args=None):
-        if args:
-            self.hash_map.put_data(args)
-            self._init_screen_values()
-
+        self.hash_map.put_data(args)
+        self._init_screen_values()
         self._validate_screen_values()
         self.init_screen()
         self.hash_map.show_screen(self.screen_name)
@@ -2587,11 +2586,31 @@ class AdrDocDetailsScreen(DocDetailsScreen):
 
     def _cards_click(self):
         selected_card_data = self._get_selected_card_data()
+        if not selected_card_data:
+            return
+
         # if selected_card_data.get('use_series') == '1':
         #     self.toast('use_series')
         # else:
         #     self.toast('not_use_series')
         # self._fill_one_string_screen()
+        screen_values = {
+            'id_doc': self.id_doc,
+            'doc_title': '{doc_type} № {doc_n} от {doc_date}'.format(
+                **self.screen_values
+            ),
+            'item_name': selected_card_data['good_name'],
+            'key': selected_card_data['key'],
+            'id_good': selected_card_data['id_good'],
+            'id_unit': selected_card_data['id_unit'],
+            'id_property': selected_card_data['id_property'],
+            'qtty': selected_card_data['qtty'],
+            'qtty_plan': selected_card_data['qtty_plan'],
+            'warehouse': self.screen_values['warehouse'],
+        }
+        screen = create_screen(self.hash_map, AdrGoodsSelectScreen, screen_values=screen_values)
+        screen.parent_screen = self
+        screen.show()
 
     def _barcode_listener(self, barcode):
         if self._update_current_cell(barcode):
@@ -2705,7 +2724,7 @@ class AdrDocDetailsScreen(DocDetailsScreen):
                 'id_cell': str(record['id_cell']),
                 'good_name': str(record['good_name']),
                 'id_good': str(record['id_good']),
-                'id_properties': str(record['id_properties']),
+                'id_property': str(record['id_properties']),
                 'properties_name': str(record['properties_name'] or ''),
                 'id_series': str(record['id_series']),
                 'series_name': str(record['series_name'] or ''),
@@ -2901,6 +2920,9 @@ class AdrDocDetailsScreen(DocDetailsScreen):
                 }
 
                 cards.customcards['cardsdata'].append(product_row)
+
+    def _set_visibility_on_start(self):
+        pass
 
     def _fill_one_string_screen(self, _filter=''):
         current_str = self.hash_map.get("selected_card_position")
@@ -3330,8 +3352,14 @@ class FlowDocDetailsScreen(DocDetailsScreen):
 class BaseGoodSelect(Screen):
     def __init__(self, hash_map: HashMap, rs_settings):
         super().__init__(hash_map, rs_settings)
+        self.screen_values = {
+            'id_doc': ''
+        }
         self.id_doc = self.hash_map['id_doc']
         self.service = DocService(self.id_doc)
+
+    def init_screen(self):
+        self.id_doc = self.screen_values['id_doc']
 
     def on_start(self):
         # Режим работы с мультимедиа и файлами по ссылкам (флаг mm_local)
@@ -3367,7 +3395,7 @@ class BaseGoodSelect(Screen):
             self.hash_map.put('selected_card_position', '')
             self.hash_map.remove('selected_card_data')
             self.hash_map.put('items_on_page', '')
-            self.hash_map.show_screen("Документ товары")
+            self._back_screen()
         elif listener == 'btn_print':
             self.print_ticket()
         elif listener == 'barcode':
@@ -3382,28 +3410,25 @@ class BaseGoodSelect(Screen):
             self.hash_map['back_screen'] = self.hash_map.get_current_screen()
             self.open_series_screen('', current_elem)
 
-    def on_post_start(self):
-        pass
-
-    def show(self, args=None):
-        pass
-
     def _handle_btn_ok(self):
-        if float(self.hash_map.get('new_qtty')) < 0:
+        new_qtty = float(self.hash_map['new_qtty'] or 0)
+        qtty_plan = float(self.hash_map.get('qtty_plan') or 0)
+
+        if new_qtty < 0:
             self.hash_map.toast('Итоговое количество меньше 0')
             self.hash_map.playsound('error')
             self._set_delta(reset=True)
             return
+
         control = self.hash_map.get_bool('control')
-        if control:
-            if float(self.hash_map.get('new_qtty')) > float(self.hash_map.get('qtty_plan')):
-                self.toast('Количество план в документе превышено')
-                self.hash_map.playsound('error')
-                self._set_delta(reset=True)
-                return
+        if control and new_qtty > qtty_plan:
+            self.toast('Количество план в документе превышено')
+            self.hash_map.playsound('error')
+            self._set_delta(reset=True)
+            return
+
         current_elem = self.hash_map.get_json('selected_card_data')
-        qtty = self.hash_map['new_qtty']
-        price = self.hash_map.get('price') or 0
+        qtty = new_qtty
 
         if self.hash_map.get('parent_screen') == 'ВыборТовараАртикул':
             self._handle_choice_by_article(current_elem, qtty)
@@ -3414,9 +3439,10 @@ class BaseGoodSelect(Screen):
         self.hash_map.put('new_qtty', '')
 
     def _handle_choice_by_article(self, current_elem, qtty):
-        if float(qtty) == float(current_elem['qtty']):
+        if float(qtty) == float(current_elem['qtty'] or 0):
             self.hash_map.show_screen("ВыборТовараАртикул")
             return
+
         finded_goods_cards = self.hash_map.get('finded_goods_cards', from_json=True)
         cardsdata = finded_goods_cards['customcards']['cardsdata']
 
@@ -3426,15 +3452,18 @@ class BaseGoodSelect(Screen):
         self.hash_map.show_screen("ВыборТовараАртикул")
 
     def _handle_choice_by_other(self, current_elem, qtty):
-        if float(qtty) != float(current_elem['qtty']):
+        old_qtty = float(current_elem.get('qtty') or 0) if current_elem else float(self.screen_values.get('qtty') or 0)
+
+        row_id = int(current_elem['key']) if current_elem else  self.screen_values.get('key')
+
+        if float(qtty) != old_qtty:
             update_data = {
                 'sent': 0,
                 'qtty': float(qtty) if qtty else 0,
             }
-            row_id = int(current_elem['key'])
             self.service.update_doc_table_row(data=update_data, row_id=row_id)
             self.service.set_doc_status_to_upload(self.hash_map.get('id_doc'))
-            self.hash_map.show_screen("Документ товары")
+        self._back_screen()
 
     def _handle_doc_good_barcode(self):
         selected_card_data = self.hash_map.get_json('selected_card_data')
@@ -3480,7 +3509,8 @@ class BaseGoodSelect(Screen):
         return False
 
     def _get_current_elem(self):
-        return self.hash_map.get_json('selected_card_data')
+        current_elem = self.hash_map.get_json('selected_card_data')
+        return current_elem or self.screen_values
 
     def _save_new_delta(self):
         new_qtty = float(self.hash_map.get('new_qtty')) if self.hash_map.get('new_qtty')  else 0
@@ -3492,8 +3522,7 @@ class BaseGoodSelect(Screen):
 
         control = self.hash_map.get_bool('control')
         if control:
-            if new_qtty > float(
-                    self.hash_map.get('qtty_plan')):
+            if new_qtty > float(self.hash_map.get('qtty_plan') or 0):
                 self.toast('Количество план в документе превышено')
                 self.hash_map.playsound('error')
                 self._set_delta(reset=True)
@@ -3501,7 +3530,8 @@ class BaseGoodSelect(Screen):
 
         current_elem = self._get_current_elem()
         qtty = new_qtty
-        # price = self.hash_map.get('price') or 0  # это не используется
+        old_qtty = float(current_elem.get('qtty') or 0)
+
         if self.hash_map.get('parent_screen') == 'ВыборТовараАртикул':
             current_elem = self.hash_map.get_json('selected_card_data')
             if qtty == float(current_elem['qtty']) if current_elem['qtty'] else 0:
@@ -3516,17 +3546,15 @@ class BaseGoodSelect(Screen):
             self.hash_map.put('finded_goods_cards', finded_goods_cards, to_json=True)
             self.hash_map.show_screen("ВыборТовараАртикул")
 
-        else:
-            if qtty != float(current_elem['qtty']):
-                update_data = {
-                    'sent': 0,
-                    'qtty': qtty,
-                    # 'price': float(price) # в Adr docs нет колонки прайс, не понятно нужна она вообще или нет
-                }
-                row_id = int(current_elem['key'])
-                self.service.update_doc_table_row(data=update_data, row_id=row_id)
-                self.hash_map.put('new_qtty', str(qtty))
-                self.hash_map.put('qtty', str(qtty))
+        elif qtty != old_qtty:
+            update_data = {
+                'sent': 0,
+                'qtty': qtty,
+            }
+            row_id = int(current_elem['key'])
+            self.service.update_doc_table_row(data=update_data, row_id=row_id)
+            self.hash_map.put('new_qtty', str(round(qtty, 3)))
+            self.hash_map.put('qtty', str(qtty))
 
     def _process_the_barcode(self):
         barcode = self.hash_map.get('barcode_good_select')
@@ -3556,7 +3584,7 @@ class BaseGoodSelect(Screen):
             delta_field = widgets.ModernField(default_text='', input_type=3)
             self.hash_map.put('new_qtty', self.hash_map.get('qtty'))
         else:
-            delta = float(self.hash_map.get('delta')) + value if self.hash_map.get('delta') else value
+            delta = float(self.hash_map.get('delta') or 0) + value if self.hash_map.get('delta') else value
             delta = self._format_quantity(delta)
             delta_field = widgets.ModernField(default_text=delta, input_type=3)
             self._set_result_qtty(delta)
@@ -3569,9 +3597,12 @@ class BaseGoodSelect(Screen):
             return qtty
 
     def _set_result_qtty(self, delta):
-        new_qtty = float(self.hash_map.get('qtty')) + delta
+        new_qtty = float(self.hash_map.get('qtty') or 0) + delta
         new_qtty = str(self._format_quantity(new_qtty))
         self.hash_map.put('new_qtty', new_qtty)
+
+    def _back_screen(self):
+        self.hash_map.show_screen("Документ товары")
 
     def print_ticket(self):
         # Получим первый баркод документа
@@ -3747,10 +3778,51 @@ class GoodsSelectScreen(BaseGoodSelect):
         return False
 
 class AdrGoodsSelectScreen(BaseGoodSelect):
+    screen_name = 'Товар выбор'
+    process_name = 'Адресное хранение'
+
     def __init__(self, hash_map: HashMap, rs_settings):
         super().__init__(hash_map, rs_settings)
         self.id_doc = self.hash_map['id_doc']
         self.service = AdrDocService()
+        self.screen_values = {
+            'id_doc': '',
+            'doc_title': '',
+            'item_name': '',
+            'key': '',
+            'id_unit': '',
+            'id_property': '',
+            'qtty': '',
+            'qtty_plan': '',
+            'warehouse': ''
+        }
+
+    def init_screen(self):
+        self._set_visibility()
+
+    def on_start(self):
+        pass
+
+    def on_input(self):
+        listeners = {
+            'btn_series_show': self._listener_not_implemented,
+        }
+
+        if self.listener in listeners:
+            listeners[self.listener]()
+        else:
+            super().on_input()
+
+    def _set_visibility(self):
+        allow_fact_input = self.rs_settings.get('allow_fact_input') or False
+        self.hash_map.put("Show_fact_qtty_input", '1' if allow_fact_input else '-1')
+        self.hash_map.put("Show_fact_qtty_note", '-1' if allow_fact_input else '1')
+
+    def _back_screen(self):
+        self.parent_screen.hash_map = self.hash_map
+        set_current_screen(screen=self.parent_screen)
+        self.parent_screen.show()
+
 
 class BarcodeRegistrationScreen(Screen):
     screen_name = 'BarcodeRegistration'
@@ -7420,6 +7492,11 @@ class MockScreen(Screen):
     def show(self, args=None):
         pass
 
+
+def set_current_screen(screen):
+    global current_screen
+    current_screen = screen
+    return current_screen
 
 def create_screen(hash_map: HashMap, screen_class=None, screen_values=None):
     """
