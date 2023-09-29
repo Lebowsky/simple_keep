@@ -269,14 +269,14 @@ def elem_viev_on_click(hash_map):
 
 
 @HashMap()
-def adr_elem_viev_on_start(hash_map):
-    screen = ui_models.AdrGoodsSelectScreen(hash_map, rs_settings)
+def adr_elem_view_on_start(hash_map):
+    screen = create_screen(hash_map, ui_models.AdrGoodsSelectScreen)
     screen.on_start()
 
 
 @HashMap()
-def adr_elem_viev_on_click(hash_map):
-    screen = ui_models.AdrGoodsSelectScreen(hash_map, rs_settings)
+def adr_elem_view_on_click(hash_map):
+    screen = create_screen(hash_map, ui_models.AdrGoodsSelectScreen)
     screen.on_input()
 
 
