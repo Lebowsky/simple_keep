@@ -975,7 +975,7 @@ class DocsListScreen(Screen):
             self.confirm_delete_doc_listener()
 
         elif self.listener == 'ON_BACK_PRESSED':
-            self.hash_map.show_screen('Плитки')
+            self._back_screen()
 
     def on_post_start(self):
         pass
@@ -1002,6 +1002,9 @@ class DocsListScreen(Screen):
                 listener='confirm_resend_doc',
                 title='Отправить документ повторно?'
             )
+
+    def _back_screen(self):
+        self.hash_map.show_screen('Плитки')
 
     def _get_doc_list_data(self, doc_type='', doc_status='') -> list:
         results = self.service.get_doc_view_data(doc_type, doc_status)
@@ -1256,59 +1259,65 @@ class AdrDocsListScreen(DocsListScreen):
     def __init__(self, hash_map: HashMap, rs_settings):
         super().__init__(hash_map, rs_settings)
         self.service = AdrDocService()
-        self.service.docs_table_name = 'RS_adr_docs'
-        self.service.details_table_name = 'RS_adr_docs_table'
         self.screen_values = {}
-        self.listener = self.hash_map['listener']
-        self.event = self.hash_map['event']
+        self.doc_types = ('Все', 'Отбор', 'Размещение', 'Перемещение')
+        self.doc_statuses = ('Все', 'К выполнению', 'Выгружен', 'К выгрузке')
+        self.popup_menu_data = ('Удалить', 'Очистить данные пересчета', 'Отправить повторно')
 
     def on_start(self) -> None:
-        doc_types = self.service.get_doc_types()
-        self.hash_map['doc_adr_type_select'] = ';'.join(['Все', 'Отбор', 'Размещение', 'Перемещение'])
-        self.hash_map['doc_status_select'] = 'Все;К выполнению;Выгружен;К выгрузке'
+        pass
+
+    def on_input(self) -> None:
+        super().on_input()
+        listeners = {
+            'CardsClick': self._cards_click,
+            'doc_adr_type_click': self._doc_type_select,
+            'confirm_clear_barcode_data': lambda : self._clear_barcode_data(self.get_id_doc()),
+        }
+        if self.listener in listeners:
+            listeners[self.listener]()
+        else:
+            self._listener_not_implemented()
+
+    def init_screen(self):
+        self.hash_map['doc_adr_type_select'] = ';'.join(self.doc_types)
+        self.hash_map['doc_status_select'] = ';'.join(self.doc_statuses)
 
         doc_type = self.hash_map['doc_type_click']
+
         if not doc_type:
             doc_type = 'Все'
             self.hash_map['doc_type_click'] = doc_type
+
         doc_status = self.hash_map['selected_doc_status']
         if not doc_status:
             doc_status = 'Все'
             self.hash_map['selected_doc_status'] = doc_status
-        # self.hash_map['doc_type_click'] = doc_type
+
         self.hash_map['selected_tile_key'] = ''
+
         list_data = self._get_doc_list_data(doc_type, doc_status)
-        doc_cards = self._get_doc_cards_view(list_data,
-                                             popup_menu_data='Удалить;Очистить данные пересчета;Отправить повторно')
+        doc_cards = self._get_doc_cards_view(
+            list_data,
+            popup_menu_data=';'.join(self.popup_menu_data)
+        )
+
         self.hash_map['docAdrCards'] = doc_cards.to_json()
 
-    def on_input(self) -> None:
-        super().on_input()
-        if self.listener == "doc_status_click":
-            self.hash_map['selected_doc_status'] = self.hash_map["doc_status_click"]
+    def _cards_click(self):
+        self.toast(self.hash_map['selected_card_data'])
+        return
+        args = self._get_selected_card_put_data()
+        self.hash_map.put_data(args)
 
-        elif self.listener == 'LayoutAction':
-            self._layout_action()
+        screen = AdrDocDetailsScreen(self.hash_map, self.rs_settings)
+        screen.show()
 
-        elif self._is_result_positive('confirm_delete'):
-            self.confirm_delete_doc_listener()
+    def _doc_type_select(self):
+        self.hash_map['doc_type_click'] = self.hash_map['doc_adr_type_click']
 
-        elif self.listener == "CardsClick":
-            args = self._get_selected_card_put_data()
-            self.hash_map.put_data(args)
-
-            screen = AdrDocDetailsScreen(self.hash_map, self.rs_settings)
-            screen.show()
-
-        elif self.listener == "doc_adr_type_click":
-            self.hash_map['doc_type_click'] = self.hash_map['doc_adr_type_click']
-
-        elif self.listener == 'ON_BACK_PRESSED':
-            self.hash_map.finish_process()
-
-        elif self.listener == 'confirm_clear_barcode_data':
-
-            self._clear_barcode_data(self.get_id_doc())
+    def _back_screen(self):
+        self.hash_map.finish_process()
 
     def _layout_action(self) -> None:
         layout_listener = self.hash_map['layout_listener']
@@ -1428,10 +1437,6 @@ class AdrDocsListScreen(DocsListScreen):
         put_data['warehouse'] = card_data['warehouse']
 
         return put_data
-
-    def _get_docs_count(self, doc_type=''):
-        doc_type = '' if not doc_type or doc_type == 'Все' else doc_type
-        return self.service.get_docs_count(doc_type)
 
     def confirm_delete_doc_listener(self):
         card_data = self.hash_map.get_json("card_data")
@@ -7389,12 +7394,6 @@ class ScreensFactory:
         GoodsPricesItemCard,
         SelectProperties,
         SelectUnit,
-        GoodBarcodeRegister,
-        GoodItemBarcodeRegister,
-        DocGoodSelectProperties,
-        ItemGoodSelectProperties,
-        DocGoodSelectUnit,
-        ItemGoodSelectUnit,
     ]
 
     @staticmethod

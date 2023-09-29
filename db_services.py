@@ -1339,9 +1339,6 @@ class AdrDocService(DocService):
         self.table_type = table_type
         self.provider = SqlQueryProvider(self.docs_table_name, sql_class=sqlClass())
 
-    def get_current_cell(self):
-        pass
-
     def get_doc_details_data(
             self,
             first_elem,
