@@ -76,23 +76,21 @@ class TestModelGoodsListScreen(unittest.TestCase):
             'description': "—"
         }]
 
-        expect = item_data[0]['name']
+        expect = item_data[0]['id']
 
         self.sut.listener = 'barcode'
         self.sut.hash_map.put('barcode', '2000000058160')
 
         self.sut.service.get_values_from_barcode = MagicMock()
         self.sut.service.get_values_from_barcode.return_value = id_good_data
-        self.sut.service.get_goods_list_data = MagicMock()
-        self.sut.service.get_goods_list_data.return_value = item_data
 
         # execute test method
         self.sut.on_input()
 
         # assert test method results
         self.sut.service.get_values_from_barcode.assert_called_once_with('barcode', '2000000058160')
-        self.sut.service.get_goods_list_data.assert_called_once()
-        actual = self.sut.hash_map.get('good_name')
+
+        actual = self.sut.hash_map.get('item_id')
         self.assertEqual(expect, actual)
 
     def test_barcode_returns_hash_map_values_if_not_found(self):
@@ -158,11 +156,12 @@ class TestModelItemCard(unittest.TestCase):
         # init test data
         self.sut.listener = 'ON_BACK_PRESSED'
         self.hash_map.put('barcode_cards', '23213213')
+        self.sut.hash_map['parent_screen'] = 'parent_screen'
 
         # execute test method
         self.sut.on_input()
-        actual = self.hash_map['ShowScreen']
+        actual = self.sut.hash_map['ShowScreen']
 
         # assert test method results
-        self.assertEqual('Товары список', actual)
-        self.assertEqual("", self.sut.hash_map.get('barcode_cards'))
+        self.assertEqual('parent_screen', actual)
+        self.assertIsNone(self.sut.hash_map.get('barcode_cards'))

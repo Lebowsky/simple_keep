@@ -1,4 +1,5 @@
 from java import jclass
+from printing_factory import PrintService
 from ru.travelfood.simple_ui import SimpleUtilites as suClass
 
 from ui_utils import HashMap
@@ -33,8 +34,6 @@ def create_screen(hash_map: HashMap):
         current_screen.event = hash_map['event']
 
     return current_screen
-
-
 
 
 # =============== Main events =================
@@ -319,35 +318,6 @@ def adr_elem_viev_on_click(hash_map):
     screen = ui_models.AdrGoodsSelectScreen(hash_map, rs_settings)
     screen.on_input()
 
-@HashMap()
-def barcode_register_doc_on_click(hash_map):
-    screen = ui_models.GoodBarcodeRegister(hash_map, rs_settings)
-    screen.on_input()
-
-@HashMap()
-def barcode_register_doc_on_start(hash_map):
-    screen = ui_models.GoodBarcodeRegister(hash_map, rs_settings)
-    screen.on_start()
-
-@HashMap()
-def doc_properties_on_start(hash_map):
-    screen: ui_models.DocGoodSelectProperties = create_screen(hash_map)
-    screen.on_start()
-
-@HashMap()
-def doc_properties_on_input(hash_map):
-    screen = ui_models.DocGoodSelectProperties(hash_map, rs_settings)
-    screen.on_input()
-
-@HashMap()
-def doc_units_on_start(hash_map):
-    screen = ui_models.DocGoodSelectUnit(hash_map, rs_settings)
-    screen.on_start()
-
-@HashMap()
-def doc_units_on_input(hash_map):
-    screen = ui_models.DocGoodSelectUnit(hash_map, rs_settings)
-    screen.on_input()
 
 @HashMap()
 def barcode_error_screen_listener(hash_map: HashMap):
