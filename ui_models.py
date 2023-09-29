@@ -7392,8 +7392,6 @@ class ScreensFactory:
         SoundSettings,
         GoodsBalancesItemCard,
         GoodsPricesItemCard,
-        SelectProperties,
-        SelectUnit,
     ]
 
     @staticmethod
