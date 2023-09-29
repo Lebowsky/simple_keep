@@ -1,4 +1,4 @@
-from typing import Optional
+from typing import Optional, Callable, Union
 from dataclasses import dataclass
 
 import requests
@@ -269,6 +269,14 @@ class HsService:
 
         return self.HttpAnswer(**answer_data)
 
+    def get_method_by_path(self, path) -> Union[Callable, None]:
+        methods = {
+            'barcodes': self.send_barcodes,
+            'documents': self.send_documents
+        }
+
+        return methods.get(path)
+
     @dataclass
     class HttpAnswer:
         url: str
@@ -291,7 +299,7 @@ class DebugService:
 
     def export_database(self, file):
         self._hs = 'post'
-        return self._send_request({'files': {'Rightscan': file}})
+        return self._send_request({'files': {'SimpleKeep.db': file}})
 
     def export_file(self, file_name, file):
         self._hs = 'post'

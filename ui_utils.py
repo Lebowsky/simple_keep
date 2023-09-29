@@ -50,13 +50,6 @@ class HashMap:
     def listener(self, v):
         pass
 
-    def show_process_result(self, process, screen, data: dict = None):
-        if process and screen:
-            self.hash_map.put('ShowProcessResult', f'{process}|{screen}')
-
-            if data:
-                self.put_data(data)
-
     def set_result_listener(self, listener):
         if listener and isinstance(listener, str):
             self.hash_map.put('SetResultListener', listener)
@@ -294,6 +287,13 @@ class HashMap:
         if data:
             self.put_data(data)
 
+    def show_process_result(self, process, screen, data: dict = None):
+        if process and screen:
+            self.hash_map.put('ShowProcessResult', f'{process}|{screen}')
+
+            if data:
+                self.put_data(data)
+
     def show_dialog(self, listener, title='', buttons=None):
         self.put("ShowDialog", listener)
 
@@ -454,12 +454,17 @@ class BarcodeWorker:
         self.barcode_data = self._get_barcode_data()
 
         if self.barcode_data:
+            self._check_use_series()
             self.check_barcode()
             self.update_document_barcode_data()
         else:
             self._set_process_result_info('not_found')
 
         return self.process_result
+
+    def _check_use_series(self):
+        if self.barcode_data['use_series'] == 1:
+            self._set_process_result_info('use_series')
 
     def _get_barcode_data(self):
         barcode_data = self.db_service.get_barcode_data(
@@ -497,8 +502,11 @@ class BarcodeWorker:
             return
 
         new_device_qtty = self.barcode_data['d_qtty'] + self.barcode_data['ratio']
+        new_overall_qtty = self.barcode_data['qtty'] + self.barcode_data['ratio']
+
         if self.barcode_data['row_key']:
-            if self.have_qtty_plan and self.control and self.barcode_data['qtty_plan'] < new_device_qtty:
+            if self.have_qtty_plan and self.control and self.barcode_data['qtty_plan'] < \
+                    max(new_device_qtty, new_overall_qtty):
                 self._set_process_result_info('quantity_plan_reached')
 
         elif self.have_zero_plan and self.control:
@@ -622,6 +630,10 @@ class BarcodeWorker:
             'success_mark': {
                 'error': '',
                 'description': 'Марка добавлена в документ'
+            },
+            'use_series': {
+                'error': 'use_series',
+                'description': 'Для товара необходимо отсканировать серии',
             }
         }
 
@@ -629,6 +641,7 @@ class BarcodeWorker:
             self.process_result.error = info_data[info_key]['error']
             self.process_result.description = info_data[info_key]['description']
             self.process_result.row_key = self.barcode_data.get('row_key', 0)
+            self.process_result.barcode_data = self.barcode_data
 
     def parse(self, barcode: str):
         return BarcodeParser(barcode).parse()
@@ -639,6 +652,7 @@ class BarcodeWorker:
         description: str = ''
         barcode: str = ''
         row_key: str = ''
+        barcode_data = None
 
 class BarcodeAdrWorker(BarcodeWorker):
     def __init__(self, id_doc, **kwargs):

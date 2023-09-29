@@ -273,6 +273,7 @@ class TestBarcodeService(unittest.TestCase):
             'approved': 0,
             'use_mark': 0,
             'row_key': '',
+            'use_series': 0,
             'd_qtty': 0.0,
             'qtty': 0.0,
             'qtty_plan': 0.0,
@@ -304,6 +305,7 @@ class TestBarcodeService(unittest.TestCase):
             'approved': 0,
             'use_mark': 0,
             'row_key': 1,
+            'use_series': 0,
             'd_qtty': 0.0,
             'qtty': 1.0,
             'qtty_plan': 5.0,
@@ -335,6 +337,7 @@ class TestBarcodeService(unittest.TestCase):
             'approved': '0',
             'use_mark': 0,
             'row_key': 1,
+            'use_series': 0,
             'qtty': 1.0,
             'd_qtty': 0.0,
             'qtty_plan': 5.0,
@@ -366,6 +369,7 @@ class TestBarcodeService(unittest.TestCase):
             'approved': '0',
             'use_mark': 0,
             'row_key': 1,
+            'use_series': 0,
             'qtty': 1.0,
             'd_qtty': 1.0,
             'qtty_plan': 5.0,
@@ -398,6 +402,7 @@ class TestBarcodeService(unittest.TestCase):
             'approved': 0,
             'use_mark': 1,
             'row_key': 1,
+            'use_series': 0,
             'qtty': 1.0,
             'd_qtty': 0.0,
             'qtty_plan': 5.0,
@@ -474,7 +479,8 @@ class DataCreator:
                 'id_unit': '""',
                 'qtty': '1',
                 'qtty_plan': '5',
-                'sent': '0'
+                'sent': '0',
+                'use_series': '0'
             },
             'RS_adr_docs_table': {
                 'id_doc': '"37c4c709-d22b-11e4-869d-0050568b35ac1"',
@@ -486,7 +492,8 @@ class DataCreator:
                 'table_type': '"in"',
                 'qtty': '1',
                 'qtty_plan': '5',
-                'sent': '0'
+                'sent': '0',
+                'use_series': '0'
             },
             'RS_docs_barcodes': {
                 'id': '3',

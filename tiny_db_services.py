@@ -54,8 +54,11 @@ class TinyNoSQLProvider:
     def upsert(self, data, **cond) -> List[int]:
         return self.table.upsert(data, cond=self._create_condition(**cond))
 
-    def remove(self, **cond):
-        self.table.remove(cond=self._create_condition(**cond))
+    def remove(self, doc_ids=None, **cond):
+        if doc_ids:
+            return self.table.remove(doc_ids=doc_ids)
+        else:
+            return self.table.remove(cond=self._create_condition(**cond), doc_ids=doc_ids)
 
     def contains(self, **cond):
         return self.table.contains(self._create_condition(**cond))
@@ -114,5 +117,18 @@ class ScanningQueueService:
         self.provider.remove(id_doc=id_doc)
 
 
+class ExchangeQueueBuffer:
+    def __init__(self, table_name, ):
+        self.table_name = table_name
+        self.provider = TinyNoSQLProvider(table_name=self.table_name)
 
+    def save_data_to_send(self, data, pk):
+        return self.provider.upsert(data=data, pk=pk)
+
+    def get_data_to_send(self):
+        return self.provider.get_all()
+
+    def remove_sent_data(self, data):
+        doc_id_list = [x.doc_id for x in data]
+        self.provider.remove(doc_ids=doc_id_list)
 

@@ -131,6 +131,7 @@ class BarcodeService(DbService):
                 IFNULL(doc_barcodes.id, 0) AS mark_id,
                 IFNULL({use_mark_field}, false) AS use_mark,
                 IFNULL(doc_table.id, '') AS row_key,
+                IFNULL(doc_table.use_series, 0) AS use_series,
                 IFNULL({d_qtty_field}, 0.0) AS d_qtty,
                 IFNULL(doc_table.qtty, 0.0) AS qtty,
                 IFNULL(doc_table.qtty_plan, 0.0) AS qtty_plan,
@@ -189,6 +190,23 @@ class BarcodeService(DbService):
         self.provider.table_name = table_name
         self.provider.replace(docs_table_update_data)
 
+    def get_barcodes_by_goods_id(self, goods_id) -> list:
+        q = f'''
+            SELECT 
+                barcodes.barcode,
+                IFNULL(props.name, '') AS property,
+                IFNULL(units.name, '') AS unit
+
+                FROM RS_barcodes AS barcodes
+                LEFT JOIN RS_properties AS props
+                    ON barcodes.id_property = props.id
+                LEFT JOIN RS_units AS units
+                    ON barcodes.id_unit = units.id
+                
+                WHERE barcodes.id_good = '{goods_id}'
+        '''
+
+        return self._sql_query(q)
 
     @staticmethod
     def insert_no_sql(queue_update_data):
@@ -201,12 +219,10 @@ class BarcodeService(DbService):
         select_part = f"""SELECT * FROM {table_name}"""
         query = select_part
         if filters:
-            i = 0
             filters_part = """ WHERE """
-            for field in list(filters):
-                filters_part += f"""{field}='{filters[field]}'""" if i == 0 else \
-                    f""" AND {field}='{filters[field]}'"""
-                i += 1
+            for count, field_name in enumerate(list(filters)):
+                filters_part += f"""{field_name}='{filters[field_name]}'""" if count == 0 else \
+                    f""" AND {field_name}='{filters[field_name]}'"""
             query = f"""{select_part} {filters_part}"""
 
         result = provider.sql_query(query, '')
@@ -1425,7 +1441,8 @@ class AdrDocService(DocService):
                 'id_doc': id_doc,
             }
 
-            fields = ['id_doc', 'id_good', 'id_properties', 'id_series', 'id_unit', 'qtty', 'qtty_plan', 'table_type']
+            fields = ['id_doc', 'id_good', 'id_properties', 'id_series', 'id_unit', 'qtty', 'qtty_plan', 'table_type',
+                      'id_cell']
             q = '''
                 SELECT {}
                 FROM RS_adr_docs_table 
@@ -1603,19 +1620,18 @@ class GoodsService(DbService):
     def get_goods_list_data(self, goods_type='', item_id='') -> list:
         query_text = f"""
             SELECT
-            RS_goods.id,
-            ifnull(RS_goods.code, '—') as code,
-            RS_goods.name,
-            RS_goods.art,
-            ifnull(RS_units.name,'—') as unit,
-            ifnull(RS_types_goods.name, '—') as type_good,
-            ifnull(RS_goods.description,'—') as description
-            
+                RS_goods.id,
+                IFNULL(RS_goods.code, '—') AS code,
+                RS_goods.name,
+                RS_goods.art,
+                IFNULL(RS_units.name,'—') AS unit,
+                IFNULL(RS_types_goods.name, '—') AS type_good,
+                IFNULL(RS_goods.description,'—') AS description
             FROM RS_goods
             LEFT JOIN RS_types_goods
-            ON RS_types_goods.id = RS_goods.type_good
+                ON RS_types_goods.id = RS_goods.type_good
             LEFT JOIN RS_units
-            ON RS_units.id = RS_goods.unit
+                ON RS_units.id = RS_goods.unit
             """
         where = '' if not goods_type else 'WHERE RS_goods.type_good=?'
         if where == '' and item_id:
@@ -1637,6 +1653,52 @@ class GoodsService(DbService):
         result = self._sql_query(query_text, args)
         return result
 
+    def get_item_data_by_id(self, item_id):
+        query_text = f"""
+            SELECT
+                RS_goods.id,
+                IFNULL(RS_goods.code, '—') AS code,
+                RS_goods.name,
+                RS_goods.art,
+                IFNULL(RS_units.name,'—') AS unit,
+                IFNULL(RS_types_goods.name, '—') AS type_good,
+                IFNULL(RS_goods.description,'—') AS description
+            FROM RS_goods
+            LEFT JOIN RS_types_goods
+                ON RS_types_goods.id = RS_goods.type_good
+            LEFT JOIN RS_units
+                ON RS_units.id = RS_goods.unit
+            WHERE RS_goods.id = "{item_id}"
+            
+            LIMIT 1
+            """
+        result = self._sql_query(query_text)
+        return result[0] if result else {}
+
+    def get_item_data_by_condition(self, item_id, property_id='', unit_id='') -> dict:
+        query_text = f"""
+            SELECT
+                RS_goods.id AS id,
+                RS_goods.code AS code,
+                RS_goods.name AS name,
+                RS_goods.art as art,
+                RS_goods.description AS description,
+                IFNULL(RS_units.name,'—') AS unit,
+                IFNULL(RS_properties.name,'—') AS property
+                
+            FROM RS_goods
+            
+            LEFT JOIN RS_units
+                ON RS_units.id = "{unit_id}"
+            LEFT JOIN RS_properties
+                ON RS_properties.id = "{property_id}"
+            WHERE RS_goods.id = "{item_id}"
+
+            LIMIT 1
+            """
+        result = self._sql_query(query_text)
+        return result[0] if result else {}
+
     def get_all_goods_types_data(self):
         query_text = 'SELECT id,name FROM RS_types_goods'
         self.provider.table_name = 'RS_types_goods'
@@ -1647,18 +1709,20 @@ class GoodsService(DbService):
                     SELECT
                     RS_barcodes.barcode,
                     RS_barcodes.id_good,
-                    RS_properties.name as property,
-                    ifnull(RS_series.name, '') as series,
-                    ifnull(RS_units.name, '') as unit
-                    
+                    IFNULL(RS_goods.name, '') AS name,
+                    IFNULL(RS_properties.name, '') AS property,
+                    IFNULL(RS_series.name, '') AS series,
+                    IFNULL(RS_units.name, '') AS unit
 
                     FROM RS_barcodes
+                    LEFT JOIN RS_goods
+                        ON RS_goods.id = RS_barcodes.id_good
                     LEFT JOIN RS_properties
-                    ON RS_properties.id = RS_barcodes.id_property
+                        ON RS_properties.id = RS_barcodes.id_property
                     LEFT JOIN RS_units
-                    ON RS_units.id = RS_barcodes.id_unit
+                        ON RS_units.id = RS_barcodes.id_unit
                     LEFT JOIN RS_series
-                    ON RS_series.id = RS_barcodes.id_series
+                        ON RS_series.id = RS_barcodes.id_series
                     
                     WHERE {identify_field} = '{identify_value}'
                     """
