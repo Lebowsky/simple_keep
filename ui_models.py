@@ -3656,7 +3656,6 @@ class BaseGoodSelect(Screen):
                 self.service.update_doc_table_row(data=update_data, row_id=row_id)
                 self.hash_map.put('new_qtty', str(qtty))
                 self.hash_map.put('qtty', str(qtty))
-        self.hash_map.toast('WORKS!!!')
 
     def _get_float_value(self, value):
         if value and re.match("^\d+\.?\d*$", value):
@@ -5508,12 +5507,20 @@ class SeriesList(Screen):
         res = self.service.get_doc_prop_by_id(self.params['id_doc'])
         self.params.update(res)
 
+        numeric_keys = ('qtty', 'qtty_plan', 'd_qtty')
+        for key in self.params.keys():
+            if key in numeric_keys:
+                if re.match("^\d+\.?\d*$", str(self.params[key])):
+                    self.params[key] = self._format_quantity(float(self.params[key]))
+                else:
+                    self.params[key] = '0'
+
+            self.hash_map[key] = self.params[key]
+
+
     def on_start(self):
         # Сохраним текущий hash_map чтобы вернуть его при выходе
         # self.rs_settings.put('_stored_hash_', json.dumps(self.hash_map.export()), True)
-
-        for key in self.params.keys():
-            self.hash_map[key] = self.params[key]
 
         query_data = self.service.get_series_by_doc_and_goods()
         list_data = query_data  # self._prepare_table_data(query_data)
@@ -5521,8 +5528,9 @@ class SeriesList(Screen):
         self.hash_map['series_cards'] = doc_cards.to_json()
 
         #Обновим количесмтво факт по сериям
+        
         real_qtty = self.service.get_total_qtty()
-        self.hash_map['qtty'] = str(real_qtty)
+        self.hash_map['qtty'] = self._format_quantity(str(real_qtty))
         self.service.set_total_qtty(real_qtty)
 
 
@@ -5657,6 +5665,11 @@ class SeriesList(Screen):
             self.hash_map['current_series_id'] = self.hash_map.get('selected_card_key')
             self.hash_map.show_screen('Заполнение серии', self.params)
 
+    def _format_quantity(self, qtty):
+        if float(qtty) % 1 == 0:
+            return int(float(qtty))
+        else:
+            return qtty
 
 class SeriesItem(SeriesList):
     process_name = 'Серии'

@@ -1253,7 +1253,7 @@ class SeriesService(DbService):
         sum(qtty) FROM RS_docs_series
          WHERE id_doc = ? AND id_good = ? AND id_properties = ?'''
         res = get_query_result(q, params)
-        if res:
+        if res and res[0][0] is not None:
             return res[0][0]
         else:
             return 0
