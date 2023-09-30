@@ -3450,7 +3450,7 @@
                                 "weight": "0",
                                 "Elements": [
                                     {
-                                        "Value": "@Doc_data",
+                                        "Value": "@doc_title",
                                         "Variable": "",
                                         "height": "wrap_content",
                                         "width": "match_parent",
@@ -3461,7 +3461,7 @@
                                         "type": "TextView"
                                     },
                                     {
-                                        "Value": "@Good",
+                                        "Value": "@item_name",
                                         "Variable": "",
                                         "height": "wrap_content",
                                         "width": "match_parent",
@@ -3877,11 +3877,6 @@
                                 "type": "MenuItem",
                                 "Value": "Серии",
                                 "Variable": "btn_series_show"
-                            },
-                            {
-                                "type": "barcode",
-                                "Value": "",
-                                "Variable": "barcode_good_select"
                             }
                         ],
                         "Handlers": [
@@ -3889,7 +3884,7 @@
                                 "event": "onStart",
                                 "action": "run",
                                 "type": "python",
-                                "method": "adr_elem_viev_on_start",
+                                "method": "adr_elem_view_on_start",
                                 "postExecute": ""
                             },
                             {
@@ -3897,7 +3892,7 @@
                                 "listener": "",
                                 "action": "run",
                                 "type": "python",
-                                "method": "adr_elem_viev_on_click",
+                                "method": "adr_elem_view_on_click",
                                 "postExecute": ""
                             }
                         ]
