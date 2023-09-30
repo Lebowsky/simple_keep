@@ -2392,7 +2392,7 @@ class GroupScanDocDetailsScreenNew(DocDetailsScreen):
         put_data_dict = {
             'Doc_data': title,
             'Good': current_elem['good_name'],
-            'id_good': None, # current_elem['id_good']
+            'id_good': current_elem['id_good'],
             'id_unit': current_elem['id_unit'],
             'id_property': current_elem['id_properties'],
             'good_art': current_elem['art'],
@@ -3843,29 +3843,18 @@ class GroupScanItemScreen(BaseGoodSelect):
 
     def __init__(self, hash_map: HashMap, rs_settings):
         super().__init__(hash_map, rs_settings)
-        self.screen_values = {}
 
     def on_start(self):
         super().on_start()
-
-    def show(self, args=None):
-        if args:
-            self.hash_map.put_data(args)
-            self.fill_screen_values(args)
-            self._init_screen_values()
-
-        self._validate_screen_values()
-        self.init_screen()
-        self.hash_map.show_screen(self.screen_name)
 
     def on_input(self):
         self.hash_map.put('stop_sync_doc', '')
         self._clear_screen_values()
         super().on_input()
 
-    def fill_screen_values(self, args: dict):
-        for k in args.keys():
-            self.screen_values[k] = ''
+    # def fill_screen_values(self, args: dict):
+    #     for k in args.keys():
+    #         self.screen_values[k] = ''
 
     def _update_doc_table_row(self, data: Dict, row_id):
         update_data = {
