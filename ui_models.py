@@ -3905,7 +3905,6 @@ class AdrGoodsSelectScreen(BaseGoodSelect):
         self.parent_screen.show()
 
 
-
 class GroupScanItemScreen(BaseGoodSelect):
     screen_name = 'Товар выбор'
     process_name = 'Групповая обработка'
@@ -3919,12 +3918,7 @@ class GroupScanItemScreen(BaseGoodSelect):
 
     def on_input(self):
         self.hash_map.put('stop_sync_doc', '')
-        self._clear_screen_values()
         super().on_input()
-
-    # def fill_screen_values(self, args: dict):
-    #     for k in args.keys():
-    #         self.screen_values[k] = ''
 
     def _update_doc_table_row(self, data: Dict, row_id):
         update_data = {
