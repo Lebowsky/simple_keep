@@ -4,36 +4,10 @@ from ru.travelfood.simple_ui import SimpleUtilites as suClass
 
 from ui_utils import HashMap
 import ui_models
+from ui_models import create_screen
 
 noClass = jclass("ru.travelfood.simple_ui.NoSQL")
 rs_settings = noClass("rs_settings")
-current_screen = None
-
-
-def create_screen(hash_map: HashMap):
-    """
-    Метод для получения модели соответствующей текущему процессу и экрану.
-    Если модель не реализована возвращает заглушку
-    Реализован синглтон через глобальную переменную current_screen, для сохренения состояния текущего экрана
-    """
-    global current_screen
-
-    screen_params = {
-        'hash_map': hash_map,
-        'rs_settings': rs_settings
-    }
-    screen_class = ui_models.ScreensFactory.get_screen_class(**screen_params)
-
-    if not screen_class:
-        current_screen = ui_models.MockScreen(**screen_params)
-    elif not isinstance(current_screen, screen_class):
-        current_screen = screen_class(**screen_params)
-    else:
-        current_screen.hash_map = hash_map
-        current_screen.listener = hash_map['listener']
-        current_screen.event = hash_map['event']
-
-    return current_screen
 
 
 # =============== Main events =================
@@ -252,24 +226,29 @@ def after_send_post_lines_data(hash_map: HashMap):
 
 @HashMap()
 def adr_docs_on_start(hash_map: HashMap):
-    screen = ui_models.AdrDocsListScreen(hash_map, rs_settings)
+    screen = create_screen(
+        hash_map=hash_map,
+        screen_class=ui_models.AdrDocsListScreen
+    )
     screen.on_start()
-
 
 @HashMap()
 def adr_doc_on_select(hash_map: HashMap):
-    screen = ui_models.AdrDocsListScreen(hash_map, rs_settings)
+    screen = create_screen(
+        hash_map=hash_map,
+        screen_class=ui_models.AdrDocsListScreen
+    )
     screen.on_input()
 
 
 @HashMap()
 def adr_doc_details_on_start(hash_map: HashMap):
-    screen: ui_models.AdrDocDetailsScreen = create_screen(hash_map)
+    screen = create_screen(hash_map, ui_models.AdrDocDetailsScreen)
     screen.on_start()
 
 @HashMap()
 def adr_doc_details_on_input(hash_map: HashMap):
-    screen: ui_models.AdrDocDetailsScreen = create_screen(hash_map)
+    screen = create_screen(hash_map, ui_models.AdrDocDetailsScreen)
     screen.on_input()
 
 @HashMap()
@@ -290,14 +269,14 @@ def elem_viev_on_click(hash_map):
 
 
 @HashMap()
-def adr_elem_viev_on_start(hash_map):
-    screen = ui_models.AdrGoodsSelectScreen(hash_map, rs_settings)
+def adr_elem_view_on_start(hash_map):
+    screen = create_screen(hash_map, ui_models.AdrGoodsSelectScreen)
     screen.on_start()
 
 
 @HashMap()
-def adr_elem_viev_on_click(hash_map):
-    screen = ui_models.AdrGoodsSelectScreen(hash_map, rs_settings)
+def adr_elem_view_on_click(hash_map):
+    screen = create_screen(hash_map, ui_models.AdrGoodsSelectScreen)
     screen.on_input()
 
 
