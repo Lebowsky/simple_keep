@@ -449,6 +449,7 @@ class DocService:
             f'{self.docs_table_name}.doc_date',
             f'{self.docs_table_name}.id_warehouse',
             f'ifnull(RS_warehouses.name,"") as RS_warehouse',
+            f'ifnull(RS_warehouses.name,"") as warehouse',
             f'ifnull({self.docs_table_name}.verified, 0) as verified',
             f'ifnull({self.docs_table_name}.sent, 0) as sent',
             f'{self.docs_table_name}.add_mark_selection',
@@ -1346,9 +1347,6 @@ class AdrDocService(DocService):
         self.current_cell = cur_cell
         self.table_type = table_type
         self.provider = SqlQueryProvider(self.docs_table_name, sql_class=sqlClass())
-
-    def get_current_cell(self):
-        pass
 
     def get_doc_details_data(
             self,

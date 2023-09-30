@@ -16,6 +16,13 @@ class SimpleUtilites:
     def urovo_stop_decode(self):
         pass
 
+    @staticmethod
+    def get_temp_dir():
+        return './'
+
+    @staticmethod
+    def deleteCache():
+        pass
 
 class ImportUtils:
     def __init__(self):
