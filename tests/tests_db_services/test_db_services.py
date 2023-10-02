@@ -10,9 +10,9 @@ from ui_utils import BarcodeParser
 class TestDocService(unittest.TestCase):
     def setUp(self) -> None:
         self.service = DocService()
+        self.data_creator = DataCreator()
         self.http_results_path = './tests_db_services/http_result_data_example'
         self.sqlite_filename = 'rightscan5.db'
-
 
         service = DbCreator()
         service.drop_all_tables()
@@ -69,6 +69,13 @@ class TestDocService(unittest.TestCase):
         with open(f'{self.http_results_path}/{file_name}', encoding='utf-8') as fp:
             return json.load(fp)
 
+    def test_can_get_docs_stat_for_no_group_scan_docs(self):
+        self.data_creator.insert_data('RS_docs', 'RS_docs_table')
+        self.assertTrue(self.service.get_docs_stat())
+
+    def test_can_get_doc_view_data_if_no_group_scan(self):
+        self.data_creator.insert_data('RS_docs', 'RS_docs_table')
+        self.assertTrue(self.service.get_doc_view_data(doc_status='К выгрузке', doc_type='Заказ'))
 
 class TestTimerService(unittest.TestCase):
     def setUp(self) -> None:
@@ -454,13 +461,14 @@ class DataCreator:
         self.samples = {
             'RS_docs': {
                 'id_doc': '"37c4c709-d22b-11e4-869d-0050568b35ac1"',
-                'doc_type': '""',
+                'doc_type': '"Заказ"',
                 'doc_n': '""',
                 'doc_date': '""',
                 'id_countragents': '""',
                 'id_warehouse': '""',
                 'verified': '1',
-                'sent': '0'
+                'sent': '0',
+                'is_group_scan': '0'
             },
             'RS_adr_docs': {
                 'id_doc': '"37c4c709-d22b-11e4-869d-0050568b35ac1"',
