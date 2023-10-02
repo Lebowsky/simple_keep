@@ -77,6 +77,18 @@ class TestDocService(unittest.TestCase):
         self.data_creator.insert_data('RS_docs', 'RS_docs_table')
         self.assertTrue(self.service.get_doc_view_data(doc_status='К выгрузке', doc_type='Заказ'))
 
+    def test_can_get_docs_stat_for_group_scan_docs(self):
+        self.data_creator.insert_data('RS_docs', 'RS_docs_table')
+        self.service.is_group_scan = True
+        self.assertTrue(self.service.get_docs_stat())
+
+    # @unittest.skip
+    def test_can_get_doc_view_data_if_group_scan(self):
+        self.data_creator.insert_data('RS_docs', 'RS_docs_table')
+        self.assertTrue(self.service.get_doc_view_data(doc_status='К выгрузке', doc_type='Заказ'))
+
+
+
 class TestTimerService(unittest.TestCase):
     def setUp(self) -> None:
         self.service = TimerService()

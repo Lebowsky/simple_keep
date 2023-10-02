@@ -497,10 +497,8 @@ class DocService:
             else:
                 where += ' AND doc_type=?'
 
-        is_group_scan = int(self.is_group_scan)
-
-        if self.docs_table_name == 'RS_docs':
-            where += f' AND is_group_scan={is_group_scan}'
+        if self.docs_table_name == 'RS_docs' and self.is_group_scan is False:
+            where += f' AND is_group_scan={int(self.is_group_scan)}'
         
         where += ''' AND RS_barc_flow.id_doc IS NULL'''
         
@@ -554,7 +552,7 @@ class DocService:
         return [doc[0] for doc in docs]
 
     def get_docs_stat(self):
-        is_group_scan = int(self.is_group_scan)
+        w = f'is_group_scan = "0"' if self.is_group_scan is False else True
 
         query_select = f'''
         WITH tmp AS (
@@ -601,7 +599,7 @@ class DocService:
             SUM(qtty_plan_verified) as qtty_plan_verified,
             SUM(qtty_plan_unverified) as qtty_plan_unverified
         FROM tmp
-        WHERE is_group_scan = '{is_group_scan}'
+        WHERE {w}
         GROUP BY doc_type
         '''
 

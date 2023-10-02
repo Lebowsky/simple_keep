@@ -27,6 +27,7 @@ noClass = jclass("ru.travelfood.simple_ui.NoSQL")
 current_screen = None
 _rs_settings = noClass("rs_settings")
 
+
 class Screen(ABC):
     screen_name: str
     process_name: str
@@ -136,6 +137,12 @@ class Screen(ABC):
 
         return selected_card_data
 
+    @staticmethod
+    def _format_quantity(qtty):
+        if float(qtty) % 1 == 0:
+            return int(float(qtty))
+        else:
+            return qtty
 
     class TextView(widgets.TextView):
         def __init__(self, value, rs_settings):
@@ -879,13 +886,12 @@ class GroupScanTiles(Tiles):
         self.process_name = self.hash_map.get_current_process()
 
     def on_start(self) -> None:
-        if not self.rs_settings.get('offline_mode'):
-            if not self.hash_map.containsKey('check_connection') and not self._check_connection():
-                tiles = self._get_message_tile("Отсутствует соединение с сервером", text_color="#ff0000")
-                self.hash_map.put('tiles', tiles, to_json=True)
-                self.hash_map.refresh_screen()
-                self.hash_map['check_connection'] = False
-                return
+        if not self._check_connection():
+            tiles = self._get_message_tile("Отсутствует соединение с сервером", text_color="#ff0000")
+            self.hash_map.put('tiles', tiles, to_json=True)
+            self.hash_map.refresh_screen()
+            self.hash_map['check_connection'] = False
+            return
 
         self.hash_map['check_connection'] = True
 
@@ -924,6 +930,10 @@ class GroupScanTiles(Tiles):
         self.hash_map.show_screen(self.screen_name, args)
 
     def _check_connection(self):
+        if (self.rs_settings.get('offline_mode') or
+                self.hash_map.containsKey('check_connection')):
+            return True
+
         hs_service = hs_services.HsService(self.get_http_settings())
         try:
             hs_service.communication_test(timeout=1)
@@ -943,8 +953,8 @@ class DocumentsTiles(GroupScanTiles):
     screen_name = 'Плитки'
     process_name = 'Документы'
 
-    def __init__(self):
-        super().__init__(self.hash_map, self.rs_settings)
+    def __init__(self, hash_map: HashMap, rs_settings):
+        super().__init__(hash_map, rs_settings)
         self.db_service = DocService()
 
     def on_start(self):
@@ -1179,12 +1189,14 @@ class DocsListScreen(Screen):
         return id_doc
 
 
+
 class GroupScanDocsListScreen(DocsListScreen):
     screen_name = 'Документы'
     process_name = 'Групповая обработка'
 
     def __init__(self, hash_map, rs_settings):
         super().__init__(hash_map, rs_settings)
+        self.service.is_group_scan = True
         self.popup_menu_data = 'Удалить'
 
     def on_start(self):
@@ -2425,14 +2437,6 @@ class GroupScanDocDetailsScreenNew(DocDetailsScreen):
         screen.show(args=put_data_dict)
 
 
-    @staticmethod
-    def _format_quantity(qtty):
-        if float(qtty) % 1 == 0:
-            return int(float(qtty))
-        else:
-            return qtty
-
-
 class DocumentsDocDetailScreen(DocDetailsScreen):
     screen_name = 'Документ товары'
     process_name = 'Документы'
@@ -3665,12 +3669,6 @@ class BaseGoodSelect(Screen):
             self._set_result_qtty(delta)
         self.hash_map.put('delta', delta_field.to_json())
 
-    def _format_quantity(self, qtty):
-        if float(qtty) % 1 == 0:
-            return int(float(qtty))
-        else:
-            return qtty
-
     def _set_result_qtty(self, delta):
         new_qtty = float(self.hash_map.get('qtty') or 0) + delta
         new_qtty = str(self._format_quantity(new_qtty))
@@ -3709,7 +3707,6 @@ class GoodsSelectScreen(BaseGoodSelect):
     screen_name = 'Товар выбор'
     process_name = 'Документы'
     printing_template_name = 'goods_select_screen'
-
 
     def __init__(self, hash_map: HashMap, rs_settings):
         super().__init__(hash_map, rs_settings)
@@ -3949,11 +3946,6 @@ class GroupScanItemScreen(BaseGoodSelect):
         barcode_worker = BarcodeWorker(self.hash_map.get("id_doc"))
         barcode_worker.queue_update_data = insert_to_queue
         barcode_worker.update_document_barcode_data()
-
-
-class GoodBarcodeRegister(Screen):
-    screen_name = 'ТоварШтрихкоды'
-    process_name = 'Документы'
 
 
 class BarcodeRegistrationScreen(Screen):
