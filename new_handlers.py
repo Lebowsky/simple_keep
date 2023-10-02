@@ -157,13 +157,13 @@ def tiles_on_input(hash_map: HashMap):
 
 @HashMap()
 def docs_on_start(hash_map: HashMap):
-    screen: ui_models.DocsListScreen = create_screen(hash_map)
+    screen = create_screen(hash_map, ui_models.DocumentsDocsListScreen)
     screen.on_start()
 
 
 @HashMap()
 def docs_on_select(hash_map: HashMap):
-    screen = create_screen(hash_map)
+    screen = create_screen(hash_map, ui_models.DocumentsDocsListScreen)
     screen.on_input()
 
 

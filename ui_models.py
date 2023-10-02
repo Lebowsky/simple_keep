@@ -24,7 +24,7 @@ import base64
 from java import jclass
 
 noClass = jclass("ru.travelfood.simple_ui.NoSQL")
-current_screen = None
+current_screen: 'Screen'
 _rs_settings = noClass("rs_settings")
 
 class Screen(ABC):
@@ -70,6 +70,9 @@ class Screen(ABC):
     def init_screen(self):
         self.hash_map.put(f'{self.__class__.__name__}_init')
         return self
+
+    def refresh_screen(self, hash_map: HashMap):
+        hash_map.refresh_screen()
 
     def _clear_screen_values(self):
         for key in self.screen_values:
@@ -7236,7 +7239,10 @@ class Timer:
 
         self.load_docs()
         self._upload_data()
-        # self.upload_all_docs()
+
+        if current_screen:
+            current_screen.refresh_screen(self.hash_map)
+
 
     def put_notification(self, text, title=None):
         self.hash_map.notification(text, title)
