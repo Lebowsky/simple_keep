@@ -240,7 +240,7 @@ class BarcodeService(DbService):
 
 
 class DocService:
-    def __init__(self, doc_id=''):
+    def __init__(self, doc_id='', is_group_scan=False):
         self.doc_id = doc_id
         self.docs_table_name = 'RS_docs'
         self.details_table_name = 'RS_docs_table'
@@ -248,6 +248,7 @@ class DocService:
         self.sql_text = ''
         self.sql_params = None
         self.debug = False
+        self.is_group_scan = is_group_scan
         self.provider = SqlQueryProvider(self.docs_table_name, sql_class=sqlClass())
 
     def get_last_edited_goods(self, to_json=False):
@@ -441,7 +442,11 @@ class DocService:
         doc_types = [rec[0] for rec in self._get_query_result(query)]
         return doc_types
 
-    def get_doc_view_data(self, doc_type='', doc_status='', no_group_scan=None) -> list:
+    def get_doc_view_data(
+            self,
+            doc_type,
+            doc_status: Literal['Все', 'Выгружен', 'К выгрузке', 'К выполнению']
+    ) -> list:
         fields = [
             f'{self.docs_table_name}.id_doc',
             f'{self.docs_table_name}.doc_type',
@@ -471,7 +476,8 @@ class DocService:
             LEFT JOIN RS_countragents as RS_countragents
                 ON RS_countragents.id = {self.docs_table_name}.id_countragents
                 '''
-        joins += f'''LEFT JOIN RS_barc_flow ON {self.docs_table_name}.id_doc = RS_barc_flow.id_doc'''
+        joins += f'''LEFT JOIN RS_barc_flow 
+                        ON {self.docs_table_name}.id_doc = RS_barc_flow.id_doc'''
         where = ''
 
         if doc_status:
@@ -491,8 +497,10 @@ class DocService:
             else:
                 where += ' AND doc_type=?'
 
-        if no_group_scan and self.docs_table_name == 'RS_docs':
-            where += ' AND is_group_scan=0'
+        is_group_scan = int(self.is_group_scan)
+
+        if self.docs_table_name == 'RS_docs':
+            where += f' AND is_group_scan={is_group_scan}'
         
         where += ''' AND RS_barc_flow.id_doc IS NULL'''
         
@@ -545,40 +553,42 @@ class DocService:
         docs = self._get_query_result(query, (target_time, ))
         return [doc[0] for doc in docs]
 
-    def get_docs_stat(self, no_group_scan=None):
+    def get_docs_stat(self):
+        is_group_scan = int(self.is_group_scan)
+
         query_select = f'''
         WITH tmp AS (
             SELECT 
                 doc_type,
-                {self.docs_table_name}.id_doc,
+                docs_table.id_doc,
                 1 as doc_Count,
-                IFNULL({self.docs_table_name}.sent,0) as sent,
-                IFNULL({self.docs_table_name}.verified,0) as verified,
-                {self.docs_table_name}.is_group_scan as is_group_scan,
+                IFNULL(docs_table.sent,0) as sent,
+                IFNULL(docs_table.verified,0) as verified,
+                IFNULL(docs_table.is_group_scan, 0) as is_group_scan,
                 CASE WHEN IFNULL(verified,0)=0 THEN 
-                    COUNT({self.details_table_name}.id)
+                    COUNT(docs_details.id)
                 ELSE 
                     0 
                 END as count_verified,
                 CASE WHEN IFNULL(verified,0)=1 THEN 
-                    count({self.details_table_name}.id)
+                    count(docs_details.id)
                 ELSE 
                     0 
                 END as count_unverified,
                 CASE WHEN IFNULL(verified,0)=0 THEN
-                     SUM({self.details_table_name}.qtty_plan)
+                     SUM(docs_details.qtty_plan)
                 ELSE 
                     0 
                 END as qtty_plan_verified,
                 CASE WHEN IFNULL(verified,0)=1 THEN 
-                    SUM({self.details_table_name}.qtty_plan)
+                    SUM(docs_details.qtty_plan)
                 ELSE 
                     0 
                 END as qtty_plan_unverified
-            FROM {self.docs_table_name}
-            LEFT JOIN {self.details_table_name} 
-                ON {self.details_table_name}.id_doc = {self.docs_table_name}.id_doc
-            GROUP BY {self.docs_table_name}.id_doc
+            FROM RS_docs AS docs_table
+            LEFT JOIN RS_docs_table AS docs_details
+                ON docs_details.id_doc = docs_table.id_doc
+            GROUP BY docs_table.id_doc
         )
         SELECT 
             doc_type as docType, 
@@ -591,13 +601,11 @@ class DocService:
             SUM(qtty_plan_verified) as qtty_plan_verified,
             SUM(qtty_plan_unverified) as qtty_plan_unverified
         FROM tmp
+        WHERE is_group_scan = '{is_group_scan}'
+        GROUP BY doc_type
         '''
-        where = "WHERE is_group_scan = '0'"
-        group = """GROUP BY doc_type"""
-        query = f"{query_select} {where} {group}" if no_group_scan and self.docs_table_name == "RS_docs" \
-            else f"{query_select} {group}"
 
-        res = self._get_query_result(query, return_dict=True)
+        res = self._get_query_result(query_select, return_dict=True)
         return res
 
     def get_doc_flow_stat(self):
@@ -1340,7 +1348,7 @@ class SelectItemService(DbService):
 
 class AdrDocService(DocService):
     def __init__(self, doc_id='', cur_cell='', table_type='in'):
-        self.doc_id = doc_id
+        super().__init__(doc_id=doc_id)
         self.docs_table_name = 'RS_Adr_docs'
         self.details_table_name = 'RS_adr_docs_table'
         self.isAdr = True

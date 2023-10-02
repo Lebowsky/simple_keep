@@ -874,7 +874,7 @@ class GroupScanTiles(Tiles):
 
     def __init__(self, hash_map: HashMap, rs_settings):
         super().__init__(hash_map, rs_settings)
-        self.db_service = DocService()
+        self.db_service = DocService(is_group_scan=True)
         self.screen_name = self.hash_map.get_current_screen()
         self.process_name = self.hash_map.get_current_process()
 
@@ -943,6 +943,10 @@ class DocumentsTiles(GroupScanTiles):
     screen_name = 'Плитки'
     process_name = 'Документы'
 
+    def __init__(self):
+        super().__init__(self.hash_map, self.rs_settings)
+        self.db_service = DocService()
+
     def on_start(self):
         super().on_start()
 
@@ -950,7 +954,7 @@ class DocumentsTiles(GroupScanTiles):
         return True
 
     def _get_docs_stat(self):
-        return self.db_service.get_docs_stat(no_group_scan=True)
+        return self.db_service.get_docs_stat()
 
 
 # ^^^^^^^^^^^^^^^^^^^^^ Tiles ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -1030,7 +1034,7 @@ class DocsListScreen(Screen):
         self.hash_map['selected_doc_status'] = self.hash_map["doc_status_click"]
         self.current_status = self.hash_map["doc_status_click"]
 
-    def _get_doc_list_data(self, doc_type='', doc_status='') -> list:
+    def _get_doc_list_data(self, doc_type, doc_status) -> list:
         results = self.service.get_doc_view_data(doc_type, doc_status)
         return results
 
@@ -1284,10 +1288,9 @@ class DocumentsDocsListScreen(DocsListScreen):
         doc_number = card_data.get('number')
         return doc_number
 
-    def _get_doc_list_data(self, doc_type='', doc_status='') -> list:
-        results = self.service.get_doc_view_data(doc_type, doc_status, no_group_scan=True)
+    def _get_doc_list_data(self, doc_type, doc_status) -> list:
+        results = self.service.get_doc_view_data(doc_type, doc_status)
         return results
-
 
 class AdrDocsListScreen(DocsListScreen):
     screen_name = 'Документы'
@@ -1367,8 +1370,9 @@ class AdrDocsListScreen(DocsListScreen):
         )
         self.hash_map['docAdrCards'] = doc_cards.to_json()
 
-    def _get_doc_list_data(self, doc_type='', doc_status='') -> list:
+    def _get_doc_list_data(self, doc_type, doc_status) -> list:
         results = self.service.get_doc_view_data(doc_type, doc_status)
+        return results
     
     @staticmethod
     def _prepare_table_data(list_data) -> list:
