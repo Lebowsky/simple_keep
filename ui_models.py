@@ -2544,7 +2544,6 @@ class AdrDocDetailsScreen(DocDetailsScreen):
 
     def __init__(self, hash_map, rs_settings):
         super().__init__(rs_settings=rs_settings, hash_map=hash_map)
-
         self.tables_types = 'Отбор;Размещение'
         self.screen_values = {
             'id_doc': self.hash_map['id_doc'],
@@ -2562,14 +2561,12 @@ class AdrDocDetailsScreen(DocDetailsScreen):
 
     def init_screen(self):
         self.hash_map.put('tables_type', self.tables_types)
+        self.hash_map.put('return_selected_data')
 
     def on_start(self):
-        self.hash_map.put('return_selected_data')
-        self.service.table_type = self.table_type
         super()._on_start()
 
     def on_input(self) -> None:
-
         listeners = {
             'CardsClick': self._cards_click,
             'btn_barcodes': lambda : self.hash_map.show_dialog(listener="ВвестиШтрихкод"),
@@ -2600,7 +2597,6 @@ class AdrDocDetailsScreen(DocDetailsScreen):
         else:
             self._open_select_goods_screen(data=selected_card_data)
         # self._fill_one_string_screen()
-
 
     def _barcode_listener(self, barcode):
         if self._update_current_cell(barcode):
@@ -2660,6 +2656,7 @@ class AdrDocDetailsScreen(DocDetailsScreen):
 
     def _table_type_selected(self):
         self.table_type = self._get_table_type_from_name(self.hash_map['table_type'])
+        self.service.table_type = self.table_type
         self.hash_map.refresh_screen()
 
     def _back_screen(self):
@@ -2692,7 +2689,7 @@ class AdrDocDetailsScreen(DocDetailsScreen):
         screen.show()
 
     def _open_series_screen(self, doc_row_key):
-        screen = create_screen(self.hash_map, SelectSeriesScreen, screen_values={'doc_row_key': doc_row_key})
+        screen = create_screen(self.hash_map, SeriesSelectScreen, screen_values={'doc_row_key': doc_row_key})
         screen.parent_screen = self
         screen.show_process_result()
 
@@ -7659,7 +7656,6 @@ def create_screen(hash_map: HashMap, screen_class=None, screen_values=None):
         if screen_values:
             hash_map.put_data(screen_values)
         current_screen = screen_class(**screen_params)
-        # current_screen.init_screen()
     else:
         current_screen.hash_map = hash_map
         current_screen.listener = hash_map['listener']
