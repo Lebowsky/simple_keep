@@ -1564,6 +1564,7 @@ class DocDetailsScreen(Screen):
 
     def on_post_start(self):
         pass
+
     def _on_start(self):
         self._set_visibility_on_start()
         self.hash_map.put('SetTitle', self.hash_map["doc_type"])
@@ -2369,6 +2370,7 @@ class DocumentsDocDetailScreen(DocDetailsScreen):
 
     def __init__(self, hash_map, rs_settings):
         super().__init__(hash_map, rs_settings)
+        self.articles_ocr_ncl = noClass('articles_ocr_ncl')
 
     def on_start(self) -> None:
         super()._on_start()
@@ -2440,27 +2442,22 @@ class DocumentsDocDetailScreen(DocDetailsScreen):
             super().scan_error_sound()
 
         elif listener == 'btn_goods_ocr':
-            self.hash_map.delete('finded_articles')
-            self.hash_map.put('art_info', 'Найденные артикулы: ')
-            list_art = self.service.get_all_articles_in_document()
-            self.hash_map.put('list_art', list_art)
+            articles = self.service.get_all_articles_in_document()
+            if not articles:
+                self.hash_map.toast('В документе отстутствуют артикулы')
+                return
+            self._set_vision_settings(articles=articles)
             self.hash_map.put('RunCV', 'Распознавание артикулов')
 
         elif listener == 'ActiveCV':
-            if self.hash_map.containsKey('button_manage_articles'):
-                finded_articles = self.hash_map.get('finded_articles')
-
-                if finded_articles is None:
-                    self.hash_map.toast('Артикулы не найдены')
-                else:
-                    title = 'Выберите товар'
-                    allowed_fact_input = self.rs_settings.get('allow_fact_input')
-                    if allowed_fact_input:
-                        title += ' и укажите количество'
-                    self.hash_map.put('title_select_good_article', title)
-                    self.hash_map.show_screen('ВыборТовараАртикул')
-
-            self.hash_map.delete('button_manage_articles')
+            if not self.articles_ocr_ncl.get('button_manage_articles'):
+                return
+            self.articles_ocr_ncl.delete('button_manage_articles')
+            finded_articles = self.articles_ocr_ncl.get('finded_articles')
+            if finded_articles is None:
+                self.hash_map.toast('Артикулы не найдены')
+                return
+            self.hash_map.show_screen('ВыборТовараАртикул')
 
         elif listener == 'btn_barcodes':
             self.hash_map.show_dialog('ВвестиШтрихкод')
@@ -3296,8 +3293,6 @@ class FlowDocDetailsScreen(DocDetailsScreen):
             values_list=values_list,
             max_length=max_length,
             min_length=min_length,
-            mesure_qty=1,
-            min_freq=1,
         )
         self.hash_map.set_vision_settings(**rec_settings)
 
@@ -4043,6 +4038,7 @@ class BarcodeRegistrationScreen(Screen):
     def _finish_process(self):
         self.hash_map.finish_process_result()
 
+
 class GoodsSelectArticle(Screen):
     screen_name = 'ВыборТовараАртикул'
     process_name = 'Документы'
@@ -4051,6 +4047,22 @@ class GoodsSelectArticle(Screen):
         super().__init__(hash_map, rs_settings)
         self.id_doc = self.hash_map['id_doc']
         self.service = DocService(self.id_doc)
+        self.articles_ocr_ncl = noClass('articles_ocr_ncl')
+
+    def on_start(self):
+        title = 'Выберите товар'
+        allowed_fact_input = self.rs_settings.get('allow_fact_input')
+        if allowed_fact_input:
+            title += ' и укажите количество'
+        self.hash_map.put('title_select_good_article', title)
+
+        if not self.hash_map['finded_goods_cards']:
+            articles = json.loads(self.articles_ocr_ncl.get('finded_articles'))
+            goods = self.service.get_goods_list_with_doc_data(articles)
+            self.hash_map.put('selected_goods', json.dumps(goods))
+            cards_data = self._get_goods_list_data(goods)
+            goods_cards = self._get_goods_cards_view(cards_data)
+            self.hash_map['finded_goods_cards'] = goods_cards.to_json()
 
     def on_input(self):
         listener = self.listener
@@ -4077,17 +4089,6 @@ class GoodsSelectArticle(Screen):
                 self._update_doc_table_row(card_data)
             self.hash_map.delete('finded_goods_cards')
             self.hash_map.show_screen('Документ товары')
-
-    def on_start(self):
-        if not self.hash_map['finded_goods_cards']:
-            articles = self.hash_map['finded_articles']
-            if not articles:
-                raise Exception('GoodsSelectArticle on_start. Не переданы артикулы')
-            goods = self.service.get_goods_list_with_doc_data(articles.split(';'))
-            self.hash_map.put('selected_goods', json.dumps(goods))
-            cards_data = self._get_goods_list_data(goods)
-            goods_cards = self._get_goods_cards_view(cards_data)
-            self.hash_map['finded_goods_cards'] = goods_cards.to_json()
 
     def on_post_start(self):
         pass
@@ -7171,26 +7172,34 @@ class ActiveCVArticleRecognition(Screen):
         super().__init__(hash_map, rs_settings)
         self.id_doc = self.hash_map['id_doc']
         self.service = DocService(self.id_doc)
+        self.articles_ocr_ncl = noClass('articles_ocr_ncl')
 
     def on_start(self):
-        pass
+        self.articles_ocr_ncl.delete('finded_articles')
+        self._set_vision_settings()
+        self.hash_map.put('art_info', 'Найденные артикулы: ')
 
     def on_input(self):
-        pass
+        if self.listener == 'Обработать':
+            self.articles_ocr_ncl.put('button_manage_articles', True, True)
+            self.hash_map.finish_process()
 
     def on_object_detected(self):
         self.hash_map.beep()
         current_object = self.hash_map.get('current_object')
-        self.hash_map.add_to_cv_list(current_object, 'finded_articles')
+        finded_articles = self.articles_ocr_ncl.get('finded_articles')
+        finded_articles = json.loads(finded_articles) if finded_articles else []
+        if current_object not in finded_articles:
+            finded_articles.append(current_object)
+            self.hash_map.put(
+                'art_info', 'Найденные артикулы: ' + ';'.join(finded_articles))
+            self.articles_ocr_ncl.put('finded_articles', json.dumps(finded_articles), True)
+
         good_name = self.get_good_info(current_object)
         self.hash_map.add_to_cv_list(
             {'object': str(current_object),
              'info': f'Товар: <big>{good_name}</big>'},
             'object_info_list', _dict=True)
-        self.hash_map.add_to_cv_list(current_object, 'yellow_list')
-
-        self.hash_map.put(
-            'art_info', 'Найденные артикулы: ' + self.hash_map.get('finded_articles'))
 
     def on_post_start(self):
         pass
@@ -7205,6 +7214,10 @@ class ActiveCVArticleRecognition(Screen):
                  ' WHERE RS_docs_table.id_doc = ? AND RS_goods.art = ?')
         goods = self.service.provider.sql_query(query, f'{self.id_doc},{article}')
         return goods[0]['name'] if goods else 'Не найдено'
+
+    def _set_vision_settings(self):
+        settings = self.articles_ocr_ncl.get('articles_ocr_settings')
+        self.hash_map.set_vision_settings(**json.loads(settings))
 
 # ^^^^^^^^^^^^^^^^^^^^^ ActiveCV ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -7225,7 +7238,10 @@ class Timer:
 
         self.load_docs()
         self._upload_data()
-        # self.upload_all_docs()
+
+        if current_screen:
+            current_screen.refresh_screen(self.hash_map)
+
 
     def put_notification(self, text, title=None):
         self.hash_map.notification(text, title)
