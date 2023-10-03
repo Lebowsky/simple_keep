@@ -1015,14 +1015,13 @@ class SeriesService(DbService):
                 RS_docs_series.id_series,
                 RS_docs_series.id_warehouse,
                 RS_docs_series.qtty,
-                RS_docs_series.name,
+                IFNULL(RS_docs_series.name, '') AS name,
                 IFNULL(RS_docs_series.best_before, '') AS best_before,
                 RS_docs_series.number,
                 IFNULL(RS_docs_series.production_date, '') AS production_date,
                 IFNULL(RS_docs.doc_type, '') AS doc_type,
                 IFNULL(RS_docs.doc_n, '') AS doc_n,
                 IFNULL(RS_docs.doc_date, '') AS doc_date,
-                IFNULL(RS_goods.name, '') AS name,
                 IFNULL(RS_goods.art, '') AS art,
                 IFNULL(RS_warehouses.name , '') AS warehouse_name
              
@@ -1195,13 +1194,13 @@ class SeriesService(DbService):
         RS_docs_series.id_series,
         RS_docs_series.id_warehouse,
         RS_docs_series.qtty,
-        RS_docs_series.name,
-        RS_docs_series.best_before,
+        IFNULL(RS_docs_series.name, '') AS name,
+        IFNULL(RS_docs_series.best_before, '') AS best_before,
         RS_docs_series.number,
-        RS_docs_series.production_date,
+        IFNULL(RS_docs_series.production_date, '') AS production_date,
         RS_docs_series.cell,
         RS_goods.name as good_name, 
-        RS_cells.name
+        RS_cells.name as cell_name
         FROM RS_docs_series
         LEFT JOIN RS_goods
         ON RS_goods.id = RS_docs_series.id_good
@@ -1275,9 +1274,7 @@ class SeriesService(DbService):
     def save_table_str(self, params):
         q = '''
         UPDATE RS_docs_series
-        SET id = :id,
-           id_doc = :id_doc,
-           id_good = :id_good,
+        SET 
            id_properties = :id_properties,
            id_series = :id_series,
            id_warehouse = :id_warehouse,
