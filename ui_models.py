@@ -24,7 +24,7 @@ import base64
 from java import jclass
 
 noClass = jclass("ru.travelfood.simple_ui.NoSQL")
-current_screen: 'Screen'
+current_screen: 'Screen' = None
 _rs_settings = noClass("rs_settings")
 
 class Screen(ABC):
