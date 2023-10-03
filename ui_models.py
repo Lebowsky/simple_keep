@@ -24,7 +24,7 @@ import base64
 from java import jclass
 
 noClass = jclass("ru.travelfood.simple_ui.NoSQL")
-current_screen: 'Screen'
+current_screen: 'Screen' = None
 _rs_settings = noClass("rs_settings")
 
 class Screen(ABC):
@@ -5459,7 +5459,6 @@ class TestSeries(Screen):
     def on_input(self):
         listener = self.listener
         if listener=='btn_show_test_series':
-            screen = SeriesSelectScreen(self.hash_map, self.rs_settings)
             args = {
                 'title': 'Выбор серии',
                 'doc_row_id': '247',
@@ -5478,14 +5477,14 @@ class TestSeries(Screen):
                 # 'qtty_plan': '0',
                 # 'qtty': '0',    
             }
-            screen.show_process_result(args)
+            screen = create_screen(self.hash_map, SeriesSelectScreen, args)
+            screen.show_process_result()
 
 class SeriesSelectScreen(Screen):
     process_name = 'SeriesProcess'
     screen_name = 'SeriesSelectScreenScreen'
     doc_basic_table_name = 'RS_docs_table'
     doc_basic_handler_name = 'RS_docs'
-    id: str = None
 
     def __init__(self, hash_map: HashMap, rs_settings):
         super().__init__(hash_map, rs_settings)
@@ -5545,7 +5544,8 @@ class SeriesSelectScreen(Screen):
         self.hash_map['cards_data'] = cards.to_json()
         self.hash_map['return_selected_data'] = ''"""
         
-        key = int(self.screen_values['doc_row_id'])
+        key = self.screen_values['doc_row_id']
+        self.hash_map.toast(self.screen_values['doc_row_id'])
         self.screen_data = self.service.get_values_for_screen_by_id(key)
         
         # Обработаем числовые ключи в словаре
@@ -5561,14 +5561,14 @@ class SeriesSelectScreen(Screen):
         
 
     def on_start(self):
-
+        
         # Сохраним текущий hash_map чтобы вернуть его при выходе
         # self.rs_settings.put('_stored_hash_', json.dumps(self.hash_map.export()), True)
-        self.hash_map.set_title(self.screen_values['title'])
+        #self.hash_map.set_title(self.screen_values['title'])
         #self.hash_map.put_data(self.screen_values)
 
         #Обновим количесмтво факт по сериям
-        #self.hash_map.toast(self.screen_values)
+        #self.hash_map.toast('HELLO')
         self._refresh_series_cards()
         
 
