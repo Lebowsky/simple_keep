@@ -2569,7 +2569,6 @@ class AdrDocDetailsScreen(DocDetailsScreen):
         self.hash_map.put('return_selected_data')
         self.service.table_type = self.table_type
         super()._on_start()
-        # self.toast(self.table_type)
 
     def on_input(self) -> None:
 
