@@ -2554,7 +2554,7 @@ class AdrDocDetailsScreen(DocDetailsScreen):
             'warehouse': self.hash_map['warehouse']
         }
         self.id_doc = self.screen_values['id_doc']
-        self.table_type = self.screen_values['table_type']
+        self.table_type = self._get_table_type_from_name(self.screen_values['doc_type'])
         self.service = AdrDocService(self.id_doc, table_type=self.table_type)
         self.current_cell = ''
         self.current_cell_id = ''
@@ -2701,6 +2701,7 @@ class AdrDocDetailsScreen(DocDetailsScreen):
             screen_values=screen_values
         )
         screen.parent_screen = self
+        screen.use_adr_docs_tables = True
         screen.show_process_result()
 
     def _get_doc_details_data(self, last_scanned=False):
@@ -5467,6 +5468,8 @@ class SeriesSelectScreen(Screen):
             'title': 'Выбор серии',
             'doc_row_id':'',
         }
+        self.use_adr_docs_tables=False
+
 
     def init_screen(self):
         """cards_data = self.db_service.get_select_data()
@@ -5474,6 +5477,9 @@ class SeriesSelectScreen(Screen):
 
         self.hash_map['cards_data'] = cards.to_json()
         self.hash_map['return_selected_data'] = ''"""
+
+        if self.use_adr_docs_tables:
+            self.service = db_services.AdrSeriesService()
 
         key = self.screen_values['doc_row_id']
         self.screen_data = self.service.get_values_for_screen_by_id(key)
@@ -5491,7 +5497,6 @@ class SeriesSelectScreen(Screen):
         self.hash_map.put('doc_data', title)
         self.hash_map.put_data(self.screen_data)
 
-
     def on_start(self):
         self.hash_map.set_title(self.screen_values['title'])
         # self.hash_map.toast(self.screen_data)
@@ -5501,7 +5506,7 @@ class SeriesSelectScreen(Screen):
     def on_input(self):
         listener = self.listener
         if listener == "CardsClick":
-            self._cards_click_hendler()
+            self._cards_click_handler()
             """self.hash_map.put('current_series_id', self.hash_map.get("selected_card_key"))
             self.hash_map.put('barcode', '')
             self.hash_map.show_screen("Заполнение серии", self.params)"""
@@ -5519,7 +5524,7 @@ class SeriesSelectScreen(Screen):
         # self.hash_map['SetResultListener'] = self.screen_values['result_listener']
         self.show_process_result(args)
 
-    def _cards_click_hendler(self):
+    def _cards_click_handler(self):
         args={'series_id': self.hash_map.get("selected_card_key")}
         self.hash_map.put('noRefresh','')
         screen = create_screen(self.hash_map, SeriesItem, args)
