@@ -1935,9 +1935,9 @@ class DocDetailsScreen(Screen):
         params_for_series_screen = json.dumps(current_elem['current_elem']
                                               if current_elem.get('current_elem') else current_elem)
         self.hash_map['params_for_series_screen'] = params_for_series_screen
-        # self.hash_map.show_process_result(SeriesList.process_name, SeriesList.screen_name)
+        # self.hash_map.show_process_result(SeriesSelectScreen.process_name, SeriesSelectScreen.screen_name)
         self.hash_map['back_screen'] = self.hash_map.get_current_screen()
-        self.hash_map.show_screen(SeriesList.screen_name)
+        self.hash_map.show_screen(SeriesSelectScreen.screen_name)
 
     class TextView(widgets.TextView):
         def __init__(self, value):
@@ -2418,6 +2418,7 @@ class DocumentsDocDetailScreen(DocDetailsScreen):
                 cards['customcards']['cardsdata'].append(row)
 
             self.hash_map.put('barcode_cards', cards, to_json=True)
+            self.hash_map.toast(self.hash_map.get_json('selected_card_data'))
             self.hash_map.show_screen("Товар выбор")
 
         elif listener == 'barcode' or self._is_result_positive('ВвестиШтрихкод'):
@@ -3609,8 +3610,8 @@ class BaseGoodSelect(Screen):
         params_for_series_screen = json.dumps(current_elem['current_elem']
                                               if current_elem.get('current_elem') else current_elem)
         self.hash_map['params_for_series_screen'] = params_for_series_screen
-        # self.hash_map.show_process_result(SeriesList.process_name, SeriesList.screen_name)
-        self.hash_map.show_screen(SeriesList.screen_name)
+        # self.hash_map.show_process_result(SeriesSelectScreen.process_name, SeriesSelectScreen.screen_name)
+        self.hash_map.show_screen(SeriesSelectScreen.screen_name)
 
 class GoodsSelectScreen(BaseGoodSelect):
     screen_name = 'Товар выбор'
@@ -5233,19 +5234,72 @@ class GoodsPricesItemCard(GoodsBalancesItemCard):
 # ^^^^^^^^^^^^^^^^^^^^^ GoodsPrices ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 # ==================== Series =============================
-class SeriesList(Screen):
-    process_name = 'Серии'
-    screen_name = 'Выбор серии'
+class TestSeries(Screen):
+    def __init__(self, hash_map: HashMap, rs_settings):
+        super().__init__(hash_map, rs_settings)
+
+    def on_start(self):
+        pass
+    
+    def on_input(self):
+        listener = self.listener
+        if listener=='btn_show_test_series':
+            screen = SeriesSelectScreen(self.hash_map, self.rs_settings)
+            args = {
+                'title': 'Выбор серии',
+                'doc_row_id': '247',
+                # 'id_doc': '972552dd-8571-44a4-b4fd-c99b62cd4273-a28eca0c6969888611edef31a731972a',
+                # 'id_good': '190a7469-3325-4d33-b5ec-28a63ac83b06-848a00112f43529a11d955bcbd72d910',  
+                # 'id_properties': '89c162bd-68ef-4693-a4a8-19238fa23c62-b4360015e92f280211df720fb02e2813', 
+                # 'id_unit':'254a3240-79c0-4a3f-9259-5122c9ddd71b-848a00112f43529a11d955bcbd72d90f',
+                # 'doc_type': 'Инвентаризация',
+                # 'doc_date': '2023-05-11T11:13:04',
+                # 'doc_n': '00-00000001',
+                # 'good_name': 'Женские ботфорты',
+                # 'good_art': 'Б-130001',
+                # 'properties_name': '39, Черный, 7, искусственная кожа',
+                # 'price': '0',
+                # 'good_unit': 'пара (1 пара)',
+                # 'qtty_plan': '0',
+                # 'qtty': '0',    
+            }
+            screen.show_process_result(args)
+
+class SeriesSelectScreen(Screen):
+    process_name = 'SeriesProcess'
+    screen_name = 'SeriesSelectScreenScreen'
     doc_basic_table_name = 'RS_docs_table'
     doc_basic_handler_name = 'RS_docs'
     id: str = None
 
     def __init__(self, hash_map: HashMap, rs_settings):
         super().__init__(hash_map, rs_settings)
+        self.service = db_services.SeriesService()
+        
+        self.screen_values = {
+            #'table_name': hash_map['table_name'],
+            'title': 'Выбор серии',
+            'doc_row_id':'',
+            # 'id_doc':'',
+            # 'id_good':'',
+            # 'id_properties':'',
+            # 'doc_type':'',
+            # 'doc_date':'',
+            # 'doc_n':'',
+            # 'good_name':'',
+            # 'good_art':'',
+            # 'properties_name':'',
+            # 'price':'',
+            # 'good_unit':'',
+            # 'qtty_plan':'',
+            # 'qtty':'',
+            #'result_listener': hash_map['result_listener'] or 'select_success',
+            #'return_value_key': hash_map['return_value_key'] or 'selected_card',
+            
+        }
+        
 
-        list_of_params = ['id_doc', 'Doc_data', 'code_art', 'properties_name',
-                          'price', 'units_name', 'good_name', 'qtty_plan', 'qtty']
-        str_params = self.hash_map.get('params_for_series_screen')
+        """str_params = self.hash_map.get('params_for_series_screen')
         if str_params:
             self.params = json.loads(str_params)
         else:
@@ -5267,24 +5321,41 @@ class SeriesList(Screen):
                 else:
                     self.params[key] = '0'
 
-            self.hash_map[key] = self.params[key]
+            self.hash_map[key] = self.params[key]"""
 
+    def init_screen(self):
+        """cards_data = self.db_service.get_select_data()
+        cards = self._get_cards(cards_data)
+
+        self.hash_map['cards_data'] = cards.to_json()
+        self.hash_map['return_selected_data'] = ''"""
+        
+        key = int(self.screen_values['doc_row_id'])
+        self.screen_data = self.service.get_values_for_screen_by_id(key)
+        
+        # Обработаем числовые ключи в словаре
+        self._handle_num_keys(self.screen_data)
+
+        self.service.params = self.screen_data
+
+        # self._refresh_series_cards()
+
+        title = '{} № {} от {}'.format(self.screen_data['doc_type'], self.screen_data['doc_n'], self.screen_data['doc_date'])
+        self.hash_map.put('doc_data', title)
+        self.hash_map.put_data(self.screen_data)
+        
 
     def on_start(self):
+
         # Сохраним текущий hash_map чтобы вернуть его при выходе
         # self.rs_settings.put('_stored_hash_', json.dumps(self.hash_map.export()), True)
-
-        query_data = self.service.get_series_by_doc_and_goods()
-        list_data = query_data  # self._prepare_table_data(query_data)
-        doc_cards = self._get_doc_cards_view(list_data)
-        self.hash_map['series_cards'] = doc_cards.to_json()
+        self.hash_map.set_title(self.screen_values['title'])
+        #self.hash_map.put_data(self.screen_values)
 
         #Обновим количесмтво факт по сериям
+        #self.hash_map.toast(self.screen_values)
+        self._refresh_series_cards()
         
-        real_qtty = self.service.get_total_qtty()
-        self.hash_map['qtty'] = self._format_quantity(str(real_qtty))
-        self.service.set_total_qtty(real_qtty)
-
 
     def on_input(self):
         listener = self.listener
@@ -5302,23 +5373,47 @@ class SeriesList(Screen):
             self.hash_map.show_screen(self.hash_map.get('back_screen'))
         elif listener == 'barcode':
             self._identify_add_barcode_series()
+            self._refresh_series_cards()
+            real_qtty = self.service.get_total_qtty()
+            self.service.set_total_qtty(real_qtty)
         elif self.listener == 'LayoutAction':
             self._layout_action()
 
+    def show(self, args=None):
+        self.hash_map['SetResultListener'] = self.screen_values['result_listener']
+        self.show_process_result(args)
+
+    def _back_screen(self):
+        self.hash_map[self.screen_values['return_value_key']] = ''
+        self._finish_process()
+
+    def _finish_process(self):
+        self._clear_screen_values()
+        self.hash_map.put('FinishProcessResult')
+
     def update_hash_map_keys(self):
-        params = self.params
+        params = self.screen_data
         exclude_keys = ('hash_map', 'screen_values', 'rs_settings')
         for key in params.keys():
             if key in exclude_keys:
                 continue
             self.hash_map[key] = self.params[key]
 
-    def on_post_start(self):
-        pass
-
-    def show(self, args=None):
-        pass
-
+    def _refresh_series_cards(self):
+        #self.hash_map.toast(self.screen_data)
+        list_data = self.service.get_series_by_doc_and_goods()
+        doc_cards = self._get_doc_cards_view(list_data)
+        self.hash_map['series_cards'] = doc_cards.to_json()
+    
+    def _handle_num_keys(self, values: dict) -> dict:
+        numeric_keys = ('qtty', 'qtty_plan', 'd_qtty')
+        for key in values.keys():
+            if key in numeric_keys:
+                if re.match("^\d+\.?\d*$", str(values[key])):
+                    values[key] = self._format_quantity(float(values[key]))
+                else:
+                    values[key] = '0'
+    
     def _get_doc_cards_view(self, table_data):
 
         title_text_size = self.rs_settings.get("TitleTextSize")
@@ -5400,13 +5495,13 @@ class SeriesList(Screen):
     def _identify_add_barcode_series(self):
         barcode = self.hash_map.get('barcode')
         if barcode:
-
-            values = self.service.get_series_by_barcode(barcode)
+            values = self.service.get_series_by_barcode(barcode, self.screen_data)
             if values:
                 item_id = values[0]['id']
                 self.service.add_qtty_to_table_str(item_id)
             else:
-                self.service.add_new_series_in_doc_series_table(barcode)
+                self.hash_map.toast(self.screen_data)
+                self.service.add_new_series_in_doc_series_table(barcode, self.screen_data)
 
     def _layout_action(self):
         layout_listener = self.hash_map.get('layout_listener')
@@ -5423,7 +5518,7 @@ class SeriesList(Screen):
         else:
             return qtty
 
-class SeriesItem(SeriesList):
+class SeriesItem(SeriesSelectScreen):
     process_name = 'Серии'
     screen_name = 'Заполнение серии'
 

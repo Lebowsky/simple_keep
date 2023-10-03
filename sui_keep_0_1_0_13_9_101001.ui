@@ -8783,7 +8783,7 @@
             },
             {
                 "type": "Process",
-                "ProcessName": "Series",
+                "ProcessName": "TestProcess",
                 "PlanFactHeader": "",
                 "DefineOnBackPressed": false,
                 "hidden": false,
@@ -8792,7 +8792,70 @@
                 "Operations": [
                     {
                         "type": "Operation",
-                        "Name": "SeriesSelect",
+                        "Name": "Test",
+                        "Timer": false,
+                        "hideBottomBarScreen": true,
+                        "noScroll": false,
+                        "handleKeyUp": false,
+                        "noConfirmation": true,
+                        "hideToolBarScreen": false,
+                        "Elements": [
+                            {
+                                "type": "LinearLayout",
+                                "Variable": "",
+                                "orientation": "vertical",
+                                "height": "wrap_content",
+                                "width": "wrap_content",
+                                "weight": "0",
+                                "Elements": [
+                                    {
+                                        "Value": "Показать экран Выбор Серии",
+                                        "Variable": "btn_show_test_series",
+                                        "height": "wrap_content",
+                                        "width": "wrap_content",
+                                        "weight": 0,
+                                        "TextBold": false,
+                                        "TextItalic": false,
+                                        "type": "Button"
+                                    }
+                                ]
+                            }
+                        ],
+                        "Handlers": [
+                            {
+                                "event": "onInput",
+                                "action": "run",
+                                "type": "python",
+                                "method": "test_series_on_input",
+                                "postExecute": ""
+                            },
+                            {
+                                "event": "onStart",
+                                "listener": "",
+                                "action": "run",
+                                "type": "python",
+                                "method": "test_series_on_start",
+                                "postExecute": ""
+                            }
+                        ],
+                        "onlineOnStart": false,
+                        "onlineOnAfterStart": false,
+                        "onlineOnInput": false
+                    }
+                ]
+            },
+            {
+                "type": "Process",
+                "ProcessName": "SeriesProcess",
+                "PlanFactHeader": "",
+                "DefineOnBackPressed": false,
+                "hidden": false,
+                "login_screen": false,
+                "SC": false,
+                "Operations": [
+                    {
+                        "type": "Operation",
+                        "Name": "SeriesSelectScreen",
                         "Timer": false,
                         "hideBottomBarScreen": true,
                         "noScroll": false,
@@ -8809,7 +8872,7 @@
                                 "weight": "0",
                                 "Elements": [
                                     {
-                                        "Value": "@Doc_data",
+                                        "Value": "@doc_data",
                                         "Variable": "",
                                         "height": "wrap_content",
                                         "width": "match_parent",
@@ -8854,7 +8917,7 @@
                                                                 "type": "TextView"
                                                             },
                                                             {
-                                                                "Value": "@code_art",
+                                                                "Value": "@good_art",
                                                                 "Variable": "",
                                                                 "height": "wrap_content",
                                                                 "width": "wrap_content",
@@ -8961,7 +9024,7 @@
                                                         "type": "TextView"
                                                     },
                                                     {
-                                                        "Value": "@units_name",
+                                                        "Value": "@good_unit",
                                                         "Variable": "",
                                                         "height": "wrap_content",
                                                         "width": "wrap_content",
@@ -9120,7 +9183,7 @@
                     },
                     {
                         "type": "Operation",
-                        "Name": "FillingSeries",
+                        "Name": "FillingSeriesScreen",
                         "Timer": false,
                         "hideBottomBarScreen": true,
                         "noScroll": false,
