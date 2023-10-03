@@ -24,7 +24,7 @@ import base64
 from java import jclass
 
 noClass = jclass("ru.travelfood.simple_ui.NoSQL")
-current_screen = None
+current_screen: 'Screen'
 _rs_settings = noClass("rs_settings")
 
 class Screen(ABC):
@@ -70,6 +70,9 @@ class Screen(ABC):
     def init_screen(self):
         self.hash_map.put(f'{self.__class__.__name__}_init')
         return self
+
+    def refresh_screen(self, hash_map: HashMap):
+        hash_map.refresh_screen()
 
     def _clear_screen_values(self):
         for key in self.screen_values:
@@ -2531,6 +2534,15 @@ class DocumentsDocDetailScreen(DocDetailsScreen):
     def _get_doc_barcode_data(self, args):
         return self.service.get_doc_barcode_data(args)
 
+    def _set_vision_settings(self, articles: List[str]):
+        settings = {
+            "values_list": ';'.join(articles),
+            "min_length": len(min(articles, key=len)),
+            "max_length": len(max(articles, key=len)),
+        }
+        self.articles_ocr_ncl.put('articles_ocr_settings', json.dumps(settings), True)
+
+
 class AdrDocDetailsScreen(DocDetailsScreen):
     screen_name = 'Документ товары'
     process_name = 'Адресное хранение'
@@ -2560,7 +2572,6 @@ class AdrDocDetailsScreen(DocDetailsScreen):
         self.hash_map.put('return_selected_data')
         self.service.table_type = self.table_type
         super()._on_start()
-        # self.toast(self.table_type)
 
     def on_input(self) -> None:
 

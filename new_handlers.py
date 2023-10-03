@@ -105,21 +105,35 @@ def serial_key_recognition_ocr(hash_map:HashMap):
 @HashMap()
 def article_cv_on_object_detected(hash_map: HashMap):
     """Процесс: Распознавание артикулов. Шаг: Новый шаг ActiveCV."""
-    screen: ui_models.ActiveCVArticleRecognition = ui_models.ActiveCVArticleRecognition(hash_map, rs_settings)
+    screen = ui_models.ActiveCVArticleRecognition(hash_map, rs_settings)
     screen.on_object_detected()
+
+
+@HashMap()
+def article_cv_on_input(hash_map: HashMap):
+    """Процесс: Распознавание артикулов. Шаг: Новый шаг ActiveCV."""
+    screen = ui_models.ActiveCVArticleRecognition(hash_map, rs_settings)
+    screen.on_input()
+
+
+@HashMap()
+def article_cv_on_start(hash_map: HashMap):
+    """Процесс: Распознавание артикулов. Шаг: Новый шаг ActiveCV."""
+    screen = ui_models.ActiveCVArticleRecognition(hash_map, rs_settings)
+    screen.on_start()
 
 
 @HashMap()
 def select_good_article_on_input(hash_map: HashMap):
     """Процесс: Документы. Экран: ВыборТовараАртикул."""
-    screen: ui_models.GoodsSelectArticle = ui_models.GoodsSelectArticle(hash_map, rs_settings)
+    screen = ui_models.GoodsSelectArticle(hash_map, rs_settings)
     screen.on_input()
 
 
 @HashMap()
 def select_good_article_on_start(hash_map: HashMap):
     """Процесс: Документы. Экран: ВыборТовараАртикул."""
-    screen: ui_models.GoodsSelectArticle = ui_models.GoodsSelectArticle(hash_map, rs_settings)
+    screen = ui_models.GoodsSelectArticle(hash_map, rs_settings)
     screen.on_start()
 
 @HashMap()
@@ -143,13 +157,13 @@ def tiles_on_input(hash_map: HashMap):
 
 @HashMap()
 def docs_on_start(hash_map: HashMap):
-    screen: ui_models.DocsListScreen = create_screen(hash_map)
+    screen = create_screen(hash_map, ui_models.DocumentsDocsListScreen)
     screen.on_start()
 
 
 @HashMap()
 def docs_on_select(hash_map: HashMap):
-    screen = create_screen(hash_map)
+    screen = create_screen(hash_map, ui_models.DocumentsDocsListScreen)
     screen.on_input()
 
 
