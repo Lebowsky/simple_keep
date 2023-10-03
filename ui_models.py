@@ -7236,8 +7236,12 @@ class Timer:
         if self.hash_map.get_bool('stop_timer_update'):
             return
 
+        if not self._check_connection():
+            return
+
         self.load_docs()
         self._upload_data()
+        self._upload_buffer_data()
 
         if current_screen:
             current_screen.refresh_screen(self.hash_map)
@@ -7301,6 +7305,24 @@ class Timer:
             docs_list_string = ', '.join([f"'{d['id_doc']}'" for d in data])
             self.db_service.update_uploaded_docs_status(docs_list_string)
 
+    def _upload_buffer_data(self):
+        # Имя таблицы очереди (имя метода в url http-сервиса)
+        buffer_tables = [
+            'barcodes',
+            'documents'
+        ]
+
+        for buffer_table in buffer_tables:
+            buffer_service = ExchangeQueueBuffer(buffer_table)
+            data_to_send = buffer_service.get_data_to_send()
+
+            method = self.http_service.get_method_by_path(buffer_table)
+            if data_to_send and method:
+                res = method(data_to_send)
+
+                if not res.error:
+                    buffer_service.remove_sent_data(data_to_send)
+
     def upload_all_docs(self):
         self.db_service = DocService()
         self.upload_docs()
@@ -7344,6 +7366,18 @@ class Timer:
             for item in new_documents.values()]
         return ", ".join(doc_titles)
 
+    def _check_connection(self):
+        hs_service = hs_services.HsService(self._get_http_settings())
+        try:
+            hs_service.communication_test(timeout=1)
+            answer = hs_service.http_answer
+        except Exception as e:
+            answer = hs_service.HttpAnswer(
+                error=True,
+                error_text=str(e.args[0]),
+                status_code=404,
+                url=hs_service.url)
+        return not answer.error
 
 # ^^^^^^^^^^^^^^^^^^^^^ Timer ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 

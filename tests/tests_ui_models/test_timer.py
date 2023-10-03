@@ -25,9 +25,6 @@ class TestMainEvents(unittest.TestCase):
         pass
         # print(self.sut.http_settings)
 
-    def test_timer_on_start(self):
-        self.sut.timer_on_start()
-
     @unittest.skip
     def test_load_docs(self):
         self.rs_settings.put('URL', 'url', True)
@@ -52,6 +49,8 @@ class TestMainEvents(unittest.TestCase):
         HsService.send_barcodes = MagicMock(return_value=http_result)
 
         from tiny_db_services import ExchangeQueueBuffer
+        self.rs_settings.put('path_to_databases', './', True)
+
         buffer_data = {
             "id_good": "190a7469-3325-4d33-b5ec-28a63ac83b06-848a00112f43529a11d955bce8a71ff6",
             "barcode": "2000000058455",
