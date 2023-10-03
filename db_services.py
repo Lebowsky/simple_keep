@@ -949,14 +949,14 @@ class DocService:
 class SeriesService(DbService):
     doc_basic_table_name = 'RS_docs_table'
     doc_basic_handler_name = 'RS_docs'
-    def __init__(self, params: dict):
+    def __init__(self):
         super().__init__()
-        if params and isinstance(params, dict):
-            self.params = params
-        else:
-            params = {}
+        #if params and isinstance(params, dict):
+        #    self.params = params
+        #else:
+        self.params = {}
 
-    def get_series_by_barcode(self, barcode):
+    def get_series_by_barcode(self, barcode, params: dict):
 
         params = [self.params.get('id_doc'), self.params.get('id_good'), self.params.get('id_properties'), barcode,
                   barcode]  # self.params.get('id_warehouse'),
@@ -1008,46 +1008,40 @@ class SeriesService(DbService):
 
         q = '''
             SELECT 
-            
-            RS_docs_series.id as key,
-            RS_docs_series.id_doc as id_doc,
-            RS_docs_series.id_good,
-            RS_docs_series.id_properties,
-            RS_docs_series.id_series,
-            RS_docs_series.id_warehouse,
-            RS_docs_series.qtty,
-            RS_docs_series.name,
-            RS_docs_series.best_before,
-            RS_docs_series.number,
-            RS_docs_series.production_date,
-            RS_docs.doc_type,
-            RS_docs.doc_n, 
-            RS_docs.doc_date,
-            RS_goods.name as good_name,
-            RS_goods.art,
-            RS_warehouses.name as warehouse_name
+                RS_docs_series.id as key,
+                RS_docs_series.id_doc as id_doc,
+                RS_docs_series.id_good,
+                RS_docs_series.id_properties,
+                RS_docs_series.id_series,
+                RS_docs_series.id_warehouse,
+                RS_docs_series.qtty,
+                RS_docs_series.name,
+                IFNULL(RS_docs_series.best_before, '') AS best_before,
+                RS_docs_series.number,
+                IFNULL(RS_docs_series.production_date, '') AS production_date,
+                IFNULL(RS_docs.doc_type, '') AS doc_type,
+                IFNULL(RS_docs.doc_n, '') AS doc_n,
+                IFNULL(RS_docs.doc_date, '') AS doc_date,
+                IFNULL(RS_goods.name, '') AS name,
+                IFNULL(RS_goods.art, '') AS art,
+                IFNULL(RS_warehouses.name , '') AS warehouse_name
              
             FROM RS_docs_series 
             
-            LEFT JOIN 
-            RS_docs ON 
-            RS_docs_series.id_doc =  RS_docs.id_doc
+            LEFT JOIN RS_docs 
+                ON RS_docs_series.id_doc = RS_docs.id_doc
             
-            LEFT JOIN 
-            RS_properties ON 
-            RS_docs_series.id_properties =  RS_properties.id
+            LEFT JOIN RS_properties 
+                ON RS_docs_series.id_properties = RS_properties.id
             
+            LEFT JOIN RS_goods 
+                ON RS_docs_series.id_good = RS_goods.id
             
-            LEFT JOIN 
-            RS_goods ON 
-            RS_docs_series.id_good =  RS_goods.id
-            
-            LEFT JOIN 
-            RS_warehouses ON 
-            RS_docs_series.id_warehouse =  RS_warehouses.id
+            LEFT JOIN RS_warehouses 
+                ON RS_docs_series.id_warehouse = RS_warehouses.id
             
             WHERE RS_docs_series.id_doc = ? AND 
-            RS_docs_series.id_good = ? 
+                RS_docs_series.id_good = ? 
             
         '''
         return get_query_result(q, params, True)
@@ -1119,11 +1113,11 @@ class SeriesService(DbService):
 
 
     def add_new_series_in_doc_series_table(self, barcode):
-        params = (
+        q_params = (
         self.params.get('id_doc'), self.params.get('id_good'), self.params.get('id_properties'), self.params.get('id_warehouse'), 1,
                 barcode, barcode, self.params.get('id_cell'))
         q = 'INSERT INTO RS_docs_series (id_doc, id_good, id_properties, id_warehouse, qtty, name, number, cell) VALUES(?,?,?,?,?,?,?,?)'
-        return get_query_result(q, params)
+        return get_query_result(q, q_params)
 
     def get_item_by_name(self, item_name, table_name):
         q = f'SELECT id FROM {table_name} WHERE {table_name}.name = ?'
@@ -1243,6 +1237,41 @@ class SeriesService(DbService):
         else:
             return {}
 
+    def get_values_for_screen_by_id(self, id) -> dict:
+        q = f'''
+        SELECT RS_docs_table.id_doc,
+            RS_docs_table.id_good,
+            RS_docs_table.id_properties,
+            RS_docs_table.id_unit,
+            RS_docs_table.qtty,
+            RS_docs_table.qtty_plan,
+            RS_docs_table.price,
+            RS_docs_table.use_series,
+            IFNULL(RS_docs.doc_type, '') AS doc_type,
+            IFNULL(RS_docs.doc_n, '') AS doc_n,
+            IFNULL(RS_docs.doc_date, '') AS doc_date,
+            IFNULL(RS_goods.name, '') AS good_name,
+            IFNULL(RS_goods.art, '') AS good_art,
+            IFNULL(RS_properties.name, '') AS properties_name,
+            IFNULL(RS_units.name, '') AS good_unit 
+        FROM RS_docs_table
+        
+        LEFT JOIN RS_docs ON
+            RS_docs_table.id_doc = RS_docs.id_doc
+        LEFT JOIN RS_goods ON
+            RS_docs_table.id_good = RS_goods.id
+        LEFT JOIN RS_properties ON
+            RS_docs_table.id_properties = RS_properties.id
+        LEFT JOIN RS_units ON
+            RS_docs_table.id_unit = RS_units.id
+        WHERE RS_docs_table.id = ?
+        '''
+        res = get_query_result(q,(id,),True)
+        if res:
+            return res[0]
+        else:
+            return {}
+
     def save_table_str(self, params):
         q = '''
         UPDATE RS_docs_series
@@ -1270,7 +1299,7 @@ class SeriesService(DbService):
         sum(qtty) FROM RS_docs_series
          WHERE id_doc = ? AND id_good = ? AND id_properties = ?'''
         res = get_query_result(q, params)
-        if res:
+        if res and res[0][0] is not None:
             return res[0][0]
         else:
             return 0
@@ -1292,14 +1321,14 @@ class SeriesService(DbService):
 
     def set_total_qtty(self, qtty):
 
-        params = (qtty, self.params.get('id_doc'), self.params.get('id_good'), self.params.get('id_properties'))
+        q_params = (qtty, self.params.get('id_doc'), self.params.get('id_good'), self.params.get('id_properties'))
         q = '''
         UPDATE RS_docs_table
         SET qtty = ?
         WHERE (RS_docs_table.id_series IS NULL OR RS_docs_table.id_series="" ) 
         AND RS_docs_table.id_doc = ? AND RS_docs_table.id_good = ? AND RS_docs_table.id_properties = ?
         '''
-        res = get_query_result(q, params)
+        res = get_query_result(q, q_params)
 
         DocService().set_doc_status_to_upload(self.params.get('id_doc'))
 

@@ -495,7 +495,7 @@ class BarcodeWorker:
         return self.process_result
 
     def _check_use_series(self):
-        if self.barcode_data['use_series'] == 1:
+        if int(self.barcode_data.get('use_series', 0)):
             self._set_process_result_info('use_series')
 
     def _get_barcode_data(self):

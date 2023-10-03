@@ -398,12 +398,12 @@ def prices_on_input(hash_map):
 
 @HashMap()
 def series_list_on_start(hash_map):
-    screen: ui_models.SeriesList = ui_models.SeriesList(hash_map, rs_settings)
+    screen: ui_models.SeriesSelectScreen = create_screen(hash_map, ui_models.SeriesSelectScreen)
     screen.on_start()
 
 @HashMap()
 def series_list_on_input(hash_map):
-    screen = ui_models.SeriesList(hash_map, rs_settings)
+    screen: ui_models.SeriesSelectScreen = create_screen(hash_map, ui_models.SeriesSelectScreen)
     screen.on_input()
 
 @HashMap()
