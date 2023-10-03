@@ -1008,46 +1008,40 @@ class SeriesService(DbService):
 
         q = '''
             SELECT 
-            
-            RS_docs_series.id as key,
-            RS_docs_series.id_doc as id_doc,
-            RS_docs_series.id_good,
-            RS_docs_series.id_properties,
-            RS_docs_series.id_series,
-            RS_docs_series.id_warehouse,
-            RS_docs_series.qtty,
-            RS_docs_series.name,
-            RS_docs_series.best_before,
-            RS_docs_series.number,
-            RS_docs_series.production_date,
-            RS_docs.doc_type,
-            RS_docs.doc_n, 
-            RS_docs.doc_date,
-            RS_goods.name as good_name,
-            RS_goods.art,
-            RS_warehouses.name as warehouse_name
+                RS_docs_series.id as key,
+                RS_docs_series.id_doc as id_doc,
+                RS_docs_series.id_good,
+                RS_docs_series.id_properties,
+                RS_docs_series.id_series,
+                RS_docs_series.id_warehouse,
+                RS_docs_series.qtty,
+                RS_docs_series.name,
+                IFNULL(RS_docs_series.best_before, '') AS best_before,
+                RS_docs_series.number,
+                IFNULL(RS_docs_series.production_date, '') AS production_date,
+                IFNULL(RS_docs.doc_type, '') AS doc_type,
+                IFNULL(RS_docs.doc_n, '') AS doc_n,
+                IFNULL(RS_docs.doc_date, '') AS doc_date,
+                IFNULL(RS_goods.name, '') AS name,
+                IFNULL(RS_goods.art, '') AS art,
+                IFNULL(RS_warehouses.name , '') AS warehouse_name
              
             FROM RS_docs_series 
             
-            LEFT JOIN 
-            RS_docs ON 
-            RS_docs_series.id_doc =  RS_docs.id_doc
+            LEFT JOIN RS_docs 
+                ON RS_docs_series.id_doc = RS_docs.id_doc
             
-            LEFT JOIN 
-            RS_properties ON 
-            RS_docs_series.id_properties =  RS_properties.id
+            LEFT JOIN RS_properties 
+                ON RS_docs_series.id_properties = RS_properties.id
             
+            LEFT JOIN RS_goods 
+                ON RS_docs_series.id_good = RS_goods.id
             
-            LEFT JOIN 
-            RS_goods ON 
-            RS_docs_series.id_good =  RS_goods.id
-            
-            LEFT JOIN 
-            RS_warehouses ON 
-            RS_docs_series.id_warehouse =  RS_warehouses.id
+            LEFT JOIN RS_warehouses 
+                ON RS_docs_series.id_warehouse = RS_warehouses.id
             
             WHERE RS_docs_series.id_doc = ? AND 
-            RS_docs_series.id_good = ? 
+                RS_docs_series.id_good = ? 
             
         '''
         return get_query_result(q, params, True)
@@ -1243,23 +1237,25 @@ class SeriesService(DbService):
         else:
             return {}
     
-    def get_values_for_screen_by_id(self, id):
+    def get_values_for_screen_by_id(self, id) -> dict:
         q = f'''
         SELECT RS_docs_table.id_doc,
-        RS_docs_table.id_good,
-        RS_docs_table.id_properties,
-        RS_docs_table.id_unit,
-        RS_docs_table.qtty,
-        RS_docs_table.qtty_plan,
-        RS_docs_table.price,
-        RS_docs_table.use_series,
-        RS_docs.doc_type,
-        RS_docs.doc_n,
-        RS_docs.doc_date,
-        RS_goods.name as good_name,
-        RS_goods.art as good_art,
-        RS_properties.name as properties_name,
-        RS_units.name as good_unit FROM RS_docs_table
+            RS_docs_table.id_good,
+            RS_docs_table.id_properties,
+            RS_docs_table.id_unit,
+            RS_docs_table.qtty,
+            RS_docs_table.qtty_plan,
+            RS_docs_table.price,
+            RS_docs_table.use_series,
+            IFNULL(RS_docs.doc_type, '') AS doc_type,
+            IFNULL(RS_docs.doc_n, '') AS doc_n,
+            IFNULL(RS_docs.doc_date, '') AS doc_date,
+            IFNULL(RS_goods.name, '') AS good_name,
+            IFNULL(RS_goods.art, '') AS good_art,
+            IFNULL(RS_properties.name, '') AS properties_name,
+            IFNULL(RS_units.name, '') AS good_unit 
+        FROM RS_docs_table
+        
         LEFT JOIN RS_docs ON
             RS_docs_table.id_doc = RS_docs.id_doc
         LEFT JOIN RS_goods ON
