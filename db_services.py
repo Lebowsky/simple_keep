@@ -409,13 +409,13 @@ class DocService:
 
         return qlist
 
-    def get_all_articles_in_document(self) -> str:
+    def get_all_articles_in_document(self) -> List[str]:
         query = ('SELECT DISTINCT RS_goods.art as art'
                  ' FROM RS_docs_table'
                  ' LEFT JOIN RS_goods ON RS_docs_table.id_good = RS_goods.id'
                  ' WHERE RS_docs_table.id_doc = ?')
         goods = self.provider.sql_query(query, self.doc_id)
-        return ';'.join(good['art'] for good in goods)
+        return [good['art'] for good in goods] if goods is not None else []
 
     @staticmethod
     def _get_query_result(query_text, args=None, return_dict=False):
@@ -449,6 +449,7 @@ class DocService:
             f'{self.docs_table_name}.doc_date',
             f'{self.docs_table_name}.id_warehouse',
             f'ifnull(RS_warehouses.name,"") as RS_warehouse',
+            f'ifnull(RS_warehouses.name,"") as warehouse',
             f'ifnull({self.docs_table_name}.verified, 0) as verified',
             f'ifnull({self.docs_table_name}.sent, 0) as sent',
             f'{self.docs_table_name}.add_mark_selection',
@@ -490,7 +491,7 @@ class DocService:
             else:
                 where += ' AND doc_type=?'
         
-        where += '''AND RS_barc_flow.id_doc IS NULL'''
+        where += ''' AND RS_barc_flow.id_doc IS NULL'''
         
         query_text = f'''
             {query_text}
@@ -1371,9 +1372,6 @@ class AdrDocService(DocService):
         self.current_cell = cur_cell
         self.table_type = table_type
         self.provider = SqlQueryProvider(self.docs_table_name, sql_class=sqlClass())
-
-    def get_current_cell(self):
-        pass
 
     def get_doc_details_data(
             self,

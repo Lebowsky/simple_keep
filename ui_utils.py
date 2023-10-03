@@ -4,7 +4,7 @@ import socket
 from dataclasses import dataclass, asdict
 from datetime import datetime, timedelta
 from functools import wraps
-from typing import Callable, Union, List, Dict, Literal, Optional
+from typing import Callable, Union, List, Dict, Literal, Optional, Tuple
 
 from db_services import DocService, BarcodeService
 from java import jclass
@@ -154,23 +154,53 @@ class HashMap:
             self.hash_map.put(key, str(value))
 
     def put_data(self, data: dict):
-        for key, value in data.items():
-            self[key] = value
+        if data:
+            for key, value in data.items():
+                self[key] = value
 
     def containsKey(self, key):
         return self.hash_map.containsKey(key)
+
+    def key_set(self) -> str:
+        return self.hash_map.keySet()
+
+    def keys(self) -> List[str]:
+        keys = str(self.key_set())
+        return keys[1:len(keys)-1].split(', ')
+
+    def items(self) -> List[Tuple[str, Optional[str]]]:
+        return [(key, self[key]) for key in self.keys()]
+
+    def show_items(
+            self,
+            only: Optional[List[str]] = None,
+            exclude: Optional[List[str]] = None,
+            is_value_exists: bool = False,
+    ) -> None:
+        text = 'Список элементов HashMap: \n'
+        if is_value_exists:
+            text += 'True если есть любое значение \n'
+        hashmap_keys = self.keys()
+        items = self.items()
+        if only:
+            items = [item for item in items if item[0] in only]
+            for key in only:
+                if key not in hashmap_keys:
+                    items.append((key, 'Нет ключа'))
+        if exclude:
+            items = [item for item in items if item[0] not in exclude]
+
+        for key, value in items:
+            value = value if not is_value_exists else value is not None
+            text += f'{key}: {value}\n'
+        self.toast(text)
+
 
     def remove(self, key):
         self.hash_map.remove(key)
 
     def delete(self, key):
         self.hash_map.remove(key)
-
-    def export(self) -> list:
-        return self.hash_map.export()
-
-    def to_json(self):
-        return json.dumps(self.export(), indent=4, ensure_ascii=False).encode('utf8').decode()
 
     def add_to_cv_list(
             self,
@@ -235,8 +265,8 @@ class HashMap:
             min_length: int = 1,
             max_length: int = 20,
             result_var: str = 'ocr_result',
-            mesure_qty: int = 0,
-            min_freq: int = 0,
+            mesure_qty: int = 1,
+            min_freq: int = 1,
             query: str = '',
             control_field: str = '',
             cursor: Optional[list] = None,
@@ -310,8 +340,10 @@ class HashMap:
             self.put('ShowDialogStyle', dialog_style)
 
     def get_current_screen(self):
-
         return self['current_screen_name'] if self.containsKey('current_screen_name') else ''
+
+    def get_parent_screen(self):
+        return self['parent_screen'] if self.containsKey('parent_screen') else ''
 
     def get_current_process(self):
         return self['current_process_name']
@@ -463,7 +495,7 @@ class BarcodeWorker:
         return self.process_result
 
     def _check_use_series(self):
-        if self.barcode_data['use_series'] == 1:
+        if int(self.barcode_data.get('use_series', 0)):
             self._set_process_result_info('use_series')
 
     def _get_barcode_data(self):

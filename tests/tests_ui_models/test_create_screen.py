@@ -21,7 +21,7 @@ class TestMainCreateScreen(unittest.TestCase):
 
         self.assertIsInstance(screen, GroupScanDocDetailsScreenNew)
 
-        from new_handlers import current_screen
+        from ui_models import current_screen
         self.assertIsInstance(current_screen, GroupScanDocDetailsScreenNew)
 
     def test_must_create_screen_and_not_rewrite_global_variable(self):
