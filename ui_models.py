@@ -24,7 +24,7 @@ import base64
 from java import jclass
 
 noClass = jclass("ru.travelfood.simple_ui.NoSQL")
-current_screen = None
+current_screen: 'Screen' = None
 _rs_settings = noClass("rs_settings")
 
 
@@ -71,6 +71,9 @@ class Screen(ABC):
     def init_screen(self):
         self.hash_map.put(f'{self.__class__.__name__}_init')
         return self
+
+    def refresh_screen(self, hash_map: HashMap):
+        hash_map.refresh_screen()
 
     def _clear_screen_values(self):
         for key in self.screen_values:
@@ -1189,7 +1192,6 @@ class DocsListScreen(Screen):
         return id_doc
 
 
-
 class GroupScanDocsListScreen(DocsListScreen):
     screen_name = 'Документы'
     process_name = 'Групповая обработка'
@@ -1385,7 +1387,7 @@ class AdrDocsListScreen(DocsListScreen):
     def _get_doc_list_data(self, doc_type, doc_status) -> list:
         results = self.service.get_doc_view_data(doc_type, doc_status)
         return results
-    
+
     @staticmethod
     def _prepare_table_data(list_data) -> list:
         table_data = []
@@ -1602,6 +1604,7 @@ class DocDetailsScreen(Screen):
 
     def on_post_start(self):
         pass
+
     def _on_start(self):
         self._set_visibility_on_start()
         self.hash_map.put('SetTitle', self.hash_map["doc_type"])
@@ -2443,6 +2446,7 @@ class DocumentsDocDetailScreen(DocDetailsScreen):
 
     def __init__(self, hash_map, rs_settings):
         super().__init__(hash_map, rs_settings)
+        self.articles_ocr_ncl = noClass('articles_ocr_ncl')
 
     def on_start(self) -> None:
         super()._on_start()
@@ -2514,27 +2518,22 @@ class DocumentsDocDetailScreen(DocDetailsScreen):
             super().scan_error_sound()
 
         elif listener == 'btn_goods_ocr':
-            self.hash_map.delete('finded_articles')
-            self.hash_map.put('art_info', 'Найденные артикулы: ')
-            list_art = self.service.get_all_articles_in_document()
-            self.hash_map.put('list_art', list_art)
+            articles = self.service.get_all_articles_in_document()
+            if not articles:
+                self.hash_map.toast('В документе отстутствуют артикулы')
+                return
+            self._set_vision_settings(articles=articles)
             self.hash_map.put('RunCV', 'Распознавание артикулов')
 
         elif listener == 'ActiveCV':
-            if self.hash_map.containsKey('button_manage_articles'):
-                finded_articles = self.hash_map.get('finded_articles')
-
-                if finded_articles is None:
-                    self.hash_map.toast('Артикулы не найдены')
-                else:
-                    title = 'Выберите товар'
-                    allowed_fact_input = self.rs_settings.get('allow_fact_input')
-                    if allowed_fact_input:
-                        title += ' и укажите количество'
-                    self.hash_map.put('title_select_good_article', title)
-                    self.hash_map.show_screen('ВыборТовараАртикул')
-
-            self.hash_map.delete('button_manage_articles')
+            if not self.articles_ocr_ncl.get('button_manage_articles'):
+                return
+            self.articles_ocr_ncl.delete('button_manage_articles')
+            finded_articles = self.articles_ocr_ncl.get('finded_articles')
+            if finded_articles is None:
+                self.hash_map.toast('Артикулы не найдены')
+                return
+            self.hash_map.show_screen('ВыборТовараАртикул')
 
         elif listener == 'btn_barcodes':
             self.hash_map.show_dialog('ВвестиШтрихкод')
@@ -2607,6 +2606,14 @@ class DocumentsDocDetailScreen(DocDetailsScreen):
 
     def _get_doc_barcode_data(self, args):
         return self.service.get_doc_barcode_data(args)
+
+    def _set_vision_settings(self, articles: List[str]):
+        settings = {
+            "values_list": ';'.join(articles),
+            "min_length": len(min(articles, key=len)),
+            "max_length": len(max(articles, key=len)),
+        }
+        self.articles_ocr_ncl.put('articles_ocr_settings', json.dumps(settings), True)
 
 
 class AdrDocDetailsScreen(DocDetailsScreen):

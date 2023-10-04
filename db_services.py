@@ -410,13 +410,13 @@ class DocService:
 
         return qlist
 
-    def get_all_articles_in_document(self) -> str:
+    def get_all_articles_in_document(self) -> List[str]:
         query = ('SELECT DISTINCT RS_goods.art as art'
                  ' FROM RS_docs_table'
                  ' LEFT JOIN RS_goods ON RS_docs_table.id_good = RS_goods.id'
                  ' WHERE RS_docs_table.id_doc = ?')
         goods = self.provider.sql_query(query, self.doc_id)
-        return ';'.join(good['art'] for good in goods)
+        return [good['art'] for good in goods] if goods is not None else []
 
     @staticmethod
     def _get_query_result(query_text, args=None, return_dict=False):
