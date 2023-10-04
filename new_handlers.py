@@ -244,6 +244,7 @@ def adr_docs_on_start(hash_map: HashMap):
         hash_map=hash_map,
         screen_class=ui_models.AdrDocsListScreen
     )
+    screen.init_screen()
     screen.on_start()
 
 @HashMap()
