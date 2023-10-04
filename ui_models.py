@@ -3418,15 +3418,11 @@ class BaseGoodSelect(Screen):
         elif listener == 'barcode':
             self._process_the_barcode()
         elif listener == "CardsClick":
-            current_elem = self.hash_map.get_json('selected_card_data')
             self.print_ticket()
         elif listener == 'btn_doc_good_barcode':
             self._handle_doc_good_barcode()
         elif listener == 'btn_series_show':
-            current_elem = self.hash_map.get_json('selected_card_data')
-            self.hash_map['back_screen'] = self.hash_map.get_current_screen()
-            # self.open_series_screen('', current_elem)
-            self._open_series_screen(current_elem['key'])
+            self._open_series_screen(self.hash_map['key'])
 
     def _handle_btn_ok(self):
         new_qtty = float(self.hash_map['new_qtty'] or 0)
@@ -3643,18 +3639,17 @@ class BaseGoodSelect(Screen):
         PrintService.print(self.hash_map, data)
 
     def _open_series_screen(self, doc_row_key):
+        set_current_screen(None)
         screen_values = {
             'doc_row_id': doc_row_key,
             'title': 'Серии',
             'use_adr_docs_tables': '0'
         }
-
-        screen = create_screen(
+        screen = SeriesSelectScreen(
             self.hash_map,
-            SeriesSelectScreen,
-            screen_values=screen_values
+            self.rs_settings
         )
-        screen.show_process_result()
+        screen.show_process_result(screen_values)
 
     def open_series_screen(self, id_doc, current_elem):
         current_elem['id'] = current_elem.get('key')
@@ -3701,7 +3696,7 @@ class GoodsSelectScreen(BaseGoodSelect):
             doc_position = self._find_matching_good(doc_data, current_elem['id_good'],
                                                             current_elem['id_properties'],
                                                             current_elem['id_unit'])
-            self.hash_map.put('doc_data', doc_data, to_json=True)
+            self.hash_map.put('GoodsSelectScreen_doc_data', doc_data, to_json=True)
             self.hash_map.put('doc_rows', doc_rows)
 
             if doc_position:
@@ -3729,7 +3724,7 @@ class GoodsSelectScreen(BaseGoodSelect):
 
     def _get_current_elem(self):
         selected_card_position = int(self.hash_map.get('selected_card_position'))
-        table_data = self.hash_map.get('doc_data', from_json=True)
+        table_data = self.hash_map.get('GoodsSelectScreen_doc_data', from_json=True)
         current_elem = table_data[selected_card_position]
         current_elem['key'] = current_elem.get('id')
         return current_elem
@@ -3739,14 +3734,14 @@ class GoodsSelectScreen(BaseGoodSelect):
         global_position = index if index else int(self.hash_map.get('selected_card_position'))
 
         doc_rows = int(self.hash_map.get('doc_rows'))
-        doc_data = self.hash_map.get('doc_data', from_json=True)
+        doc_data = self.hash_map.get('GoodsSelectScreen_doc_data', from_json=True)
 
         if index is None:
             # перед перелистыванием сохраним дельту и обновим кол-во в словаре
             self._save_new_delta()
             doc_data[global_position]['qtty'] = self.hash_map.get('qtty')
             doc_data[global_position]['new_qtty'] = self.hash_map.get('new_qtty')
-            self.hash_map.put('doc_data', doc_data, to_json=True)
+            self.hash_map.put('GoodsSelectScreen_doc_data', doc_data, to_json=True)
 
         if action == 'next':
             pos = global_position + 1 if global_position < doc_rows else 1
@@ -3805,7 +3800,7 @@ class GoodsSelectScreen(BaseGoodSelect):
             return True
 
         if id_good != id_good_br:
-            table_data = self.hash_map.get('doc_data', from_json=True)
+            table_data = self.hash_map.get('GoodsSelectScreen_doc_data', from_json=True)
             match_index = self._find_matching_good(table_data, id_good_br, id_property_br, id_unit_br)
 
             if match_index is not None:
