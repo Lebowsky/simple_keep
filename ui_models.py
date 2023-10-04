@@ -27,6 +27,7 @@ noClass = jclass("ru.travelfood.simple_ui.NoSQL")
 current_screen: 'Screen' = None
 _rs_settings = noClass("rs_settings")
 
+
 class Screen(ABC):
     screen_name: str
     process_name: str
@@ -160,8 +161,9 @@ class Screen(ABC):
             self.width = "match_parent"
             self.StrokeWidth = 1
 
+# ==================== Printing screens =============================
 
-# ==================== Pritnting screens =============================
+
 class HtmlView(Screen):
     screen_name = 'Результат'
     process_name = 'Печать'
@@ -219,6 +221,7 @@ class HtmlView(Screen):
         self.hash_map.put('html', html)
         self.hash_map.put('data_for_printing_keys', list_for_choose)
         self.hash_map.put('matching_table', table_view.to_json())
+        self.hash_map.put('return_selected_data')
         self.hash_map.refresh_screen()
 
     def get_details_data(self, html_doc_params: set) -> List[Dict]:
@@ -238,9 +241,10 @@ class HtmlView(Screen):
 
     def on_input(self):
         if self.listener == 'ON_BACK_PRESSED':
-            self.hash_map.show_screen('Список шаблонов')
-
-        elif self.listener == 'btn_cancel':
+            if self.print_ncl.get('from_file_browser'):
+                self.print_ncl.delete('from_file_browser')
+                self.hash_map.finish_process_result()
+                return
             self.hash_map.show_screen('Список шаблонов')
 
         elif self.listener == 'btn_save':
@@ -276,20 +280,26 @@ class HtmlView(Screen):
 
         elif self.listener == 'PrintBitmap':
             path_to_png = self.hash_map.get('PrintBitmapPath')
-            self.print_ncl.put('preview_label_template_image', path_to_png, True)
+            # Перенос шаблонов в отдельную папку.
+            directory, name = os.path.split(path_to_png)
+            new_path = os.path.join(directory, 'saved_label_templates', name)
+            os.makedirs(os.path.join(directory, 'saved_label_templates'), exist_ok=True)
+            shutil.copy(path_to_png, new_path)
+            os.remove(path_to_png)
+
+            self.print_ncl.put('preview_label_template_image', new_path, True)
             self.hash_map.beep()
             self.hash_map.toast('Шаблон сохранён')
+            self.print_ncl.delete('from_file_browser')
             self.hash_map.show_screen('Настройки печати Шаблоны')
 
         elif self.listener == 'CardsClick':
-            card_position = int(self.hash_map.get("selected_card_position"))
-            if card_position == 0:
+            card_data = json.loads(self.hash_map.get('selected_card_data'))
+            if not card_data:
                 return
-            matching_table = json.loads(self.hash_map.get("matching_table"))
-            current_elem = matching_table['customtable']['tabledata'][card_position]
             self.hash_map.put('list_field', self.hash_map.get('data_for_printing_keys'))
             self.hash_map.show_dialog('НастройкаСоответствияДиалог',
-                                      title=current_elem['key'], buttons=['Да', 'Нет'])
+                                      title=card_data['key'], buttons=['Да', 'Нет'])
 
         elif self.hash_map.get("event") == 'onResultPositive':
             card_position = int(self.hash_map.get('selected_card_position'))
@@ -301,13 +311,6 @@ class HtmlView(Screen):
                                   'utf8').decode())
             self.on_start()
             self.hash_map.refresh_screen()
-
-        elif self.listener == 'barcode_type_click':
-            self.on_start()
-            self.hash_map.refresh_screen()
-        elif self.listener == 'select_field':
-            pass
-
 
     def on_post_start(self):
         pass
@@ -382,13 +385,6 @@ class HtmlView(Screen):
 
         return row_view
 
-    @staticmethod
-    def show_screen(hash_map, data_for_printing):
-        if data_for_printing:
-            hash_map.put('print_parameters', json.dumps(data_for_printing))
-            # if self.params:
-            hash_map.show_process_result('Печать', 'Результат')
-
 
 class TemplatesList(Screen):
     screen_name = 'Список шаблонов'
@@ -405,7 +401,9 @@ class TemplatesList(Screen):
             self.hash_map.show_screen('Настройки печати Шаблоны')
             return
         doc_cards = self._get_doc_cards_view(list_data)
-        self.hash_map['templates_cards'] = doc_cards.to_json()
+        self.print_ncl.put('templates_cards', doc_cards.to_json(), True)
+        self.hash_map.put('templates_cards', doc_cards.to_json())
+        self.hash_map.put('return_selected_data')
         self.hash_map.delete('matching_table')
 
     def on_input(self):
@@ -413,14 +411,9 @@ class TemplatesList(Screen):
             self.hash_map.show_screen('Настройки печати Шаблоны')
 
         elif self.listener == 'CardsClick':
-            card_position = self.hash_map.get("selected_card_position")
-            jlist = self.hash_map.get("templates_cards")
-            if not jlist:
-                raise Exception('TemplatesList, on_input, jlist, empty templates_cards')
-            jlist = json.loads(jlist)
-            selected_card = jlist['customcards']['cardsdata'][int(card_position)]
-            self.print_ncl.put('lable_file_name', selected_card.get('file_name'), True)
-            self.print_ncl.put('lable_full_path', selected_card.get('full_path'), True)
+            card_data = json.loads(self.hash_map.get('selected_card_data'))
+            self.print_ncl.put('lable_file_name', card_data.get('file_name'), True)
+            self.print_ncl.put('lable_full_path', card_data.get('full_path'), True)
             self.hash_map.show_screen('Результат')
 
     def on_post_start(self):
@@ -488,6 +481,455 @@ class TemplatesList(Screen):
         return html_files_info
 
 
+class PrintSettings(Screen):
+    screen_name = 'Настройки печати'
+    process_name = 'Печать'
+
+    def __init__(self, hash_map: HashMap, rs_settings):
+        super().__init__(hash_map, rs_settings)
+        self.print_ncl = noClass('print_ncl')
+
+    def on_start(self):
+        print_through = self.print_ncl.get('print_through')
+        self.hash_map.put('check_box_bluetooth_print',
+                          str(print_through == 'BT').lower())
+        self.hash_map.put('check_box_wifi_print', str(print_through == 'WiFi').lower())
+
+    def on_input(self):
+        listener = self.listener
+        if listener == 'btn_bluetooth_printer_settings':
+            self.hash_map.show_screen('Настройки печати Bluetooth')
+        elif listener == 'btn_wifi_printer_settings':
+            self.hash_map.show_screen('Настройки печати WiFi')
+        elif listener == 'btn_label_templates_settings':
+            self.hash_map.show_screen('Настройки печати Шаблоны')
+        elif listener == 'check_box_bluetooth_print':
+            self.print_ncl.put('print_through', 'BT', True)
+            self.hash_map.toast('Печать через Bluetooth')
+        elif listener == 'check_box_wifi_print':
+            self.print_ncl.put('print_through', 'WiFi', True)
+            self.hash_map.toast('Печать через WiFi')
+        elif listener == 'ON_BACK_PRESSED':
+            self.hash_map.finish_process()
+
+    def on_post_start(self):
+        pass
+
+    def show(self, args=None):
+        pass
+
+
+class PrintBluetoothSettings(Screen):
+    screen_name = 'Настройки печати Bluetooth'
+    process_name = 'Печать'
+
+    def __init__(self, hash_map: HashMap, rs_settings):
+        super().__init__(hash_map, rs_settings)
+        self.bt_ncl = noClass("bt_settings")
+
+    def on_start(self):
+        printer = self.bt_ncl.get("default_printer") or 'Не выбран'
+        self.hash_map.put('default_printer', printer)
+
+    def on_input(self):
+        listener = self.listener
+        if listener == 'btn_show_connected':
+            devices = self.hash_map.get("BTResult")
+            devices = json.loads(devices) if devices else []
+            jcards = {"cards": []}
+
+            for device in devices:
+                card = {"key": device.get("address"),
+                        "items": [
+                            {
+                                "key": "Устройство",
+                                "value": device.get("name"),
+                                "size": "15",
+                                "color": "#1b31c2",
+                                "caption_size": "12",
+                                "caption_color": "#1b31c2"
+                            },
+                            {
+                                "key": "MAC",
+                                "value": device.get("address"),
+                                "size": "15",
+                                "color": "#131e61",
+                                "caption_size": "12",
+                                "caption_color": "#1b31c2"
+                            },
+                            {
+                                "key": "state",
+                                "value": device.get("state"),
+                                "size": "15",
+                                "color": "#131e61",
+                                "caption_size": "12",
+                                "caption_color": "#1b31c2"
+                            }
+                        ]}
+
+                jcards["cards"].append(card)
+
+            self.hash_map.put("cards", json.dumps(jcards))
+
+        elif listener == 'btn_stop_scan':
+            if self.bt_ncl.get('scanning'):
+                self.bt_ncl.put('scanning', False, True)
+                self.hash_map.put('BTStopScan', '')
+                self.hash_map.toast('Сканирование остановлено')
+
+        elif listener == 'btn_bt_disconnect':
+            if self.bt_ncl.get('default_printer'):
+                try:
+                    bt.close_socket()
+                    self.hash_map.delete('default_printer')
+                    self.bt_ncl.delete('default_printer')
+                    self.hash_map.put('default_printer', 'Не выбран')
+                    self.hash_map.toast('Принтер отключен')
+                except Exception as e:
+                    self.hash_map.toast('Нет подключенных принтеров')
+            else:
+                self.hash_map.toast('Нет подключенных принтеров')
+
+        elif listener == 'btn_start_scan':
+            bt_discover_handlers = [{
+                "action": "run", "type": "set",
+                "method": "beep;toast=@BTDiscoverResult",
+                "postExecute": ""
+            }]
+            self.bt_ncl.put('scanning', True, True)
+            self.hash_map.put("BTStartScan", "")
+            self.hash_map.put("BTDiscoverHandlers", json.dumps(bt_discover_handlers))
+
+            self.hash_map.toast('Сканирование')
+
+        elif listener == 'CardsClick':
+            bt_handlers = [
+                {"action": "run", "type": "python", "method": "bluetooth_error"}
+            ]
+
+            mac = self.hash_map.get("selected_card_key")
+            device = bt.get_device(mac)
+            if device is None:
+                self.hash_map.toast("Не получилось подключиться к устройству")
+                return
+            self.hash_map.toast('тест')
+            connected = bt.connect_to_client(device, json.dumps(bt_handlers))
+            if not connected:
+                self.hash_map.toast("Устройство не является принтером")
+                return
+            self.bt_ncl.put("default_printer", mac, False)
+            self.hash_map.put("default_printer", mac)
+            self.hash_map.beep()
+            self.hash_map.toast('Успешно')
+
+        elif listener == 'btn_test_print':
+            if self.bt_ncl.get('default_printer'):
+                zpl = '^XA^CFA,30^FO10,50^FDTest^FS^BY3,2,120^FO10,150^BC^FD12345678^FS^XZ'
+                sent, result = PrintService.print_bt(zpl)
+                self.hash_map.toast(result)
+            else:
+                self.hash_map.toast('Нет подключенных принтеров')
+        elif listener == 'ON_BACK_PRESSED':
+            self.hash_map.show_screen('Настройки печати')
+
+    def on_post_start(self):
+        pass
+
+    def show(self, args=None):
+        pass
+
+
+class PrintWiFiSettings(Screen):
+    screen_name = 'Настройки печати WiFi'
+    process_name = 'Печать'
+
+    def __init__(self, hash_map: HashMap, rs_settings):
+        super().__init__(hash_map, rs_settings)
+        self.print_ncl = noClass("print_ncl")
+
+    def on_start(self):
+        import re
+        ip = self.print_ncl.get('current_ip')
+        if ip:
+            self.hash_map.put('wi_fi_ip', ip)
+            self.hash_map.put('info_wifi_current_ip',
+                              f'IP подключенного принтера: {ip}')
+        else:
+            ip = self.hash_map.get('wi_fi_ip')
+            if ip:
+                pattern = r'^(\d{1,3}\.){3}\d{1,3}$'
+                if not re.match(pattern, ip):
+                    self.hash_map.delete('wi_fi_ip')
+                    self.hash_map.toast('Неверный формат IP')
+                    self.hash_map.put('info_wifi_current_ip',
+                                      f'Нет подключенного принтера')
+                    return
+                self.hash_map.put('info_wifi_current_ip',
+                                  f'IP подключенного принтера: {ip}')
+            else:
+                self.hash_map.put('info_wifi_current_ip', f'Нет подключенного принтера')
+
+    def on_input(self):
+        listener = self.listener
+        if listener == 'btn_wifi_save_ip':
+            self._wifi_save_ip()
+        elif listener == 'btn_wifi_delete_ip':
+            self._wifi_delete_ip()
+        elif listener == 'btn_test_wi_fi':
+            self.hash_map.toast('Тест печати')
+            self._test_wi_fi()
+        elif listener == 'btn_wi_fi_print_zpl':
+            self.hash_map.toast('Тест zpl')
+            self._print_zpl()
+        elif listener == 'ON_BACK_PRESSED':
+            self.hash_map.show_screen('Настройки печати')
+
+    def on_post_start(self):
+        pass
+
+    def show(self, args=None):
+        pass
+
+    def _wifi_save_ip(self):
+        import re
+        ip = self.hash_map.get('wi_fi_ip')
+        if not ip:
+            self.hash_map.toast('Не указан ip')
+            return
+        pattern = r'^(\d{1,3}\.){3}\d{1,3}$'
+        if not re.match(pattern, ip):
+            self.hash_map.delete('wi_fi_ip')
+            self.hash_map.toast('Неверный формат IP')
+            return
+        self.print_ncl.put('current_ip', ip, True)
+        self.hash_map.beep()
+        self.hash_map.toast('IP принтера записан')
+
+    def _wifi_delete_ip(self):
+        ip = self.print_ncl.get('current_ip')
+        if not ip:
+            self.hash_map.toast('Не указан ip')
+            return
+        self.hash_map.delete('wi_fi_ip')
+        self.print_ncl.delete('current_ip')
+        self.hash_map.toast('IP принтера удалён')
+
+    def _print_zpl(self):
+        zpl = self.hash_map.get('wi_fi_zpl_input')
+        if not zpl:
+            self.hash_map.toast('Нет zpl кода для печати')
+            return
+        self.print_ncl.put('wifi_data_to_print', zpl, True)
+        self.hash_map.run_event_async('print_wifi')
+
+    def _test_wi_fi(self):
+        zpl = '^XA^CFA,30^FO10,50^FDTest^FS^BY3,2,120^FO10,150^BC^FD12345678^FS^XZ'
+        self.print_ncl.put('wifi_data_to_print', zpl, True)
+        self.hash_map.run_event_async('print_wifi')
+
+
+class PrintLabelTemplatesSettings(Screen):
+    screen_name = 'Настройки печати Шаблоны'
+    process_name = 'Печать'
+
+    def __init__(self, hash_map: HashMap, rs_settings):
+        super().__init__(hash_map, rs_settings)
+        self.print_ncl = noClass("print_ncl")
+        self.hs_service = HsService(self.get_http_settings())
+
+    def on_start(self):
+        template = self.print_ncl.get('current_label_template_name') or 'Нет'
+        self.hash_map.put('current_label_template_name', f'Текущий шаблон: {template}')
+        path_to_label_preview_image = self.print_ncl.get('preview_label_template_image')
+        if not path_to_label_preview_image:
+            return
+        temp_preview = self.print_ncl.get('preview_label_template_image_temp')
+        path = temp_preview if temp_preview else path_to_label_preview_image
+        self.hash_map.put('preview_label_template_image', '~' + path)
+
+    def on_input(self):
+        listener = self.listener
+        if listener == 'btn_get_labels':
+            self._get_labels()
+        elif listener == 'btn_select_label_template':
+            self.hash_map.show_screen('Список шаблонов')
+        elif listener == 'btn_delete_template_settings':
+            self.delete_template_settings()
+        elif listener == 'btn_label_template_size_settings':
+            path_to_label = self.print_ncl.get('preview_label_template_image')
+            if not os.path.isfile(path_to_label):
+                self.hash_map.toast('Сначала нужно выбрать шаблон')
+                return
+            self.hash_map.show_screen('Настройки печати Размеры')
+        elif listener == 'ON_BACK_PRESSED':
+            self.hash_map.show_screen('Настройки печати')
+
+
+    def on_post_start(self):
+        pass
+
+    def show(self, args=None):
+        pass
+
+    def _get_labels(self):
+        try:
+            answer = self.hs_service.get_templates()
+            if answer['status_code'] != 200:
+                reason = answer['error_pool']
+                raise f'Ошибка соединения с сервером: {reason}'
+
+            output_folder = os.path.join(suClass.get_temp_dir(), 'labels')
+
+            os.makedirs(output_folder, exist_ok=True)
+
+            data_list = answer['data']
+            self.hash_map.toast(f'data_list:{type(data_list)}, {data_list}')
+
+            for data_dict in data_list:
+                file_name = self._correct_filename(data_dict['name']) + '.htm'
+                file_path = os.path.join(output_folder, file_name)
+
+                try:
+                    with open(file_path, 'w', encoding='utf-8') as file:
+                        file.write(base64.b64decode(data_dict['html']).decode('utf-8'))
+                except Exception as e:
+                    self.hash_map.toast(
+                        f'Ошибка сохранения файла {file_path}: {str(e)}')
+                    raise f'Ошибка сохранения файла {file_path}: {str(e)}'
+            self.print_ncl.put('label_templates_dir', output_folder, True)
+            self.hash_map.toast('Шаблоны загружены')
+        except Exception as e:
+            self.hash_map.toast(str(e))
+
+    @staticmethod
+    def _correct_filename(filename):
+        illegal_chars = ['<', '>', ':', '"', "'", '/', '\\', '|', '?', '*', "<", ">",
+                         '\x00']
+        for char in illegal_chars:
+            filename = filename.replace(char, '')
+        return filename
+
+    def delete_template_settings(self):
+        self.print_ncl.delete('barcode_width')
+        self.print_ncl.delete('barcode_height')
+        self.print_ncl.delete('barcode_left')
+        self.print_ncl.delete('barcode_right')
+        self.print_ncl.delete('barcode_up')
+        self.print_ncl.delete('barcode_down')
+        self.print_ncl.delete('matching_table')
+        self.print_ncl.delete('barcode_type')
+        self.print_ncl.delete('current_label_template_name')
+        self.print_ncl.delete('current_label_template_path')
+
+        old_preview_tmp = self.print_ncl.get('preview_label_template_image_temp')
+        if old_preview_tmp and os.path.exists(old_preview_tmp):
+            os.remove(old_preview_tmp)
+        self.print_ncl.delete('preview_label_template_image_temp')
+        old_preview = self.print_ncl.get('preview_label_template_image')
+        if old_preview and os.path.exists(old_preview):
+            os.remove(old_preview)
+        self.print_ncl.delete('preview_label_template_image')
+
+
+class PrintTemplateSizeSettings(Screen):
+    screen_name = 'Настройки печати Размеры'
+    process_name = 'Печать'
+
+    def __init__(self, hash_map: HashMap, rs_settings):
+        super().__init__(hash_map, rs_settings)
+        self.print_ncl = noClass("print_ncl")
+
+    def on_start(self):
+        width_template = self.hash_map.get('width_print_template')
+        width_template = int(float(width_template)) if width_template else 50
+        height_template = self.hash_map.get('height_print_template')
+        height_template = int(float(height_template)) if height_template else 50
+        dpmm = self.hash_map.get('dpmm_print_template')
+        dpmm = int(dpmm) if dpmm else 8
+        image_height = self.hash_map.get('image_height_print_template')
+        image_height = int(float(image_height)) if image_height else 50
+        image_width = self.hash_map.get('image_width_print_template')
+        image_width = int(float(image_width)) if image_width else 50
+        ll = self.hash_map.get('image_ll_print_template')
+        ll = int(float(ll)) if ll else 15
+        pw = self.hash_map.get('image_pw_print_template')
+        pw = int(float(pw)) if pw else 1000
+        y = self.hash_map.get('image_y_print_template')
+        y = int(float(y)) if y else 0
+        x = self.hash_map.get('image_x_print_template')
+        x = int(float(x)) if x else 0
+
+        path_to_img = self.print_ncl.get('preview_label_template_image')
+        zpldata = PrintService.make_zpl_from_label(
+            image_width_print_template=image_width,
+            image_height_print_template=image_height,
+            dpmm_print_template=dpmm,
+            image_ll_print_template=ll,
+            image_pw_print_template=pw,
+            image_x_print_template=x,
+            image_y_print_template=y,
+            path_to_img=path_to_img
+        )
+        self.print_ncl.put('zpldata', zpldata, True)
+        success, answer = PrintService.zpl_to_png_from_api(
+            zpldata, dpmm, width_template, height_template)
+        if not success:
+            return
+
+        path, ext = os.path.splitext(path_to_img)
+        preview_path = path + '_preview' + ext
+        with open(preview_path, 'wb') as out_file:
+            shutil.copyfileobj(answer, out_file)
+            self.print_ncl.put('preview_label_template_image_temp',
+                               preview_path, True)
+        self.hash_map.put('image_print', '~' + preview_path)
+        self.hash_map.put('width_print_template', str(width_template))
+        self.hash_map.put('height_print_template', str(height_template))
+        self.hash_map.put('image_width_print_template', str(image_width))
+        self.hash_map.put('image_height_print_template', str(image_height))
+        self.hash_map.put('dpmm_print_template', str(dpmm))
+        self.hash_map.put('image_ll_print_template', str(ll))
+        self.hash_map.put('image_pw_print_template', str(pw))
+        self.hash_map.put('image_x_print_template', str(x))
+        self.hash_map.put('image_y_print_template', str(y))
+        self.hash_map.refresh_screen()
+
+    def on_input(self):
+        listener = self.hash_map.get('listener')
+
+        if listener == 'ON_BACK_PRESSED':
+            self.hash_map.show_screen('Настройки печати Шаблоны')
+
+        elif listener == 'btn_save_template_sizes':
+            template = dict(
+                image_height_print_template=self.print_ncl.get('image_height_print_template'),
+                image_width_print_template=self.print_ncl.get('image_width_print_template'),
+                dpmm_print_template=self.print_ncl.get('dpmm_print_template'),
+                image_x_print_template=self.print_ncl.get('image_x_print_template'),
+                image_y_print_template=self.print_ncl.get('image_y_print_template'),
+                image_ll_print_template=self.print_ncl.get('image_ll_print_template'),
+                image_pw_print_template=self.print_ncl.get('image_pw_print_template'),
+            )
+            self.print_ncl.put('saved_print_template', json.dumps(template), True)
+            self.hash_map.toast('Шаблон сохранён')
+
+        elif listener == 'btn_delete_print_template':
+            self.print_ncl.delete('saved_print_template')
+            self.hash_map.toast('Шаблон удалён')
+
+        elif listener == 'btn_sent_to_print':
+            zpldata = self.print_ncl.get('zpldata')
+            PrintService.print_zpl(zpldata, self.hash_map)
+
+    def on_post_start(self):
+        pass
+
+    def show(self, args=None):
+        pass
+
+# ^^^^^^^^^^^^^^^^^^^^^ Printing screens ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+
 class SimpleFileBrowser(Screen):
     screen_name = 'Список файлов'
     process_name = 'Проводник'
@@ -498,13 +940,12 @@ class SimpleFileBrowser(Screen):
         self.hs_service = hs_services.DebugService(ip_host=self.hash_map.get('ip_host') or self.debug_host_ip)  # '192.168.1.77'
 
     def on_start(self):
-        if not self.hash_map.get('current_dir'):
-            self.hash_map['current_dir'] = suClass.get_temp_dir()
-        target_dir = self.hash_map.get('current_dir')
-        list_data = self.get_all_files_from_patch(target_dir)
-
+        current_dir = self.hash_map.get('current_dir') or suClass.get_temp_dir()
+        list_data = self.get_all_files_from_patch(current_dir)
         doc_cards = self._get_doc_cards_view(list_data)
-        self.hash_map['templates_cards'] = doc_cards.to_json()
+        self.hash_map.put('current_dir', current_dir)
+        self.hash_map['file_browser_cards'] = doc_cards.to_json()
+        self.hash_map.put('return_selected_data')
 
     def on_input(self):
         current_directory = Path(self.hash_map.get('current_dir'))
@@ -512,119 +953,125 @@ class SimpleFileBrowser(Screen):
             self.hash_map.finish_process()
 
         elif self.listener == 'btn_get_up':
-            current_directory = current_directory.parent
-            self.hash_map['current_dir'] = current_directory
-            self.on_start()
-            self.hash_map.refresh_screen()
-        elif self.listener == 'CardsClick':
-            current_str = self.hash_map.get("selected_card_position")
-            jlist = self.hash_map.get_json("templates_cards")
-            current_elem = jlist['customcards']['cardsdata'][int(current_str)]
-            if current_elem['item_type'] == 'Folder':
-                self.hash_map['current_dir'] = current_directory / current_elem[
-                    'file_name']
-                self.hash_map.refresh_screen()
+            if not os.access(current_directory.parent, os.R_OK):
+                self.hash_map.toast('Доступ запрещён')
+                return
+            self.hash_map['current_dir'] = current_directory.parent
 
+        elif self.listener == 'CardsClick':
+            current_elem = json.loads(self.hash_map.get("selected_card_data"))
+            if current_elem['file_type'] == 'Folder':
+                new_dir = Path(current_directory, current_elem['file_name'])
+                if os.access(new_dir, os.R_OK):
+                    self.hash_map['current_dir'] = new_dir
 
         elif self.listener == 'LayoutAction':
             self._layout_action()
 
-
-    def _get_doc_cards_view(self, table_data):
-
-        card_title_text_size = self.rs_settings.get('CardTitleTextSize')
-        card_date_text_size = self.rs_settings.get('CardDateTextSize')
-
+    def _get_doc_cards_view(self, table_data: List[Dict]):
+        for row in table_data:
+            if row['file_type'] != 'File':
+                row['_layout'] = self._get_layout(is_file=False)
+            elif row['extension'] == '.htm':
+                row['_layout'] = self._get_layout(is_htm=True)
         doc_cards = widgets.CustomCards(
-            widgets.LinearLayout(
-
-                widgets.LinearLayout(
-                    widgets.TextView(
-                        Value='@picture',
-                        TextBold=False,
-                        TextSize=card_title_text_size,
-                        weight=1
-                    ),
-                    widgets.TextView(
-                        Value='@file_name',
-                        TextBold=True,
-                        TextSize=card_title_text_size,
-                        weight=3
-                    ),
-                    widgets.PopupMenuButton(
-                        Value='Передать на ББ',
-                        Variable="sent",
-                        gravity_horizontal='right',
-                        weight=1
-                    ),
-
-                    orientation="horizontal"
-                ),
-                widgets.LinearLayout(
-                    widgets.TextView(
-                        Value='@file_size',
-                        TextSize=card_date_text_size
-                    ),
-                    widgets.TextView(
-                        Value='@creation_time',
-                        TextSize=card_date_text_size
-                    )
-                ),
-
-                width="match_parent"
-            ),
+            self._get_layout(),
             options=widgets.Options().options,
-            cardsdata=table_data
+            cardsdata=table_data,
         )
 
         return doc_cards
 
-    @staticmethod
-    def get_all_files_from_patch(directory):
+    def _get_layout(self, is_file: bool = True, is_htm: bool = False):
+        card_title_text_size = self.rs_settings.get('CardTitleTextSize')
+        card_date_text_size = self.rs_settings.get('CardDateTextSize')
+        popup_values = ['Инфо']
+        if is_file:
+            popup_values.append('Передать на ББ')
+            if is_htm:
+                popup_values.append('Шаблон печати')
+        layout = widgets.LinearLayout(
+            widgets.LinearLayout(
+                widgets.TextView(
+                    Value='@picture',
+                    TextBold=False,
+                    TextSize=card_title_text_size,
+                    weight=0
+                ),
+                widgets.TextView(
+                    Value='@file_name',
+                    TextBold=True,
+                    TextSize=card_title_text_size,
+                    weight=1
+                ),
+                widgets.PopupMenuButton(
+                    Value=';'.join(popup_values),
+                    Variable="sent",
+                    weight=0,
+                ),
+                width="match_parent",
+                orientation="horizontal",
+            ),
+            widgets.LinearLayout(
+                widgets.TextView(
+                    Value='@file_size',
+                    TextSize=card_date_text_size
+                ),
+                widgets.TextView(
+                    Value='@creation_time',
+                    TextSize=card_date_text_size
+                ),
+                width="match_parent",
+            ),
 
+            width="match_parent"
+        )
+        return layout
+
+    @staticmethod
+    def get_all_files_from_patch(directory: str) -> List[Dict]:
         files_info = []
         # Walk through the folder and its subdirectories
         directory_path = Path(directory)
-        items = [item for item in directory_path.iterdir()]
-
-        for item in items:
-            file_path = item.name
-            item_type = "File" if item.is_file() else "Folder"
-
-            file_size_kb = item.stat().st_size / 1024  # Convert bytes to kilobytes
-            creation_time = item.stat().st_ctime
-            formatted_creation_time = time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(
-                int(creation_time)))  # Format datetime for user eyes ))
-            pic = '#f15b' if item.is_file() else '#f07b'
-            if item.is_symlink():
-                pic = '#f0c1'
-
+        for file in directory_path.iterdir():
+            pic = ('#f15b' if file.is_file() else
+                   '#f0c1' if file.is_symlink() else '#f07b')
+            file_type = ("File" if file.is_file() else
+                         "SymLink" if file.is_symlink() else "Folder")
+            formatted_creation_time = time.strftime(
+                '%Y-%m-%d %H:%M:%S',
+                time.localtime(int(file.stat().st_ctime))
+            )
             file_info = {
                 'picture': pic,
-                'item_type': item_type,
-                'full_path': str(directory_path.joinpath(file_path)),
-                'file_name': file_path,
-                'file_size': f'{file_size_kb:.2f} KB',
-                # Format file size with 2 decimal places
-                'creation_time': formatted_creation_time
+                'file_type': file_type,
+                'file_name': file.name,
+                'full_path': str(directory_path.joinpath(file.name)),
+                'file_size': f'{file.stat().st_size / 1024:.2f} KB',
+                'creation_time': formatted_creation_time,
+                'extension': file.suffix
             }
             files_info.append(file_info)
 
-        # print(html_files_info)
         return files_info
 
     def _layout_action(self):
-        if self.hash_map.get('layout_listener') == 'Передать на ББ':
+        listener = self.hash_map.get('layout_listener')
+        selected_card: dict = json.loads(self.hash_map.get('card_data'))
+        if listener == 'Передать на ББ':
+            self._copy_file(Path(selected_card['full_path']))
+        elif listener == 'Инфо':
+            selected_card.pop('_layout', None)
+            self.hash_map.toast(str(selected_card))
+        elif listener == 'Шаблон печати':
+            print_ncl = noClass("print_ncl")
+            print_ncl.put('lable_file_name', selected_card.get('file_name'), True)
+            print_ncl.put('lable_full_path', selected_card.get('full_path'), True)
+            print_ncl.put('from_file_browser', True, True)
+            self.hash_map.show_process_result('Печать', 'Результат')
 
-            selected_card = json.loads(self.hash_map.get('card_data'))
-            if selected_card and isinstance(selected_card, dict):
-                file = Path(selected_card['full_path'])
-                if file.is_file():
-                    self._copy_file(file)
-
-    def _copy_file(self, file):
+    def _copy_file(self, file: Path):
         ip_host = self.hash_map.get('ip_host') or self.rs_settings.get('debug_host_ip') # '192.168.1.77'
-
         with open(file, 'rb') as f:
             # send_service = self.hs_service(ip_host)
             res = self.hs_service.export_file(file.name, f)
@@ -634,8 +1081,6 @@ class SimpleFileBrowser(Screen):
             else:
                 self.hash_map.toast('Ошибка соединения')
 
-
-# ^^^^^^^^^^^^^^^^^^^^^ Pritnting screens ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 # ==================== Tiles =============================
 
