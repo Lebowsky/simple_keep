@@ -1337,6 +1337,14 @@ class SeriesService(DbService):
 
         return True
 
+    def update_total_qty(self, qty, row_id):
+        q = f'''
+            UPDATE RS_docs_table
+            SET qtty = {qty}
+            WHERE id = {row_id}
+            '''
+        get_query_result(q)
+
 
 class AdrSeriesService(SeriesService):
     def get_values_for_screen_by_id(self, _id) -> dict:
@@ -1378,7 +1386,9 @@ class AdrSeriesService(SeriesService):
         else:
             return {}
 
-    def set_adr_total_qtty(self, qtty):
+
+
+    def set_total_qtty(self, qtty):
 
         params = (qtty, self.params.get('id_doc'), self.params.get('id_good'), self.params.get('id_properties'), self.params.get('cell'))
         q = '''
@@ -1392,6 +1402,15 @@ class AdrSeriesService(SeriesService):
 
         AdrDocService(doc_id = self.params.get('id_doc'), cur_cell = self.params.get('cell')).set_doc_status_to_upload(doc_id = self.params.get('id_doc'))
         return True
+
+    def update_total_qty(self, qty, row_id):
+        q = f'''
+            UPDATE RS_adr_docs_table
+            SET qtty = {qty}
+            WHERE id = {row_id}
+            '''
+        get_query_result(q)
+
 
 class SelectItemService(DbService):
     def __init__(self, table_name):
