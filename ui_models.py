@@ -3652,17 +3652,6 @@ class BaseGoodSelect(Screen):
         )
         screen.show_process_result(screen_values)
 
-    def open_series_screen(self, id_doc, current_elem):
-        current_elem['id'] = current_elem.get('key')
-        current_elem['id_doc'] = id_doc
-        current_elem['warehouse'] = self.hash_map.get('warehouse')
-
-        params_for_series_screen = json.dumps(current_elem['current_elem']
-                                              if current_elem.get('current_elem') else current_elem)
-        self.hash_map['params_for_series_screen'] = params_for_series_screen
-        # self.hash_map.show_process_result(SeriesSelectScreen.process_name, SeriesSelectScreen.screen_name)
-        self.hash_map.show_screen(SeriesSelectScreen.screen_name)
-
 class GoodsSelectScreen(BaseGoodSelect):
     screen_name = 'Товар выбор'
     process_name = 'Документы'
@@ -5574,7 +5563,7 @@ class SeriesSelectScreen(Screen):
 
     def _refresh_total_qtty(self):
         real_qtty = self.service.get_total_qtty()
-        self.service.set_total_qtty(real_qtty)
+        self.service.update_total_qty(qty=real_qtty, row_id=self.screen_values['doc_row_id'])
         self.hash_map['qtty'] = self._format_quantity(real_qtty)
 
     def _barcode_listener(self):
