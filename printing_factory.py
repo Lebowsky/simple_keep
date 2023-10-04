@@ -1,6 +1,6 @@
 import json
 import os
-from typing import Tuple, Any
+from typing import Tuple, Any, Union
 from ru.travelfood.simple_ui import SimpleUtilites as suClass
 import requests
 import zpl
@@ -15,10 +15,10 @@ from io import BytesIO
 from pathlib import Path
 from java import jclass
 from ui_utils import HashMap
-from ru.travelfood.simple_ui import SimpleBluetooth as BT
+from ru.travelfood.simple_ui import SimpleBluetooth
 noClass = jclass("ru.travelfood.simple_ui.NoSQL")
 print_ncl = noClass("print_ncl")
-bt = BT()
+bt = SimpleBluetooth()
 
 
 class HTMLDocument:
@@ -27,20 +27,19 @@ class HTMLDocument:
         self.template_file = template_file
 
     @staticmethod
-    def generate_barcode(data, type='ean13'):
-        EAN = barcode.get_barcode_class(type)
+    def generate_barcode(data, barcode_type='ean13'):
+        ean_class = barcode.get_barcode_class(barcode_type)
         writer = ImageWriter()
-        #writer.set_options({})
-        ean = EAN(data, writer = writer)
+        ean = ean_class(data, writer=writer)
 
         barcode_image = BytesIO()
         ean.write(barcode_image)
         return base64.b64encode(barcode_image.getvalue()).decode()
 
-
-    def generate_qr_code(self, barcode):
+    @staticmethod
+    def generate_qr_code(barcode_data):
         qr = qrcode.QRCode(version=1, box_size=10, border=5)
-        qr.add_data(barcode)
+        qr.add_data(barcode_data)
         qr.make(fit=True)
         img = qr.make_image(fill_color="black", back_color="white")
 
@@ -59,8 +58,8 @@ class HTMLDocument:
         if barcode_type == 'qr-code':
             barcode_image_base64 = self.generate_qr_code(parameters['barcode'])
         else:
-
-            barcode_image_base64 = self.generate_barcode(parameters['barcode'], barcode_type)
+            barcode_image_base64 = self.generate_barcode(parameters['barcode'],
+                                                         barcode_type)
 
         template = env.get_template(self.template_file)
 
@@ -68,7 +67,8 @@ class HTMLDocument:
 
         soup = BeautifulSoup(aa, 'html.parser')
         for imgtag in soup.find_all("img"):
-            imgtag['src'] = "data:image/png; width:auto; height:auto; base64," + barcode_image_base64
+            imgtag['src'] = ("data:image/png; width:auto; height:auto; base64,"
+                             + barcode_image_base64)
 
         return str(soup)
 
@@ -83,7 +83,7 @@ class HTMLDocument:
         template_source = env.loader.get_source(env, file_name)[0]
         parsed_content = env.parse(template_source)
         params = meta.find_undeclared_variables(parsed_content)
-        if not 'barcode' in params:
+        if 'barcode' not in params:
             params.add('barcode')
         return params
 
@@ -206,7 +206,7 @@ class PrintService:
 
     @staticmethod
     def zpl_to_png_from_api(
-            zpl: str,
+            zpl_data: str,
             dpmm: int,
             label_width: int,
             label_height: int,
@@ -214,7 +214,7 @@ class PrintService:
         """
         Делает запрос к API. Отправляются zpl код и размеры этикетки.
         """
-        files = {'file': zpl}
+        files = {'file': zpl_data}
 
         url = (f'http://api.labelary.com/v1/printers/{dpmm}dpmm/'
                f'labels/{mm_to_inch(label_width * 2)}x{mm_to_inch(label_height * 2)}/0/')
@@ -249,8 +249,10 @@ class PrintService:
             htmlresult,
             width=str(int(print_ncl.get('barcode_width'))),
             height=str(int(print_ncl.get('barcode_height'))),
-            x=str(int(print_ncl.get('barcode_right')) - int(print_ncl.get('barcode_left'))),
-            y=str(int(print_ncl.get('barcode_down')) - int(print_ncl.get('barcode_up'))),
+            x=str(int(print_ncl.get('barcode_right'))
+                  - int(print_ncl.get('barcode_left'))),
+            y=str(int(print_ncl.get('barcode_down'))
+                  - int(print_ncl.get('barcode_up'))),
         )
 
         hash_map.toast('Отправлено на печать')
@@ -263,7 +265,7 @@ class PrintService:
                 "postExecute": json.dumps([{
                     "action": "run",
                     "type": "python",
-                    "method": "print_postExecute"
+                    "method": "print_post_execute"
                 }])
             }])
         )
@@ -273,7 +275,7 @@ class PrintService:
         hash_map.put("html2image_ToFile", filename)
 
     @staticmethod
-    def print_postExecute(hash_map: HashMap):
+    def print_post_execute(hash_map: HashMap):
         path_to_img = print_ncl.get('path_to_html2image_file')
         saved_template = print_ncl.get('saved_print_template')
         if not saved_template:
@@ -285,15 +287,15 @@ class PrintService:
         PrintService.print_zpl(zpldata, hash_map)
 
     @staticmethod
-    def print_zpl(zpl: str, hash_map: HashMap):
+    def print_zpl(zpl_data: str, hash_map: HashMap):
         print_through = print_ncl.get('print_through')
         if not print_through:
             hash_map.toast('Не выбрано устройство для печати')
         elif print_through == 'BT':
-            sent, result = PrintService.print_bt(zpl)
+            sent, result = PrintService.print_bt(zpl_data)
             hash_map.toast(result)
         elif print_through == 'WiFi':
-            print_ncl.put('wifi_data_to_print', zpl, True)
+            print_ncl.put('wifi_data_to_print', zpl_data, True)
             hash_map.run_event_async('print_wifi')
 
     @staticmethod
@@ -312,7 +314,7 @@ class PrintService:
         hash_map.toast('Успешно' if sended else 'Не отправлено')
 
     @staticmethod
-    def print_bt(data: str):
+    def print_bt(data: Union[str, int, bytes]):
         ncl = noClass("bt_settings")
         bt_handlers = [{"action": "run", "type": "python", "method": "bluetooth_error"}]
         printer = ncl.get("default_printer")
@@ -323,7 +325,8 @@ class PrintService:
             return False, "Не отправлено.Не получилось подключиться к устройству"
         try:
             bt.write_data(data, json.dumps(bt_handlers))
-            return True, "Отправлено на печать. Переподключите принтер,если печать не началась"
+            return True, ("Отправлено на печать."
+                          " Переподключите принтер, если печать не началась")
         except Exception as e:
             try:
                 bt.connect_to_client(device, json.dumps(bt_handlers))
