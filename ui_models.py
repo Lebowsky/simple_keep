@@ -5459,7 +5459,7 @@ class TestSeries(Screen):
         if listener=='btn_show_test_series':
             args = {
                 'title': 'Выбор серии',
-                'doc_row_id': '112',
+                'doc_row_id': '247',
             }
             screen = create_screen(self.hash_map, SeriesSelectScreen, args)
             screen.show_process_result()
@@ -5618,7 +5618,8 @@ class SeriesSelectScreen(Screen):
                     widgets.TextView(
                         Value='@number',
                         TextBold=True,
-                        TextSize=card_title_text_size
+                        TextSize=card_title_text_size,
+                        TextColor='#0f03fc'
                     ),
                 ),
                 widgets.LinearLayout(
