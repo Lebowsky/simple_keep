@@ -8739,7 +8739,7 @@
                 "ProcessName": "SeriesProcess",
                 "PlanFactHeader": "",
                 "DefineOnBackPressed": true,
-                "hidden": false,
+                "hidden": true,
                 "login_screen": false,
                 "SC": false,
                 "Operations": [
@@ -9256,7 +9256,7 @@
                                         "weight": "1",
                                         "Elements": [
                                             {
-                                                "Value": "Количество",
+                                                "Value": "Количество:",
                                                 "Variable": "",
                                                 "height": "wrap_content",
                                                 "width": "wrap_content",
@@ -9270,9 +9270,9 @@
                                                 "Value": "@FillingSeriesScreen_qtty",
                                                 "Variable": "FillingSeriesScreen_qtty",
                                                 "height": "wrap_content",
-                                                "width": "wrap_content",
+                                                "width": "match_parent",
                                                 "orientation": "",
-                                                "weight": "",
+                                                "weight": "5",
                                                 "TextBold": false,
                                                 "TextItalic": false,
                                                 "TextSize": "21",
@@ -9293,18 +9293,6 @@
                                         "weight": "1",
                                         "Elements": [
                                             {
-                                                "Value": "Отмена",
-                                                "Variable": "btn_cancel",
-                                                "height": "wrap_content",
-                                                "width": "match_parent",
-                                                "orientation": "horizontal",
-                                                "weight": "1",
-                                                "TextBold": false,
-                                                "TextItalic": false,
-                                                "TextSize": "21",
-                                                "type": "Button"
-                                            },
-                                            {
                                                 "Value": "Сохранить",
                                                 "Variable": "btn_save",
                                                 "height": "wrap_content",
@@ -9314,7 +9302,6 @@
                                                 "TextBold": false,
                                                 "TextItalic": false,
                                                 "TextSize": "21",
-                                                "TextColor": "",
                                                 "type": "Button"
                                             }
                                         ],

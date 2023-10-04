@@ -5498,12 +5498,6 @@ class SeriesSelectScreen(Screen):
 
 
     def init_screen(self):
-        """cards_data = self.db_service.get_select_data()
-        cards = self._get_cards(cards_data)
-
-        self.hash_map['cards_data'] = cards.to_json()
-        self.hash_map['return_selected_data'] = ''"""
-
         if self.use_adr_docs_tables:
             self.service = db_services.AdrSeriesService()
 
@@ -5522,7 +5516,7 @@ class SeriesSelectScreen(Screen):
 
         self.hash_map.put('doc_data', title)
         self.hash_map.put_data(self.screen_data)
-
+        self._refresh_total_qtty()
 
     def on_start(self):
         self.hash_map.set_title(self.screen_values['title'])
@@ -5530,25 +5524,18 @@ class SeriesSelectScreen(Screen):
 
         # self._refresh_series_cards()
 
-
     def on_input(self):
         listener = self.listener
         if listener == "CardsClick":
             self._cards_click_handler()
-            """self.hash_map.put('current_series_id', self.hash_map.get("selected_card_key"))
-            self.hash_map.put('barcode', '')
-            self.hash_map.show_screen("Заполнение серии", self.params)"""
         elif listener == "ON_BACK_PRESSED":
-            # real_qtty = self.service.get_total_qtty()
-            # self.service.set_total_qtty(real_qtty)
-            # self.hash_map.show_screen(self.hash_map.get('back_screen'))
             self._back_screen()
         elif listener == 'barcode':
             self._barcode_listener()
         elif self.listener == 'LayoutAction':
             self._layout_action()
 
-        # self.hash_map.no_refresh()
+        self.hash_map.no_refresh()
 
     def show(self, args=None):
         self.show_process_result(args)
@@ -5564,12 +5551,15 @@ class SeriesSelectScreen(Screen):
         screen = SeriesItem(self.hash_map, self.rs_settings)
         screen.show(args)
 
-    def _barcode_listener(self):
-        self._identify_add_barcode_series()
-        self._refresh_series_cards()
+    def _refresh_total_qtty(self):
         real_qtty = self.service.get_total_qtty()
         self.service.set_total_qtty(real_qtty)
         self.hash_map['qtty'] = self._format_quantity(real_qtty)
+
+    def _barcode_listener(self):
+        self._identify_add_barcode_series()
+        self._refresh_series_cards()
+        self._refresh_total_qtty()
         self.hash_map.refresh_screen()
 
     def _back_screen(self):
@@ -5608,7 +5598,7 @@ class SeriesSelectScreen(Screen):
                 values[key] = f'годен до: {values[key]}'
             elif key == 'production_date' and values[key]:
                 values[key] = f'дата произв.: {values[key]}'
-            elif key == 'qtty' and values[key]:
+            elif key == 'qtty' and values[key] is not None and values[key] != '':
                 values[key] = f'кол-во: {values[key]}'
         return values
 
@@ -5749,18 +5739,13 @@ class SeriesItem(Screen):
         self.hash_map.put_data(put_data)
 
     def on_start(self):
-        self.init_screen()
-        """prop_list = self.service.get_series_table_str(self.hash_map.get('current_series_id'))
-        for key, value in prop_list.items():
-            if value:
-                self.hash_map.put(key, value)
-            else:
-                self.hash_map.put(key, '_')"""
+        series_id = self.screen_values['series_id']
+        self.screen_data = self.service.get_series_table_str(series_id)
+        # self.init_screen()
 
     def on_input(self):
         listener = self.listener
         if listener == "btn_save":
-
             self.save_data()
             self.hash_map.back_screen()
         elif listener == "ON_BACK_PRESSED":
@@ -5768,10 +5753,11 @@ class SeriesItem(Screen):
         elif listener == "btn_cancel":
             self.hash_map.back_screen()
 
-        self.hash_map.no_refresh()
+        # self.hash_map.toast(self.hash_map['production_date'])
+        self.hash_map.refresh_screen()
+        # self.hash_map.no_refresh()
 
     def save_data(self):
-
         params = {'id': int(self.screen_data['id']),
                   'id_doc': self.screen_data['id_doc'],
                   'id_good':  self.screen_data['id_good'],
@@ -5780,12 +5766,16 @@ class SeriesItem(Screen):
                   'id_warehouse': self.hash_map['id_warehouse'],
                   'qtty': self.hash_map['FillingSeriesScreen_qtty'],
                   'name': self.hash_map['name'],
-                  'best_before': self.hash_map['best_before'],
+                  'best_before': self.hash_map['best_before'] if self._is_valid_date_format(self.hash_map['best_before']) else None,
                   'number': self.hash_map['number'],
-                  'production_date': self.hash_map['production_date'],
-                  'cell': None
+                  'production_date': self.hash_map['production_date'] if self._is_valid_date_format(self.hash_map['production_date']) else None,
+                  'cell': self.hash_map['id_cell']
                   }
         self.service.save_table_str(params)
+
+    def _is_valid_date_format(self, date_str):
+        pattern = r"^(0[1-9]|[12][0-9]|3[01])\.(0[1-9]|1[0-2])\.\d{4}$"
+        return bool(re.match(pattern, date_str))
 
     def _handle_num_keys(self, values: dict) -> dict:
         numeric_keys = ('qtty', 'qtty_plan', 'd_qtty', 'FillingSeriesScreen_qtty')
@@ -5822,7 +5812,7 @@ class SeriesAdrList(Screen):
         else:
             self.params = {}
 
-        self.service = db_services.SeriesService(self.params)
+        self.service = db_services.AdrSeriesService(self.params)
         self.service.doc_basic_table_name = 'RS_adr_docs_table'
         self.service.doc_basic_handler_name = 'RS_adr_docs'
         self.popup_menu_data = 'Удалить;Изменить'
