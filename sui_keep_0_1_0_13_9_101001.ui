@@ -8848,7 +8848,7 @@
                 "type": "Process",
                 "ProcessName": "SeriesProcess",
                 "PlanFactHeader": "",
-                "DefineOnBackPressed": false,
+                "DefineOnBackPressed": true,
                 "hidden": false,
                 "login_screen": false,
                 "SC": false,

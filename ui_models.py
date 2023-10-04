@@ -5501,11 +5501,12 @@ class TestSeries(Screen):
                 'doc_row_id': '247',
             }
             screen = create_screen(self.hash_map, SeriesSelectScreen, args)
-            screen.show_process_result()
+            screen.show()
+            
 
 class SeriesSelectScreen(Screen):
     process_name = 'SeriesProcess'
-    screen_name = 'SeriesSelectScreenScreen'
+    screen_name = 'SeriesSelectScreen'
     doc_basic_table_name = 'RS_docs_table'
     doc_basic_handler_name = 'RS_docs'
 
@@ -5578,6 +5579,7 @@ class SeriesSelectScreen(Screen):
         args={'series_id': self.hash_map.get("selected_card_key")}
         self.hash_map.put('noRefresh','')
         screen = create_screen(self.hash_map, SeriesItem, args)
+        screen.parent_screen = self
         screen.show()
 
     def _barcode_listener(self):
@@ -5589,11 +5591,11 @@ class SeriesSelectScreen(Screen):
         self.hash_map.refresh_screen()
 
     def _back_screen(self):
-        self.hash_map[self.screen_values['return_value_key']] = ''
+        #self.hash_map[self.screen_values['return_value_key']] = ''
         self._finish_process()
 
     def _finish_process(self):
-        self._clear_screen_values()
+        #self._clear_screen_values()
         self.hash_map.put('FinishProcessResult')
 
     def update_hash_map_keys(self):
@@ -5756,7 +5758,7 @@ class SeriesItem(SeriesSelectScreen):
         self.hash_map.put_data(self.screen_data)
 
     def on_start(self):
-        pass
+        self._run_on_start_handlers()
         # self.hash_map.toast(self.screen_data)
         """prop_list = self.service.get_series_table_str(self.hash_map.get('current_series_id'))
         for key, value in prop_list.items():
@@ -5770,12 +5772,15 @@ class SeriesItem(SeriesSelectScreen):
         if listener == "btn_save":
 
             self.save_data()
-            self.hash_map.put('BackScreen', '')
-        elif listener == "ON_BACK_PRESSED":
-            self.hash_map.put('BackScreen', '')
-        elif listener == "btn_cancel":
-            self.hash_map.put('BackScreen', '')
+            #self.hash_map.put('BackScreen', '')
 
+            self.on_start_handlers.append(self._show_parent_screen)
+        elif listener == "ON_BACK_PRESSED":
+            self.on_start_handlers.append(self._show_parent_screen)
+        elif listener == "btn_cancel":
+            self.on_start_handlers.append(self._show_parent_screen)
+        
+        self.hash_map.no_refresh()
 
     def save_data(self):
         #self.hash_map.toast(self.screen_data)
@@ -5793,6 +5798,11 @@ class SeriesItem(SeriesSelectScreen):
                   'cell': None
                   }
         self.service.save_table_str(params)
+
+    def _show_parent_screen(self):
+        self.parent_screen.hash_map = self.hash_map
+        self.parent_screen.show()
+        set_current_screen(self.parent_screen)
 
 
 class SeriesAdrList(Screen):
