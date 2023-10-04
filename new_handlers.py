@@ -245,6 +245,7 @@ def adr_docs_on_start(hash_map: HashMap):
         hash_map=hash_map,
         screen_class=ui_models.AdrDocsListScreen
     )
+    screen.init_screen()
     screen.on_start()
 
 
@@ -409,25 +410,25 @@ def prices_on_input(hash_map):
 
 @HashMap()
 def series_list_on_start(hash_map):
-    screen: ui_models.SeriesList = ui_models.SeriesList(hash_map, rs_settings)
+    screen: ui_models.SeriesSelectScreen = create_screen(hash_map, ui_models.SeriesSelectScreen)
     screen.on_start()
 
 
 @HashMap()
 def series_list_on_input(hash_map):
-    screen = ui_models.SeriesList(hash_map, rs_settings)
+    screen: ui_models.SeriesSelectScreen = create_screen(hash_map, ui_models.SeriesSelectScreen)
     screen.on_input()
 
 
 @HashMap()
 def series_item_on_start(hash_map):
-    screen: ui_models.SeriesItem = ui_models.SeriesItem(hash_map, rs_settings)
+    screen: ui_models.SeriesItem =  create_screen(hash_map, ui_models.SeriesItem)
     screen.on_start()
 
 
 @HashMap()
 def series_item_on_input(hash_map):
-    screen: ui_models.SeriesItem = ui_models.SeriesItem(hash_map, rs_settings)
+    screen: ui_models.SeriesItem =  create_screen(hash_map, ui_models.SeriesItem)
     screen.on_input()
 
 
