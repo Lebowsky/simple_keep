@@ -1240,7 +1240,7 @@ class SeriesService(DbService):
             return res[0]
         else:
             return {}
-    
+
     def get_values_for_screen_by_id(self, id) -> dict:
 
         q = f'''
@@ -1377,7 +1377,7 @@ class AdrSeriesService(SeriesService):
             return res[0]
         else:
             return {}
-        
+
     def set_adr_total_qtty(self, qtty):
 
         params = (qtty, self.params.get('id_doc'), self.params.get('id_good'), self.params.get('id_properties'), self.params.get('cell'))
