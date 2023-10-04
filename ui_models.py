@@ -2584,9 +2584,11 @@ class AdrDocDetailsScreen(DocDetailsScreen):
         self.current_cell = ''
         self.current_cell_id = ''
 
+
     def init_screen(self):
         self.hash_map.put('tables_type', self.tables_types)
         self.hash_map.put('return_selected_data')
+        self.hash_map['table_type'] = 'Размещение' if self.screen_values['table_type']=='in' else 'Отбор'
 
     def on_start(self):
         super()._on_start()
@@ -2624,9 +2626,7 @@ class AdrDocDetailsScreen(DocDetailsScreen):
                 lambda: self._open_series_screen(selected_card_data['key'])
             )
         else:
-            self.on_start_handlers.append(
-                lambda: self._open_select_goods_screen(data=selected_card_data)
-            )
+            self._open_select_goods_screen(data=selected_card_data)
         # self._fill_one_string_screen()
 
     def _barcode_listener(self, barcode):
@@ -2723,9 +2723,8 @@ class AdrDocDetailsScreen(DocDetailsScreen):
             'qtty_plan': data['qtty_plan'],
             'warehouse': self.screen_values['warehouse'],
         }
-        screen = create_screen(self.hash_map, AdrGoodsSelectScreen, screen_values=screen_values)
-        screen.parent_screen = self
-        screen.show()
+        screen = AdrGoodsSelectScreen(self.hash_map, self.rs_settings)
+        screen.show(screen_values)
 
     def _get_doc_details_data(self, last_scanned=False):
         super()._check_previous_page()
@@ -3835,15 +3834,15 @@ class AdrGoodsSelectScreen(BaseGoodSelect):
         self.id_doc = self.hash_map['id_doc']
         self.service = AdrDocService()
         self.screen_values = {
-            'id_doc': '',
-            'doc_title': '',
-            'item_name': '',
-            'key': '',
-            'id_unit': '',
-            'id_property': '',
-            'qtty': '',
-            'qtty_plan': '',
-            'warehouse': ''
+            'id_doc': self.hash_map['id_doc'],
+            'doc_title': self.hash_map['doc_title'],
+            'item_name': self.hash_map['item_name'],
+            'key': self.hash_map['key'],
+            'id_unit': self.hash_map['id_unit'],
+            'id_property': self.hash_map['id_property'],
+            'qtty': self.hash_map['qtty'],
+            'qtty_plan': self.hash_map['qtty_plan'],
+            'warehouse': self.hash_map['warehouse']
         }
 
     def init_screen(self):
@@ -3854,7 +3853,7 @@ class AdrGoodsSelectScreen(BaseGoodSelect):
 
     def on_input(self):
         listeners = {
-            'btn_series_show': self._listener_not_implemented,
+            'btn_series_show': lambda: self._open_series_screen(self.screen_values['key']),
         }
 
         if self.listener in listeners:
@@ -3868,9 +3867,22 @@ class AdrGoodsSelectScreen(BaseGoodSelect):
         self.hash_map.put("Show_fact_qtty_note", '-1' if allow_fact_input else '1')
 
     def _back_screen(self):
-        self.parent_screen.hash_map = self.hash_map
-        set_current_screen(screen=self.parent_screen)
-        self.parent_screen.show()
+        screen = AdrDocDetailsScreen(self.hash_map, self.rs_settings)
+        screen.show()
+
+    def _open_series_screen(self, doc_row_key):
+        screen_values = {
+            'doc_row_id': doc_row_key,
+            'title': 'Серии',
+            'use_adr_docs_tables': '1'
+        }
+
+        screen = create_screen(
+            self.hash_map,
+            SeriesSelectScreen,
+            screen_values=screen_values
+        )
+        screen.show_process_result()
 
 
 class BarcodeRegistrationScreen(Screen):
@@ -5701,7 +5713,6 @@ class SeriesSelectScreen(Screen):
                 item_id = values[0]['id']
                 self.service.add_qtty_to_table_str(item_id)
             else:
-                self.hash_map.toast(self.screen_data)
                 self.service.add_new_series_in_doc_series_table(barcode)
 
     def _layout_action(self):
