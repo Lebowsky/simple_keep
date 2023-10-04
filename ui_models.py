@@ -141,6 +141,7 @@ class Screen(ABC):
     def _run_on_start_handlers(self):
         for handler in self.on_start_handlers:
             handler()
+            self.on_start_handlers.remove(handler)
 
     class TextView(widgets.TextView):
         def __init__(self, value, rs_settings):
@@ -1946,7 +1947,8 @@ class DocDetailsScreen(Screen):
     def _open_series_screen(self, doc_row_key):
         screen_values = {
             'doc_row_id': doc_row_key,
-            'title': 'Серии'
+            'title': 'Серии',
+            'use_adr_docs_tables': '1'
         }
 
         screen = create_screen(
@@ -1955,7 +1957,6 @@ class DocDetailsScreen(Screen):
             screen_values=screen_values
         )
         screen.parent_screen = self
-        screen.use_adr_docs_tables = True
         screen.show_process_result()
 
     def open_series_screen(self, id_doc, current_elem):
@@ -2725,8 +2726,6 @@ class AdrDocDetailsScreen(DocDetailsScreen):
         screen = create_screen(self.hash_map, AdrGoodsSelectScreen, screen_values=screen_values)
         screen.parent_screen = self
         screen.show()
-
-
 
     def _get_doc_details_data(self, last_scanned=False):
         super()._check_previous_page()
@@ -5516,9 +5515,9 @@ class SeriesSelectScreen(Screen):
         self.screen_data = {}
         self.screen_values = {
             'title': 'Выбор серии',
-            'doc_row_id':'',
+            'doc_row_id': self.hash_map['doc_row_id'],
         }
-        self.use_adr_docs_tables=False
+        self.use_adr_docs_tables=self.hash_map.get_bool('use_adr_docs_tables')
 
 
     def init_screen(self):
@@ -5550,7 +5549,8 @@ class SeriesSelectScreen(Screen):
 
     def on_start(self):
         self.hash_map.set_title(self.screen_values['title'])
-        # self.hash_map.toast(self.screen_data)
+        self.init_screen()
+
         # self._refresh_series_cards()
 
 
@@ -5571,16 +5571,21 @@ class SeriesSelectScreen(Screen):
         elif self.listener == 'LayoutAction':
             self._layout_action()
 
+        # self.hash_map.no_refresh()
+
     def show(self, args=None):
-        # self.hash_map['SetResultListener'] = self.screen_values['result_listener']
         self.show_process_result(args)
 
     def _cards_click_handler(self):
-        args={'series_id': self.hash_map.get("selected_card_key")}
-        self.hash_map.put('noRefresh','')
-        screen = create_screen(self.hash_map, SeriesItem, args)
-        screen.parent_screen = self
-        screen.show()
+        self._open_series_item_screen()
+
+    def _open_series_item_screen(self):
+        args = {
+            'series_id': self.hash_map.get("selected_card_key"),
+            'title': 'Серия'
+        }
+        screen = SeriesItem(self.hash_map, self.rs_settings)
+        screen.show(args)
 
     def _barcode_listener(self):
         self._identify_add_barcode_series()
@@ -5591,11 +5596,9 @@ class SeriesSelectScreen(Screen):
         self.hash_map.refresh_screen()
 
     def _back_screen(self):
-        #self.hash_map[self.screen_values['return_value_key']] = ''
         self._finish_process()
 
     def _finish_process(self):
-        #self._clear_screen_values()
         self.hash_map.put('FinishProcessResult')
 
     def update_hash_map_keys(self):
@@ -5736,7 +5739,8 @@ class SeriesSelectScreen(Screen):
         else:
             return qtty
 
-class SeriesItem(SeriesSelectScreen):
+
+class SeriesItem(Screen):
     process_name = 'SeriesProcess'
     screen_name = 'FillingSeriesScreen'
     doc_basic_table_name = 'RS_docs_table'
@@ -5748,18 +5752,28 @@ class SeriesItem(SeriesSelectScreen):
         self.screen_data = {}
         self.screen_values = {
             'title': 'Заполнение серии',
-            'series_id':'',
+            'series_id': self.hash_map['series_id'],
         }
+
 
     def init_screen(self):
         series_id = self.screen_values['series_id']
         self.screen_data = self.service.get_series_table_str(series_id)
-        self._handle_num_keys(self.screen_data)
-        self.hash_map.put_data(self.screen_data)
+
+        put_data = {
+            'good_name': self.screen_data['good_name'],
+            'name': self.screen_data['name'],
+            'number': self.screen_data['number'],
+            'production_date': self.screen_data['production_date'],
+            'best_before': self.screen_data['best_before'],
+            'FillingSeriesScreen_qtty' : self.screen_data['qtty']
+        }
+
+        self._handle_num_keys(put_data)
+        self.hash_map.put_data(put_data)
 
     def on_start(self):
-        self._run_on_start_handlers()
-        # self.hash_map.toast(self.screen_data)
+        self.init_screen()
         """prop_list = self.service.get_series_table_str(self.hash_map.get('current_series_id'))
         for key, value in prop_list.items():
             if value:
@@ -5770,27 +5784,24 @@ class SeriesItem(SeriesSelectScreen):
     def on_input(self):
         listener = self.listener
         if listener == "btn_save":
-
             self.save_data()
-            #self.hash_map.put('BackScreen', '')
-
-            self.on_start_handlers.append(self._show_parent_screen)
+            self.hash_map.back_screen()
         elif listener == "ON_BACK_PRESSED":
-            self.on_start_handlers.append(self._show_parent_screen)
+            self.hash_map.back_screen()
         elif listener == "btn_cancel":
-            self.on_start_handlers.append(self._show_parent_screen)
-        
+            self.hash_map.back_screen()
+
         self.hash_map.no_refresh()
 
     def save_data(self):
-        #self.hash_map.toast(self.screen_data)
+
         params = {'id': int(self.screen_data['id']),
                   'id_doc': self.screen_data['id_doc'],
                   'id_good':  self.screen_data['id_good'],
                   'id_properties':self.hash_map['id_properties'],
                   'id_series': self.hash_map['id_series'],
                   'id_warehouse': self.hash_map['id_warehouse'],
-                  'qtty': self.hash_map['qtty'],
+                  'qtty': self.hash_map['FillingSeriesScreen_qtty'],
                   'name': self.hash_map['name'],
                   'best_before': self.hash_map['best_before'],
                   'number': self.hash_map['number'],
@@ -5799,10 +5810,20 @@ class SeriesItem(SeriesSelectScreen):
                   }
         self.service.save_table_str(params)
 
-    def _show_parent_screen(self):
-        self.parent_screen.hash_map = self.hash_map
-        self.parent_screen.show()
-        set_current_screen(self.parent_screen)
+    def _handle_num_keys(self, values: dict) -> dict:
+        numeric_keys = ('qtty', 'qtty_plan', 'd_qtty', 'FillingSeriesScreen_qtty')
+        for key in numeric_keys:
+            if key in values and re.match("^\d+\.?\d*$", str(values[key])):
+                values[key] = self._format_quantity(float(values[key]))
+            else:
+                values[key] = '0'
+        return values
+
+    def _format_quantity(self, qtty):
+        if float(qtty) % 1 == 0:
+            return int(float(qtty))
+        else:
+            return qtty
 
 
 class SeriesAdrList(Screen):
