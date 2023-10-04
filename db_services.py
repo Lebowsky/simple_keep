@@ -1338,6 +1338,46 @@ class SeriesService(DbService):
         return True
 
 
+class AdrSeriesService(SeriesService):
+    def get_values_for_screen_by_id(self, _id) -> dict:
+
+        q = f'''
+        SELECT RS_docs_table.id_doc,
+            RS_docs_table.id_good,
+            RS_docs_table.id_properties,
+            RS_docs_table.id_unit,
+            RS_docs_table.qtty,
+            RS_docs_table.qtty_plan,
+            RS_docs_table.use_series,
+            RS_docs_table.id_cell,
+            IFNULL(RS_docs.doc_type, '') AS doc_type,
+            IFNULL(RS_docs.doc_n, '') AS doc_n,
+            IFNULL(RS_docs.doc_date, '') AS doc_date,
+            IFNULL(RS_goods.name, '') AS good_name,
+            IFNULL(RS_goods.art, '') AS good_art,
+            IFNULL(RS_properties.name, '') AS properties_name,
+            IFNULL(RS_units.name, '') AS good_unit, 
+            IFNULL(RS_cells.name, '') AS cell_name
+        FROM RS_adr_docs_table AS RS_docs_table
+
+        LEFT JOIN RS_adr_docs AS RS_docs ON
+            RS_docs_table.id_doc = RS_docs.id_doc
+        LEFT JOIN RS_goods ON
+            RS_docs_table.id_good = RS_goods.id
+        LEFT JOIN RS_properties ON
+            RS_docs_table.id_properties = RS_properties.id
+        LEFT JOIN RS_units ON
+            RS_docs_table.id_unit = RS_units.id
+        LEFT JOIN RS_cells ON
+            RS_docs_table.id_cell = RS_cells.id
+        WHERE RS_docs_table.id = ?
+        '''
+        res = get_query_result(q, (_id,), True)
+        if res:
+            return res[0]
+        else:
+            return {}
+        
     def set_adr_total_qtty(self, qtty):
 
         params = (qtty, self.params.get('id_doc'), self.params.get('id_good'), self.params.get('id_properties'), self.params.get('cell'))
@@ -1352,42 +1392,6 @@ class SeriesService(DbService):
 
         AdrDocService(doc_id = self.params.get('id_doc'), cur_cell = self.params.get('cell')).set_doc_status_to_upload(doc_id = self.params.get('id_doc'))
         return True
-
-class AdrSeriesService(SeriesService):
-    def get_values_for_screen_by_id(self, _id) -> dict:
-
-        q = f'''
-        SELECT RS_docs_table.id_doc,
-            RS_docs_table.id_good,
-            RS_docs_table.id_properties,
-            RS_docs_table.id_unit,
-            RS_docs_table.qtty,
-            RS_docs_table.qtty_plan,
-            RS_docs_table.use_series,
-            IFNULL(RS_docs.doc_type, '') AS doc_type,
-            IFNULL(RS_docs.doc_n, '') AS doc_n,
-            IFNULL(RS_docs.doc_date, '') AS doc_date,
-            IFNULL(RS_goods.name, '') AS good_name,
-            IFNULL(RS_goods.art, '') AS good_art,
-            IFNULL(RS_properties.name, '') AS properties_name,
-            IFNULL(RS_units.name, '') AS good_unit 
-        FROM RS_adr_docs_table AS RS_docs_table
-
-        LEFT JOIN RS_adr_docs AS RS_docs ON
-            RS_docs_table.id_doc = RS_docs.id_doc
-        LEFT JOIN RS_goods ON
-            RS_docs_table.id_good = RS_goods.id
-        LEFT JOIN RS_properties ON
-            RS_docs_table.id_properties = RS_properties.id
-        LEFT JOIN RS_units ON
-            RS_docs_table.id_unit = RS_units.id
-        WHERE RS_docs_table.id = ?
-        '''
-        res = get_query_result(q, (_id,), True)
-        if res:
-            return res[0]
-        else:
-            return {}
 
 class SelectItemService(DbService):
     def __init__(self, table_name):
