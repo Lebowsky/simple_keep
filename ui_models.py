@@ -1656,7 +1656,7 @@ class DocDetailsScreen(Screen):
                     title='Количество план в документе превышено')
 
             elif res['Error'] == 'Must_use_series':
-                self.open_series_screen(id_doc, res)
+                self._open_series_screen(res['key'])
                 return res
 
             elif res['Error'] == 'Zero_plan_error':
@@ -1948,7 +1948,7 @@ class DocDetailsScreen(Screen):
         screen_values = {
             'doc_row_id': doc_row_key,
             'title': 'Серии',
-            'use_adr_docs_tables': '1'
+            'use_adr_docs_tables': '0'
         }
 
         screen = create_screen(
@@ -2404,54 +2404,16 @@ class DocumentsDocDetailScreen(DocDetailsScreen):
         id_doc = self.hash_map.get('id_doc')
 
         if listener == "CardsClick":
-            selected_card_key = self.hash_map['selected_card_key']
-            doc_goods_table = self.hash_map.get_json('doc_goods_table')
-            table_data = doc_goods_table['customtable']['tabledata']
-
-            current_elem = None
-            current_elem_filter = [item for item in table_data if item.get('key') == selected_card_key]
-
-            if current_elem_filter:
-                current_elem = current_elem_filter[0]
-
-            # текущий элемент не найден или это заголовок таблицы
-            if current_elem is None or 'good_name' not in current_elem:
-                return
-            # ----------- Блок работы с сериями товара. Если строка документа должна хранить серии
-            # ВАЖНО! Заменяет экран товара по умолчанию
-            if current_elem['use_series'] == '1':
-                current_elem['id'] = current_elem['key']
-                self.open_series_screen(id_doc, current_elem)
+            selected_card_data = self.hash_map.get_json('selected_card_data')
+            if not selected_card_data:
                 return
 
-            self.hash_map.put('was_clicked', '1')
-
-            # Формируем таблицу QR кодов------------------
-
-            args = {
-                'id_doc': id_doc,
-                'id_good': current_elem['id_good'],
-                'id_property': current_elem['id_properties'],
-                'id_series': current_elem['id_series'],
-                'id_unit': current_elem['id_unit'],
-            }
-            res = self._get_doc_barcode_data(args)
-
-            # TODO Переделать через виджеты
-            cards = self._get_barcode_card()
-
-            # Формируем список карточек баркодов
-            cards['customcards']['cardsdata'] = []
-            for el in res:
-                picture = '#f00c' if el['approved'] in ['True', 'true', '1'] else ''
-                row = {
-                    'barcode': el['mark_code'],
-                    'picture': picture
-                }
-                cards['customcards']['cardsdata'].append(row)
-
-            self.hash_map.put('barcode_cards', cards, to_json=True)
-            self.hash_map.show_screen("Товар выбор")
+            if selected_card_data.get('use_series') == '1':
+                self._open_series_screen(selected_card_data['key'])
+                return
+            else:
+                self.hash_map.put('was_clicked', '1')
+                self.hash_map.show_screen("Товар выбор")
 
         elif listener == 'barcode' or self._is_result_positive('ВвестиШтрихкод'):
             res = self._barcode_scanned()
@@ -2562,6 +2524,19 @@ class DocumentsDocDetailScreen(DocDetailsScreen):
         }
         self.articles_ocr_ncl.put('articles_ocr_settings', json.dumps(settings), True)
 
+    def _open_series_screen(self, doc_row_key):
+        screen_values = {
+            'doc_row_id': doc_row_key,
+            'title': 'Серии',
+            'use_adr_docs_tables': '0'
+        }
+
+        screen = create_screen(
+            self.hash_map,
+            SeriesSelectScreen,
+            screen_values=screen_values
+        )
+        screen.show_process_result()
 
 class AdrDocDetailsScreen(DocDetailsScreen):
     screen_name = 'Документ товары'
@@ -3450,7 +3425,8 @@ class BaseGoodSelect(Screen):
         elif listener == 'btn_series_show':
             current_elem = self.hash_map.get_json('selected_card_data')
             self.hash_map['back_screen'] = self.hash_map.get_current_screen()
-            self.open_series_screen('', current_elem)
+            # self.open_series_screen('', current_elem)
+            self._open_series_screen(current_elem['key'])
 
     def _handle_btn_ok(self):
         new_qtty = float(self.hash_map['new_qtty'] or 0)
@@ -3665,6 +3641,20 @@ class BaseGoodSelect(Screen):
             data[key] = self.hash_map.get(data[key])
         data['barcode'] = barcode if barcode else '0000000000000'
         PrintService.print(self.hash_map, data)
+
+    def _open_series_screen(self, doc_row_key):
+        screen_values = {
+            'doc_row_id': doc_row_key,
+            'title': 'Серии',
+            'use_adr_docs_tables': '0'
+        }
+
+        screen = create_screen(
+            self.hash_map,
+            SeriesSelectScreen,
+            screen_values=screen_values
+        )
+        screen.show_process_result()
 
     def open_series_screen(self, id_doc, current_elem):
         current_elem['id'] = current_elem.get('key')
