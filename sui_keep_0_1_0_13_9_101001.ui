@@ -8736,7 +8736,7 @@
                 "type": "Process",
                 "ProcessName": "SeriesProcess",
                 "PlanFactHeader": "",
-                "DefineOnBackPressed": false,
+                "DefineOnBackPressed": true,
                 "hidden": false,
                 "login_screen": false,
                 "SC": false,
@@ -9265,8 +9265,8 @@
                                                 "type": "TextView"
                                             },
                                             {
-                                                "Value": "@qtty",
-                                                "Variable": "qtty",
+                                                "Value": "@FillingSeriesScreen_qtty",
+                                                "Variable": "FillingSeriesScreen_qtty",
                                                 "height": "wrap_content",
                                                 "width": "wrap_content",
                                                 "orientation": "",

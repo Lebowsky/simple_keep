@@ -949,7 +949,7 @@ class DocService:
 class SeriesService(DbService):
     doc_basic_table_name = 'RS_docs_table'
     doc_basic_handler_name = 'RS_docs'
-    def __init__(self, docs_table='RS_docs', docs_details_table='RS_docs_table'):
+    def __init__(self):
         super().__init__()
         #if params and isinstance(params, dict):
         #    self.params = params
