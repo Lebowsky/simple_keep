@@ -5498,6 +5498,7 @@ class TestSeries(Screen):
             args = {
                 'title': 'Выбор серии',
                 'doc_row_id': '247',
+                'use_adr_doc_tables': 0
             }
             screen = create_screen(self.hash_map, SeriesSelectScreen, args)
             screen.show()
@@ -5571,7 +5572,7 @@ class SeriesSelectScreen(Screen):
         elif self.listener == 'LayoutAction':
             self._layout_action()
 
-        # self.hash_map.no_refresh()
+        self.hash_map.no_refresh()
 
     def show(self, args=None):
         self.show_process_result(args)
@@ -5773,13 +5774,9 @@ class SeriesItem(Screen):
         self.hash_map.put_data(put_data)
 
     def on_start(self):
-        self.init_screen()
-        """prop_list = self.service.get_series_table_str(self.hash_map.get('current_series_id'))
-        for key, value in prop_list.items():
-            if value:
-                self.hash_map.put(key, value)
-            else:
-                self.hash_map.put(key, '_')"""
+        series_id = self.screen_values['series_id']
+        self.screen_data = self.service.get_series_table_str(series_id)
+        # self.init_screen()
 
     def on_input(self):
         listener = self.listener
@@ -5790,8 +5787,10 @@ class SeriesItem(Screen):
             self.hash_map.back_screen()
         elif listener == "btn_cancel":
             self.hash_map.back_screen()
-
-        self.hash_map.no_refresh()
+        
+        self.hash_map.toast(self.hash_map['production_date'])
+        self.hash_map.refresh_screen()
+        # self.hash_map.no_refresh()
 
     def save_data(self):
 
