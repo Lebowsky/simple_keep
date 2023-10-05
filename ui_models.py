@@ -5472,25 +5472,6 @@ class SelectUnit(GoodsPricesItemCard):
 # ^^^^^^^^^^^^^^^^^^^^^ GoodsPrices ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 # ==================== Series =============================
-class TestSeries(Screen):
-    def __init__(self, hash_map: HashMap, rs_settings):
-        super().__init__(hash_map, rs_settings)
-
-    def on_start(self):
-        pass
-    
-    def on_input(self):
-        listener = self.listener
-        if listener=='btn_show_test_series':
-            args = {
-                'title': 'Выбор серии',
-                'doc_row_id': '247',
-                'use_adr_doc_tables': 0
-            }
-            screen = create_screen(self.hash_map, SeriesSelectScreen, args)
-            screen.show()
-            
-
 class SeriesSelectScreen(Screen):
     process_name = 'SeriesProcess'
     screen_name = 'SeriesSelectScreen'
