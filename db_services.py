@@ -240,7 +240,7 @@ class BarcodeService(DbService):
 
 
 class DocService:
-    def __init__(self, doc_id=''):
+    def __init__(self, doc_id='', is_group_scan=False):
         self.doc_id = doc_id
         self.docs_table_name = 'RS_docs'
         self.details_table_name = 'RS_docs_table'
@@ -248,6 +248,7 @@ class DocService:
         self.sql_text = ''
         self.sql_params = None
         self.debug = False
+        self.is_group_scan = is_group_scan
         self.provider = SqlQueryProvider(self.docs_table_name, sql_class=sqlClass())
 
     def get_last_edited_goods(self, to_json=False):
@@ -457,6 +458,7 @@ class DocService:
 
         if self.docs_table_name == 'RS_docs':
             fields.append(f'{self.docs_table_name}.id_countragents')
+            fields.append(f'{self.docs_table_name}.is_group_scan')
             fields.append(f'ifnull(RS_countragents.full_name, "") as RS_countragent')
 
         query_text = 'SELECT ' + ',\n'.join(fields)
@@ -490,6 +492,9 @@ class DocService:
                 where = 'WHERE doc_type=?'
             else:
                 where += ' AND doc_type=?'
+
+        if self.docs_table_name == 'RS_docs' and self.is_group_scan is False:
+            where += f' AND is_group_scan={int(self.is_group_scan)}'
         
         where += ''' AND RS_barc_flow.id_doc IS NULL'''
         
@@ -543,38 +548,41 @@ class DocService:
         return [doc[0] for doc in docs]
 
     def get_docs_stat(self):
-        query = f'''
+        w = f'is_group_scan = "0"' if self.is_group_scan is False else True
+
+        query_select = f'''
         WITH tmp AS (
             SELECT 
                 doc_type,
-                {self.docs_table_name}.id_doc,
+                docs_table.id_doc,
                 1 as doc_Count,
-                IFNULL({self.docs_table_name}.sent,0) as sent,
-                IFNULL({self.docs_table_name}.verified,0) as verified, 
+                IFNULL(docs_table.sent,0) as sent,
+                IFNULL(docs_table.verified,0) as verified,
+                IFNULL(docs_table.is_group_scan, 0) as is_group_scan,
                 CASE WHEN IFNULL(verified,0)=0 THEN 
-                    COUNT({self.details_table_name}.id)
+                    COUNT(docs_details.id)
                 ELSE 
                     0 
                 END as count_verified,
                 CASE WHEN IFNULL(verified,0)=1 THEN 
-                    count({self.details_table_name}.id)
+                    count(docs_details.id)
                 ELSE 
                     0 
                 END as count_unverified,
                 CASE WHEN IFNULL(verified,0)=0 THEN
-                     SUM({self.details_table_name}.qtty_plan)
+                     SUM(docs_details.qtty_plan)
                 ELSE 
                     0 
                 END as qtty_plan_verified,
                 CASE WHEN IFNULL(verified,0)=1 THEN 
-                    SUM({self.details_table_name}.qtty_plan)
+                    SUM(docs_details.qtty_plan)
                 ELSE 
                     0 
                 END as qtty_plan_unverified
-            FROM {self.docs_table_name}
-            LEFT JOIN {self.details_table_name} 
-                ON {self.details_table_name}.id_doc = {self.docs_table_name}.id_doc
-            GROUP BY {self.docs_table_name}.id_doc
+            FROM RS_docs AS docs_table
+            LEFT JOIN RS_docs_table AS docs_details
+                ON docs_details.id_doc = docs_table.id_doc
+            GROUP BY docs_table.id_doc
         )
         SELECT 
             doc_type as docType, 
@@ -587,10 +595,11 @@ class DocService:
             SUM(qtty_plan_verified) as qtty_plan_verified,
             SUM(qtty_plan_unverified) as qtty_plan_unverified
         FROM tmp
+        WHERE {w}
         GROUP BY doc_type
         '''
 
-        res = self._get_query_result(query, return_dict=True)
+        res = self._get_query_result(query_select, return_dict=True)
         return res
 
     def get_doc_flow_stat(self):
@@ -945,6 +954,7 @@ class DocService:
     def mark_verified(self, value=1):
         self.provider.table_name = self.docs_table_name
         self.provider.update({'verified': value}, {'id_doc': self.doc_id})
+
 
 class SeriesService(DbService):
     doc_basic_table_name = 'RS_docs_table'

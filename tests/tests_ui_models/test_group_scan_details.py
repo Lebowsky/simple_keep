@@ -183,7 +183,7 @@ class TestGroupScanDocDetailsScreenNew(unittest.TestCase):
 
         BarcodeWorker._get_barcode_data = MagicMock(return_value=barcode_data)
 
-        result = self.sut._barcode_scanned()
+        result = self.sut._item_barcode_scanned()
         self.assertIsNone(result)
 
     # @unittest.skip

@@ -146,7 +146,7 @@ def docs_tiles_on_start(hash_map: HashMap):
 
 @HashMap()
 def gs_tiles_on_start(hash_map: HashMap):
-    screen = ui_models.GroupScanTiles(hash_map, rs_settings)
+    screen = create_screen(hash_map, ui_models.GroupScanTiles)
     screen.on_start()
 
 
@@ -168,6 +168,19 @@ def docs_on_select(hash_map: HashMap):
     screen.on_input()
 
 
+@HashMap()
+def group_docs_on_start(hash_map: HashMap):
+    screen = create_screen(hash_map, ui_models.GroupScanDocsListScreen)
+    screen.on_start()
+
+
+@HashMap()
+def group_docs_on_select(hash_map: HashMap):
+    screen = create_screen(hash_map, ui_models.GroupScanDocsListScreen)
+    screen.on_input()
+
+
+
 # @HashMap()
 # def doc_details_on_start(hash_map: HashMap):
 #     screen: ui_models.GroupScanDocDetailsScreen = create_screen(hash_map)
@@ -187,8 +200,7 @@ def doc_details_listener(hash_map: HashMap):
 
 @HashMap()
 def doc_details_before_process_barcode(hash_map):
-    """ Обработчик для синхронного запроса и обновления данных
-     после сканирования и перед обработкой ШК"""
+    """ Обработчик для синхронного запроса и обновления данных после сканирования и перед обработкой ШК"""
 
     screen = ui_models.GroupScanDocDetailsScreen(hash_map, rs_settings)
     screen.before_process_barcode()
