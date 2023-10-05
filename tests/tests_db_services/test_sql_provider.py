@@ -24,7 +24,7 @@ class TestSqlQueryProvider(unittest.TestCase):
             sut.delete(test_data)
             sut.select(test_data)
 
-        self.assertEqual(context.exception.args[0], 'table_name must be specified')
+        self.assertEqual(context.exception.args[0], 'SqlQueryProvider(table_name=): table_name must be specified')
 
     def test_create(self):
         sut = SqlQueryProvider(debug=True)
