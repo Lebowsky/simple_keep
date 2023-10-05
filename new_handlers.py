@@ -407,7 +407,6 @@ def prices_on_input(hash_map):
 
 
 # ^^^^^^^^^^^^^^^^^^^^^ GoodsPrices ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
 @HashMap()
 def series_list_on_start(hash_map):
     screen: ui_models.SeriesSelectScreen = create_screen(hash_map, ui_models.SeriesSelectScreen)
