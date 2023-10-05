@@ -2,6 +2,7 @@ import json
 import os
 
 
+
 def jclass(cls_name):
     if cls_name == 'ru.travelfood.simple_ui.NoSQL':
         return NoSQL
