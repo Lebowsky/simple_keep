@@ -3851,13 +3851,14 @@ class BaseGoodSelect(Screen):
             """Префикс кнопок +/-, значение в названиях кнопок"""
             self._set_delta(int(listener[4:]))
         elif listener in ["btn_cancel", 'BACK_BUTTON', 'ON_BACK_PRESSED']:
-            self._save_new_delta()
+           self._handle_btn_ok()
+           """ self._save_new_delta()
             self._set_delta(reset=True)
             self.hash_map.put('new_qtty', '')
             self.hash_map.put('selected_card_position', '')
             self.hash_map.remove('selected_card_data')
             self.hash_map.put('items_on_page', '')
-            self._back_screen()
+            self._back_screen()"""
         elif listener == 'btn_print':
             self.print_ticket()
         elif listener == 'barcode':
@@ -3886,7 +3887,7 @@ class BaseGoodSelect(Screen):
             self._set_delta(reset=True)
             return
 
-        current_elem = self.hash_map.get_json('selected_card_data')
+        current_elem = self.hash_map.get_json('GoodsSelectScreen_selected_card_data')
         qtty = new_qtty
 
         if self.hash_map.get('parent_screen') == 'ВыборТовараАртикул':
@@ -3898,7 +3899,7 @@ class BaseGoodSelect(Screen):
         self.hash_map.put('new_qtty', '')
 
     def _handle_choice_by_article(self, current_elem, qtty):
-        if float(qtty) == float(self.hash_map.get('qtty') or 0):
+        if float(qtty) == float(current_elem['qtty'] or 0):
             self.hash_map.show_screen("ВыборТовараАртикул")
             return
 
@@ -3911,7 +3912,7 @@ class BaseGoodSelect(Screen):
         self.hash_map.show_screen("ВыборТовараАртикул")
 
     def _handle_choice_by_other(self, current_elem, qtty):
-        old_qtty = float(self.hash_map.get('qtty') or 0) if current_elem else float(self.screen_values.get('qtty') or 0)
+        old_qtty = float(current_elem['qtty'] or 0) if current_elem else float(self.screen_values.get('qtty') or 0)
         row_id = int(current_elem['key']) if current_elem else  self.screen_values.get('key')
 
         if float(qtty) != old_qtty:
@@ -3924,7 +3925,7 @@ class BaseGoodSelect(Screen):
         self._back_screen()
 
     def _handle_doc_good_barcode(self):
-        selected_card_data = self.hash_map.get_json('selected_card_data')
+        selected_card_data = self.hash_map.get_json('GoodsSelectScreen_selected_card_data')
         init_data = {
             'item_id': selected_card_data.get('id_good', ''),
             'property_id': selected_card_data.get('id_properties', ''),
@@ -3967,7 +3968,7 @@ class BaseGoodSelect(Screen):
         return False
 
     def _get_current_elem(self):
-        current_elem = self.hash_map.get_json('selected_card_data')
+        current_elem = self.hash_map.get_json('GoodsSelectScreen_selected_card_data')
         return current_elem or self.screen_values
 
     def _save_new_delta(self):
@@ -3992,7 +3993,7 @@ class BaseGoodSelect(Screen):
         old_qtty = float(current_elem.get('qtty') or 0)
 
         if self.hash_map.get('parent_screen') == 'ВыборТовараАртикул':
-            current_elem = self.hash_map.get_json('selected_card_data')
+            current_elem = self.hash_map.get_json('GoodsSelectScreen_selected_card_data')
             if qtty == self._get_float_value(self.hash_map.get('qtty')):
                 self.hash_map.show_screen("ВыборТовараАртикул")
                 return
@@ -4132,6 +4133,7 @@ class GoodsSelectScreen(BaseGoodSelect):
                                                             current_elem['id_unit'])
             self.hash_map.put('GoodsSelectScreen_doc_data', doc_data, to_json=True)
             self.hash_map.put('doc_rows', doc_rows)
+            self.hash_map.put('GoodsSelectScreen_selected_card_data', current_elem, to_json=True)
 
             if doc_position:
                 self._goods_selector('index', index=doc_position)
