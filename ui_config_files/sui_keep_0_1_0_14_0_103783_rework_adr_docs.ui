@@ -56,6 +56,7 @@
                         "Handlers": [
                             {
                                 "event": "onStart",
+                                "listener": "",
                                 "action": "run",
                                 "type": "python",
                                 "method": "docs_tiles_on_start",
@@ -129,6 +130,7 @@
                         "Handlers": [
                             {
                                 "event": "onStart",
+                                "listener": "",
                                 "action": "run",
                                 "type": "python",
                                 "method": "docs_on_start",
@@ -271,12 +273,10 @@
                                                         "Variable": "current_page",
                                                         "height": "match_parent",
                                                         "width": "wrap_content",
-                                                        "orientation": "",
                                                         "weight": "1",
                                                         "TextBold": false,
                                                         "TextItalic": false,
                                                         "TextSize": "18",
-                                                        "TextColor": "",
                                                         "type": "TextView"
                                                     },
                                                     {
@@ -284,25 +284,20 @@
                                                         "Variable": "items_on_page_click",
                                                         "height": "wrap_content",
                                                         "width": "wrap_content",
-                                                        "orientation": "",
-                                                        "weight": "",
+                                                        "weight": 0,
                                                         "TextBold": false,
                                                         "TextItalic": false,
                                                         "TextSize": "16",
                                                         "TextColor": "#000000",
                                                         "type": "SpinnerLayout"
                                                     }
-                                                ],
-                                                "BackgroundColor": "",
-                                                "StrokeWidth": "",
-                                                "Padding": ""
+                                                ]
                                             },
                                             {
                                                 "Value": ">",
                                                 "Variable": "next_page",
                                                 "height": "wrap_content",
                                                 "width": "match_parent",
-                                                "orientation": "",
                                                 "weight": "3",
                                                 "TextBold": false,
                                                 "TextItalic": false,
@@ -310,10 +305,7 @@
                                                 "TextColor": "#000000",
                                                 "type": "Button"
                                             }
-                                        ],
-                                        "BackgroundColor": "",
-                                        "StrokeWidth": "",
-                                        "Padding": ""
+                                        ]
                                     },
                                     {
                                         "Value": "@doc_goods_table",
@@ -328,12 +320,9 @@
                                         "Variable": "doc_goods_table",
                                         "height": "wrap_content",
                                         "width": "match_parent",
-                                        "orientation": "",
                                         "weight": "0",
                                         "TextBold": false,
                                         "TextItalic": false,
-                                        "TextSize": "",
-                                        "TextColor": "",
                                         "type": "CardsLayout"
                                     },
                                     {
@@ -341,7 +330,6 @@
                                         "Variable": "btn_doc_mark_verified",
                                         "height": "wrap_content",
                                         "width": "match_parent",
-                                        "orientation": "",
                                         "weight": "0",
                                         "type": "Button"
                                     },
@@ -407,6 +395,7 @@
                         "Handlers": [
                             {
                                 "event": "onStart",
+                                "listener": "",
                                 "action": "run",
                                 "type": "python",
                                 "method": "doc_details_on_start",
@@ -633,10 +622,7 @@
                                                     }
                                                 ]
                                             }
-                                        ],
-                                        "BackgroundColor": "",
-                                        "StrokeWidth": "",
-                                        "Padding": ""
+                                        ]
                                     },
                                     {
                                         "type": "LinearLayout",
@@ -662,7 +648,6 @@
                                                 "Variable": "",
                                                 "height": "wrap_content",
                                                 "width": "match_parent",
-                                                "orientation": "",
                                                 "weight": "5",
                                                 "TextBold": true,
                                                 "TextItalic": false,
@@ -675,18 +660,13 @@
                                                 "Variable": "btn_next_good",
                                                 "height": "wrap_content",
                                                 "width": "wrap_content",
-                                                "orientation": "",
                                                 "weight": "1",
                                                 "TextBold": true,
                                                 "TextItalic": false,
                                                 "TextSize": "21",
-                                                "TextColor": "",
                                                 "type": "Button"
                                             }
-                                        ],
-                                        "BackgroundColor": "",
-                                        "StrokeWidth": "",
-                                        "Padding": ""
+                                        ]
                                     },
                                     {
                                         "type": "LinearLayout",
@@ -717,12 +697,10 @@
                                                         "Variable": "qtty_plan",
                                                         "height": "wrap_content",
                                                         "width": "match_parent",
-                                                        "orientation": "",
                                                         "weight": "0",
                                                         "TextBold": false,
                                                         "TextItalic": false,
                                                         "TextSize": "24",
-                                                        "TextColor": "",
                                                         "type": "TextView"
                                                     }
                                                 ]
@@ -795,23 +773,18 @@
                                                                         "Variable": "qtty",
                                                                         "height": "wrap_content",
                                                                         "width": "wrap_content",
-                                                                        "orientation": "",
                                                                         "weight": "1",
                                                                         "TextBold": false,
                                                                         "TextItalic": false,
                                                                         "TextSize": "18",
-                                                                        "TextColor": "",
                                                                         "type": "TextView"
                                                                     }
-                                                                ],
-                                                                "BackgroundColor": "",
-                                                                "StrokeWidth": "",
-                                                                "Padding": ""
+                                                                ]
                                                             },
                                                             {
                                                                 "type": "LinearLayout",
                                                                 "Variable": "",
-                                                                "orientation": "",
+                                                                "orientation": "vertical",
                                                                 "height": "wrap_content",
                                                                 "width": "match_parent",
                                                                 "weight": "2",
@@ -826,14 +799,9 @@
                                                                         "TextItalic": false,
                                                                         "type": "TextView"
                                                                     }
-                                                                ],
-                                                                "BackgroundColor": "",
-                                                                "StrokeWidth": "",
-                                                                "Padding": ""
+                                                                ]
                                                             }
                                                         ],
-                                                        "BackgroundColor": "",
-                                                        "StrokeWidth": "",
                                                         "Padding": "center"
                                                     },
                                                     {
@@ -867,7 +835,7 @@
                                                             {
                                                                 "type": "LinearLayout",
                                                                 "Variable": "",
-                                                                "orientation": "",
+                                                                "orientation": "vertical",
                                                                 "height": "wrap_content",
                                                                 "width": "match_parent",
                                                                 "weight": "1",
@@ -888,23 +856,18 @@
                                                                         "Variable": "new_qtty",
                                                                         "height": "wrap_content",
                                                                         "width": "wrap_content",
-                                                                        "orientation": "",
                                                                         "weight": "1",
                                                                         "TextBold": true,
                                                                         "TextItalic": false,
                                                                         "TextSize": "24",
-                                                                        "TextColor": "",
                                                                         "type": "TextView"
                                                                     }
-                                                                ],
-                                                                "BackgroundColor": "",
-                                                                "StrokeWidth": "",
-                                                                "Padding": ""
+                                                                ]
                                                             },
                                                             {
                                                                 "type": "LinearLayout",
                                                                 "Variable": "",
-                                                                "orientation": "",
+                                                                "orientation": "vertical",
                                                                 "height": "wrap_content",
                                                                 "width": "match_parent",
                                                                 "weight": "4",
@@ -919,14 +882,9 @@
                                                                         "TextItalic": false,
                                                                         "type": "TextView"
                                                                     }
-                                                                ],
-                                                                "BackgroundColor": "",
-                                                                "StrokeWidth": "",
-                                                                "Padding": ""
+                                                                ]
                                                             }
                                                         ],
-                                                        "BackgroundColor": "",
-                                                        "StrokeWidth": "",
                                                         "Padding": "center"
                                                     }
                                                 ]
@@ -952,7 +910,6 @@
                                                         "Variable": "qtty",
                                                         "height": "wrap_content",
                                                         "width": "match_parent",
-                                                        "orientation": "",
                                                         "weight": "0",
                                                         "TextBold": false,
                                                         "TextItalic": false,
@@ -1008,12 +965,10 @@
                                                         "Variable": "ops_-1",
                                                         "height": "wrap_content",
                                                         "width": "match_parent",
-                                                        "orientation": "",
                                                         "weight": "1",
                                                         "TextBold": false,
                                                         "TextItalic": false,
                                                         "TextSize": "21",
-                                                        "TextColor": "",
                                                         "type": "Button"
                                                     },
                                                     {
@@ -1034,12 +989,10 @@
                                                         "Variable": "ops_+1",
                                                         "height": "wrap_content",
                                                         "width": "match_parent",
-                                                        "orientation": "",
                                                         "weight": "1",
                                                         "TextBold": false,
                                                         "TextItalic": false,
                                                         "TextSize": "21",
-                                                        "TextColor": "",
                                                         "type": "Button"
                                                     },
                                                     {
@@ -1047,18 +1000,13 @@
                                                         "Variable": "ops_+5",
                                                         "height": "wrap_content",
                                                         "width": "match_parent",
-                                                        "orientation": "",
                                                         "weight": "1",
                                                         "TextBold": false,
                                                         "TextItalic": false,
                                                         "TextSize": "21",
-                                                        "TextColor": "",
                                                         "type": "Button"
                                                     }
-                                                ],
-                                                "BackgroundColor": "",
-                                                "StrokeWidth": "",
-                                                "Padding": ""
+                                                ]
                                             },
                                             {
                                                 "type": "LinearLayout",
@@ -1109,6 +1057,7 @@
                         "Handlers": [
                             {
                                 "event": "onStart",
+                                "listener": "",
                                 "action": "run",
                                 "type": "python",
                                 "method": "elem_viev_on_start",
@@ -1217,6 +1166,7 @@
                         "Handlers": [
                             {
                                 "event": "onStart",
+                                "listener": "",
                                 "action": "run",
                                 "type": "python",
                                 "method": "delete_barcode_screen_start",
@@ -1224,6 +1174,7 @@
                             },
                             {
                                 "event": "onInput",
+                                "listener": "",
                                 "action": "run",
                                 "type": "python",
                                 "method": "delete_barcode_screen_click",
@@ -1264,7 +1215,6 @@
                                         "width": "match_parent",
                                         "weight": "0",
                                         "TextSize": "24",
-                                        "TextColor": "",
                                         "type": "TextView"
                                     },
                                     {
@@ -1297,6 +1247,7 @@
                         "Handlers": [
                             {
                                 "event": "onInput",
+                                "listener": "",
                                 "action": "run",
                                 "type": "python",
                                 "method": "barcode_error_screen_listener",
@@ -1452,6 +1403,7 @@
                         "Handlers": [
                             {
                                 "event": "onStart",
+                                "listener": "",
                                 "action": "run",
                                 "type": "python",
                                 "method": "barcode_flow_on_start",
@@ -1459,6 +1411,7 @@
                             },
                             {
                                 "event": "onInput",
+                                "listener": "",
                                 "action": "run",
                                 "type": "python",
                                 "method": "barcode_flow_listener",
@@ -1515,6 +1468,7 @@
                         "Handlers": [
                             {
                                 "event": "onInput",
+                                "listener": "",
                                 "action": "run",
                                 "type": "python",
                                 "method": "select_good_article_on_input",
@@ -1522,6 +1476,7 @@
                             },
                             {
                                 "event": "onStart",
+                                "listener": "",
                                 "action": "run",
                                 "type": "python",
                                 "method": "select_good_article_on_start",
@@ -1597,11 +1552,9 @@
                                                                 "Variable": "",
                                                                 "height": "wrap_content",
                                                                 "width": "wrap_content",
-                                                                "orientation": "",
                                                                 "weight": "0",
                                                                 "TextBold": false,
                                                                 "TextItalic": false,
-                                                                "TextSize": "",
                                                                 "TextColor": "#000000",
                                                                 "type": "TextView"
                                                             }
@@ -1632,18 +1585,13 @@
                                                         "Variable": "",
                                                         "height": "wrap_content",
                                                         "width": "wrap_content",
-                                                        "orientation": "",
                                                         "weight": "0",
                                                         "TextBold": false,
                                                         "TextItalic": false,
-                                                        "TextSize": "",
                                                         "TextColor": "#000000",
                                                         "type": "TextView"
                                                     }
-                                                ],
-                                                "BackgroundColor": "",
-                                                "StrokeWidth": "",
-                                                "Padding": ""
+                                                ]
                                             },
                                             {
                                                 "type": "LinearLayout",
@@ -1668,18 +1616,13 @@
                                                         "Variable": "",
                                                         "height": "wrap_content",
                                                         "width": "wrap_content",
-                                                        "orientation": "",
                                                         "weight": "0",
                                                         "TextBold": false,
                                                         "TextItalic": false,
-                                                        "TextSize": "",
                                                         "TextColor": "#cc0000",
                                                         "type": "TextView"
                                                     }
-                                                ],
-                                                "BackgroundColor": "",
-                                                "StrokeWidth": "",
-                                                "Padding": ""
+                                                ]
                                             },
                                             {
                                                 "type": "LinearLayout",
@@ -1704,30 +1647,21 @@
                                                         "Variable": "",
                                                         "height": "wrap_content",
                                                         "width": "wrap_content",
-                                                        "orientation": "",
                                                         "weight": "0",
                                                         "TextBold": false,
                                                         "TextItalic": false,
-                                                        "TextSize": "",
                                                         "TextColor": "#000000",
                                                         "type": "TextView"
                                                     }
-                                                ],
-                                                "BackgroundColor": "",
-                                                "StrokeWidth": "",
-                                                "Padding": ""
+                                                ]
                                             }
-                                        ],
-                                        "BackgroundColor": "",
-                                        "StrokeWidth": "",
-                                        "Padding": ""
+                                        ]
                                     },
                                     {
                                         "Value": "@good_name",
                                         "Variable": "",
                                         "height": "wrap_content",
                                         "width": "match_parent",
-                                        "orientation": "",
                                         "weight": "0",
                                         "TextBold": true,
                                         "TextItalic": false,
@@ -1764,12 +1698,10 @@
                                                         "Variable": "qtty_plan",
                                                         "height": "wrap_content",
                                                         "width": "match_parent",
-                                                        "orientation": "",
                                                         "weight": "0",
                                                         "TextBold": false,
                                                         "TextItalic": false,
                                                         "TextSize": "24",
-                                                        "TextColor": "",
                                                         "type": "TextView"
                                                     }
                                                 ]
@@ -1842,23 +1774,18 @@
                                                                         "Variable": "qtty",
                                                                         "height": "wrap_content",
                                                                         "width": "wrap_content",
-                                                                        "orientation": "",
                                                                         "weight": "1",
                                                                         "TextBold": false,
                                                                         "TextItalic": false,
                                                                         "TextSize": "18",
-                                                                        "TextColor": "",
                                                                         "type": "TextView"
                                                                     }
-                                                                ],
-                                                                "BackgroundColor": "",
-                                                                "StrokeWidth": "",
-                                                                "Padding": ""
+                                                                ]
                                                             },
                                                             {
                                                                 "type": "LinearLayout",
                                                                 "Variable": "",
-                                                                "orientation": "",
+                                                                "orientation": "vertical",
                                                                 "height": "wrap_content",
                                                                 "width": "match_parent",
                                                                 "weight": "2",
@@ -1873,14 +1800,9 @@
                                                                         "TextItalic": false,
                                                                         "type": "TextView"
                                                                     }
-                                                                ],
-                                                                "BackgroundColor": "",
-                                                                "StrokeWidth": "",
-                                                                "Padding": ""
+                                                                ]
                                                             }
                                                         ],
-                                                        "BackgroundColor": "",
-                                                        "StrokeWidth": "",
                                                         "Padding": "center"
                                                     },
                                                     {
@@ -1914,7 +1836,7 @@
                                                             {
                                                                 "type": "LinearLayout",
                                                                 "Variable": "",
-                                                                "orientation": "",
+                                                                "orientation": "vertical",
                                                                 "height": "wrap_content",
                                                                 "width": "match_parent",
                                                                 "weight": "1",
@@ -1935,23 +1857,18 @@
                                                                         "Variable": "new_qtty",
                                                                         "height": "wrap_content",
                                                                         "width": "wrap_content",
-                                                                        "orientation": "",
                                                                         "weight": "1",
                                                                         "TextBold": true,
                                                                         "TextItalic": false,
                                                                         "TextSize": "24",
-                                                                        "TextColor": "",
                                                                         "type": "TextView"
                                                                     }
-                                                                ],
-                                                                "BackgroundColor": "",
-                                                                "StrokeWidth": "",
-                                                                "Padding": ""
+                                                                ]
                                                             },
                                                             {
                                                                 "type": "LinearLayout",
                                                                 "Variable": "",
-                                                                "orientation": "",
+                                                                "orientation": "vertical",
                                                                 "height": "wrap_content",
                                                                 "width": "match_parent",
                                                                 "weight": "2",
@@ -1966,14 +1883,9 @@
                                                                         "TextItalic": false,
                                                                         "type": "TextView"
                                                                     }
-                                                                ],
-                                                                "BackgroundColor": "",
-                                                                "StrokeWidth": "",
-                                                                "Padding": ""
+                                                                ]
                                                             }
                                                         ],
-                                                        "BackgroundColor": "",
-                                                        "StrokeWidth": "",
                                                         "Padding": "center"
                                                     }
                                                 ]
@@ -1999,7 +1911,6 @@
                                                         "Variable": "qtty",
                                                         "height": "wrap_content",
                                                         "width": "match_parent",
-                                                        "orientation": "",
                                                         "weight": "0",
                                                         "TextBold": false,
                                                         "TextItalic": false,
@@ -2055,12 +1966,10 @@
                                                         "Variable": "ops_-1",
                                                         "height": "wrap_content",
                                                         "width": "match_parent",
-                                                        "orientation": "",
                                                         "weight": "1",
                                                         "TextBold": false,
                                                         "TextItalic": false,
                                                         "TextSize": "21",
-                                                        "TextColor": "",
                                                         "type": "Button"
                                                     },
                                                     {
@@ -2068,7 +1977,6 @@
                                                         "Variable": "delta",
                                                         "height": "wrap_content",
                                                         "width": "match_parent",
-                                                        "orientation": "",
                                                         "weight": "1",
                                                         "TextBold": false,
                                                         "TextItalic": false,
@@ -2081,12 +1989,10 @@
                                                         "Variable": "ops_+1",
                                                         "height": "wrap_content",
                                                         "width": "match_parent",
-                                                        "orientation": "",
                                                         "weight": "1",
                                                         "TextBold": false,
                                                         "TextItalic": false,
                                                         "TextSize": "21",
-                                                        "TextColor": "",
                                                         "type": "Button"
                                                     },
                                                     {
@@ -2094,18 +2000,13 @@
                                                         "Variable": "ops_+5",
                                                         "height": "wrap_content",
                                                         "width": "match_parent",
-                                                        "orientation": "",
                                                         "weight": "1",
                                                         "TextBold": false,
                                                         "TextItalic": false,
                                                         "TextSize": "21",
-                                                        "TextColor": "",
                                                         "type": "Button"
                                                     }
-                                                ],
-                                                "BackgroundColor": "",
-                                                "StrokeWidth": "",
-                                                "Padding": ""
+                                                ]
                                             },
                                             {
                                                 "type": "LinearLayout",
@@ -2132,12 +2033,9 @@
                                         "Variable": "series_cards",
                                         "height": "wrap_content",
                                         "width": "match_parent",
-                                        "orientation": "",
                                         "weight": "0",
                                         "TextBold": false,
                                         "TextItalic": false,
-                                        "TextSize": "",
-                                        "TextColor": "",
                                         "type": "CardsLayout"
                                     }
                                 ]
@@ -2151,6 +2049,7 @@
                         "Handlers": [
                             {
                                 "event": "onStart",
+                                "listener": "",
                                 "action": "run",
                                 "type": "python",
                                 "method": "series_list_on_start",
@@ -2207,12 +2106,9 @@
                                                 "Variable": "",
                                                 "height": "wrap_content",
                                                 "width": "wrap_content",
-                                                "orientation": "",
-                                                "weight": "",
+                                                "weight": 0,
                                                 "TextBold": false,
                                                 "TextItalic": false,
-                                                "TextSize": "",
-                                                "TextColor": "",
                                                 "type": "TextView"
                                             }
                                         ]
@@ -2240,18 +2136,12 @@
                                                 "Variable": "name",
                                                 "height": "wrap_content",
                                                 "width": "wrap_content",
-                                                "orientation": "",
-                                                "weight": "",
+                                                "weight": 0,
                                                 "TextBold": false,
                                                 "TextItalic": false,
-                                                "TextSize": "",
-                                                "TextColor": "",
                                                 "type": "EditTextText"
                                             }
-                                        ],
-                                        "BackgroundColor": "",
-                                        "StrokeWidth": "",
-                                        "Padding": ""
+                                        ]
                                     },
                                     {
                                         "type": "LinearLayout",
@@ -2276,18 +2166,12 @@
                                                 "Variable": "number",
                                                 "height": "wrap_content",
                                                 "width": "wrap_content",
-                                                "orientation": "",
-                                                "weight": "",
+                                                "weight": 0,
                                                 "TextBold": false,
                                                 "TextItalic": false,
-                                                "TextSize": "",
-                                                "TextColor": "",
                                                 "type": "EditTextText"
                                             }
-                                        ],
-                                        "BackgroundColor": "",
-                                        "StrokeWidth": "",
-                                        "Padding": ""
+                                        ]
                                     },
                                     {
                                         "type": "LinearLayout",
@@ -2312,23 +2196,17 @@
                                                 "Variable": "production_date",
                                                 "height": "wrap_content",
                                                 "width": "wrap_content",
-                                                "orientation": "",
                                                 "weight": "1",
                                                 "TextBold": false,
                                                 "TextItalic": false,
-                                                "TextSize": "",
-                                                "TextColor": "",
                                                 "type": "EditTextText"
                                             }
-                                        ],
-                                        "BackgroundColor": "",
-                                        "StrokeWidth": "",
-                                        "Padding": ""
+                                        ]
                                     },
                                     {
                                         "type": "LinearLayout",
                                         "Variable": "",
-                                        "orientation": "",
+                                        "orientation": "vertical",
                                         "height": "wrap_content",
                                         "width": "match_parent",
                                         "weight": "1",
@@ -2348,18 +2226,12 @@
                                                 "Variable": "best_before",
                                                 "height": "wrap_content",
                                                 "width": "wrap_content",
-                                                "orientation": "",
                                                 "weight": "1",
                                                 "TextBold": false,
                                                 "TextItalic": false,
-                                                "TextSize": "",
-                                                "TextColor": "",
                                                 "type": "EditTextText"
                                             }
-                                        ],
-                                        "BackgroundColor": "",
-                                        "StrokeWidth": "",
-                                        "Padding": ""
+                                        ]
                                     },
                                     {
                                         "type": "LinearLayout",
@@ -2384,18 +2256,12 @@
                                                 "Variable": "qtty",
                                                 "height": "wrap_content",
                                                 "width": "wrap_content",
-                                                "orientation": "",
-                                                "weight": "",
+                                                "weight": 0,
                                                 "TextBold": false,
                                                 "TextItalic": false,
-                                                "TextSize": "",
-                                                "TextColor": "",
                                                 "type": "EditTextNumeric"
                                             }
-                                        ],
-                                        "BackgroundColor": "",
-                                        "StrokeWidth": "",
-                                        "Padding": ""
+                                        ]
                                     },
                                     {
                                         "type": "LinearLayout",
@@ -2420,18 +2286,12 @@
                                                 "Variable": "btn_save",
                                                 "height": "wrap_content",
                                                 "width": "wrap_content",
-                                                "orientation": "",
-                                                "weight": "",
+                                                "weight": 0,
                                                 "TextBold": false,
                                                 "TextItalic": false,
-                                                "TextSize": "",
-                                                "TextColor": "",
                                                 "type": "Button"
                                             }
-                                        ],
-                                        "BackgroundColor": "",
-                                        "StrokeWidth": "",
-                                        "Padding": ""
+                                        ]
                                     }
                                 ]
                             }
@@ -2439,6 +2299,7 @@
                         "Handlers": [
                             {
                                 "event": "onStart",
+                                "listener": "",
                                 "action": "run",
                                 "type": "python",
                                 "method": "series_item_on_start",
@@ -2508,6 +2369,7 @@
                         "Handlers": [
                             {
                                 "event": "onStart",
+                                "listener": "",
                                 "action": "runprogress",
                                 "type": "python",
                                 "method": "gs_tiles_on_start",
@@ -2581,6 +2443,7 @@
                         "Handlers": [
                             {
                                 "event": "onStart",
+                                "listener": "",
                                 "action": "run",
                                 "type": "python",
                                 "method": "docs_on_start",
@@ -2723,12 +2586,10 @@
                                                         "Variable": "current_page",
                                                         "height": "match_parent",
                                                         "width": "wrap_content",
-                                                        "orientation": "",
                                                         "weight": "1",
                                                         "TextBold": false,
                                                         "TextItalic": false,
                                                         "TextSize": "21",
-                                                        "TextColor": "",
                                                         "type": "TextView"
                                                     },
                                                     {
@@ -2736,25 +2597,20 @@
                                                         "Variable": "items_on_page_click",
                                                         "height": "wrap_content",
                                                         "width": "wrap_content",
-                                                        "orientation": "",
-                                                        "weight": "",
+                                                        "weight": 0,
                                                         "TextBold": false,
                                                         "TextItalic": false,
                                                         "TextSize": "16",
                                                         "TextColor": "#000000",
                                                         "type": "SpinnerLayout"
                                                     }
-                                                ],
-                                                "BackgroundColor": "",
-                                                "StrokeWidth": "",
-                                                "Padding": ""
+                                                ]
                                             },
                                             {
                                                 "Value": ">",
                                                 "Variable": "next_page",
                                                 "height": "wrap_content",
                                                 "width": "match_parent",
-                                                "orientation": "",
                                                 "weight": "2",
                                                 "TextBold": false,
                                                 "TextItalic": false,
@@ -2762,10 +2618,7 @@
                                                 "TextColor": "#000000",
                                                 "type": "Button"
                                             }
-                                        ],
-                                        "BackgroundColor": "",
-                                        "StrokeWidth": "",
-                                        "Padding": ""
+                                        ]
                                     },
                                     {
                                         "Value": "@doc_goods_table",
@@ -2837,6 +2690,7 @@
                         "Handlers": [
                             {
                                 "event": "onStart",
+                                "listener": "",
                                 "action": "run",
                                 "type": "python",
                                 "method": "doc_details_on_start",
@@ -2885,7 +2739,6 @@
                                         "width": "match_parent",
                                         "weight": "0",
                                         "TextSize": "24",
-                                        "TextColor": "",
                                         "type": "TextView"
                                     },
                                     {
@@ -2918,6 +2771,7 @@
                         "Handlers": [
                             {
                                 "event": "onInput",
+                                "listener": "",
                                 "action": "run",
                                 "type": "python",
                                 "method": "barcode_error_screen_listener",
@@ -3002,7 +2856,6 @@
             {
                 "type": "Process",
                 "ProcessName": "Адресное хранение",
-                "PlanFactHeader": "",
                 "DefineOnBackPressed": true,
                 "hidden": false,
                 "login_screen": false,
@@ -3066,6 +2919,7 @@
                         "Handlers": [
                             {
                                 "event": "onStart",
+                                "listener": "",
                                 "action": "run",
                                 "type": "python",
                                 "method": "adr_docs_on_start",
@@ -3178,12 +3032,10 @@
                                                         "Variable": "current_page",
                                                         "height": "match_parent",
                                                         "width": "wrap_content",
-                                                        "orientation": "",
                                                         "weight": "1",
                                                         "TextBold": false,
                                                         "TextItalic": false,
                                                         "TextSize": "21",
-                                                        "TextColor": "",
                                                         "type": "TextView"
                                                     },
                                                     {
@@ -3191,25 +3043,20 @@
                                                         "Variable": "items_on_page_click",
                                                         "height": "wrap_content",
                                                         "width": "wrap_content",
-                                                        "orientation": "",
-                                                        "weight": "",
+                                                        "weight": 0,
                                                         "TextBold": false,
                                                         "TextItalic": false,
                                                         "TextSize": "16",
                                                         "TextColor": "#000000",
                                                         "type": "SpinnerLayout"
                                                     }
-                                                ],
-                                                "BackgroundColor": "",
-                                                "StrokeWidth": "",
-                                                "Padding": ""
+                                                ]
                                             },
                                             {
                                                 "Value": ">",
                                                 "Variable": "next_page",
                                                 "height": "wrap_content",
                                                 "width": "match_parent",
-                                                "orientation": "",
                                                 "weight": "2",
                                                 "TextBold": false,
                                                 "TextItalic": false,
@@ -3217,10 +3064,7 @@
                                                 "TextColor": "#000000",
                                                 "type": "Button"
                                             }
-                                        ],
-                                        "BackgroundColor": "",
-                                        "StrokeWidth": "",
-                                        "Padding": ""
+                                        ]
                                     },
                                     {
                                         "type": "LinearLayout",
@@ -3273,10 +3117,7 @@
                                                 "weight": "1",
                                                 "type": "SpinnerLayout"
                                             }
-                                        ],
-                                        "BackgroundColor": "",
-                                        "StrokeWidth": "",
-                                        "Padding": ""
+                                        ]
                                     },
                                     {
                                         "type": "LinearLayout",
@@ -3313,10 +3154,7 @@
                                                 "weight": "0",
                                                 "type": "Button"
                                             }
-                                        ],
-                                        "BackgroundColor": "",
-                                        "StrokeWidth": "",
-                                        "Padding": ""
+                                        ]
                                     },
                                     {
                                         "Value": "@warehouse",
@@ -3339,7 +3177,6 @@
                                         "Variable": "btn_doc_mark_verified",
                                         "height": "wrap_content",
                                         "width": "match_parent",
-                                        "orientation": "",
                                         "weight": "0",
                                         "type": "Button"
                                     }
@@ -3379,6 +3216,7 @@
                         "Handlers": [
                             {
                                 "event": "onStart",
+                                "listener": "",
                                 "action": "run",
                                 "type": "python",
                                 "method": "adr_doc_details_on_start",
@@ -3386,6 +3224,7 @@
                             },
                             {
                                 "event": "onInput",
+                                "listener": "",
                                 "action": "run",
                                 "type": "python",
                                 "method": "adr_doc_details_on_input",
@@ -3462,12 +3301,10 @@
                                                         "Variable": "qtty_plan",
                                                         "height": "wrap_content",
                                                         "width": "match_parent",
-                                                        "orientation": "",
                                                         "weight": "0",
                                                         "TextBold": false,
                                                         "TextItalic": false,
                                                         "TextSize": "24",
-                                                        "TextColor": "",
                                                         "type": "TextView"
                                                     }
                                                 ]
@@ -3540,23 +3377,18 @@
                                                                         "Variable": "qtty",
                                                                         "height": "wrap_content",
                                                                         "width": "wrap_content",
-                                                                        "orientation": "",
                                                                         "weight": "1",
                                                                         "TextBold": false,
                                                                         "TextItalic": false,
                                                                         "TextSize": "18",
-                                                                        "TextColor": "",
                                                                         "type": "TextView"
                                                                     }
-                                                                ],
-                                                                "BackgroundColor": "",
-                                                                "StrokeWidth": "",
-                                                                "Padding": ""
+                                                                ]
                                                             },
                                                             {
                                                                 "type": "LinearLayout",
                                                                 "Variable": "",
-                                                                "orientation": "",
+                                                                "orientation": "vertical",
                                                                 "height": "wrap_content",
                                                                 "width": "match_parent",
                                                                 "weight": "2",
@@ -3571,14 +3403,9 @@
                                                                         "TextItalic": false,
                                                                         "type": "TextView"
                                                                     }
-                                                                ],
-                                                                "BackgroundColor": "",
-                                                                "StrokeWidth": "",
-                                                                "Padding": ""
+                                                                ]
                                                             }
                                                         ],
-                                                        "BackgroundColor": "",
-                                                        "StrokeWidth": "",
                                                         "Padding": "center"
                                                     },
                                                     {
@@ -3612,7 +3439,7 @@
                                                             {
                                                                 "type": "LinearLayout",
                                                                 "Variable": "",
-                                                                "orientation": "",
+                                                                "orientation": "vertical",
                                                                 "height": "wrap_content",
                                                                 "width": "match_parent",
                                                                 "weight": "1",
@@ -3633,23 +3460,18 @@
                                                                         "Variable": "new_qtty",
                                                                         "height": "wrap_content",
                                                                         "width": "wrap_content",
-                                                                        "orientation": "",
                                                                         "weight": "1",
                                                                         "TextBold": true,
                                                                         "TextItalic": false,
                                                                         "TextSize": "24",
-                                                                        "TextColor": "",
                                                                         "type": "TextView"
                                                                     }
-                                                                ],
-                                                                "BackgroundColor": "",
-                                                                "StrokeWidth": "",
-                                                                "Padding": ""
+                                                                ]
                                                             },
                                                             {
                                                                 "type": "LinearLayout",
                                                                 "Variable": "",
-                                                                "orientation": "",
+                                                                "orientation": "vertical",
                                                                 "height": "wrap_content",
                                                                 "width": "match_parent",
                                                                 "weight": "2",
@@ -3664,14 +3486,9 @@
                                                                         "TextItalic": false,
                                                                         "type": "TextView"
                                                                     }
-                                                                ],
-                                                                "BackgroundColor": "",
-                                                                "StrokeWidth": "",
-                                                                "Padding": ""
+                                                                ]
                                                             }
                                                         ],
-                                                        "BackgroundColor": "",
-                                                        "StrokeWidth": "",
                                                         "Padding": "center"
                                                     }
                                                 ]
@@ -3697,7 +3514,6 @@
                                                         "Variable": "qtty",
                                                         "height": "wrap_content",
                                                         "width": "match_parent",
-                                                        "orientation": "",
                                                         "weight": "0",
                                                         "TextBold": false,
                                                         "TextItalic": false,
@@ -3753,12 +3569,10 @@
                                                         "Variable": "ops_-1",
                                                         "height": "wrap_content",
                                                         "width": "match_parent",
-                                                        "orientation": "",
                                                         "weight": "1",
                                                         "TextBold": false,
                                                         "TextItalic": false,
                                                         "TextSize": "21",
-                                                        "TextColor": "",
                                                         "type": "Button"
                                                     },
                                                     {
@@ -3766,7 +3580,6 @@
                                                         "Variable": "delta",
                                                         "height": "wrap_content",
                                                         "width": "match_parent",
-                                                        "orientation": "",
                                                         "weight": "1",
                                                         "TextBold": false,
                                                         "TextItalic": false,
@@ -3779,12 +3592,10 @@
                                                         "Variable": "ops_+1",
                                                         "height": "wrap_content",
                                                         "width": "match_parent",
-                                                        "orientation": "",
                                                         "weight": "1",
                                                         "TextBold": false,
                                                         "TextItalic": false,
                                                         "TextSize": "21",
-                                                        "TextColor": "",
                                                         "type": "Button"
                                                     },
                                                     {
@@ -3792,18 +3603,13 @@
                                                         "Variable": "ops_+5",
                                                         "height": "wrap_content",
                                                         "width": "match_parent",
-                                                        "orientation": "",
                                                         "weight": "1",
                                                         "TextBold": false,
                                                         "TextItalic": false,
                                                         "TextSize": "21",
-                                                        "TextColor": "",
                                                         "type": "Button"
                                                     }
-                                                ],
-                                                "BackgroundColor": "",
-                                                "StrokeWidth": "",
-                                                "Padding": ""
+                                                ]
                                             },
                                             {
                                                 "type": "LinearLayout",
@@ -3844,6 +3650,7 @@
                         "Handlers": [
                             {
                                 "event": "onStart",
+                                "listener": "",
                                 "action": "run",
                                 "type": "python",
                                 "method": "adr_elem_view_on_start",
@@ -3892,7 +3699,6 @@
                                         "width": "match_parent",
                                         "weight": "0",
                                         "TextSize": "24",
-                                        "TextColor": "",
                                         "type": "TextView"
                                     },
                                     {
@@ -3925,6 +3731,7 @@
                         "Handlers": [
                             {
                                 "event": "onInput",
+                                "listener": "",
                                 "action": "run",
                                 "type": "python",
                                 "method": "barcode_error_screen_listener",
@@ -4039,11 +3846,9 @@
                                                                 "Variable": "",
                                                                 "height": "wrap_content",
                                                                 "width": "wrap_content",
-                                                                "orientation": "",
                                                                 "weight": "0",
                                                                 "TextBold": false,
                                                                 "TextItalic": false,
-                                                                "TextSize": "",
                                                                 "TextColor": "#000000",
                                                                 "type": "TextView"
                                                             }
@@ -4074,18 +3879,13 @@
                                                         "Variable": "",
                                                         "height": "wrap_content",
                                                         "width": "wrap_content",
-                                                        "orientation": "",
                                                         "weight": "0",
                                                         "TextBold": false,
                                                         "TextItalic": false,
-                                                        "TextSize": "",
                                                         "TextColor": "#000000",
                                                         "type": "TextView"
                                                     }
-                                                ],
-                                                "BackgroundColor": "",
-                                                "StrokeWidth": "",
-                                                "Padding": ""
+                                                ]
                                             },
                                             {
                                                 "type": "LinearLayout",
@@ -4110,18 +3910,13 @@
                                                         "Variable": "",
                                                         "height": "wrap_content",
                                                         "width": "wrap_content",
-                                                        "orientation": "",
                                                         "weight": "0",
                                                         "TextBold": false,
                                                         "TextItalic": false,
-                                                        "TextSize": "",
                                                         "TextColor": "#cc0000",
                                                         "type": "TextView"
                                                     }
-                                                ],
-                                                "BackgroundColor": "",
-                                                "StrokeWidth": "",
-                                                "Padding": ""
+                                                ]
                                             },
                                             {
                                                 "type": "LinearLayout",
@@ -4146,30 +3941,21 @@
                                                         "Variable": "",
                                                         "height": "wrap_content",
                                                         "width": "wrap_content",
-                                                        "orientation": "",
                                                         "weight": "0",
                                                         "TextBold": false,
                                                         "TextItalic": false,
-                                                        "TextSize": "",
                                                         "TextColor": "#000000",
                                                         "type": "TextView"
                                                     }
-                                                ],
-                                                "BackgroundColor": "",
-                                                "StrokeWidth": "",
-                                                "Padding": ""
+                                                ]
                                             }
-                                        ],
-                                        "BackgroundColor": "",
-                                        "StrokeWidth": "",
-                                        "Padding": ""
+                                        ]
                                     },
                                     {
                                         "Value": "@good_name",
                                         "Variable": "",
                                         "height": "wrap_content",
                                         "width": "match_parent",
-                                        "orientation": "",
                                         "weight": "0",
                                         "TextBold": true,
                                         "TextItalic": false,
@@ -4206,12 +3992,10 @@
                                                         "Variable": "qtty_plan",
                                                         "height": "wrap_content",
                                                         "width": "match_parent",
-                                                        "orientation": "",
                                                         "weight": "0",
                                                         "TextBold": false,
                                                         "TextItalic": false,
                                                         "TextSize": "24",
-                                                        "TextColor": "",
                                                         "type": "TextView"
                                                     }
                                                 ]
@@ -4284,23 +4068,18 @@
                                                                         "Variable": "qtty",
                                                                         "height": "wrap_content",
                                                                         "width": "wrap_content",
-                                                                        "orientation": "",
                                                                         "weight": "1",
                                                                         "TextBold": false,
                                                                         "TextItalic": false,
                                                                         "TextSize": "18",
-                                                                        "TextColor": "",
                                                                         "type": "TextView"
                                                                     }
-                                                                ],
-                                                                "BackgroundColor": "",
-                                                                "StrokeWidth": "",
-                                                                "Padding": ""
+                                                                ]
                                                             },
                                                             {
                                                                 "type": "LinearLayout",
                                                                 "Variable": "",
-                                                                "orientation": "",
+                                                                "orientation": "vertical",
                                                                 "height": "wrap_content",
                                                                 "width": "match_parent",
                                                                 "weight": "2",
@@ -4315,14 +4094,9 @@
                                                                         "TextItalic": false,
                                                                         "type": "TextView"
                                                                     }
-                                                                ],
-                                                                "BackgroundColor": "",
-                                                                "StrokeWidth": "",
-                                                                "Padding": ""
+                                                                ]
                                                             }
                                                         ],
-                                                        "BackgroundColor": "",
-                                                        "StrokeWidth": "",
                                                         "Padding": "center"
                                                     },
                                                     {
@@ -4356,7 +4130,7 @@
                                                             {
                                                                 "type": "LinearLayout",
                                                                 "Variable": "",
-                                                                "orientation": "",
+                                                                "orientation": "vertical",
                                                                 "height": "wrap_content",
                                                                 "width": "match_parent",
                                                                 "weight": "1",
@@ -4377,23 +4151,18 @@
                                                                         "Variable": "new_qtty",
                                                                         "height": "wrap_content",
                                                                         "width": "wrap_content",
-                                                                        "orientation": "",
                                                                         "weight": "1",
                                                                         "TextBold": true,
                                                                         "TextItalic": false,
                                                                         "TextSize": "24",
-                                                                        "TextColor": "",
                                                                         "type": "TextView"
                                                                     }
-                                                                ],
-                                                                "BackgroundColor": "",
-                                                                "StrokeWidth": "",
-                                                                "Padding": ""
+                                                                ]
                                                             },
                                                             {
                                                                 "type": "LinearLayout",
                                                                 "Variable": "",
-                                                                "orientation": "",
+                                                                "orientation": "vertical",
                                                                 "height": "wrap_content",
                                                                 "width": "match_parent",
                                                                 "weight": "2",
@@ -4408,14 +4177,9 @@
                                                                         "TextItalic": false,
                                                                         "type": "TextView"
                                                                     }
-                                                                ],
-                                                                "BackgroundColor": "",
-                                                                "StrokeWidth": "",
-                                                                "Padding": ""
+                                                                ]
                                                             }
                                                         ],
-                                                        "BackgroundColor": "",
-                                                        "StrokeWidth": "",
                                                         "Padding": "center"
                                                     }
                                                 ]
@@ -4441,7 +4205,6 @@
                                                         "Variable": "qtty",
                                                         "height": "wrap_content",
                                                         "width": "match_parent",
-                                                        "orientation": "",
                                                         "weight": "0",
                                                         "TextBold": false,
                                                         "TextItalic": false,
@@ -4497,12 +4260,10 @@
                                                         "Variable": "ops_-1",
                                                         "height": "wrap_content",
                                                         "width": "match_parent",
-                                                        "orientation": "",
                                                         "weight": "1",
                                                         "TextBold": false,
                                                         "TextItalic": false,
                                                         "TextSize": "21",
-                                                        "TextColor": "",
                                                         "type": "Button"
                                                     },
                                                     {
@@ -4510,7 +4271,6 @@
                                                         "Variable": "delta",
                                                         "height": "wrap_content",
                                                         "width": "match_parent",
-                                                        "orientation": "",
                                                         "weight": "1",
                                                         "TextBold": false,
                                                         "TextItalic": false,
@@ -4523,12 +4283,10 @@
                                                         "Variable": "ops_+1",
                                                         "height": "wrap_content",
                                                         "width": "match_parent",
-                                                        "orientation": "",
                                                         "weight": "1",
                                                         "TextBold": false,
                                                         "TextItalic": false,
                                                         "TextSize": "21",
-                                                        "TextColor": "",
                                                         "type": "Button"
                                                     },
                                                     {
@@ -4536,18 +4294,13 @@
                                                         "Variable": "ops_+5",
                                                         "height": "wrap_content",
                                                         "width": "match_parent",
-                                                        "orientation": "",
                                                         "weight": "1",
                                                         "TextBold": false,
                                                         "TextItalic": false,
                                                         "TextSize": "21",
-                                                        "TextColor": "",
                                                         "type": "Button"
                                                     }
-                                                ],
-                                                "BackgroundColor": "",
-                                                "StrokeWidth": "",
-                                                "Padding": ""
+                                                ]
                                             },
                                             {
                                                 "type": "LinearLayout",
@@ -4574,12 +4327,9 @@
                                         "Variable": "series_cards",
                                         "height": "wrap_content",
                                         "width": "match_parent",
-                                        "orientation": "",
                                         "weight": "0",
                                         "TextBold": false,
                                         "TextItalic": false,
-                                        "TextSize": "",
-                                        "TextColor": "",
                                         "type": "CardsLayout"
                                     }
                                 ]
@@ -4593,6 +4343,7 @@
                         "Handlers": [
                             {
                                 "event": "onStart",
+                                "listener": "",
                                 "action": "run",
                                 "type": "python",
                                 "method": "adr_series_list_on_start",
@@ -4649,12 +4400,9 @@
                                                 "Variable": "",
                                                 "height": "wrap_content",
                                                 "width": "wrap_content",
-                                                "orientation": "",
-                                                "weight": "",
+                                                "weight": 0,
                                                 "TextBold": false,
                                                 "TextItalic": false,
-                                                "TextSize": "",
-                                                "TextColor": "",
                                                 "type": "TextView"
                                             }
                                         ]
@@ -4682,18 +4430,12 @@
                                                 "Variable": "name",
                                                 "height": "wrap_content",
                                                 "width": "wrap_content",
-                                                "orientation": "",
-                                                "weight": "",
+                                                "weight": 0,
                                                 "TextBold": false,
                                                 "TextItalic": false,
-                                                "TextSize": "",
-                                                "TextColor": "",
                                                 "type": "EditTextText"
                                             }
-                                        ],
-                                        "BackgroundColor": "",
-                                        "StrokeWidth": "",
-                                        "Padding": ""
+                                        ]
                                     },
                                     {
                                         "type": "LinearLayout",
@@ -4718,18 +4460,12 @@
                                                 "Variable": "number",
                                                 "height": "wrap_content",
                                                 "width": "wrap_content",
-                                                "orientation": "",
-                                                "weight": "",
+                                                "weight": 0,
                                                 "TextBold": false,
                                                 "TextItalic": false,
-                                                "TextSize": "",
-                                                "TextColor": "",
                                                 "type": "EditTextText"
                                             }
-                                        ],
-                                        "BackgroundColor": "",
-                                        "StrokeWidth": "",
-                                        "Padding": ""
+                                        ]
                                     },
                                     {
                                         "type": "LinearLayout",
@@ -4754,23 +4490,17 @@
                                                 "Variable": "production_date",
                                                 "height": "wrap_content",
                                                 "width": "wrap_content",
-                                                "orientation": "",
                                                 "weight": "1",
                                                 "TextBold": false,
                                                 "TextItalic": false,
-                                                "TextSize": "",
-                                                "TextColor": "",
                                                 "type": "EditTextText"
                                             }
-                                        ],
-                                        "BackgroundColor": "",
-                                        "StrokeWidth": "",
-                                        "Padding": ""
+                                        ]
                                     },
                                     {
                                         "type": "LinearLayout",
                                         "Variable": "",
-                                        "orientation": "",
+                                        "orientation": "vertical",
                                         "height": "wrap_content",
                                         "width": "match_parent",
                                         "weight": "1",
@@ -4790,18 +4520,12 @@
                                                 "Variable": "best_before",
                                                 "height": "wrap_content",
                                                 "width": "wrap_content",
-                                                "orientation": "",
                                                 "weight": "1",
                                                 "TextBold": false,
                                                 "TextItalic": false,
-                                                "TextSize": "",
-                                                "TextColor": "",
                                                 "type": "EditTextText"
                                             }
-                                        ],
-                                        "BackgroundColor": "",
-                                        "StrokeWidth": "",
-                                        "Padding": ""
+                                        ]
                                     },
                                     {
                                         "type": "LinearLayout",
@@ -4826,18 +4550,12 @@
                                                 "Variable": "qtty",
                                                 "height": "wrap_content",
                                                 "width": "wrap_content",
-                                                "orientation": "",
-                                                "weight": "",
+                                                "weight": 0,
                                                 "TextBold": false,
                                                 "TextItalic": false,
-                                                "TextSize": "",
-                                                "TextColor": "",
                                                 "type": "EditTextNumeric"
                                             }
-                                        ],
-                                        "BackgroundColor": "",
-                                        "StrokeWidth": "",
-                                        "Padding": ""
+                                        ]
                                     },
                                     {
                                         "type": "LinearLayout",
@@ -4862,18 +4580,12 @@
                                                 "Variable": "btn_save",
                                                 "height": "wrap_content",
                                                 "width": "wrap_content",
-                                                "orientation": "",
-                                                "weight": "",
+                                                "weight": 0,
                                                 "TextBold": false,
                                                 "TextItalic": false,
-                                                "TextSize": "",
-                                                "TextColor": "",
                                                 "type": "Button"
                                             }
-                                        ],
-                                        "BackgroundColor": "",
-                                        "StrokeWidth": "",
-                                        "Padding": ""
+                                        ]
                                     }
                                 ]
                             }
@@ -4881,6 +4593,7 @@
                         "Handlers": [
                             {
                                 "event": "onStart",
+                                "listener": "",
                                 "action": "run",
                                 "type": "python",
                                 "method": "adr_series_item_on_start",
@@ -4901,7 +4614,6 @@
             {
                 "type": "Process",
                 "ProcessName": "Сбор ШК",
-                "PlanFactHeader": "",
                 "DefineOnBackPressed": true,
                 "hidden": false,
                 "login_screen": false,
@@ -4950,6 +4662,7 @@
                         "Handlers": [
                             {
                                 "event": "onStart",
+                                "listener": "",
                                 "action": "run",
                                 "type": "python",
                                 "method": "flow_tiles_on_start",
@@ -5023,6 +4736,7 @@
                         "Handlers": [
                             {
                                 "event": "onStart",
+                                "listener": "",
                                 "action": "run",
                                 "type": "python",
                                 "method": "flow_docs_on_start",
@@ -5159,6 +4873,7 @@
                         "Handlers": [
                             {
                                 "event": "onStart",
+                                "listener": "",
                                 "action": "run",
                                 "type": "python",
                                 "method": "barcode_flow_on_start",
@@ -5166,6 +4881,7 @@
                             },
                             {
                                 "event": "onInput",
+                                "listener": "",
                                 "action": "run",
                                 "type": "python",
                                 "method": "barcode_flow_listener",
@@ -5312,7 +5028,6 @@
             {
                 "type": "Process",
                 "ProcessName": "Универсальный справочник",
-                "PlanFactHeader": "",
                 "DefineOnBackPressed": false,
                 "hidden": true,
                 "login_screen": false,
@@ -5350,6 +5065,7 @@
                         "Handlers": [
                             {
                                 "event": "onStart",
+                                "listener": "",
                                 "action": "run",
                                 "type": "python",
                                 "method": "universal_cards_on_start",
@@ -5357,6 +5073,7 @@
                             },
                             {
                                 "event": "onInput",
+                                "listener": "",
                                 "action": "run",
                                 "type": "python",
                                 "method": "universal_cards_listener",
@@ -5447,6 +5164,7 @@
                         "Handlers": [
                             {
                                 "event": "onStart",
+                                "listener": "",
                                 "action": "run",
                                 "type": "python",
                                 "method": "goods_on_start",
@@ -5454,6 +5172,7 @@
                             },
                             {
                                 "event": "onInput",
+                                "listener": "",
                                 "action": "run",
                                 "type": "python",
                                 "method": "goods_on_input",
@@ -5508,7 +5227,6 @@
                                                 "Variable": "to_balances",
                                                 "height": "wrap_content",
                                                 "width": "match_parent",
-                                                "orientation": "",
                                                 "weight": "1",
                                                 "type": "ProgressButton"
                                             }
@@ -5675,6 +5393,7 @@
                         "Handlers": [
                             {
                                 "event": "onStart",
+                                "listener": "",
                                 "action": "run",
                                 "type": "python",
                                 "method": "good_card_on_start",
@@ -5682,6 +5401,7 @@
                             },
                             {
                                 "event": "onInput",
+                                "listener": "",
                                 "action": "run",
                                 "type": "python",
                                 "method": "good_card_on_input",
@@ -5689,6 +5409,7 @@
                             },
                             {
                                 "event": "onPostStart",
+                                "listener": "",
                                 "action": "run",
                                 "type": "python",
                                 "method": "good_card_post_start",
@@ -5728,6 +5449,7 @@
                         "Handlers": [
                             {
                                 "event": "onStart",
+                                "listener": "",
                                 "action": "run",
                                 "type": "python",
                                 "method": "select_type_goods_on_start",
@@ -5735,6 +5457,7 @@
                             },
                             {
                                 "event": "onInput",
+                                "listener": "",
                                 "action": "run",
                                 "type": "python",
                                 "method": "select_type_goods_on_input",
@@ -5853,12 +5576,9 @@
                                                                 "Variable": "item_art_input",
                                                                 "height": "wrap_content",
                                                                 "width": "match_parent",
-                                                                "orientation": "",
                                                                 "weight": "1",
                                                                 "TextBold": false,
                                                                 "TextItalic": false,
-                                                                "TextSize": "",
-                                                                "TextColor": "",
                                                                 "type": "EditTextText"
                                                             }
                                                         ]
@@ -5887,17 +5607,11 @@
                                                                 "weight": "1",
                                                                 "type": "EditTextText"
                                                             }
-                                                        ],
-                                                        "BackgroundColor": "",
-                                                        "StrokeWidth": "",
-                                                        "Padding": ""
+                                                        ]
                                                     }
                                                 ]
                                             }
-                                        ],
-                                        "BackgroundColor": "",
-                                        "StrokeWidth": "",
-                                        "Padding": ""
+                                        ]
                                     }
                                 ]
                             },
@@ -5924,11 +5638,9 @@
                                         "Variable": "barcode_info",
                                         "height": "wrap_content",
                                         "width": "match_parent",
-                                        "orientation": "",
-                                        "weight": "",
+                                        "weight": 0,
                                         "TextBold": false,
                                         "TextItalic": false,
-                                        "TextSize": "",
                                         "TextColor": "#008000",
                                         "type": "TextView"
                                     },
@@ -5937,7 +5649,6 @@
                                         "Variable": "selected_cell_name",
                                         "height": "wrap_content",
                                         "width": "match_parent",
-                                        "orientation": "",
                                         "weight": "0",
                                         "TextSize": "16",
                                         "TextColor": "#008000",
@@ -5948,7 +5659,6 @@
                                         "Variable": "error_msg",
                                         "height": "wrap_content",
                                         "width": "match_parent",
-                                        "orientation": "",
                                         "weight": "0",
                                         "TextSize": "16",
                                         "TextColor": "#ff0000",
@@ -5959,18 +5669,13 @@
                                         "Variable": "selected_wh_name",
                                         "height": "wrap_content",
                                         "width": "match_parent",
-                                        "orientation": "",
-                                        "weight": "",
+                                        "weight": 0,
                                         "TextBold": false,
                                         "TextItalic": false,
-                                        "TextSize": "",
                                         "TextColor": "#008000",
                                         "type": "TextView"
                                     }
-                                ],
-                                "BackgroundColor": "",
-                                "StrokeWidth": "",
-                                "Padding": ""
+                                ]
                             },
                             {
                                 "type": "LinearLayout",
@@ -5995,7 +5700,6 @@
                                         "Variable": "get_balance_btn",
                                         "height": "wrap_content",
                                         "width": "match_parent",
-                                        "orientation": "",
                                         "weight": "1",
                                         "TextSize": "15",
                                         "type": "ProgressButton"
@@ -6005,18 +5709,12 @@
                                         "Variable": "",
                                         "height": "wrap_content",
                                         "width": "match_parent",
-                                        "orientation": "",
                                         "weight": "2",
                                         "TextBold": false,
                                         "TextItalic": false,
-                                        "TextSize": "",
-                                        "TextColor": "",
                                         "type": "TextView"
                                     }
-                                ],
-                                "BackgroundColor": "",
-                                "StrokeWidth": "",
-                                "Padding": ""
+                                ]
                             },
                             {
                                 "type": "LinearLayout",
@@ -6034,10 +5732,7 @@
                                         "weight": "0",
                                         "type": "TableLayout"
                                     }
-                                ],
-                                "BackgroundColor": "",
-                                "StrokeWidth": "",
-                                "Padding": ""
+                                ]
                             },
                             {
                                 "type": "barcode",
@@ -6053,6 +5748,7 @@
                         "Handlers": [
                             {
                                 "event": "onStart",
+                                "listener": "",
                                 "action": "run",
                                 "type": "python",
                                 "method": "balances_on_start",
@@ -6060,6 +5756,7 @@
                             },
                             {
                                 "event": "onInput",
+                                "listener": "",
                                 "action": "run",
                                 "type": "python",
                                 "method": "balances_on_input",
@@ -6206,10 +5903,7 @@
                                                                 "weight": "1",
                                                                 "type": "object"
                                                             }
-                                                        ],
-                                                        "BackgroundColor": "",
-                                                        "StrokeWidth": "",
-                                                        "Padding": ""
+                                                        ]
                                                     },
                                                     {
                                                         "Value": "",
@@ -6243,17 +5937,11 @@
                                                                 "weight": "1",
                                                                 "type": "object"
                                                             }
-                                                        ],
-                                                        "BackgroundColor": "",
-                                                        "StrokeWidth": "",
-                                                        "Padding": ""
+                                                        ]
                                                     }
                                                 ]
                                             }
-                                        ],
-                                        "BackgroundColor": "",
-                                        "StrokeWidth": "",
-                                        "Padding": ""
+                                        ]
                                     }
                                 ]
                             },
@@ -6279,7 +5967,6 @@
                                         "Variable": "selected_price_type_name",
                                         "height": "wrap_content",
                                         "width": "match_parent",
-                                        "orientation": "",
                                         "weight": "0",
                                         "TextColor": "#008000",
                                         "type": "TextView"
@@ -6289,7 +5976,6 @@
                                         "Variable": "selected_property_name",
                                         "height": "wrap_content",
                                         "width": "match_parent",
-                                        "orientation": "",
                                         "weight": "0",
                                         "TextColor": "#008000",
                                         "type": "TextView"
@@ -6299,7 +5985,6 @@
                                         "Variable": "selected_unit_name",
                                         "height": "wrap_content",
                                         "width": "match_parent",
-                                        "orientation": "",
                                         "weight": "0",
                                         "TextColor": "#008000",
                                         "type": "TextView"
@@ -6309,7 +5994,6 @@
                                         "Variable": "barcode_info",
                                         "height": "wrap_content",
                                         "width": "match_parent",
-                                        "orientation": "",
                                         "weight": "0",
                                         "TextColor": "#008000",
                                         "type": "TextView"
@@ -6323,10 +6007,7 @@
                                         "TextColor": "#ff0000",
                                         "type": "TextView"
                                     }
-                                ],
-                                "BackgroundColor": "",
-                                "StrokeWidth": "",
-                                "Padding": ""
+                                ]
                             },
                             {
                                 "type": "LinearLayout",
@@ -6351,7 +6032,6 @@
                                         "Variable": "get_prices_btn",
                                         "height": "wrap_content",
                                         "width": "match_parent",
-                                        "orientation": "",
                                         "weight": "1",
                                         "type": "ProgressButton"
                                     },
@@ -6360,23 +6040,17 @@
                                         "Variable": "",
                                         "height": "wrap_content",
                                         "width": "match_parent",
-                                        "orientation": "",
                                         "weight": "2",
                                         "TextBold": false,
                                         "TextItalic": false,
-                                        "TextSize": "",
-                                        "TextColor": "",
                                         "type": "TextView"
                                     }
-                                ],
-                                "BackgroundColor": "",
-                                "StrokeWidth": "",
-                                "Padding": ""
+                                ]
                             },
                             {
                                 "type": "LinearLayout",
                                 "Variable": "",
-                                "orientation": "",
+                                "orientation": "vertical",
                                 "height": "wrap_content",
                                 "width": "match_parent",
                                 "weight": "0",
@@ -6389,10 +6063,7 @@
                                         "weight": "0",
                                         "type": "TableLayout"
                                     }
-                                ],
-                                "BackgroundColor": "",
-                                "StrokeWidth": "",
-                                "Padding": ""
+                                ]
                             },
                             {
                                 "type": "barcode",
@@ -6408,6 +6079,7 @@
                         "Handlers": [
                             {
                                 "event": "onStart",
+                                "listener": "",
                                 "action": "run",
                                 "type": "python",
                                 "method": "prices_on_start",
@@ -6415,6 +6087,7 @@
                             },
                             {
                                 "event": "onInput",
+                                "listener": "",
                                 "action": "run",
                                 "type": "python",
                                 "method": "prices_on_input",
@@ -6488,12 +6161,9 @@
                                         "Variable": "path",
                                         "height": "wrap_content",
                                         "width": "match_parent",
-                                        "orientation": "",
                                         "weight": "0",
                                         "TextBold": false,
                                         "TextItalic": false,
-                                        "TextSize": "",
-                                        "TextColor": "",
                                         "type": "EditTextText"
                                     },
                                     {
@@ -6582,6 +6252,7 @@
                         "Handlers": [
                             {
                                 "event": "onStart",
+                                "listener": "",
                                 "action": "run",
                                 "type": "python",
                                 "method": "settings_on_start",
@@ -6589,6 +6260,7 @@
                             },
                             {
                                 "event": "onInput",
+                                "listener": "",
                                 "action": "run",
                                 "type": "python",
                                 "method": "settings_on_click",
@@ -6628,6 +6300,7 @@
                         "Handlers": [
                             {
                                 "event": "onStart",
+                                "listener": "",
                                 "action": "run",
                                 "type": "python",
                                 "method": "file_list_on_start",
@@ -6747,6 +6420,7 @@
                         "Handlers": [
                             {
                                 "event": "onStart",
+                                "listener": "",
                                 "action": "run",
                                 "type": "python",
                                 "method": "font_sizes_on_start",
@@ -6754,6 +6428,7 @@
                             },
                             {
                                 "event": "onInput",
+                                "listener": "",
                                 "action": "run",
                                 "type": "python",
                                 "method": "font_size_settings_listener",
@@ -6814,7 +6489,6 @@
                                         "width": "match_parent",
                                         "weight": "0",
                                         "TextSize": "20",
-                                        "TextColor": "",
                                         "type": "TextView"
                                     },
                                     {
@@ -6824,7 +6498,6 @@
                                         "width": "match_parent",
                                         "weight": "0",
                                         "TextSize": "20",
-                                        "TextColor": "",
                                         "type": "TextView"
                                     },
                                     {
@@ -6834,7 +6507,6 @@
                                         "width": "match_parent",
                                         "weight": "0",
                                         "TextSize": "20",
-                                        "TextColor": "",
                                         "type": "TextView"
                                     },
                                     {
@@ -6844,7 +6516,6 @@
                                         "width": "match_parent",
                                         "weight": "0",
                                         "TextSize": "20",
-                                        "TextColor": "",
                                         "type": "TextView"
                                     },
                                     {
@@ -6854,7 +6525,6 @@
                                         "width": "match_parent",
                                         "weight": "0",
                                         "TextSize": "20",
-                                        "TextColor": "",
                                         "type": "TextView"
                                     }
                                 ]
@@ -6868,6 +6538,7 @@
                         "Handlers": [
                             {
                                 "event": "onInput",
+                                "listener": "",
                                 "action": "run",
                                 "type": "python",
                                 "method": "test_barcode_listener",
@@ -6924,12 +6595,9 @@
                                         "Variable": "error_log_table",
                                         "height": "wrap_content",
                                         "width": "wrap_content",
-                                        "orientation": "",
-                                        "weight": "",
+                                        "weight": 0,
                                         "TextBold": false,
                                         "TextItalic": false,
-                                        "TextSize": "",
-                                        "TextColor": "",
                                         "type": "TableLayout"
                                     }
                                 ]
@@ -6938,6 +6606,7 @@
                         "Handlers": [
                             {
                                 "event": "onStart",
+                                "listener": "",
                                 "action": "run",
                                 "type": "python",
                                 "method": "settings_errors_on_start",
@@ -6945,6 +6614,7 @@
                             },
                             {
                                 "event": "onInput",
+                                "listener": "",
                                 "action": "run",
                                 "type": "python",
                                 "method": "settings_errors_on_click",
@@ -7056,6 +6726,7 @@
                         "Handlers": [
                             {
                                 "event": "onStart",
+                                "listener": "",
                                 "action": "run",
                                 "type": "python",
                                 "method": "http_settings_on_start",
@@ -7063,6 +6734,7 @@
                             },
                             {
                                 "event": "onInput",
+                                "listener": "",
                                 "action": "run",
                                 "type": "python",
                                 "method": "http_settings_on_click",
@@ -7103,12 +6775,9 @@
                                         "Variable": "save_btn",
                                         "height": "wrap_content",
                                         "width": "wrap_content",
-                                        "orientation": "",
-                                        "weight": "",
+                                        "weight": 0,
                                         "TextBold": false,
                                         "TextItalic": false,
-                                        "TextSize": "",
-                                        "TextColor": "",
                                         "type": "Button"
                                     }
                                 ]
@@ -7117,6 +6786,7 @@
                         "Handlers": [
                             {
                                 "event": "onStart",
+                                "listener": "",
                                 "action": "run",
                                 "type": "python",
                                 "method": "sound_settings_on_start",
@@ -7189,12 +6859,9 @@
                                         "Variable": "save_btn",
                                         "height": "wrap_content",
                                         "width": "wrap_content",
-                                        "orientation": "",
-                                        "weight": "",
+                                        "weight": 0,
                                         "TextBold": false,
                                         "TextItalic": false,
-                                        "TextSize": "",
-                                        "TextColor": "",
                                         "type": "Button"
                                     }
                                 ]
@@ -7203,6 +6870,7 @@
                         "Handlers": [
                             {
                                 "event": "onStart",
+                                "listener": "",
                                 "action": "run",
                                 "type": "python",
                                 "method": "documents_settings_on_start",
@@ -7355,12 +7023,9 @@
                                         "Variable": "btn_fill_ratio",
                                         "height": "wrap_content",
                                         "width": "match_parent",
-                                        "orientation": "",
                                         "weight": "1",
                                         "TextBold": false,
                                         "TextItalic": false,
-                                        "TextSize": "",
-                                        "TextColor": "",
                                         "type": "ProgressButton"
                                     }
                                 ]
@@ -7369,6 +7034,7 @@
                         "Handlers": [
                             {
                                 "event": "onInput",
+                                "listener": "",
                                 "action": "run",
                                 "type": "python",
                                 "method": "debug_listener",
@@ -7389,7 +7055,6 @@
             {
                 "type": "Process",
                 "ProcessName": "Печать",
-                "PlanFactHeader": "",
                 "DefineOnBackPressed": true,
                 "hidden": true,
                 "login_screen": false,
@@ -7459,6 +7124,7 @@
                         "Handlers": [
                             {
                                 "event": "onStart",
+                                "listener": "",
                                 "action": "run",
                                 "type": "python",
                                 "method": "print_settings_on_start",
@@ -7466,6 +7132,7 @@
                             },
                             {
                                 "event": "onInput",
+                                "listener": "",
                                 "action": "run",
                                 "type": "python",
                                 "method": "print_settings_on_input",
@@ -7507,6 +7174,7 @@
                         "Handlers": [
                             {
                                 "event": "onStart",
+                                "listener": "",
                                 "action": "run",
                                 "type": "python",
                                 "method": "template_list_on_start",
@@ -7559,8 +7227,6 @@
                                         "weight": "3",
                                         "TextBold": false,
                                         "TextItalic": false,
-                                        "TextSize": "",
-                                        "TextColor": "",
                                         "type": "html"
                                     },
                                     {
@@ -7568,12 +7234,9 @@
                                         "Variable": "matching_table_values",
                                         "height": "wrap_content",
                                         "width": "match_parent",
-                                        "orientation": "",
                                         "weight": "1",
                                         "TextBold": false,
                                         "TextItalic": false,
-                                        "TextSize": "",
-                                        "TextColor": "",
                                         "type": "TableLayout"
                                     },
                                     {
@@ -7581,12 +7244,9 @@
                                         "Variable": "",
                                         "height": "wrap_content",
                                         "width": "match_parent",
-                                        "orientation": "",
                                         "weight": "1",
                                         "TextBold": false,
                                         "TextItalic": false,
-                                        "TextSize": "",
-                                        "TextColor": "",
                                         "type": "TextView"
                                     },
                                     {
@@ -7612,12 +7272,9 @@
                                                 "Variable": "barcode_width",
                                                 "height": "wrap_content",
                                                 "width": "match_parent",
-                                                "orientation": "",
                                                 "weight": "4",
                                                 "TextBold": false,
                                                 "TextItalic": false,
-                                                "TextSize": "",
-                                                "TextColor": "",
                                                 "type": "EditTextNumeric"
                                             },
                                             {
@@ -7625,12 +7282,9 @@
                                                 "Variable": "",
                                                 "height": "wrap_content",
                                                 "width": "match_parent",
-                                                "orientation": "",
                                                 "weight": "4",
                                                 "TextBold": false,
                                                 "TextItalic": false,
-                                                "TextSize": "",
-                                                "TextColor": "",
                                                 "type": "TextView"
                                             },
                                             {
@@ -7638,12 +7292,9 @@
                                                 "Variable": "barcode_height",
                                                 "height": "wrap_content",
                                                 "width": "match_parent",
-                                                "orientation": "",
                                                 "weight": "4",
                                                 "TextBold": false,
                                                 "TextItalic": false,
-                                                "TextSize": "",
-                                                "TextColor": "",
                                                 "type": "EditTextNumeric"
                                             },
                                             {
@@ -7662,10 +7313,7 @@
                                                 "weight": "3",
                                                 "type": "SpinnerLayout"
                                             }
-                                        ],
-                                        "BackgroundColor": "",
-                                        "StrokeWidth": "",
-                                        "Padding": ""
+                                        ]
                                     },
                                     {
                                         "type": "LinearLayout",
@@ -7739,10 +7387,7 @@
                                                 "weight": "1",
                                                 "type": "EditTextNumeric"
                                             }
-                                        ],
-                                        "BackgroundColor": "",
-                                        "StrokeWidth": "",
-                                        "Padding": ""
+                                        ]
                                     },
                                     {
                                         "type": "LinearLayout",
@@ -7767,18 +7412,12 @@
                                                 "Variable": "btn_save",
                                                 "height": "wrap_content",
                                                 "width": "wrap_content",
-                                                "orientation": "",
-                                                "weight": "",
+                                                "weight": 0,
                                                 "TextBold": false,
                                                 "TextItalic": false,
-                                                "TextSize": "",
-                                                "TextColor": "",
                                                 "type": "Button"
                                             }
-                                        ],
-                                        "BackgroundColor": "",
-                                        "StrokeWidth": "",
-                                        "Padding": ""
+                                        ]
                                     }
                                 ]
                             }
@@ -7786,6 +7425,7 @@
                         "Handlers": [
                             {
                                 "event": "onInput",
+                                "listener": "",
                                 "action": "run",
                                 "type": "python",
                                 "method": "html_view_on_input",
@@ -7922,10 +7562,7 @@
                                                 "weight": "0",
                                                 "type": "TextView"
                                             }
-                                        ],
-                                        "BackgroundColor": "",
-                                        "StrokeWidth": "",
-                                        "Padding": ""
+                                        ]
                                     },
                                     {
                                         "Value": "@cards",
@@ -7941,6 +7578,7 @@
                         "Handlers": [
                             {
                                 "event": "onInput",
+                                "listener": "",
                                 "action": "run",
                                 "type": "python",
                                 "method": "print_bluetooth_settings_on_input",
@@ -7948,6 +7586,7 @@
                             },
                             {
                                 "event": "onStart",
+                                "listener": "",
                                 "action": "run",
                                 "type": "set",
                                 "method": "BTGetBounded",
@@ -7955,6 +7594,7 @@
                             },
                             {
                                 "event": "onStart",
+                                "listener": "",
                                 "action": "run",
                                 "type": "python",
                                 "method": "print_bluetooth_settings_on_start",
@@ -8058,6 +7698,7 @@
                         "Handlers": [
                             {
                                 "event": "onInput",
+                                "listener": "",
                                 "action": "run",
                                 "type": "python",
                                 "method": "print_wifi_settings_on_input",
@@ -8065,6 +7706,7 @@
                             },
                             {
                                 "event": "onStart",
+                                "listener": "",
                                 "action": "run",
                                 "type": "python",
                                 "method": "print_wifi_settings_on_start",
@@ -8152,6 +7794,7 @@
                         "Handlers": [
                             {
                                 "event": "onStart",
+                                "listener": "",
                                 "action": "run",
                                 "type": "python",
                                 "method": "print_label_templates_on_start",
@@ -8159,6 +7802,7 @@
                             },
                             {
                                 "event": "onInput",
+                                "listener": "",
                                 "action": "run",
                                 "type": "python",
                                 "method": "print_label_templates_on_input",
@@ -8274,10 +7918,7 @@
                                                         "weight": "2",
                                                         "type": "EditTextNumeric"
                                                     }
-                                                ],
-                                                "BackgroundColor": "",
-                                                "StrokeWidth": "",
-                                                "Padding": ""
+                                                ]
                                             },
                                             {
                                                 "type": "LinearLayout",
@@ -8319,10 +7960,7 @@
                                                         "weight": "2",
                                                         "type": "EditTextNumeric"
                                                     }
-                                                ],
-                                                "BackgroundColor": "",
-                                                "StrokeWidth": "",
-                                                "Padding": ""
+                                                ]
                                             },
                                             {
                                                 "type": "LinearLayout",
@@ -8380,10 +8018,7 @@
                                                         "weight": "2",
                                                         "type": "SpinnerLayout"
                                                     }
-                                                ],
-                                                "BackgroundColor": "",
-                                                "StrokeWidth": "",
-                                                "Padding": ""
+                                                ]
                                             }
                                         ],
                                         "StrokeWidth": "5"
@@ -8418,6 +8053,7 @@
                         "Handlers": [
                             {
                                 "event": "onStart",
+                                "listener": "",
                                 "action": "run",
                                 "type": "python",
                                 "method": "print_label_template_size_on_start",
@@ -8425,6 +8061,7 @@
                             },
                             {
                                 "event": "onInput",
+                                "listener": "",
                                 "action": "run",
                                 "type": "python",
                                 "method": "print_label_template_size_on_input",
@@ -8437,7 +8074,6 @@
             {
                 "type": "Process",
                 "ProcessName": "Проводник",
-                "PlanFactHeader": "",
                 "DefineOnBackPressed": false,
                 "hidden": false,
                 "login_screen": false,
@@ -8486,12 +8122,9 @@
                                         "Variable": "templates_cards",
                                         "height": "wrap_content",
                                         "width": "match_parent",
-                                        "orientation": "",
-                                        "weight": "",
+                                        "weight": 0,
                                         "TextBold": false,
                                         "TextItalic": false,
-                                        "TextSize": "",
-                                        "TextColor": "",
                                         "type": "CardsLayout"
                                     }
                                 ]
@@ -8500,6 +8133,7 @@
                         "Handlers": [
                             {
                                 "event": "onStart",
+                                "listener": "",
                                 "action": "run",
                                 "type": "python",
                                 "method": "file_browser_on_start",
@@ -8520,7 +8154,6 @@
             {
                 "type": "Process",
                 "ProcessName": "Серии",
-                "PlanFactHeader": "",
                 "DefineOnBackPressed": false,
                 "hidden": true,
                 "login_screen": false,
@@ -8562,6 +8195,7 @@
                         "Handlers": [
                             {
                                 "event": "OnObjectDetected",
+                                "listener": "",
                                 "action": "run",
                                 "type": "python",
                                 "method": "article_cv_on_object_detected",
@@ -8582,7 +8216,6 @@
             {
                 "type": "Process",
                 "ProcessName": "SelectItemProcess",
-                "PlanFactHeader": "",
                 "DefineOnBackPressed": true,
                 "hidden": true,
                 "login_screen": false,
@@ -8622,6 +8255,7 @@
                         "Handlers": [
                             {
                                 "event": "onStart",
+                                "listener": "",
                                 "action": "run",
                                 "type": "python",
                                 "method": "select_item_on_start",
@@ -8642,7 +8276,6 @@
             {
                 "type": "Process",
                 "ProcessName": "BarcodeRegistration",
-                "PlanFactHeader": "",
                 "DefineOnBackPressed": true,
                 "hidden": true,
                 "login_screen": false,
@@ -8666,10 +8299,10 @@
                             {
                                 "type": "LinearLayout",
                                 "Variable": "",
-                                "orientation": "",
+                                "orientation": "vertical",
                                 "height": "wrap_content",
                                 "width": "wrap_content",
-                                "weight": "",
+                                "weight": 0,
                                 "Elements": [
                                     {
                                         "Value": "Отсканируйте штрихкод товара",
@@ -8683,10 +8316,7 @@
                                         "TextColor": "#7A005C",
                                         "type": "TextView"
                                     }
-                                ],
-                                "BackgroundColor": "",
-                                "StrokeWidth": "",
-                                "Padding": ""
+                                ]
                             },
                             {
                                 "type": "LinearLayout",
@@ -8712,11 +8342,9 @@
                                         "Variable": "good_name_barcode",
                                         "height": "wrap_content",
                                         "width": "match_parent",
-                                        "orientation": "",
-                                        "weight": "",
+                                        "weight": 0,
                                         "TextBold": true,
                                         "TextItalic": false,
-                                        "TextSize": "",
                                         "TextColor": "#7A005C",
                                         "type": "TextView"
                                     },
@@ -8751,18 +8379,12 @@
                                                 "Variable": "",
                                                 "height": "wrap_content",
                                                 "width": "match_parent",
-                                                "orientation": "",
                                                 "weight": "1",
                                                 "TextBold": false,
                                                 "TextItalic": false,
-                                                "TextSize": "",
-                                                "TextColor": "",
                                                 "type": "object"
                                             }
-                                        ],
-                                        "BackgroundColor": "",
-                                        "StrokeWidth": "",
-                                        "Padding": ""
+                                        ]
                                     },
                                     {
                                         "Value": "",
@@ -8798,10 +8420,7 @@
                                                 "weight": "1",
                                                 "type": "object"
                                             }
-                                        ],
-                                        "BackgroundColor": "",
-                                        "StrokeWidth": "",
-                                        "Padding": ""
+                                        ]
                                     },
                                     {
                                         "Value": "",
@@ -8835,33 +8454,24 @@
                                                 "weight": "1",
                                                 "type": "object"
                                             }
-                                        ],
-                                        "BackgroundColor": "",
-                                        "StrokeWidth": "",
-                                        "Padding": ""
+                                        ]
                                     },
                                     {
                                         "Value": "Сохранить",
                                         "Variable": "btn_ok",
                                         "height": "wrap_content",
                                         "width": "match_parent",
-                                        "orientation": "",
                                         "weight": "1",
                                         "TextBold": false,
                                         "TextItalic": false,
-                                        "TextSize": "",
-                                        "TextColor": "",
                                         "type": "Button"
                                     }
-                                ],
-                                "BackgroundColor": "",
-                                "StrokeWidth": "",
-                                "Padding": ""
+                                ]
                             },
                             {
                                 "type": "LinearLayout",
                                 "Variable": "",
-                                "orientation": "",
+                                "orientation": "vertical",
                                 "height": "match_parent",
                                 "width": "match_parent",
                                 "weight": "0",
@@ -8876,15 +8486,13 @@
                                         "TextItalic": false,
                                         "type": "TableLayout"
                                     }
-                                ],
-                                "BackgroundColor": "",
-                                "StrokeWidth": "",
-                                "Padding": ""
+                                ]
                             }
                         ],
                         "Handlers": [
                             {
                                 "event": "onStart",
+                                "listener": "",
                                 "action": "run",
                                 "type": "python",
                                 "method": "barcode_register_doc_on_start",
@@ -9011,6 +8619,7 @@
         "CommonHandlers": [
             {
                 "event": "onLaunch",
+                "listener": "",
                 "action": "run",
                 "type": "pythonreload",
                 "method": "app_on_start",
@@ -9019,6 +8628,7 @@
             },
             {
                 "event": "onWebServiceSyncCommand",
+                "listener": "",
                 "action": "run",
                 "type": "python",
                 "method": "event_service",
@@ -9031,8 +8641,7 @@
                 "action": "run",
                 "type": "python",
                 "method": "put_notification",
-                "postExecute": "",
-                "alias": ""
+                "postExecute": ""
             },
             {
                 "event": "onBackgroundCommand",
@@ -9040,16 +8649,15 @@
                 "action": "run",
                 "type": "set",
                 "method": "UpdateConfigurations",
-                "postExecute": "",
-                "alias": ""
+                "postExecute": ""
             },
             {
                 "event": "onSQLError",
+                "listener": "",
                 "action": "run",
                 "type": "set",
                 "method": "beep",
-                "postExecute": "",
-                "alias": ""
+                "postExecute": ""
             },
             {
                 "event": "onLaunch",
