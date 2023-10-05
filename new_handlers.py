@@ -257,7 +257,9 @@ def adr_docs_on_start(hash_map: HashMap):
         hash_map=hash_map,
         screen_class=ui_models.AdrDocsListScreen
     )
+    screen.init_screen()
     screen.on_start()
+
 
 @HashMap()
 def adr_doc_on_select(hash_map: HashMap):
@@ -273,15 +275,18 @@ def adr_doc_details_on_start(hash_map: HashMap):
     screen = create_screen(hash_map, ui_models.AdrDocDetailsScreen)
     screen.on_start()
 
+
 @HashMap()
 def adr_doc_details_on_input(hash_map: HashMap):
     screen = create_screen(hash_map, ui_models.AdrDocDetailsScreen)
     screen.on_input()
 
+
 @HashMap()
 def docs_offline_on_start(hash_map: HashMap):
     screen = ui_models.DocsOfflineListScreen(hash_map, rs_settings)
     screen.on_start()
+
 
 @HashMap()
 def elem_viev_on_start(hash_map):
@@ -319,15 +324,18 @@ def barcode_error_screen_listener(hash_map: HashMap):
 def select_item_on_start(hash_map: HashMap):
     ui_models.SelectItemScreen(hash_map, rs_settings).on_start()
 
+
 @HashMap()
 def select_item_on_input(hash_map: HashMap):
     ui_models.SelectItemScreen(hash_map, rs_settings).on_input()
+
 
 @HashMap()
 def select_item_result(hash_map: HashMap):
     hash_map.toast('select_item_result')
 
 # =============== Goods =================
+
 
 @HashMap()
 def goods_on_start(hash_map):
@@ -370,6 +378,7 @@ def good_card_on_input(hash_map):
     screen: ui_models.ItemCard = create_screen(hash_map)
     screen.on_input()
 
+
 @HashMap()
 def offline_good_card_on_input(hash_map):
     screen = ui_models.ItemCardOfflineScreen(hash_map, rs_settings)
@@ -384,6 +393,7 @@ def offline_good_card_on_input(hash_map):
 def balances_on_start(hash_map):
     screen: ui_models.GoodsBalancesItemCard = create_screen(hash_map)
     screen.on_start()
+
 
 @HashMap()
 def balances_on_input(hash_map):
@@ -401,6 +411,7 @@ def prices_on_start(hash_map):
     screen: ui_models.GoodsPricesItemCard = create_screen(hash_map)
     screen.on_start()
 
+
 @HashMap()
 def prices_on_input(hash_map):
     screen = ui_models.GoodsPricesItemCard(hash_map, rs_settings)
@@ -408,26 +419,29 @@ def prices_on_input(hash_map):
 
 
 # ^^^^^^^^^^^^^^^^^^^^^ GoodsPrices ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
 @HashMap()
 def series_list_on_start(hash_map):
-    screen: ui_models.SeriesList = ui_models.SeriesList(hash_map, rs_settings)
+    screen: ui_models.SeriesSelectScreen = create_screen(hash_map, ui_models.SeriesSelectScreen)
     screen.on_start()
+
 
 @HashMap()
 def series_list_on_input(hash_map):
-    screen = ui_models.SeriesList(hash_map, rs_settings)
+    screen: ui_models.SeriesSelectScreen = create_screen(hash_map, ui_models.SeriesSelectScreen)
     screen.on_input()
+
 
 @HashMap()
 def series_item_on_start(hash_map):
-    screen: ui_models.SeriesItem = ui_models.SeriesItem(hash_map, rs_settings)
+    screen: ui_models.SeriesItem =  create_screen(hash_map, ui_models.SeriesItem)
     screen.on_start()
+
 
 @HashMap()
 def series_item_on_input(hash_map):
-    screen: ui_models.SeriesItem = ui_models.SeriesItem(hash_map, rs_settings)
+    screen: ui_models.SeriesItem =  create_screen(hash_map, ui_models.SeriesItem)
     screen.on_input()
+
 
 @HashMap()
 def adr_series_list_on_start(hash_map):
@@ -439,6 +453,7 @@ def adr_series_list_on_start(hash_map):
 def adr_series_list_on_input(hash_map):
     screen: ui_models.SeriesAdrList = ui_models.SeriesAdrList(hash_map, rs_settings)
     screen.on_input()
+
 
 @HashMap()
 def adr_series_item_on_start(hash_map):
@@ -531,11 +546,58 @@ def documents_settings_on_input(hash_map):
     screen = ui_models.DocumentsSettings(hash_map, rs_settings)
     screen.on_input()
 
+
 @HashMap()
 def documents_settings_on_start(hash_map):
     """Процесс: Параметры. Экран: Настройки документов"""
     screen = ui_models.DocumentsSettings(hash_map, rs_settings)
     screen.on_start()
+
+
+# ^^^^^^^^^^^^^^^^^ Settings ^^^^^^^^^^^^^^^^^
+
+# =============== Print =================
+
+@HashMap()
+def print_settings_on_input(hash_map):
+    """Процесс: Печать. Экран: Настройки печати"""
+    screen = ui_models.PrintSettings(hash_map, rs_settings)
+    screen.on_input()
+
+
+@HashMap()
+def print_settings_on_start(hash_map):
+    """Процесс: Печать. Экран: Настройки печати"""
+    screen = ui_models.PrintSettings(hash_map, rs_settings)
+    screen.on_start()
+
+
+@HashMap()
+def template_list_on_start(hash_map):
+    """Процесс: Печать. Экран: Список шаблонов"""
+    screen: ui_models.TemplatesList = ui_models.TemplatesList(hash_map, rs_settings)
+    screen.on_start()
+
+
+@HashMap()
+def template_list_on_input(hash_map):
+    """Процесс: Печать. Экран: Список шаблонов"""
+    screen: ui_models.TemplatesList = ui_models.TemplatesList(hash_map, rs_settings)
+    screen.on_input()
+
+
+@HashMap()
+def html_view_on_start(hash_map):
+    """Процесс: Печать. Экран: Результат"""
+    screen = ui_models.HtmlView(hash_map, rs_settings)
+    screen.on_start()
+
+
+@HashMap()
+def html_view_on_input(hash_map):
+    """Процесс: Печать. Экран: Результат"""
+    screen = ui_models.HtmlView(hash_map, rs_settings)
+    screen.on_input()
 
 
 @HashMap()
@@ -554,21 +616,8 @@ def print_bluetooth_settings_on_start(hash_map):
 
 @HashMap()
 def bluetooth_error(hash_map):
+    """Общий обработчик ошибки при печати через Bluetooth"""
     PrintService.bluetooth_error(hash_map)
-
-
-@HashMap()
-def print_settings_on_input(hash_map):
-    """Процесс: Печать. Экран: Настройки печати"""
-    screen = ui_models.PrintSettings(hash_map, rs_settings)
-    screen.on_input()
-
-
-@HashMap()
-def print_settings_on_start(hash_map):
-    """Процесс: Печать. Экран: Настройки печати"""
-    screen = ui_models.PrintSettings(hash_map, rs_settings)
-    screen.on_start()
 
 
 @HashMap()
@@ -593,7 +642,15 @@ def print_wifi(hash_map):
 
 @HashMap()
 def wifi_error(hash_map):
+    """Общий обработчик ошибки при печати через WiFi"""
     PrintService.wifi_error(hash_map)
+
+
+@HashMap()
+def print_label_templates_on_start(hash_map):
+    """Процесс: Печать. Экран: Настройки печати Шаблоны"""
+    screen = ui_models.PrintLabelTemplatesSettings(hash_map, rs_settings)
+    screen.on_start()
 
 
 @HashMap()
@@ -602,12 +659,6 @@ def print_label_templates_on_input(hash_map):
     screen = ui_models.PrintLabelTemplatesSettings(hash_map, rs_settings)
     screen.on_input()
 
-
-@HashMap()
-def print_label_templates_on_start(hash_map):
-    """Процесс: Печать. Экран: Настройки печати Шаблоны"""
-    screen = ui_models.PrintLabelTemplatesSettings(hash_map, rs_settings)
-    screen.on_start()
 
 @HashMap()
 def print_label_template_size_on_input(hash_map):
@@ -624,47 +675,22 @@ def print_label_template_size_on_start(hash_map):
 
 
 @HashMap()
-def print_postExecute(hash_map):
+def print_post_execute(hash_map):
     """Срабатывает после вызова PrintService.print и печатает ценник"""
-    PrintService.print_postExecute(hash_map)
-# ^^^^^^^^^^^^^^^^^ Settings ^^^^^^^^^^^^^^^^^
+    PrintService.print_post_execute(hash_map)
 
-# =============== Html =================
+# ^^^^^^^^^^^^^^^^^ Print ^^^^^^^^^^^^^^^^^
 
-@HashMap()
-def html_view_on_start(hash_map):
-    screen = ui_models.HtmlView(hash_map, rs_settings)
-    screen.on_start()
-
-
-@HashMap()
-def html_view_on_input(hash_map):
-    screen = ui_models.HtmlView(hash_map, rs_settings)
-    screen.on_input()
-
-
-@HashMap()
-def template_list_on_start(hash_map):
-    screen: ui_models.TemplatesList = ui_models.TemplatesList(hash_map, rs_settings)
-    screen.on_start()
-
-
-@HashMap()
-def template_list_on_input(hash_map):
-    screen: ui_models.TemplatesList = ui_models.TemplatesList(hash_map, rs_settings)
-    screen.on_input()
-
-# ^^^^^^^^^^^^^^^^^ Html ^^^^^^^^^^^^^^^^^
 
 @HashMap()
 def file_browser_on_start(hash_map):
-    screen: ui_models.SimpleFileBrowser = ui_models.SimpleFileBrowser(hash_map, rs_settings)
+    screen = ui_models.SimpleFileBrowser(hash_map, rs_settings)
     screen.on_start()
 
 
 @HashMap()
 def file_browser_on_input(hash_map):
-    screen: ui_models.SimpleFileBrowser = ui_models.SimpleFileBrowser(hash_map, rs_settings)
+    screen = ui_models.SimpleFileBrowser(hash_map, rs_settings)
     screen.on_input()
 
 

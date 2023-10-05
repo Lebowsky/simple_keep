@@ -14,6 +14,7 @@ class TestDocService(unittest.TestCase):
         self.http_results_path = './tests_db_services/http_result_data_example'
         self.sqlite_filename = 'rightscan5.db'
 
+
         service = DbCreator()
         service.drop_all_tables()
         service.create_tables()

@@ -442,11 +442,7 @@ class DocService:
         doc_types = [rec[0] for rec in self._get_query_result(query)]
         return doc_types
 
-    def get_doc_view_data(
-            self,
-            doc_type,
-            doc_status: Literal['Все', 'Выгружен', 'К выгрузке', 'К выполнению']
-    ) -> list:
+    def get_doc_view_data(self, doc_type='', doc_status='') -> list:
         fields = [
             f'{self.docs_table_name}.id_doc',
             f'{self.docs_table_name}.doc_type',
@@ -477,8 +473,7 @@ class DocService:
             LEFT JOIN RS_countragents as RS_countragents
                 ON RS_countragents.id = {self.docs_table_name}.id_countragents
                 '''
-        joins += f'''LEFT JOIN RS_barc_flow 
-                        ON {self.docs_table_name}.id_doc = RS_barc_flow.id_doc'''
+        joins += f'''LEFT JOIN RS_barc_flow ON {self.docs_table_name}.id_doc = RS_barc_flow.id_doc'''
         where = ''
 
         if doc_status:
@@ -1438,7 +1433,7 @@ class SelectItemService(DbService):
 
 class AdrDocService(DocService):
     def __init__(self, doc_id='', cur_cell='', table_type='in'):
-        super().__init__(doc_id=doc_id)
+        self.doc_id = doc_id
         self.docs_table_name = 'RS_Adr_docs'
         self.details_table_name = 'RS_adr_docs_table'
         self.isAdr = True
