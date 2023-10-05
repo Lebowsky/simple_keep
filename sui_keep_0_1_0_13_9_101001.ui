@@ -17,11 +17,11 @@
                         "type": "Operation",
                         "Name": "Плитки",
                         "Timer": false,
-                        "hideToolBarScreen": false,
                         "hideBottomBarScreen": true,
                         "noScroll": false,
                         "handleKeyUp": false,
                         "noConfirmation": false,
+                        "hideToolBarScreen": false,
                         "Elements": [
                             {
                                 "orientation": "vertical",
@@ -69,17 +69,20 @@
                                 "method": "tiles_on_input",
                                 "postExecute": ""
                             }
-                        ]
+                        ],
+                        "onlineOnStart": false,
+                        "onlineOnAfterStart": false,
+                        "onlineOnInput": false
                     },
                     {
                         "type": "Operation",
                         "Name": "Документы",
                         "Timer": false,
-                        "hideToolBarScreen": false,
                         "hideBottomBarScreen": true,
                         "noScroll": false,
                         "handleKeyUp": false,
                         "noConfirmation": true,
+                        "hideToolBarScreen": false,
                         "Elements": [
                             {
                                 "type": "LinearLayout",
@@ -142,17 +145,20 @@
                                 "method": "docs_on_select",
                                 "postExecute": ""
                             }
-                        ]
+                        ],
+                        "onlineOnStart": false,
+                        "onlineOnAfterStart": false,
+                        "onlineOnInput": false
                     },
                     {
                         "type": "Operation",
                         "Name": "Документ товары",
                         "Timer": false,
-                        "hideToolBarScreen": false,
                         "hideBottomBarScreen": true,
                         "noScroll": false,
                         "handleKeyUp": false,
                         "noConfirmation": true,
+                        "hideToolBarScreen": false,
                         "Elements": [
                             {
                                 "type": "LinearLayout",
@@ -420,17 +426,20 @@
                                 "method": "doc_details_listener",
                                 "postExecute": ""
                             }
-                        ]
+                        ],
+                        "onlineOnStart": false,
+                        "onlineOnAfterStart": false,
+                        "onlineOnInput": false
                     },
                     {
                         "type": "Operation",
                         "Name": "Товар выбор",
                         "Timer": false,
-                        "hideToolBarScreen": false,
                         "hideBottomBarScreen": true,
                         "noScroll": false,
                         "handleKeyUp": false,
                         "noConfirmation": true,
+                        "hideToolBarScreen": false,
                         "Elements": [
                             {
                                 "type": "LinearLayout",
@@ -1137,11 +1146,6 @@
                                 "type": "MenuItem",
                                 "Value": "Серии",
                                 "Variable": "btn_series_show"
-                            },
-                            {
-                                "type": "barcode",
-                                "Value": "",
-                                "Variable": "barcode_good_select"
                             }
                         ],
                         "Handlers": [
@@ -1160,17 +1164,20 @@
                                 "method": "elem_viev_on_click",
                                 "postExecute": ""
                             }
-                        ]
+                        ],
+                        "onlineOnStart": false,
+                        "onlineOnAfterStart": false,
+                        "onlineOnInput": false
                     },
                     {
                         "type": "Operation",
                         "Name": "Удаление штрихкода",
                         "Timer": false,
-                        "hideToolBarScreen": false,
                         "hideBottomBarScreen": true,
                         "noScroll": false,
                         "handleKeyUp": false,
                         "noConfirmation": false,
+                        "hideToolBarScreen": false,
                         "Elements": [
                             {
                                 "type": "LinearLayout",
@@ -1262,22 +1269,26 @@
                             },
                             {
                                 "event": "onInput",
+                                "listener": "",
                                 "action": "run",
                                 "type": "python",
                                 "method": "delete_barcode_screen_click",
                                 "postExecute": ""
                             }
-                        ]
+                        ],
+                        "onlineOnStart": false,
+                        "onlineOnAfterStart": false,
+                        "onlineOnInput": false
                     },
                     {
                         "type": "Operation",
                         "Name": "Ошибка сканера",
                         "Timer": false,
-                        "hideToolBarScreen": false,
                         "hideBottomBarScreen": true,
                         "noScroll": false,
                         "handleKeyUp": false,
                         "noConfirmation": false,
+                        "hideToolBarScreen": false,
                         "Elements": [
                             {
                                 "type": "LinearLayout",
@@ -1340,17 +1351,20 @@
                                 "method": "barcode_error_screen_listener",
                                 "postExecute": ""
                             }
-                        ]
+                        ],
+                        "onlineOnStart": false,
+                        "onlineOnAfterStart": false,
+                        "onlineOnInput": false
                     },
                     {
                         "type": "Operation",
                         "Name": "ВвестиШтрихкод",
                         "Timer": false,
-                        "hideToolBarScreen": false,
                         "hideBottomBarScreen": false,
                         "noScroll": false,
                         "handleKeyUp": false,
                         "noConfirmation": false,
+                        "hideToolBarScreen": false,
                         "Elements": [
                             {
                                 "type": "LinearLayout",
@@ -1379,17 +1393,20 @@
                                 ]
                             }
                         ],
-                        "Handlers": []
+                        "Handlers": [],
+                        "onlineOnStart": false,
+                        "onlineOnAfterStart": false,
+                        "onlineOnInput": false
                     },
                     {
                         "type": "Operation",
                         "Name": "ПотокШтрихкодовДокумента",
                         "Timer": false,
-                        "hideToolBarScreen": false,
                         "hideBottomBarScreen": true,
                         "noScroll": false,
                         "handleKeyUp": false,
                         "noConfirmation": false,
+                        "hideToolBarScreen": false,
                         "Elements": [
                             {
                                 "type": "LinearLayout",
@@ -1497,22 +1514,26 @@
                             },
                             {
                                 "event": "onInput",
+                                "listener": "",
                                 "action": "run",
                                 "type": "python",
                                 "method": "barcode_flow_listener",
                                 "postExecute": ""
                             }
-                        ]
+                        ],
+                        "onlineOnStart": false,
+                        "onlineOnAfterStart": false,
+                        "onlineOnInput": false
                     },
                     {
                         "type": "Operation",
                         "Name": "ВыборТовараАртикул",
                         "Timer": false,
-                        "hideToolBarScreen": false,
                         "hideBottomBarScreen": true,
                         "noScroll": false,
                         "handleKeyUp": false,
                         "noConfirmation": true,
+                        "hideToolBarScreen": false,
                         "Elements": [
                             {
                                 "type": "LinearLayout",
@@ -1560,22 +1581,26 @@
                             },
                             {
                                 "event": "onStart",
+                                "listener": "",
                                 "action": "run",
                                 "type": "python",
                                 "method": "select_good_article_on_start",
                                 "postExecute": ""
                             }
-                        ]
+                        ],
+                        "onlineOnStart": false,
+                        "onlineOnAfterStart": false,
+                        "onlineOnInput": false
                     },
                     {
                         "type": "Operation",
                         "Name": "ТоварШтрихкоды",
                         "Timer": false,
-                        "hideToolBarScreen": false,
                         "hideBottomBarScreen": true,
                         "noScroll": false,
                         "handleKeyUp": false,
                         "noConfirmation": false,
+                        "hideToolBarScreen": false,
                         "Elements": [
                             {
                                 "type": "barcode",
@@ -1794,17 +1819,20 @@
                                 "method": "barcode_register_doc_on_start",
                                 "postExecute": ""
                             }
-                        ]
+                        ],
+                        "onlineOnStart": false,
+                        "onlineOnAfterStart": false,
+                        "onlineOnInput": false
                     },
                     {
                         "type": "Operation",
                         "Name": "Выбор характеристик",
                         "Timer": false,
-                        "hideToolBarScreen": false,
                         "hideBottomBarScreen": true,
                         "noScroll": false,
                         "handleKeyUp": false,
                         "noConfirmation": false,
+                        "hideToolBarScreen": false,
                         "Elements": [
                             {
                                 "type": "LinearLayout",
@@ -1846,17 +1874,20 @@
                                 "method": "doc_properties_on_input",
                                 "postExecute": ""
                             }
-                        ]
+                        ],
+                        "onlineOnStart": false,
+                        "onlineOnAfterStart": false,
+                        "onlineOnInput": false
                     },
                     {
                         "type": "Operation",
                         "Name": "Выбор упаковки",
                         "Timer": false,
-                        "hideToolBarScreen": false,
                         "hideBottomBarScreen": true,
                         "noScroll": false,
                         "handleKeyUp": false,
                         "noConfirmation": false,
+                        "hideToolBarScreen": false,
                         "Elements": [
                             {
                                 "type": "LinearLayout",
@@ -1895,17 +1926,20 @@
                                 "method": "doc_units_on_input",
                                 "postExecute": ""
                             }
-                        ]
+                        ],
+                        "onlineOnStart": false,
+                        "onlineOnAfterStart": false,
+                        "onlineOnInput": false
                     },
                     {
                         "type": "Operation",
                         "Name": "Такой штрихкод уже есть",
                         "Timer": false,
-                        "hideToolBarScreen": false,
                         "hideBottomBarScreen": false,
                         "noScroll": false,
                         "handleKeyUp": false,
                         "noConfirmation": false,
+                        "hideToolBarScreen": false,
                         "Elements": [
                             {
                                 "type": "LinearLayout",
@@ -1967,17 +2001,20 @@
                                 ]
                             }
                         ],
-                        "Handlers": []
+                        "Handlers": [],
+                        "onlineOnStart": false,
+                        "onlineOnAfterStart": false,
+                        "onlineOnInput": false
                     },
                     {
                         "type": "Operation",
                         "Name": "Выбор серии",
                         "Timer": false,
-                        "hideToolBarScreen": false,
                         "hideBottomBarScreen": true,
                         "noScroll": false,
                         "handleKeyUp": false,
                         "noConfirmation": true,
+                        "hideToolBarScreen": false,
                         "Elements": [
                             {
                                 "type": "LinearLayout",
@@ -2216,7 +2253,7 @@
                                             },
                                             {
                                                 "type": "LinearLayout",
-                                                "Variable": "fact_qtty_input",
+                                                "Variable": "",
                                                 "orientation": "vertical",
                                                 "height": "wrap_content",
                                                 "width": "match_parent",
@@ -2228,210 +2265,8 @@
                                                         "height": "wrap_content",
                                                         "width": "match_parent",
                                                         "weight": "0",
-                                                        "type": "TextView"
-                                                    },
-                                                    {
-                                                        "type": "LinearLayout",
-                                                        "Variable": "",
-                                                        "orientation": "horizontal",
-                                                        "height": "wrap_content",
-                                                        "width": "match_parent",
-                                                        "weight": "0",
-                                                        "Elements": [
-                                                            {
-                                                                "type": "LinearLayout",
-                                                                "Variable": "",
-                                                                "orientation": "vertical",
-                                                                "height": "wrap_content",
-                                                                "width": "match_parent",
-                                                                "weight": "2",
-                                                                "Elements": [
-                                                                    {
-                                                                        "Value": "",
-                                                                        "Variable": "blank_1",
-                                                                        "height": "wrap_content",
-                                                                        "width": "match_parent",
-                                                                        "weight": "0",
-                                                                        "TextBold": false,
-                                                                        "TextItalic": false,
-                                                                        "type": "TextView"
-                                                                    }
-                                                                ]
-                                                            },
-                                                            {
-                                                                "type": "LinearLayout",
-                                                                "Variable": "",
-                                                                "orientation": "horizontal",
-                                                                "height": "wrap_content",
-                                                                "width": "match_parent",
-                                                                "weight": "1",
-                                                                "Elements": [
-                                                                    {
-                                                                        "Value": "Было:",
-                                                                        "Variable": "",
-                                                                        "height": "wrap_content",
-                                                                        "width": "wrap_content",
-                                                                        "weight": "1",
-                                                                        "TextBold": false,
-                                                                        "TextItalic": false,
-                                                                        "TextSize": "18",
-                                                                        "type": "TextView"
-                                                                    },
-                                                                    {
-                                                                        "Value": "@qtty",
-                                                                        "Variable": "qtty",
-                                                                        "height": "wrap_content",
-                                                                        "width": "wrap_content",
-                                                                        "orientation": "",
-                                                                        "weight": "1",
-                                                                        "TextBold": false,
-                                                                        "TextItalic": false,
-                                                                        "TextSize": "18",
-                                                                        "TextColor": "",
-                                                                        "type": "TextView"
-                                                                    }
-                                                                ],
-                                                                "BackgroundColor": "",
-                                                                "StrokeWidth": "",
-                                                                "Padding": ""
-                                                            },
-                                                            {
-                                                                "type": "LinearLayout",
-                                                                "Variable": "",
-                                                                "orientation": "",
-                                                                "height": "wrap_content",
-                                                                "width": "match_parent",
-                                                                "weight": "2",
-                                                                "Elements": [
-                                                                    {
-                                                                        "Value": "",
-                                                                        "Variable": "blank_2",
-                                                                        "height": "wrap_content",
-                                                                        "width": "wrap_content",
-                                                                        "weight": "0",
-                                                                        "TextBold": false,
-                                                                        "TextItalic": false,
-                                                                        "type": "TextView"
-                                                                    }
-                                                                ],
-                                                                "BackgroundColor": "",
-                                                                "StrokeWidth": "",
-                                                                "Padding": ""
-                                                            }
-                                                        ],
-                                                        "BackgroundColor": "",
-                                                        "StrokeWidth": "",
-                                                        "Padding": "center"
-                                                    },
-                                                    {
-                                                        "type": "LinearLayout",
-                                                        "Variable": "",
-                                                        "orientation": "horizontal",
-                                                        "height": "wrap_content",
-                                                        "width": "match_parent",
-                                                        "weight": "0",
-                                                        "Elements": [
-                                                            {
-                                                                "type": "LinearLayout",
-                                                                "Variable": "",
-                                                                "orientation": "vertical",
-                                                                "height": "wrap_content",
-                                                                "width": "match_parent",
-                                                                "weight": "2",
-                                                                "Elements": [
-                                                                    {
-                                                                        "Value": "",
-                                                                        "Variable": "blank_left",
-                                                                        "height": "wrap_content",
-                                                                        "width": "wrap_content",
-                                                                        "weight": "0",
-                                                                        "TextBold": false,
-                                                                        "TextItalic": false,
-                                                                        "type": "TextView"
-                                                                    }
-                                                                ]
-                                                            },
-                                                            {
-                                                                "type": "LinearLayout",
-                                                                "Variable": "",
-                                                                "orientation": "",
-                                                                "height": "wrap_content",
-                                                                "width": "match_parent",
-                                                                "weight": "1",
-                                                                "Elements": [
-                                                                    {
-                                                                        "Value": "Будет:",
-                                                                        "Variable": "",
-                                                                        "height": "wrap_content",
-                                                                        "width": "wrap_content",
-                                                                        "weight": "1",
-                                                                        "TextBold": true,
-                                                                        "TextItalic": false,
-                                                                        "TextSize": "21",
-                                                                        "type": "TextView"
-                                                                    },
-                                                                    {
-                                                                        "Value": "@new_qtty",
-                                                                        "Variable": "new_qtty",
-                                                                        "height": "wrap_content",
-                                                                        "width": "wrap_content",
-                                                                        "orientation": "",
-                                                                        "weight": "1",
-                                                                        "TextBold": true,
-                                                                        "TextItalic": false,
-                                                                        "TextSize": "24",
-                                                                        "TextColor": "",
-                                                                        "type": "TextView"
-                                                                    }
-                                                                ],
-                                                                "BackgroundColor": "",
-                                                                "StrokeWidth": "",
-                                                                "Padding": ""
-                                                            },
-                                                            {
-                                                                "type": "LinearLayout",
-                                                                "Variable": "",
-                                                                "orientation": "",
-                                                                "height": "wrap_content",
-                                                                "width": "match_parent",
-                                                                "weight": "2",
-                                                                "Elements": [
-                                                                    {
-                                                                        "Value": "",
-                                                                        "Variable": "blank_right",
-                                                                        "height": "wrap_content",
-                                                                        "width": "wrap_content",
-                                                                        "weight": "0",
-                                                                        "TextBold": false,
-                                                                        "TextItalic": false,
-                                                                        "type": "TextView"
-                                                                    }
-                                                                ],
-                                                                "BackgroundColor": "",
-                                                                "StrokeWidth": "",
-                                                                "Padding": ""
-                                                            }
-                                                        ],
-                                                        "BackgroundColor": "",
-                                                        "StrokeWidth": "",
-                                                        "Padding": "center"
-                                                    }
-                                                ]
-                                            },
-                                            {
-                                                "type": "LinearLayout",
-                                                "Variable": "fact_qtty_note",
-                                                "orientation": "vertical",
-                                                "height": "wrap_content",
-                                                "width": "match_parent",
-                                                "weight": "1",
-                                                "Elements": [
-                                                    {
-                                                        "Value": "Факт",
-                                                        "Variable": "",
-                                                        "height": "wrap_content",
-                                                        "width": "match_parent",
-                                                        "weight": "0",
+                                                        "TextBold": false,
+                                                        "TextItalic": false,
                                                         "type": "TextView"
                                                     },
                                                     {
@@ -2444,128 +2279,18 @@
                                                         "TextBold": false,
                                                         "TextItalic": false,
                                                         "TextSize": "24",
-                                                        "TextColor": "#000000",
+                                                        "TextColor": "",
                                                         "type": "TextView"
-                                                    }
-                                                ]
-                                            }
-                                        ]
-                                    },
-                                    {
-                                        "type": "LinearLayout",
-                                        "Variable": "fact_qtty_input",
-                                        "orientation": "vertical",
-                                        "height": "wrap_content",
-                                        "width": "match_parent",
-                                        "weight": "0",
-                                        "Elements": [
-                                            {
-                                                "Value": "Добавить:",
-                                                "Variable": "",
-                                                "height": "wrap_content",
-                                                "width": "match_parent",
-                                                "weight": "0",
-                                                "TextBold": false,
-                                                "TextItalic": false,
-                                                "TextSize": "21",
-                                                "TextColor": "#000000",
-                                                "type": "TextView"
-                                            },
-                                            {
-                                                "type": "LinearLayout",
-                                                "Variable": "fact_qtty_input",
-                                                "orientation": "horizontal",
-                                                "height": "wrap_content",
-                                                "width": "match_parent",
-                                                "weight": "0",
-                                                "Elements": [
-                                                    {
-                                                        "Value": "-5",
-                                                        "Variable": "ops_-5",
-                                                        "height": "wrap_content",
-                                                        "width": "match_parent",
-                                                        "weight": "1",
-                                                        "TextBold": false,
-                                                        "TextItalic": false,
-                                                        "TextSize": "21",
-                                                        "type": "Button"
-                                                    },
-                                                    {
-                                                        "Value": "-1",
-                                                        "Variable": "ops_-1",
-                                                        "height": "wrap_content",
-                                                        "width": "match_parent",
-                                                        "orientation": "",
-                                                        "weight": "1",
-                                                        "TextBold": false,
-                                                        "TextItalic": false,
-                                                        "TextSize": "21",
-                                                        "TextColor": "",
-                                                        "type": "Button"
-                                                    },
-                                                    {
-                                                        "Value": "@delta",
-                                                        "Variable": "delta",
-                                                        "height": "wrap_content",
-                                                        "width": "match_parent",
-                                                        "orientation": "",
-                                                        "weight": "1",
-                                                        "TextBold": false,
-                                                        "TextItalic": false,
-                                                        "TextSize": "24",
-                                                        "TextColor": "#000000",
-                                                        "type": "ModernEditText"
-                                                    },
-                                                    {
-                                                        "Value": "+1",
-                                                        "Variable": "ops_+1",
-                                                        "height": "wrap_content",
-                                                        "width": "match_parent",
-                                                        "orientation": "",
-                                                        "weight": "1",
-                                                        "TextBold": false,
-                                                        "TextItalic": false,
-                                                        "TextSize": "21",
-                                                        "TextColor": "",
-                                                        "type": "Button"
-                                                    },
-                                                    {
-                                                        "Value": "+5",
-                                                        "Variable": "ops_+5",
-                                                        "height": "wrap_content",
-                                                        "width": "match_parent",
-                                                        "orientation": "",
-                                                        "weight": "1",
-                                                        "TextBold": false,
-                                                        "TextItalic": false,
-                                                        "TextSize": "21",
-                                                        "TextColor": "",
-                                                        "type": "Button"
                                                     }
                                                 ],
                                                 "BackgroundColor": "",
                                                 "StrokeWidth": "",
                                                 "Padding": ""
-                                            },
-                                            {
-                                                "type": "LinearLayout",
-                                                "Variable": "",
-                                                "orientation": "horizontal",
-                                                "height": "wrap_content",
-                                                "width": "match_parent",
-                                                "weight": "0",
-                                                "Elements": [
-                                                    {
-                                                        "Value": "Сохранить",
-                                                        "Variable": "btn_ok",
-                                                        "height": "wrap_content",
-                                                        "width": "match_parent",
-                                                        "weight": "1",
-                                                        "type": "Button"
-                                                    }
-                                                ]
                                             }
-                                        ]
+                                        ],
+                                        "BackgroundColor": "",
+                                        "StrokeWidth": "",
+                                        "Padding": ""
                                     },
                                     {
                                         "Value": "@series_cards",
@@ -2604,17 +2329,20 @@
                                 "method": "series_list_on_input",
                                 "postExecute": ""
                             }
-                        ]
+                        ],
+                        "onlineOnStart": false,
+                        "onlineOnAfterStart": false,
+                        "onlineOnInput": false
                     },
                     {
                         "type": "Operation",
                         "Name": "Заполнение серии",
                         "Timer": false,
-                        "hideToolBarScreen": true,
                         "hideBottomBarScreen": true,
                         "noScroll": false,
                         "handleKeyUp": false,
                         "noConfirmation": true,
+                        "hideToolBarScreen": true,
                         "Elements": [
                             {
                                 "type": "LinearLayout",
@@ -2625,37 +2353,16 @@
                                 "weight": "1",
                                 "Elements": [
                                     {
-                                        "type": "LinearLayout",
+                                        "Value": "@good_name",
                                         "Variable": "",
-                                        "orientation": "horizontal",
                                         "height": "wrap_content",
                                         "width": "match_parent",
-                                        "weight": "1",
-                                        "Elements": [
-                                            {
-                                                "Value": "Товар",
-                                                "Variable": "",
-                                                "height": "wrap_content",
-                                                "width": "wrap_content",
-                                                "weight": "0",
-                                                "TextBold": false,
-                                                "TextItalic": false,
-                                                "type": "TextView"
-                                            },
-                                            {
-                                                "Value": "@good_name",
-                                                "Variable": "",
-                                                "height": "wrap_content",
-                                                "width": "wrap_content",
-                                                "orientation": "",
-                                                "weight": "",
-                                                "TextBold": false,
-                                                "TextItalic": false,
-                                                "TextSize": "",
-                                                "TextColor": "",
-                                                "type": "TextView"
-                                            }
-                                        ]
+                                        "weight": "0",
+                                        "TextBold": true,
+                                        "TextItalic": false,
+                                        "TextSize": "24",
+                                        "TextColor": "#7A005C",
+                                        "type": "TextView"
                                     },
                                     {
                                         "type": "LinearLayout",
@@ -2671,8 +2378,9 @@
                                                 "height": "wrap_content",
                                                 "width": "wrap_content",
                                                 "weight": "0",
-                                                "TextBold": false,
+                                                "TextBold": true,
                                                 "TextItalic": false,
+                                                "TextSize": "21",
                                                 "type": "TextView"
                                             },
                                             {
@@ -2684,7 +2392,7 @@
                                                 "weight": "",
                                                 "TextBold": false,
                                                 "TextItalic": false,
-                                                "TextSize": "",
+                                                "TextSize": "21",
                                                 "TextColor": "",
                                                 "type": "EditTextText"
                                             }
@@ -2702,13 +2410,14 @@
                                         "weight": "1",
                                         "Elements": [
                                             {
-                                                "Value": "Номер:",
+                                                "Value": "Номер серии:",
                                                 "Variable": "",
                                                 "height": "wrap_content",
                                                 "width": "wrap_content",
                                                 "weight": "0",
-                                                "TextBold": false,
+                                                "TextBold": true,
                                                 "TextItalic": false,
+                                                "TextSize": "21",
                                                 "type": "TextView"
                                             },
                                             {
@@ -2720,7 +2429,7 @@
                                                 "weight": "",
                                                 "TextBold": false,
                                                 "TextItalic": false,
-                                                "TextSize": "",
+                                                "TextSize": "21",
                                                 "TextColor": "",
                                                 "type": "EditTextText"
                                             }
@@ -2738,13 +2447,14 @@
                                         "weight": "1",
                                         "Elements": [
                                             {
-                                                "Value": "Дата производства",
+                                                "Value": "Дата производства:",
                                                 "Variable": "",
                                                 "height": "wrap_content",
                                                 "width": "wrap_content",
-                                                "weight": "1",
-                                                "TextBold": false,
+                                                "weight": "0",
+                                                "TextBold": true,
                                                 "TextItalic": false,
+                                                "TextSize": "21",
                                                 "type": "TextView"
                                             },
                                             {
@@ -2753,12 +2463,12 @@
                                                 "height": "wrap_content",
                                                 "width": "wrap_content",
                                                 "orientation": "",
-                                                "weight": "1",
+                                                "weight": "",
                                                 "TextBold": false,
                                                 "TextItalic": false,
                                                 "TextSize": "",
                                                 "TextColor": "",
-                                                "type": "EditTextText"
+                                                "type": "DateField"
                                             }
                                         ],
                                         "BackgroundColor": "",
@@ -2778,9 +2488,10 @@
                                                 "Variable": "",
                                                 "height": "wrap_content",
                                                 "width": "wrap_content",
-                                                "weight": "1",
-                                                "TextBold": false,
+                                                "weight": "0",
+                                                "TextBold": true,
                                                 "TextItalic": false,
+                                                "TextSize": "21",
                                                 "type": "TextView"
                                             },
                                             {
@@ -2789,12 +2500,12 @@
                                                 "height": "wrap_content",
                                                 "width": "wrap_content",
                                                 "orientation": "",
-                                                "weight": "1",
+                                                "weight": "",
                                                 "TextBold": false,
                                                 "TextItalic": false,
                                                 "TextSize": "",
                                                 "TextColor": "",
-                                                "type": "EditTextText"
+                                                "type": "DateField"
                                             }
                                         ],
                                         "BackgroundColor": "",
@@ -2815,8 +2526,9 @@
                                                 "height": "wrap_content",
                                                 "width": "wrap_content",
                                                 "weight": "0",
-                                                "TextBold": false,
+                                                "TextBold": true,
                                                 "TextItalic": false,
+                                                "TextSize": "21",
                                                 "type": "TextView"
                                             },
                                             {
@@ -2828,7 +2540,7 @@
                                                 "weight": "",
                                                 "TextBold": false,
                                                 "TextItalic": false,
-                                                "TextSize": "",
+                                                "TextSize": "21",
                                                 "TextColor": "",
                                                 "type": "EditTextNumeric"
                                             }
@@ -2849,22 +2561,24 @@
                                                 "Value": "Отмена",
                                                 "Variable": "btn_cancel",
                                                 "height": "wrap_content",
-                                                "width": "wrap_content",
-                                                "weight": "0",
+                                                "width": "match_parent",
+                                                "orientation": "horizontal",
+                                                "weight": "1",
                                                 "TextBold": false,
                                                 "TextItalic": false,
+                                                "TextSize": "21",
                                                 "type": "Button"
                                             },
                                             {
                                                 "Value": "Сохранить",
                                                 "Variable": "btn_save",
                                                 "height": "wrap_content",
-                                                "width": "wrap_content",
-                                                "orientation": "",
-                                                "weight": "",
+                                                "width": "match_parent",
+                                                "orientation": "horizontal",
+                                                "weight": "1",
                                                 "TextBold": false,
                                                 "TextItalic": false,
-                                                "TextSize": "",
+                                                "TextSize": "21",
                                                 "TextColor": "",
                                                 "type": "Button"
                                             }
@@ -2892,7 +2606,10 @@
                                 "method": "series_item_on_input",
                                 "postExecute": ""
                             }
-                        ]
+                        ],
+                        "onlineOnStart": false,
+                        "onlineOnAfterStart": false,
+                        "onlineOnInput": false
                     }
                 ]
             },
@@ -2909,11 +2626,11 @@
                         "type": "Operation",
                         "Name": "Плитки",
                         "Timer": false,
-                        "hideToolBarScreen": false,
                         "hideBottomBarScreen": true,
                         "noScroll": false,
                         "handleKeyUp": false,
                         "noConfirmation": false,
+                        "hideToolBarScreen": false,
                         "Elements": [
                             {
                                 "orientation": "vertical",
@@ -2961,17 +2678,20 @@
                                 "method": "tiles_on_input",
                                 "postExecute": ""
                             }
-                        ]
+                        ],
+                        "onlineOnStart": false,
+                        "onlineOnAfterStart": false,
+                        "onlineOnInput": false
                     },
                     {
                         "type": "Operation",
                         "Name": "Документы",
                         "Timer": false,
-                        "hideToolBarScreen": false,
                         "hideBottomBarScreen": true,
                         "noScroll": false,
                         "handleKeyUp": false,
                         "noConfirmation": true,
+                        "hideToolBarScreen": false,
                         "Elements": [
                             {
                                 "type": "LinearLayout",
@@ -3034,17 +2754,20 @@
                                 "method": "docs_on_select",
                                 "postExecute": ""
                             }
-                        ]
+                        ],
+                        "onlineOnStart": false,
+                        "onlineOnAfterStart": false,
+                        "onlineOnInput": false
                     },
                     {
                         "type": "Operation",
                         "Name": "Документ товары",
                         "Timer": false,
-                        "hideToolBarScreen": false,
                         "hideBottomBarScreen": true,
                         "noScroll": false,
                         "handleKeyUp": false,
                         "noConfirmation": true,
+                        "hideToolBarScreen": false,
                         "Elements": [
                             {
                                 "type": "LinearLayout",
@@ -3290,17 +3013,20 @@
                                 "method": "doc_details_listener",
                                 "postExecute": ""
                             }
-                        ]
+                        ],
+                        "onlineOnStart": false,
+                        "onlineOnAfterStart": false,
+                        "onlineOnInput": false
                     },
                     {
                         "type": "Operation",
                         "Name": "Ошибка сканера",
                         "Timer": false,
-                        "hideToolBarScreen": false,
                         "hideBottomBarScreen": true,
                         "noScroll": false,
                         "handleKeyUp": false,
                         "noConfirmation": false,
+                        "hideToolBarScreen": false,
                         "Elements": [
                             {
                                 "type": "LinearLayout",
@@ -3363,17 +3089,20 @@
                                 "method": "barcode_error_screen_listener",
                                 "postExecute": ""
                             }
-                        ]
+                        ],
+                        "onlineOnStart": false,
+                        "onlineOnAfterStart": false,
+                        "onlineOnInput": false
                     },
                     {
                         "type": "Operation",
                         "Name": "ВвестиШтрихкод",
                         "Timer": false,
-                        "hideToolBarScreen": false,
                         "hideBottomBarScreen": false,
                         "noScroll": false,
                         "handleKeyUp": false,
                         "noConfirmation": false,
+                        "hideToolBarScreen": false,
                         "Elements": [
                             {
                                 "type": "LinearLayout",
@@ -3402,17 +3131,20 @@
                                 ]
                             }
                         ],
-                        "Handlers": []
+                        "Handlers": [],
+                        "onlineOnStart": false,
+                        "onlineOnAfterStart": false,
+                        "onlineOnInput": false
                     },
                     {
                         "type": "Operation",
                         "Name": "Подтвердите действие",
                         "Timer": false,
-                        "hideToolBarScreen": false,
                         "hideBottomBarScreen": false,
                         "noScroll": false,
                         "handleKeyUp": false,
                         "noConfirmation": false,
+                        "hideToolBarScreen": false,
                         "Elements": [
                             {
                                 "type": "LinearLayout",
@@ -3435,7 +3167,10 @@
                                 ]
                             }
                         ],
-                        "Handlers": []
+                        "Handlers": [],
+                        "onlineOnStart": false,
+                        "onlineOnAfterStart": false,
+                        "onlineOnInput": false
                     }
                 ]
             },
@@ -3452,11 +3187,11 @@
                         "type": "Operation",
                         "Name": "Документы",
                         "Timer": false,
-                        "hideToolBarScreen": false,
                         "hideBottomBarScreen": true,
                         "noScroll": false,
                         "handleKeyUp": false,
                         "noConfirmation": true,
+                        "hideToolBarScreen": false,
                         "Elements": [
                             {
                                 "type": "LinearLayout",
@@ -3519,17 +3254,20 @@
                                 "method": "adr_doc_on_select",
                                 "postExecute": ""
                             }
-                        ]
+                        ],
+                        "onlineOnStart": false,
+                        "onlineOnAfterStart": false,
+                        "onlineOnInput": false
                     },
                     {
                         "type": "Operation",
                         "Name": "Документ товары",
                         "Timer": false,
-                        "hideToolBarScreen": false,
                         "hideBottomBarScreen": true,
                         "noScroll": false,
                         "handleKeyUp": false,
                         "noConfirmation": false,
+                        "hideToolBarScreen": false,
                         "Elements": [
                             {
                                 "type": "LinearLayout",
@@ -3826,22 +3564,26 @@
                             },
                             {
                                 "event": "onInput",
+                                "listener": "",
                                 "action": "run",
                                 "type": "python",
                                 "method": "adr_doc_details_on_input",
                                 "postExecute": ""
                             }
-                        ]
+                        ],
+                        "onlineOnStart": false,
+                        "onlineOnAfterStart": false,
+                        "onlineOnInput": false
                     },
                     {
                         "type": "Operation",
                         "Name": "Товар выбор",
                         "Timer": false,
-                        "hideToolBarScreen": false,
                         "hideBottomBarScreen": true,
                         "noScroll": false,
                         "handleKeyUp": false,
                         "noConfirmation": true,
+                        "hideToolBarScreen": false,
                         "Elements": [
                             {
                                 "type": "LinearLayout",
@@ -4281,6 +4023,11 @@
                                 "type": "MenuItem",
                                 "Value": "Серии",
                                 "Variable": "btn_series_show"
+                            },
+                            {
+                                "type": "barcode",
+                                "Value": "",
+                                "Variable": "barcode_good_select"
                             }
                         ],
                         "Handlers": [
@@ -4299,17 +4046,20 @@
                                 "method": "adr_elem_view_on_click",
                                 "postExecute": ""
                             }
-                        ]
+                        ],
+                        "onlineOnStart": false,
+                        "onlineOnAfterStart": false,
+                        "onlineOnInput": false
                     },
                     {
                         "type": "Operation",
                         "Name": "Ошибка сканера",
                         "Timer": false,
-                        "hideToolBarScreen": false,
                         "hideBottomBarScreen": true,
                         "noScroll": false,
                         "handleKeyUp": false,
                         "noConfirmation": false,
+                        "hideToolBarScreen": false,
                         "Elements": [
                             {
                                 "type": "LinearLayout",
@@ -4372,17 +4122,20 @@
                                 "method": "barcode_error_screen_listener",
                                 "postExecute": ""
                             }
-                        ]
+                        ],
+                        "onlineOnStart": false,
+                        "onlineOnAfterStart": false,
+                        "onlineOnInput": false
                     },
                     {
                         "type": "Operation",
                         "Name": "ВвестиШтрихкод",
                         "Timer": false,
-                        "hideToolBarScreen": false,
                         "hideBottomBarScreen": false,
                         "noScroll": false,
                         "handleKeyUp": false,
                         "noConfirmation": false,
+                        "hideToolBarScreen": false,
                         "Elements": [
                             {
                                 "type": "LinearLayout",
@@ -4411,17 +4164,20 @@
                                 ]
                             }
                         ],
-                        "Handlers": []
+                        "Handlers": [],
+                        "onlineOnStart": false,
+                        "onlineOnAfterStart": false,
+                        "onlineOnInput": false
                     },
                     {
                         "type": "Operation",
                         "Name": "Выбор серии",
                         "Timer": false,
-                        "hideToolBarScreen": false,
                         "hideBottomBarScreen": true,
                         "noScroll": false,
                         "handleKeyUp": false,
                         "noConfirmation": true,
+                        "hideToolBarScreen": false,
                         "Elements": [
                             {
                                 "type": "LinearLayout",
@@ -5048,17 +4804,20 @@
                                 "method": "adr_series_list_on_input",
                                 "postExecute": ""
                             }
-                        ]
+                        ],
+                        "onlineOnStart": false,
+                        "onlineOnAfterStart": false,
+                        "onlineOnInput": false
                     },
                     {
                         "type": "Operation",
                         "Name": "Заполнение серии",
                         "Timer": false,
-                        "hideToolBarScreen": true,
                         "hideBottomBarScreen": true,
                         "noScroll": false,
                         "handleKeyUp": false,
                         "noConfirmation": true,
+                        "hideToolBarScreen": true,
                         "Elements": [
                             {
                                 "type": "LinearLayout",
@@ -5336,7 +5095,10 @@
                                 "method": "adr_series_item_on_input",
                                 "postExecute": ""
                             }
-                        ]
+                        ],
+                        "onlineOnStart": false,
+                        "onlineOnAfterStart": false,
+                        "onlineOnInput": false
                     }
                 ]
             },
@@ -5353,11 +5115,11 @@
                         "type": "Operation",
                         "Name": "Плитки",
                         "Timer": false,
-                        "hideToolBarScreen": false,
                         "hideBottomBarScreen": true,
                         "noScroll": false,
                         "handleKeyUp": false,
                         "noConfirmation": false,
+                        "hideToolBarScreen": false,
                         "Elements": [
                             {
                                 "orientation": "vertical",
@@ -5405,17 +5167,20 @@
                                 "method": "flow_tiles_on_select",
                                 "postExecute": ""
                             }
-                        ]
+                        ],
+                        "onlineOnStart": false,
+                        "onlineOnAfterStart": false,
+                        "onlineOnInput": false
                     },
                     {
                         "type": "Operation",
                         "Name": "Документы",
                         "Timer": false,
-                        "hideToolBarScreen": false,
                         "hideBottomBarScreen": true,
                         "noScroll": false,
                         "handleKeyUp": false,
                         "noConfirmation": true,
+                        "hideToolBarScreen": false,
                         "Elements": [
                             {
                                 "type": "LinearLayout",
@@ -5478,17 +5243,20 @@
                                 "method": "flow_docs_on_select",
                                 "postExecute": ""
                             }
-                        ]
+                        ],
+                        "onlineOnStart": false,
+                        "onlineOnAfterStart": false,
+                        "onlineOnInput": false
                     },
                     {
                         "type": "Operation",
                         "Name": "ПотокШтрихкодовДокумента",
                         "Timer": false,
-                        "hideToolBarScreen": false,
                         "hideBottomBarScreen": true,
                         "noScroll": false,
                         "handleKeyUp": false,
                         "noConfirmation": false,
+                        "hideToolBarScreen": false,
                         "Elements": [
                             {
                                 "type": "LinearLayout",
@@ -5608,22 +5376,26 @@
                             },
                             {
                                 "event": "onInput",
+                                "listener": "",
                                 "action": "run",
                                 "type": "python",
                                 "method": "barcode_flow_listener",
                                 "postExecute": ""
                             }
-                        ]
+                        ],
+                        "onlineOnStart": false,
+                        "onlineOnAfterStart": false,
+                        "onlineOnInput": false
                     },
                     {
                         "type": "Operation",
                         "Name": "ВвестиШтрихкод",
                         "Timer": false,
-                        "hideToolBarScreen": false,
                         "hideBottomBarScreen": false,
                         "noScroll": false,
                         "handleKeyUp": false,
                         "noConfirmation": false,
+                        "hideToolBarScreen": false,
                         "Elements": [
                             {
                                 "type": "LinearLayout",
@@ -5652,17 +5424,20 @@
                                 ]
                             }
                         ],
-                        "Handlers": []
+                        "Handlers": [],
+                        "onlineOnStart": false,
+                        "onlineOnAfterStart": false,
+                        "onlineOnInput": false
                     },
                     {
                         "type": "Operation",
                         "Name": "ШаблонРаспознавания",
                         "Timer": false,
-                        "hideToolBarScreen": false,
                         "hideBottomBarScreen": true,
                         "noScroll": false,
                         "handleKeyUp": false,
                         "noConfirmation": false,
+                        "hideToolBarScreen": false,
                         "Elements": [
                             {
                                 "type": "LinearLayout",
@@ -5747,7 +5522,10 @@
                                 ]
                             }
                         ],
-                        "Handlers": []
+                        "Handlers": [],
+                        "onlineOnStart": false,
+                        "onlineOnAfterStart": false,
+                        "onlineOnInput": false
                     }
                 ]
             },
@@ -5764,11 +5542,11 @@
                         "type": "Operation",
                         "Name": "Справочник",
                         "Timer": false,
-                        "hideToolBarScreen": false,
                         "hideBottomBarScreen": true,
                         "noScroll": false,
                         "handleKeyUp": false,
                         "noConfirmation": true,
+                        "hideToolBarScreen": false,
                         "Elements": [
                             {
                                 "type": "LinearLayout",
@@ -5799,12 +5577,16 @@
                             },
                             {
                                 "event": "onInput",
+                                "listener": "",
                                 "action": "run",
                                 "type": "python",
                                 "method": "universal_cards_listener",
                                 "postExecute": ""
                             }
-                        ]
+                        ],
+                        "onlineOnStart": false,
+                        "onlineOnAfterStart": false,
+                        "onlineOnInput": false
                     }
                 ]
             },
@@ -5820,11 +5602,11 @@
                         "type": "Operation",
                         "Name": "Товары список",
                         "Timer": false,
-                        "hideToolBarScreen": false,
                         "hideBottomBarScreen": true,
                         "noScroll": false,
                         "handleKeyUp": false,
                         "noConfirmation": true,
+                        "hideToolBarScreen": false,
                         "Elements": [
                             {
                                 "type": "LinearLayout",
@@ -5896,22 +5678,26 @@
                             },
                             {
                                 "event": "onInput",
+                                "listener": "",
                                 "action": "run",
                                 "type": "python",
                                 "method": "goods_on_input",
                                 "postExecute": ""
                             }
-                        ]
+                        ],
+                        "onlineOnStart": false,
+                        "onlineOnAfterStart": false,
+                        "onlineOnInput": false
                     },
                     {
                         "type": "Operation",
                         "Name": "Карточка товара",
                         "Timer": false,
-                        "hideToolBarScreen": false,
                         "hideBottomBarScreen": true,
                         "noScroll": false,
                         "handleKeyUp": false,
                         "noConfirmation": false,
+                        "hideToolBarScreen": false,
                         "Elements": [
                             {
                                 "type": "LinearLayout",
@@ -6124,6 +5910,7 @@
                             },
                             {
                                 "event": "onInput",
+                                "listener": "",
                                 "action": "run",
                                 "type": "python",
                                 "method": "good_card_on_input",
@@ -6131,22 +5918,26 @@
                             },
                             {
                                 "event": "onPostStart",
+                                "listener": "",
                                 "action": "run",
                                 "type": "python",
                                 "method": "good_card_post_start",
                                 "postExecute": ""
                             }
-                        ]
+                        ],
+                        "onlineOnStart": false,
+                        "onlineOnAfterStart": false,
+                        "onlineOnInput": false
                     },
                     {
                         "type": "Operation",
                         "Name": "Выбор категории товаров ",
                         "Timer": false,
-                        "hideToolBarScreen": false,
                         "hideBottomBarScreen": true,
                         "noScroll": false,
                         "handleKeyUp": false,
                         "noConfirmation": false,
+                        "hideToolBarScreen": false,
                         "Elements": [
                             {
                                 "type": "LinearLayout",
@@ -6177,22 +5968,26 @@
                             },
                             {
                                 "event": "onInput",
+                                "listener": "",
                                 "action": "run",
                                 "type": "python",
                                 "method": "select_type_goods_on_input",
                                 "postExecute": ""
                             }
-                        ]
+                        ],
+                        "onlineOnStart": false,
+                        "onlineOnAfterStart": false,
+                        "onlineOnInput": false
                     },
                     {
                         "type": "Operation",
                         "Name": "ТоварШтрихкоды",
                         "Timer": false,
-                        "hideToolBarScreen": false,
                         "hideBottomBarScreen": true,
                         "noScroll": false,
                         "handleKeyUp": false,
                         "noConfirmation": false,
+                        "hideToolBarScreen": false,
                         "Elements": [
                             {
                                 "type": "barcode",
@@ -6411,17 +6206,20 @@
                                 "method": "barcode_register_item_on_start",
                                 "postExecute": ""
                             }
-                        ]
+                        ],
+                        "onlineOnStart": false,
+                        "onlineOnAfterStart": false,
+                        "onlineOnInput": false
                     },
                     {
                         "type": "Operation",
                         "Name": "Выбор характеристик",
                         "Timer": false,
-                        "hideToolBarScreen": false,
                         "hideBottomBarScreen": true,
                         "noScroll": false,
                         "handleKeyUp": false,
                         "noConfirmation": false,
+                        "hideToolBarScreen": false,
                         "Elements": [
                             {
                                 "type": "LinearLayout",
@@ -6463,17 +6261,20 @@
                                 "method": "item_properties_on_input",
                                 "postExecute": ""
                             }
-                        ]
+                        ],
+                        "onlineOnStart": false,
+                        "onlineOnAfterStart": false,
+                        "onlineOnInput": false
                     },
                     {
                         "type": "Operation",
                         "Name": "Выбор упаковки",
                         "Timer": false,
-                        "hideToolBarScreen": false,
                         "hideBottomBarScreen": true,
                         "noScroll": false,
                         "handleKeyUp": false,
                         "noConfirmation": false,
+                        "hideToolBarScreen": false,
                         "Elements": [
                             {
                                 "type": "LinearLayout",
@@ -6512,17 +6313,20 @@
                                 "method": "item_units_on_input",
                                 "postExecute": ""
                             }
-                        ]
+                        ],
+                        "onlineOnStart": false,
+                        "onlineOnAfterStart": false,
+                        "onlineOnInput": false
                     },
                     {
                         "type": "Operation",
                         "Name": "Такой штрихкод уже есть",
                         "Timer": false,
-                        "hideToolBarScreen": false,
                         "hideBottomBarScreen": false,
                         "noScroll": false,
                         "handleKeyUp": false,
                         "noConfirmation": false,
+                        "hideToolBarScreen": false,
                         "Elements": [
                             {
                                 "type": "LinearLayout",
@@ -6584,7 +6388,10 @@
                                 ]
                             }
                         ],
-                        "Handlers": []
+                        "Handlers": [],
+                        "onlineOnStart": false,
+                        "onlineOnAfterStart": false,
+                        "onlineOnInput": false
                     }
                 ]
             },
@@ -6600,11 +6407,11 @@
                         "type": "Operation",
                         "Name": "Проверить остатки",
                         "Timer": false,
-                        "hideToolBarScreen": false,
                         "hideBottomBarScreen": true,
                         "noScroll": false,
                         "handleKeyUp": false,
                         "noConfirmation": false,
+                        "hideToolBarScreen": false,
                         "Elements": [
                             {
                                 "type": "LinearLayout",
@@ -6904,22 +6711,26 @@
                             },
                             {
                                 "event": "onInput",
+                                "listener": "",
                                 "action": "run",
                                 "type": "python",
                                 "method": "balances_on_input",
                                 "postExecute": ""
                             }
-                        ]
+                        ],
+                        "onlineOnStart": false,
+                        "onlineOnAfterStart": false,
+                        "onlineOnInput": false
                     },
                     {
                         "type": "Operation",
                         "Name": "Выбор склада",
                         "Timer": false,
-                        "hideToolBarScreen": false,
                         "hideBottomBarScreen": true,
                         "noScroll": false,
                         "handleKeyUp": false,
                         "noConfirmation": false,
+                        "hideToolBarScreen": false,
                         "Elements": [
                             {
                                 "type": "LinearLayout",
@@ -6955,12 +6766,16 @@
                             },
                             {
                                 "event": "onInput",
+                                "listener": "",
                                 "action": "run",
                                 "type": "python",
                                 "method": "wh_select_on_input",
                                 "postExecute": ""
                             }
-                        ]
+                        ],
+                        "onlineOnStart": false,
+                        "onlineOnAfterStart": false,
+                        "onlineOnInput": false
                     }
                 ]
             },
@@ -6976,11 +6791,11 @@
                         "type": "Operation",
                         "Name": "Проверка цен",
                         "Timer": false,
-                        "hideToolBarScreen": false,
                         "hideBottomBarScreen": true,
                         "noScroll": false,
                         "handleKeyUp": false,
                         "noConfirmation": false,
+                        "hideToolBarScreen": false,
                         "Elements": [
                             {
                                 "type": "LinearLayout",
@@ -7310,22 +7125,26 @@
                             },
                             {
                                 "event": "onInput",
+                                "listener": "",
                                 "action": "run",
                                 "type": "python",
                                 "method": "prices_on_input",
                                 "postExecute": ""
                             }
-                        ]
+                        ],
+                        "onlineOnStart": false,
+                        "onlineOnAfterStart": false,
+                        "onlineOnInput": false
                     },
                     {
                         "type": "Operation",
                         "Name": "Выбор типа цены",
                         "Timer": false,
-                        "hideToolBarScreen": false,
                         "hideBottomBarScreen": true,
                         "noScroll": false,
                         "handleKeyUp": false,
                         "noConfirmation": false,
+                        "hideToolBarScreen": false,
                         "Elements": [
                             {
                                 "type": "LinearLayout",
@@ -7361,22 +7180,26 @@
                             },
                             {
                                 "event": "onInput",
+                                "listener": "",
                                 "action": "run",
                                 "type": "python",
                                 "method": "price_types_on_input",
                                 "postExecute": ""
                             }
-                        ]
+                        ],
+                        "onlineOnStart": false,
+                        "onlineOnAfterStart": false,
+                        "onlineOnInput": false
                     },
                     {
                         "type": "Operation",
                         "Name": "Выбор характеристик",
                         "Timer": false,
-                        "hideToolBarScreen": false,
                         "hideBottomBarScreen": true,
                         "noScroll": false,
                         "handleKeyUp": false,
                         "noConfirmation": false,
+                        "hideToolBarScreen": false,
                         "Elements": [
                             {
                                 "type": "LinearLayout",
@@ -7412,22 +7235,26 @@
                             },
                             {
                                 "event": "onInput",
+                                "listener": "",
                                 "action": "run",
                                 "type": "python",
                                 "method": "properties_on_input",
                                 "postExecute": ""
                             }
-                        ]
+                        ],
+                        "onlineOnStart": false,
+                        "onlineOnAfterStart": false,
+                        "onlineOnInput": false
                     },
                     {
                         "type": "Operation",
                         "Name": "Выбор упаковки",
                         "Timer": false,
-                        "hideToolBarScreen": false,
                         "hideBottomBarScreen": true,
                         "noScroll": false,
                         "handleKeyUp": false,
                         "noConfirmation": false,
+                        "hideToolBarScreen": false,
                         "Elements": [
                             {
                                 "type": "LinearLayout",
@@ -7463,22 +7290,26 @@
                             },
                             {
                                 "event": "onInput",
+                                "listener": "",
                                 "action": "run",
                                 "type": "python",
                                 "method": "units_on_input",
                                 "postExecute": ""
                             }
-                        ]
+                        ],
+                        "onlineOnStart": false,
+                        "onlineOnAfterStart": false,
+                        "onlineOnInput": false
                     },
                     {
                         "type": "Operation",
                         "Name": "Таблица цен",
                         "Timer": false,
-                        "hideToolBarScreen": false,
                         "hideBottomBarScreen": true,
                         "noScroll": false,
                         "handleKeyUp": false,
                         "noConfirmation": false,
+                        "hideToolBarScreen": false,
                         "Elements": [
                             {
                                 "type": "LinearLayout",
@@ -7538,12 +7369,16 @@
                             },
                             {
                                 "event": "onInput",
+                                "listener": "",
                                 "action": "run",
                                 "type": "python",
                                 "method": "prices_table_on_input",
                                 "postExecute": ""
                             }
-                        ]
+                        ],
+                        "onlineOnStart": false,
+                        "onlineOnAfterStart": false,
+                        "onlineOnInput": false
                     }
                 ]
             },
@@ -7559,11 +7394,11 @@
                         "type": "Operation",
                         "Name": "Настройки и обмен",
                         "Timer": false,
-                        "hideToolBarScreen": false,
                         "hideBottomBarScreen": true,
                         "noScroll": false,
                         "handleKeyUp": false,
                         "noConfirmation": true,
+                        "hideToolBarScreen": false,
                         "Elements": [
                             {
                                 "type": "LinearLayout",
@@ -7717,22 +7552,26 @@
                             },
                             {
                                 "event": "onInput",
+                                "listener": "",
                                 "action": "run",
                                 "type": "python",
                                 "method": "settings_on_click",
                                 "postExecute": ""
                             }
-                        ]
+                        ],
+                        "onlineOnStart": false,
+                        "onlineOnAfterStart": false,
+                        "onlineOnInput": false
                     },
                     {
                         "type": "Operation",
                         "Name": "СписокФайлов",
                         "Timer": false,
-                        "hideToolBarScreen": false,
                         "hideBottomBarScreen": true,
                         "noScroll": false,
                         "handleKeyUp": false,
                         "noConfirmation": true,
+                        "hideToolBarScreen": false,
                         "Elements": [
                             {
                                 "type": "LinearLayout",
@@ -7761,17 +7600,20 @@
                                 "method": "file_list_on_start",
                                 "postExecute": ""
                             }
-                        ]
+                        ],
+                        "onlineOnStart": false,
+                        "onlineOnAfterStart": false,
+                        "onlineOnInput": false
                     },
                     {
                         "type": "Operation",
                         "Name": "Настройки Шрифтов",
                         "Timer": false,
-                        "hideToolBarScreen": false,
                         "hideBottomBarScreen": true,
                         "noScroll": false,
                         "handleKeyUp": false,
                         "noConfirmation": true,
+                        "hideToolBarScreen": false,
                         "Elements": [
                             {
                                 "type": "LinearLayout",
@@ -7882,22 +7724,26 @@
                             },
                             {
                                 "event": "onInput",
+                                "listener": "",
                                 "action": "run",
                                 "type": "python",
                                 "method": "font_size_settings_listener",
                                 "postExecute": ""
                             }
-                        ]
+                        ],
+                        "onlineOnStart": false,
+                        "onlineOnAfterStart": false,
+                        "onlineOnInput": false
                     },
                     {
                         "type": "Operation",
                         "Name": "Тест сканера",
                         "Timer": false,
-                        "hideToolBarScreen": false,
                         "hideBottomBarScreen": true,
                         "noScroll": false,
                         "handleKeyUp": false,
                         "noConfirmation": true,
+                        "hideToolBarScreen": false,
                         "Elements": [
                             {
                                 "type": "LinearLayout",
@@ -8001,17 +7847,20 @@
                                 "method": "test_barcode_listener",
                                 "postExecute": ""
                             }
-                        ]
+                        ],
+                        "onlineOnStart": false,
+                        "onlineOnAfterStart": false,
+                        "onlineOnInput": false
                     },
                     {
                         "type": "Operation",
                         "Name": "Ошибки",
                         "Timer": false,
-                        "hideToolBarScreen": false,
                         "hideBottomBarScreen": true,
                         "noScroll": false,
                         "handleKeyUp": false,
                         "noConfirmation": true,
+                        "hideToolBarScreen": false,
                         "Elements": [
                             {
                                 "type": "LinearLayout",
@@ -8073,22 +7922,26 @@
                             },
                             {
                                 "event": "onInput",
+                                "listener": "",
                                 "action": "run",
                                 "type": "python",
                                 "method": "settings_errors_on_click",
                                 "postExecute": ""
                             }
-                        ]
+                        ],
+                        "onlineOnStart": false,
+                        "onlineOnAfterStart": false,
+                        "onlineOnInput": false
                     },
                     {
                         "type": "Operation",
                         "Name": "Настройки http соединения",
                         "Timer": false,
-                        "hideToolBarScreen": false,
                         "hideBottomBarScreen": true,
                         "noScroll": false,
                         "handleKeyUp": false,
                         "noConfirmation": true,
+                        "hideToolBarScreen": false,
                         "Elements": [
                             {
                                 "type": "LinearLayout",
@@ -8191,22 +8044,26 @@
                             },
                             {
                                 "event": "onInput",
+                                "listener": "",
                                 "action": "run",
                                 "type": "python",
                                 "method": "http_settings_on_click",
                                 "postExecute": ""
                             }
-                        ]
+                        ],
+                        "onlineOnStart": false,
+                        "onlineOnAfterStart": false,
+                        "onlineOnInput": false
                     },
                     {
                         "type": "Operation",
                         "Name": "Настройка звука",
                         "Timer": false,
-                        "hideToolBarScreen": false,
                         "hideBottomBarScreen": true,
                         "noScroll": false,
                         "handleKeyUp": false,
                         "noConfirmation": true,
+                        "hideToolBarScreen": false,
                         "Elements": [
                             {
                                 "type": "LinearLayout",
@@ -8258,17 +8115,20 @@
                                 "method": "sound_settings_listener",
                                 "postExecute": ""
                             }
-                        ]
+                        ],
+                        "onlineOnStart": false,
+                        "onlineOnAfterStart": false,
+                        "onlineOnInput": false
                     },
                     {
                         "type": "Operation",
                         "Name": "Настройки документов",
                         "Timer": false,
-                        "hideToolBarScreen": false,
                         "hideBottomBarScreen": true,
                         "noScroll": false,
                         "handleKeyUp": false,
                         "noConfirmation": true,
+                        "hideToolBarScreen": false,
                         "Elements": [
                             {
                                 "type": "LinearLayout",
@@ -8344,7 +8204,10 @@
                                 "method": "documents_settings_on_input",
                                 "postExecute": ""
                             }
-                        ]
+                        ],
+                        "onlineOnStart": false,
+                        "onlineOnAfterStart": false,
+                        "onlineOnInput": false
                     }
                 ]
             },
@@ -8360,11 +8223,11 @@
                         "type": "Operation",
                         "Name": "Отладочный экран",
                         "Timer": false,
-                        "hideToolBarScreen": true,
                         "hideBottomBarScreen": true,
                         "noScroll": false,
                         "handleKeyUp": false,
                         "noConfirmation": true,
+                        "hideToolBarScreen": true,
                         "Elements": [
                             {
                                 "type": "LinearLayout",
@@ -8510,7 +8373,10 @@
                                 "method": "debug_on_start",
                                 "postExecute": ""
                             }
-                        ]
+                        ],
+                        "onlineOnStart": false,
+                        "onlineOnAfterStart": false,
+                        "onlineOnInput": false
                     }
                 ]
             },
@@ -8527,11 +8393,11 @@
                         "type": "Operation",
                         "Name": "Список шаблонов",
                         "Timer": false,
-                        "hideToolBarScreen": true,
                         "hideBottomBarScreen": true,
                         "noScroll": false,
                         "handleKeyUp": false,
                         "noConfirmation": true,
+                        "hideToolBarScreen": true,
                         "Elements": [
                             {
                                 "type": "LinearLayout",
@@ -8596,17 +8462,20 @@
                                 "method": "template_list_on_input",
                                 "postExecute": ""
                             }
-                        ]
+                        ],
+                        "onlineOnStart": false,
+                        "onlineOnAfterStart": false,
+                        "onlineOnInput": false
                     },
                     {
                         "type": "Operation",
                         "Name": "Результат",
                         "Timer": false,
-                        "hideToolBarScreen": false,
                         "hideBottomBarScreen": true,
                         "noScroll": false,
                         "handleKeyUp": false,
                         "noConfirmation": true,
+                        "hideToolBarScreen": false,
                         "Elements": [
                             {
                                 "type": "LinearLayout",
@@ -8808,17 +8677,20 @@
                                 "method": "html_view_on_start",
                                 "postExecute": ""
                             }
-                        ]
+                        ],
+                        "onlineOnStart": false,
+                        "onlineOnAfterStart": false,
+                        "onlineOnInput": false
                     },
                     {
                         "type": "Operation",
                         "Name": "НастройкаСоответствияДиалог",
                         "Timer": false,
-                        "hideToolBarScreen": false,
                         "hideBottomBarScreen": false,
                         "noScroll": false,
                         "handleKeyUp": false,
                         "noConfirmation": false,
+                        "hideToolBarScreen": false,
                         "Elements": [
                             {
                                 "type": "LinearLayout",
@@ -8839,7 +8711,10 @@
                                 ]
                             }
                         ],
-                        "Handlers": []
+                        "Handlers": [],
+                        "onlineOnStart": false,
+                        "onlineOnAfterStart": false,
+                        "onlineOnInput": false
                     }
                 ]
             },
@@ -8856,11 +8731,11 @@
                         "type": "Operation",
                         "Name": "Проводник файлов",
                         "Timer": false,
-                        "hideToolBarScreen": true,
                         "hideBottomBarScreen": true,
                         "noScroll": false,
                         "handleKeyUp": false,
                         "noConfirmation": true,
+                        "hideToolBarScreen": true,
                         "Elements": [
                             {
                                 "type": "LinearLayout",
@@ -8922,30 +8797,613 @@
                                 "method": "file_browser_on_input",
                                 "postExecute": ""
                             }
-                        ]
+                        ],
+                        "onlineOnStart": false,
+                        "onlineOnAfterStart": false,
+                        "onlineOnInput": false
                     }
                 ]
             },
             {
                 "type": "Process",
-                "ProcessName": "Серии",
+                "ProcessName": "SeriesProcess",
                 "PlanFactHeader": "",
-                "DefineOnBackPressed": false,
+                "DefineOnBackPressed": true,
                 "hidden": true,
                 "login_screen": false,
                 "SC": false,
                 "Operations": [
                     {
                         "type": "Operation",
-                        "Name": "Выбор серии",
+                        "Name": "SeriesSelectScreen",
                         "Timer": false,
-                        "hideToolBarScreen": false,
                         "hideBottomBarScreen": true,
                         "noScroll": false,
                         "handleKeyUp": false,
                         "noConfirmation": true,
-                        "Elements": [],
-                        "Handlers": []
+                        "hideToolBarScreen": false,
+                        "Elements": [
+                            {
+                                "type": "LinearLayout",
+                                "Variable": "",
+                                "orientation": "vertical",
+                                "height": "wrap_content",
+                                "width": "match_parent",
+                                "weight": "0",
+                                "Elements": [
+                                    {
+                                        "Value": "@doc_data",
+                                        "Variable": "",
+                                        "height": "wrap_content",
+                                        "width": "match_parent",
+                                        "weight": "0",
+                                        "TextBold": false,
+                                        "TextItalic": false,
+                                        "TextSize": "16",
+                                        "type": "TextView"
+                                    },
+                                    {
+                                        "type": "LinearLayout",
+                                        "Variable": "",
+                                        "orientation": "vertical",
+                                        "height": "wrap_content",
+                                        "width": "match_parent",
+                                        "weight": "0",
+                                        "Elements": [
+                                            {
+                                                "type": "LinearLayout",
+                                                "Variable": "",
+                                                "orientation": "horizontal",
+                                                "height": "match_parent",
+                                                "width": "match_parent",
+                                                "weight": "0",
+                                                "Elements": [
+                                                    {
+                                                        "type": "LinearLayout",
+                                                        "Variable": "",
+                                                        "orientation": "horizontal",
+                                                        "height": "wrap_content",
+                                                        "width": "match_parent",
+                                                        "weight": "1",
+                                                        "Elements": [
+                                                            {
+                                                                "Value": "Артикул:",
+                                                                "Variable": "",
+                                                                "height": "wrap_content",
+                                                                "width": "wrap_content",
+                                                                "weight": "0",
+                                                                "TextBold": true,
+                                                                "TextColor": "#000000",
+                                                                "type": "TextView"
+                                                            },
+                                                            {
+                                                                "Value": "@good_art",
+                                                                "Variable": "",
+                                                                "height": "wrap_content",
+                                                                "width": "wrap_content",
+                                                                "orientation": "",
+                                                                "weight": "0",
+                                                                "TextBold": false,
+                                                                "TextItalic": false,
+                                                                "TextSize": "",
+                                                                "TextColor": "#000000",
+                                                                "type": "TextView"
+                                                            }
+                                                        ]
+                                                    }
+                                                ]
+                                            },
+                                            {
+                                                "type": "LinearLayout",
+                                                "Variable": "",
+                                                "orientation": "horizontal",
+                                                "height": "wrap_content",
+                                                "width": "wrap_content",
+                                                "weight": "0",
+                                                "Elements": [
+                                                    {
+                                                        "Value": "Характеристика:",
+                                                        "Variable": "",
+                                                        "height": "wrap_content",
+                                                        "width": "wrap_content",
+                                                        "weight": "0",
+                                                        "TextBold": true,
+                                                        "TextColor": "#000000",
+                                                        "type": "TextView"
+                                                    },
+                                                    {
+                                                        "Value": "@properties_name",
+                                                        "Variable": "",
+                                                        "height": "wrap_content",
+                                                        "width": "wrap_content",
+                                                        "orientation": "",
+                                                        "weight": "0",
+                                                        "TextBold": false,
+                                                        "TextItalic": false,
+                                                        "TextSize": "",
+                                                        "TextColor": "#000000",
+                                                        "type": "TextView"
+                                                    }
+                                                ],
+                                                "BackgroundColor": "",
+                                                "StrokeWidth": "",
+                                                "Padding": ""
+                                            },
+                                            {
+                                                "type": "LinearLayout",
+                                                "Variable": "",
+                                                "orientation": "horizontal",
+                                                "height": "wrap_content",
+                                                "width": "wrap_content",
+                                                "weight": "0",
+                                                "Elements": [
+                                                    {
+                                                        "Value": "Цена:",
+                                                        "Variable": "",
+                                                        "height": "wrap_content",
+                                                        "width": "wrap_content",
+                                                        "weight": "0",
+                                                        "TextBold": true,
+                                                        "TextColor": "#cc0000",
+                                                        "type": "TextView"
+                                                    },
+                                                    {
+                                                        "Value": "@price",
+                                                        "Variable": "",
+                                                        "height": "wrap_content",
+                                                        "width": "wrap_content",
+                                                        "orientation": "",
+                                                        "weight": "0",
+                                                        "TextBold": false,
+                                                        "TextItalic": false,
+                                                        "TextSize": "",
+                                                        "TextColor": "#cc0000",
+                                                        "type": "TextView"
+                                                    }
+                                                ],
+                                                "BackgroundColor": "",
+                                                "StrokeWidth": "",
+                                                "Padding": ""
+                                            },
+                                            {
+                                                "type": "LinearLayout",
+                                                "Variable": "",
+                                                "orientation": "horizontal",
+                                                "height": "wrap_content",
+                                                "width": "wrap_content",
+                                                "weight": "0",
+                                                "Elements": [
+                                                    {
+                                                        "Value": "Упаковка:",
+                                                        "Variable": "",
+                                                        "height": "wrap_content",
+                                                        "width": "wrap_content",
+                                                        "weight": "0",
+                                                        "TextBold": true,
+                                                        "TextColor": "#000000",
+                                                        "type": "TextView"
+                                                    },
+                                                    {
+                                                        "Value": "@good_unit",
+                                                        "Variable": "",
+                                                        "height": "wrap_content",
+                                                        "width": "wrap_content",
+                                                        "orientation": "",
+                                                        "weight": "0",
+                                                        "TextBold": false,
+                                                        "TextItalic": false,
+                                                        "TextSize": "",
+                                                        "TextColor": "#000000",
+                                                        "type": "TextView"
+                                                    }
+                                                ],
+                                                "BackgroundColor": "",
+                                                "StrokeWidth": "",
+                                                "Padding": ""
+                                            }
+                                        ],
+                                        "BackgroundColor": "",
+                                        "StrokeWidth": "",
+                                        "Padding": ""
+                                    },
+                                    {
+                                        "Value": "@good_name",
+                                        "Variable": "",
+                                        "height": "wrap_content",
+                                        "width": "match_parent",
+                                        "orientation": "",
+                                        "weight": "0",
+                                        "TextBold": true,
+                                        "TextItalic": false,
+                                        "TextSize": "24",
+                                        "TextColor": "#7A005C",
+                                        "type": "TextView"
+                                    },
+                                    {
+                                        "type": "LinearLayout",
+                                        "Variable": "",
+                                        "orientation": "horizontal",
+                                        "height": "wrap_content",
+                                        "width": "match_parent",
+                                        "weight": "0",
+                                        "Elements": [
+                                            {
+                                                "type": "LinearLayout",
+                                                "Variable": "",
+                                                "orientation": "vertical",
+                                                "height": "wrap_content",
+                                                "width": "match_parent",
+                                                "weight": "1",
+                                                "Elements": [
+                                                    {
+                                                        "Value": "План",
+                                                        "Variable": "",
+                                                        "height": "wrap_content",
+                                                        "width": "match_parent",
+                                                        "weight": "0",
+                                                        "type": "TextView"
+                                                    },
+                                                    {
+                                                        "Value": "@qtty_plan",
+                                                        "Variable": "qtty_plan",
+                                                        "height": "wrap_content",
+                                                        "width": "match_parent",
+                                                        "orientation": "",
+                                                        "weight": "0",
+                                                        "TextBold": false,
+                                                        "TextItalic": false,
+                                                        "TextSize": "24",
+                                                        "TextColor": "",
+                                                        "type": "TextView"
+                                                    }
+                                                ]
+                                            },
+                                            {
+                                                "type": "LinearLayout",
+                                                "Variable": "",
+                                                "orientation": "vertical",
+                                                "height": "wrap_content",
+                                                "width": "match_parent",
+                                                "weight": "1",
+                                                "Elements": [
+                                                    {
+                                                        "Value": "Факт",
+                                                        "Variable": "",
+                                                        "height": "wrap_content",
+                                                        "width": "match_parent",
+                                                        "weight": "0",
+                                                        "TextBold": false,
+                                                        "TextItalic": false,
+                                                        "type": "TextView"
+                                                    },
+                                                    {
+                                                        "Value": "@qtty",
+                                                        "Variable": "qtty",
+                                                        "height": "wrap_content",
+                                                        "width": "match_parent",
+                                                        "orientation": "",
+                                                        "weight": "0",
+                                                        "TextBold": false,
+                                                        "TextItalic": false,
+                                                        "TextSize": "24",
+                                                        "TextColor": "",
+                                                        "type": "TextView"
+                                                    }
+                                                ],
+                                                "BackgroundColor": "",
+                                                "StrokeWidth": "",
+                                                "Padding": ""
+                                            }
+                                        ],
+                                        "BackgroundColor": "",
+                                        "StrokeWidth": "",
+                                        "Padding": ""
+                                    },
+                                    {
+                                        "Value": "@series_cards",
+                                        "Variable": "series_cards",
+                                        "height": "wrap_content",
+                                        "width": "match_parent",
+                                        "orientation": "",
+                                        "weight": "0",
+                                        "TextBold": false,
+                                        "TextItalic": false,
+                                        "TextSize": "",
+                                        "TextColor": "",
+                                        "type": "CardsLayout"
+                                    }
+                                ]
+                            },
+                            {
+                                "type": "barcode",
+                                "Value": "",
+                                "Variable": "barcode"
+                            }
+                        ],
+                        "Handlers": [
+                            {
+                                "event": "onStart",
+                                "action": "run",
+                                "type": "python",
+                                "method": "series_list_on_start",
+                                "postExecute": ""
+                            },
+                            {
+                                "event": "onInput",
+                                "listener": "",
+                                "action": "run",
+                                "type": "python",
+                                "method": "series_list_on_input",
+                                "postExecute": ""
+                            }
+                        ],
+                        "onlineOnStart": false,
+                        "onlineOnAfterStart": false,
+                        "onlineOnInput": false
+                    },
+                    {
+                        "type": "Operation",
+                        "Name": "FillingSeriesScreen",
+                        "Timer": false,
+                        "hideBottomBarScreen": true,
+                        "noScroll": false,
+                        "handleKeyUp": false,
+                        "noConfirmation": true,
+                        "hideToolBarScreen": true,
+                        "Elements": [
+                            {
+                                "type": "LinearLayout",
+                                "Variable": "",
+                                "orientation": "vertical",
+                                "height": "wrap_content",
+                                "width": "match_parent",
+                                "weight": "1",
+                                "Elements": [
+                                    {
+                                        "Value": "@good_name",
+                                        "Variable": "",
+                                        "height": "wrap_content",
+                                        "width": "match_parent",
+                                        "weight": "0",
+                                        "TextBold": true,
+                                        "TextItalic": false,
+                                        "TextSize": "24",
+                                        "TextColor": "#7A005C",
+                                        "type": "TextView"
+                                    },
+                                    {
+                                        "type": "LinearLayout",
+                                        "Variable": "",
+                                        "orientation": "horizontal",
+                                        "height": "wrap_content",
+                                        "width": "match_parent",
+                                        "weight": "1",
+                                        "Elements": [
+                                            {
+                                                "Value": "Имя:",
+                                                "Variable": "",
+                                                "height": "wrap_content",
+                                                "width": "wrap_content",
+                                                "weight": "0",
+                                                "TextBold": true,
+                                                "TextItalic": false,
+                                                "TextSize": "21",
+                                                "type": "TextView"
+                                            },
+                                            {
+                                                "Value": "@name",
+                                                "Variable": "name",
+                                                "height": "wrap_content",
+                                                "width": "wrap_content",
+                                                "orientation": "",
+                                                "weight": "",
+                                                "TextBold": false,
+                                                "TextItalic": false,
+                                                "TextSize": "21",
+                                                "TextColor": "",
+                                                "type": "EditTextText"
+                                            }
+                                        ],
+                                        "BackgroundColor": "",
+                                        "StrokeWidth": "",
+                                        "Padding": ""
+                                    },
+                                    {
+                                        "type": "LinearLayout",
+                                        "Variable": "",
+                                        "orientation": "horizontal",
+                                        "height": "wrap_content",
+                                        "width": "match_parent",
+                                        "weight": "1",
+                                        "Elements": [
+                                            {
+                                                "Value": "Номер серии:",
+                                                "Variable": "",
+                                                "height": "wrap_content",
+                                                "width": "wrap_content",
+                                                "weight": "0",
+                                                "TextBold": true,
+                                                "TextItalic": false,
+                                                "TextSize": "21",
+                                                "type": "TextView"
+                                            },
+                                            {
+                                                "Value": "@number",
+                                                "Variable": "number",
+                                                "height": "wrap_content",
+                                                "width": "wrap_content",
+                                                "orientation": "",
+                                                "weight": "",
+                                                "TextBold": false,
+                                                "TextItalic": false,
+                                                "TextSize": "21",
+                                                "TextColor": "",
+                                                "type": "EditTextText"
+                                            }
+                                        ],
+                                        "BackgroundColor": "",
+                                        "StrokeWidth": "",
+                                        "Padding": ""
+                                    },
+                                    {
+                                        "type": "LinearLayout",
+                                        "Variable": "",
+                                        "orientation": "horizontal",
+                                        "height": "wrap_content",
+                                        "width": "match_parent",
+                                        "weight": "1",
+                                        "Elements": [
+                                            {
+                                                "Value": "Дата производства:",
+                                                "Variable": "",
+                                                "height": "wrap_content",
+                                                "width": "wrap_content",
+                                                "weight": "0",
+                                                "TextBold": true,
+                                                "TextItalic": false,
+                                                "TextSize": "21",
+                                                "type": "TextView"
+                                            },
+                                            {
+                                                "Value": "@production_date",
+                                                "Variable": "production_date",
+                                                "height": "wrap_content",
+                                                "width": "wrap_content",
+                                                "orientation": "",
+                                                "weight": "",
+                                                "TextBold": false,
+                                                "TextItalic": false,
+                                                "TextSize": "",
+                                                "TextColor": "",
+                                                "type": "DateField"
+                                            }
+                                        ],
+                                        "BackgroundColor": "",
+                                        "StrokeWidth": "",
+                                        "Padding": ""
+                                    },
+                                    {
+                                        "type": "LinearLayout",
+                                        "Variable": "",
+                                        "orientation": "",
+                                        "height": "wrap_content",
+                                        "width": "match_parent",
+                                        "weight": "1",
+                                        "Elements": [
+                                            {
+                                                "Value": "Годен до: ",
+                                                "Variable": "",
+                                                "height": "wrap_content",
+                                                "width": "wrap_content",
+                                                "weight": "0",
+                                                "TextBold": true,
+                                                "TextItalic": false,
+                                                "TextSize": "21",
+                                                "type": "TextView"
+                                            },
+                                            {
+                                                "Value": "@best_before",
+                                                "Variable": "best_before",
+                                                "height": "wrap_content",
+                                                "width": "wrap_content",
+                                                "orientation": "",
+                                                "weight": "",
+                                                "TextBold": false,
+                                                "TextItalic": false,
+                                                "TextSize": "",
+                                                "TextColor": "",
+                                                "type": "DateField"
+                                            }
+                                        ],
+                                        "BackgroundColor": "",
+                                        "StrokeWidth": "",
+                                        "Padding": ""
+                                    },
+                                    {
+                                        "type": "LinearLayout",
+                                        "Variable": "",
+                                        "orientation": "horizontal",
+                                        "height": "wrap_content",
+                                        "width": "match_parent",
+                                        "weight": "1",
+                                        "Elements": [
+                                            {
+                                                "Value": "Количество:",
+                                                "Variable": "",
+                                                "height": "wrap_content",
+                                                "width": "wrap_content",
+                                                "weight": "0",
+                                                "TextBold": true,
+                                                "TextItalic": false,
+                                                "TextSize": "21",
+                                                "type": "TextView"
+                                            },
+                                            {
+                                                "Value": "@FillingSeriesScreen_qtty",
+                                                "Variable": "FillingSeriesScreen_qtty",
+                                                "height": "wrap_content",
+                                                "width": "match_parent",
+                                                "orientation": "",
+                                                "weight": "5",
+                                                "TextBold": false,
+                                                "TextItalic": false,
+                                                "TextSize": "21",
+                                                "TextColor": "",
+                                                "type": "EditTextNumeric"
+                                            }
+                                        ],
+                                        "BackgroundColor": "",
+                                        "StrokeWidth": "",
+                                        "Padding": ""
+                                    },
+                                    {
+                                        "type": "LinearLayout",
+                                        "Variable": "",
+                                        "orientation": "horizontal",
+                                        "height": "wrap_content",
+                                        "width": "match_parent",
+                                        "weight": "1",
+                                        "Elements": [
+                                            {
+                                                "Value": "Сохранить",
+                                                "Variable": "btn_save",
+                                                "height": "wrap_content",
+                                                "width": "match_parent",
+                                                "orientation": "horizontal",
+                                                "weight": "1",
+                                                "TextBold": false,
+                                                "TextItalic": false,
+                                                "TextSize": "21",
+                                                "type": "Button"
+                                            }
+                                        ],
+                                        "BackgroundColor": "",
+                                        "StrokeWidth": "",
+                                        "Padding": ""
+                                    }
+                                ]
+                            }
+                        ],
+                        "Handlers": [
+                            {
+                                "event": "onStart",
+                                "action": "run",
+                                "type": "python",
+                                "method": "series_item_on_start",
+                                "postExecute": ""
+                            },
+                            {
+                                "event": "onInput",
+                                "listener": "",
+                                "action": "run",
+                                "type": "python",
+                                "method": "series_item_on_input",
+                                "postExecute": ""
+                            }
+                        ],
+                        "onlineOnStart": false,
+                        "onlineOnAfterStart": false,
+                        "onlineOnInput": false
                     }
                 ]
             },
@@ -9001,11 +9459,11 @@
                         "type": "Operation",
                         "Name": "SelectItemScreen",
                         "Timer": false,
-                        "hideToolBarScreen": false,
                         "hideBottomBarScreen": true,
                         "noScroll": true,
                         "handleKeyUp": false,
                         "noConfirmation": true,
+                        "hideToolBarScreen": false,
                         "Elements": [
                             {
                                 "type": "LinearLayout",
@@ -9044,7 +9502,10 @@
                                 "method": "select_item_on_input",
                                 "postExecute": ""
                             }
-                        ]
+                        ],
+                        "onlineOnStart": false,
+                        "onlineOnAfterStart": false,
+                        "onlineOnInput": false
                     }
                 ]
             }
@@ -9165,6 +9626,7 @@
             },
             {
                 "event": "onWebServiceSyncCommand",
+                "listener": "",
                 "action": "run",
                 "type": "python",
                 "method": "event_service",
@@ -9191,11 +9653,21 @@
             },
             {
                 "event": "onSQLError",
+                "listener": "",
                 "action": "run",
                 "type": "set",
                 "method": "beep",
                 "postExecute": "",
                 "alias": ""
+            },
+            {
+                "event": "onLaunch",
+                "listener": "",
+                "action": "run",
+                "type": "python",
+                "method": "timer_update",
+                "postExecute": "",
+                "alias": "timer_update"
             }
         ],
         "RecognitionTemplates": [

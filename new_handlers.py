@@ -31,7 +31,8 @@ def timer_update(hash_map: HashMap):
 
 @HashMap()
 def event_service(hash_map):
-    """ Обработчик для работы МП в режиме сервера. В ws_body по умолчанию лежит текст конфигурации """
+    """ Обработчик для работы МП в режиме сервера.
+     В ws_body по умолчанию лежит текст конфигурации """
 
     hash_map['ws_body'] = hash_map['ANDROID_ID']
 
@@ -40,7 +41,6 @@ def event_service(hash_map):
 def on_sql_error(hash_map):
     model = ui_models.MainEvents(hash_map, rs_settings)
     model.on_sql_error()
-
 
 
 @HashMap()
@@ -89,14 +89,14 @@ def barcode_flow_on_start(hash_map: HashMap):
 
 
 @HashMap()
-def barcode_flow_listener(hash_map:HashMap):
+def barcode_flow_listener(hash_map: HashMap):
     """Процесс: Сбор ШК. Экран: ПотокШтрихкодовДокумента"""
     screen = ui_models.FlowDocDetailsScreen(hash_map, rs_settings)
     screen.on_input()
 
 
 @HashMap()
-def serial_key_recognition_ocr(hash_map:HashMap):
+def serial_key_recognition_ocr(hash_map: HashMap):
     """Процесс: Сбор ШК. Экран: ПотокШтрихкодовДокумента.
        Шаблон Распознавания: Серийный номер"""
     ui_models.FlowDocDetailsScreen.serial_key_recognition_ocr(hash_map, rs_settings)
@@ -135,6 +135,7 @@ def select_good_article_on_start(hash_map: HashMap):
     """Процесс: Документы. Экран: ВыборТовараАртикул."""
     screen = ui_models.GoodsSelectArticle(hash_map, rs_settings)
     screen.on_start()
+
 
 @HashMap()
 def docs_tiles_on_start(hash_map: HashMap):
@@ -291,24 +292,6 @@ def elem_viev_on_start(hash_map):
 @HashMap()
 def elem_viev_on_click(hash_map):
     screen = ui_models.GoodsSelectScreen(hash_map, rs_settings)
-    screen.on_input()
-
-
-@HashMap()
-def group_elem_viev_on_start(hash_map):
-    screen = ui_models.GroupScanItemScreen(hash_map, rs_settings)
-    screen.on_start()
-
-
-@HashMap()
-def group_elem_viev_on_click(hash_map):
-    screen = ui_models.GroupScanItemScreen(hash_map, rs_settings)
-    screen.on_input()
-
-
-@HashMap()
-def offline_elem_view_on_click(hash_map):
-    screen = ui_models.GoodsSelectOfflineScreen(hash_map, rs_settings)
     screen.on_input()
 
 
