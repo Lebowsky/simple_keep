@@ -819,8 +819,6 @@ class FlowTilesScreen(Tiles):
         super().on_input()
         if self.listener == 'ON_BACK_PRESSED':
             self.hash_map.put('FinishProcess', '')
-        # elif self.listener == 'CardsClick':
-        #     self.hash_map.show_screen('Документы')
 
     def _get_tile_view(self) -> widgets.LinearLayout:
         tiles_view = widgets.LinearLayout(
@@ -952,6 +950,7 @@ class GroupScanTiles(Tiles):
     def _get_docs_stat(self):
         return self.db_service.get_docs_stat()
 
+
 class DocumentsTiles(GroupScanTiles):
     screen_name = 'Плитки'
     process_name = 'Документы'
@@ -1072,7 +1071,8 @@ class DocsListScreen(Screen):
                 'warehouse': record['RS_warehouse'],
                 'countragent': record['RS_countragent'],
                 'add_mark_selection': record['add_mark_selection'],
-                'status': doc_status
+                'status': doc_status,
+                'is_group_scan': record['is_group_scan']
             })
 
         return table_data
@@ -1208,9 +1208,12 @@ class GroupScanDocsListScreen(DocsListScreen):
         super().on_input()
         if self.listener == "CardsClick":
             current_mode = "офлайн" if self.rs_settings.get('offline_mode') else "онлайн"
-            self.hash_map.put('group_scan_message',
-                              f"Вы открываете документ групповую обработку документа "
-                              f"в {current_mode.upper()} режиме. Документ не будет доступен в процессе 'Документы' ")
+            warning_msg = "Документ не будет доступен в процессе 'Документы'"
+            msg = (f"Вы открываете документ групповую обработку документа "
+                   f"в {current_mode.upper()} режиме.")
+            if self.hash_map.get_json('selected_card_data')['is_group_scan'] == '0':
+                msg += warning_msg
+            self.hash_map.put('group_scan_message', msg)
 
             self.hash_map.show_dialog('Подтвердите действие')
             selected_card_key = self.hash_map['selected_card_key']
@@ -1305,6 +1308,7 @@ class DocumentsDocsListScreen(DocsListScreen):
     def _get_doc_list_data(self, doc_type, doc_status) -> list:
         results = self.service.get_doc_view_data(doc_type, doc_status)
         return results
+
 
 class AdrDocsListScreen(DocsListScreen):
     screen_name = 'Документы'
@@ -1564,6 +1568,7 @@ class FlowDocScreen(DocsListScreen):
 class DocDetailsScreen(Screen):
     def __init__(self, hash_map, rs_settings):
         super().__init__(hash_map, rs_settings)
+        self.barcode_worker = None
         self.rs_settings = rs_settings
         self.id_doc = self.hash_map['id_doc']
         self.service = DocService(self.id_doc)
@@ -1649,7 +1654,7 @@ class DocDetailsScreen(Screen):
         self.hash_map['return_selected_data'] = ''
         self.hash_map.put("doc_goods_table", table_view.to_json())
 
-    def _barcode_scanned(self):
+    def _item_barcode_scanned(self):
         id_doc = self.hash_map.get('id_doc')
         doc = RsDoc(id_doc)
         self.hash_map.put("SearchString", "")
@@ -1660,56 +1665,14 @@ class DocDetailsScreen(Screen):
 
         if not barcode:
             return {}
-
-        have_qtty_plan = self.hash_map.get_bool('have_qtty_plan')
-        have_zero_plan = self.hash_map.get_bool('have_zero_plan')
-        have_mark_plan = self.hash_map.get_bool('have_mark_plan')
-        control = self.hash_map.get_bool('control')
-        # self.toast(have_zero_plan)
-
-        res = doc.process_the_barcode(
-            barcode,
-            have_qtty_plan,
-            have_zero_plan,
-            control,
-            have_mark_plan,
-            use_mark_setting=self.rs_settings.get('use_mark'))
-
-        # self.toast(res['Error'])
-
-        if res is None:
-            self.hash_map.put('scanned_barcode', barcode)
-            self.hash_map.show_screen('Ошибка сканера')
-            res = {'Error': 'BarcodeError'}
-        elif res['Error']:
-            if res['Error'] == 'AlreadyScanned':
-                self.hash_map.put('barcode', json.dumps({'barcode': res['Barcode'], 'doc_info': res['doc_info']}))
-                self.hash_map.show_screen('Удаление штрихкода')
-            elif res['Error'] == 'QuantityPlanReached':
-                self.hash_map.put('Error_description', 'Количество план в документе превышено')
-                self.hash_map.show_dialog(
-                    listener='Ошибка превышения плана',
-                    title='Количество план в документе превышено')
-
-            elif res['Error'] == 'Must_use_series':
-                self.open_series_screen(id_doc, res)
-                return res
-
-            elif res['Error'] == 'Zero_plan_error':
-                self.hash_map.toast(res['Descr'])
-            else:
-                self.hash_map.toast(res['Descr'])
-        else:
-            # self.hash_map.toast('Товар добавлен в документ')
-            self.hash_map.put('highlight', True)
-            self.hash_map.put('barcode_scanned', True)
-
-        if res.get('Error'):
-            self.hash_map.put('scan_error', res['Error'])
-        else:
-            self.hash_map.put('scan_error', '')
-
-        return res
+        
+        self.barcode_worker = BarcodeWorker(id_doc=self.id_doc,
+                                            **self._get_barcode_process_params(),
+                                            use_scanning_queue=True)
+        result = self.barcode_worker.process_the_barcode(barcode)
+        if result.error:
+            self._process_error_scan_barcode(result)
+            return result.error
 
     def _get_barcode_process_params(self):
         return {
@@ -2216,6 +2179,7 @@ class GroupScanDocDetailsScreenNew(DocDetailsScreen):
 
     def go_back(self):
         self.hash_map.remove('stop_sync_doc')
+        self.hash_map.put('stop_timer_update', 'false')
         self.hash_map.show_screen('Документы')
 
     def send_post_lines_data(self, sent=None):
@@ -2446,6 +2410,7 @@ class DocumentsDocDetailScreen(DocDetailsScreen):
 
     def __init__(self, hash_map, rs_settings):
         super().__init__(hash_map, rs_settings)
+        self.db_service = db_services.BarcodeService()
         self.articles_ocr_ncl = noClass('articles_ocr_ncl')
 
     def on_start(self) -> None:
@@ -2507,15 +2472,15 @@ class DocumentsDocDetailScreen(DocDetailsScreen):
             self.hash_map.show_screen("Товар выбор")
 
         elif listener == 'barcode' or self._is_result_positive('ВвестиШтрихкод'):
-            res = self._barcode_scanned()
-            if res.get('Error') and res['Error'] == 'Must_use_series':
-                return
-            if res.get('key'):
-                self.service.update_rs_docs_table_sent_status(res.get('key'))
-                self.service.set_doc_status_to_upload(id_doc)
-
-            self.hash_map.put('scan_error', res['Error'])
-            super().scan_error_sound()
+            res = self._item_barcode_scanned()
+            # if res.get('Error') and res['Error'] == 'Must_use_series':
+            #     return
+            # if res.get('key'):
+            #     self.service.update_rs_docs_table_sent_status(res.get('key'))
+            #     self.service.set_doc_status_to_upload(id_doc)
+            #
+            # self.hash_map.put('scan_error', res['Error'])
+            # super().scan_error_sound()
 
         elif listener == 'btn_goods_ocr':
             articles = self.service.get_all_articles_in_document()
@@ -3025,10 +2990,10 @@ class AdrDocDetailsScreen(DocDetailsScreen):
         if not current_elem['qtty']:
             self.hash_map.put("qtty", '')
         else:
-            if float(current_elem['qtty']) == 0:
+            if float(current_elem['d_qtty']) == 0:
                 self.hash_map.put("qtty", '')
             else:
-                self.hash_map.put("qtty", str(current_elem['qtty']))
+                self.hash_map.put("qtty", str(current_elem['d_qtty']))
 
         self.hash_map.put('key', current_elem['key'])
         self.hash_map.put('id_good', current_elem['id_good'])
@@ -3061,6 +3026,7 @@ class AdrDocDetailsScreen(DocDetailsScreen):
     def _set_current_cell(self, current_cell='', current_cell_id=''):
         self.current_cell, self.current_cell_id = current_cell, current_cell_id
         self.hash_map['current_cell'] = current_cell
+
 
 class FlowDocDetailsScreen(DocDetailsScreen):
     screen_name = 'ПотокШтрихкодовДокумента'
@@ -3709,6 +3675,35 @@ class BaseGoodSelect(Screen):
         # self.hash_map.show_process_result(SeriesList.process_name, SeriesList.screen_name)
         self.hash_map.show_screen(SeriesList.screen_name)
 
+    def _update_doc_table_row(self, data: Dict, row_id):
+        if not self.hash_map.get('delta'):
+            return
+
+        update_data = {
+            'sent': 0,
+            'd_qtty': float(data['qtty']),
+        }
+
+        self.service.update_doc_table_row(data=update_data, row_id=row_id)
+        self.service.set_doc_status_to_upload(self.hash_map.get('id_doc'))
+
+        insert_to_queue = {
+            "id_doc": self.hash_map.get('id_doc'),
+            "id_good": self.hash_map.get("id_good"),
+            "id_properties": self.hash_map.get("id_property"),
+            "id_series": self.hash_map.get("id_series"),
+            "id_unit": self.hash_map.get("id_unit"),
+            "id_cell": "",
+            "d_qtty": float(self.hash_map.get('delta')),
+            "sent": False,
+            "price": self.hash_map.get("good_price"),
+            "id_price": ""
+        }
+
+        barcode_worker = BarcodeWorker(self.hash_map.get("id_doc"))
+        barcode_worker.queue_update_data = insert_to_queue
+        barcode_worker.update_document_barcode_data()
+
 
 class GoodsSelectScreen(BaseGoodSelect):
     screen_name = 'Товар выбор'
@@ -3732,7 +3727,7 @@ class GoodsSelectScreen(BaseGoodSelect):
                 return
 
             if self.hash_map.get('parent_screen') == 'ВыборТовараАртикул':
-                self.hash_map.put('qtty', current_elem['qtty'])
+                self.hash_map.put('qtty', current_elem['d_qtty'])
                 show_hide = '-1'
             else:
                 show_hide = '1'
@@ -3752,7 +3747,6 @@ class GoodsSelectScreen(BaseGoodSelect):
 
     def on_input(self):
         super().on_input()
-
         listener = self.listener
 
         if listener == 'btn_next_good':
@@ -3809,7 +3803,7 @@ class GoodsSelectScreen(BaseGoodSelect):
             # тут берем количество с экрана артикулов
             qtty = self.hash_map.get('qtty')
         else:
-            qtty = self._format_quantity(current_elem['qtty']) if current_elem['qtty'] else 0
+            qtty = self._format_quantity(current_elem['d_qtty']) if current_elem['d_qtty'] else 0
 
         put_data = {
             'Doc_data': title,
@@ -3856,13 +3850,6 @@ class GoodsSelectScreen(BaseGoodSelect):
                 return True
 
         return False
-
-    def _update_doc_table_row(self, data, row_id):
-        update_data = {
-            'sent': 0,
-            'd_qtty': float(data['qtty']),
-        }
-        self.service.update_doc_table_row(data=update_data, row_id=row_id)
 
 
 
@@ -3927,32 +3914,6 @@ class GroupScanItemScreen(BaseGoodSelect):
     def on_input(self):
         self.hash_map.put('stop_sync_doc', '')
         super().on_input()
-
-    def _update_doc_table_row(self, data: Dict, row_id):
-        update_data = {
-            'sent': 0,
-            'd_qtty': float(data['qtty']),
-        }
-
-        self.service.update_doc_table_row(data=update_data, row_id=row_id)
-        self.service.set_doc_status_to_upload(self.hash_map.get('id_doc'))
-
-        insert_to_queue = {
-            "id_doc": self.hash_map.get('id_doc'),
-            "id_good": self.hash_map.get("id_good"),
-            "id_properties": self.hash_map.get("id_property"),
-            "id_series": self.hash_map.get("id_series"),
-            "id_unit": self.hash_map.get("id_unit"),
-            "id_cell": "",
-            "d_qtty": update_data["d_qtty"],
-            "sent": False,
-            "price": self.hash_map.get("good_price"),
-            "id_price": ""
-        }
-
-        barcode_worker = BarcodeWorker(self.hash_map.get("id_doc"))
-        barcode_worker.queue_update_data = insert_to_queue
-        barcode_worker.update_document_barcode_data()
 
 
 class BarcodeRegistrationScreen(Screen):
@@ -4328,16 +4289,6 @@ class GoodsSelectArticle(Screen):
 
         return cards_data
 
-    def _update_doc_table_row(self, data: Dict, qtty: Optional[float] = None):
-        update_data = {
-            'sent': 0,
-            'qtty': qtty or float(data['qtty']),
-        }
-        row_id = int(data['key'])
-        self.service.update_doc_table_row(data=update_data, row_id=row_id)
-        self.service.set_doc_status_to_upload(self.hash_map.get('id_doc'))
-
-
 # ^^^^^^^^^^^^^^^^^^^^^ Goods select ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 
@@ -4551,9 +4502,7 @@ class ItemCard(Screen):
 
     def init_screen(self):
         super().init_screen()
-
         item_data = self.service.get_item_data_by_id(item_id=self.screen_values['item_id'])
-
         if item_data:
             put_data = {
                 "good_name": item_data['name'],
@@ -7569,7 +7518,7 @@ class ScreensFactory:
         GroupScanDocsListScreen,
         DocumentsDocsListScreen,
         GroupScanDocDetailsScreenNew,
-        GroupScanDocDetailsScreen,
+        # GroupScanDocDetailsScreen,
         DocumentsDocDetailScreen,
         ErrorLogScreen,
         DebugSettingsScreen,

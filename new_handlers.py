@@ -145,7 +145,7 @@ def docs_tiles_on_start(hash_map: HashMap):
 
 @HashMap()
 def gs_tiles_on_start(hash_map: HashMap):
-    screen = ui_models.GroupScanTiles(hash_map, rs_settings)
+    screen = create_screen(hash_map, ui_models.GroupScanTiles)
     screen.on_start()
 
 
@@ -164,6 +164,18 @@ def docs_on_start(hash_map: HashMap):
 @HashMap()
 def docs_on_select(hash_map: HashMap):
     screen = create_screen(hash_map, ui_models.DocumentsDocsListScreen)
+    screen.on_input()
+
+
+@HashMap()
+def group_docs_on_start(hash_map: HashMap):
+    screen = create_screen(hash_map, ui_models.GroupScanDocsListScreen)
+    screen.on_start()
+
+
+@HashMap()
+def group_docs_on_select(hash_map: HashMap):
+    screen = create_screen(hash_map, ui_models.GroupScanDocsListScreen)
     screen.on_input()
 
 
