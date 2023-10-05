@@ -4209,7 +4209,7 @@ class AdrGoodsSelectScreen(BaseGoodSelect):
         self._set_visibility()
 
     def on_start(self):
-        pass
+        super().on_start()
 
     def on_input(self):
         listeners = {
