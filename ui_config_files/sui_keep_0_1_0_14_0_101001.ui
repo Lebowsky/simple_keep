@@ -5493,14 +5493,14 @@
                                 "Variable": "",
                                 "orientation": "vertical",
                                 "height": "wrap_content",
-                                "width": "match_parent",
+                                "width": "wrap_content",
                                 "weight": "0",
                                 "Elements": [
                                     {
                                         "Value": "@templates_cards",
                                         "Variable": "templates_cards",
                                         "height": "wrap_content",
-                                        "width": "match_parent",
+                                        "width": "wrap_content",
                                         "weight": "0",
                                         "TextBold": false,
                                         "TextItalic": false,
@@ -5735,6 +5735,16 @@
                                         "width": "match_parent",
                                         "weight": "1",
                                         "Elements": [
+                                            {
+                                                "Value": "Отмена",
+                                                "Variable": "btn_cancel",
+                                                "height": "wrap_content",
+                                                "width": "wrap_content",
+                                                "weight": "0",
+                                                "TextBold": false,
+                                                "TextItalic": false,
+                                                "type": "Button"
+                                            },
                                             {
                                                 "Value": "Сохранить",
                                                 "Variable": "btn_save",
@@ -6085,7 +6095,7 @@
                                         "type": "TextView"
                                     },
                                     {
-                                        "Value": "Выбрать из списка",
+                                        "Value": "Выбрать шаблон",
                                         "Variable": "btn_select_label_template",
                                         "height": "wrap_content",
                                         "width": "match_parent",
@@ -6413,7 +6423,7 @@
                         "Timer": false,
                         "hideToolBarScreen": true,
                         "hideBottomBarScreen": true,
-                        "noScroll": true,
+                        "noScroll": false,
                         "handleKeyUp": false,
                         "noConfirmation": true,
                         "Elements": [
@@ -6422,7 +6432,7 @@
                                 "Variable": "",
                                 "orientation": "vertical",
                                 "height": "wrap_content",
-                                "width": "match_parent",
+                                "width": "wrap_content",
                                 "weight": "0",
                                 "Elements": [
                                     {
@@ -6446,11 +6456,11 @@
                                         "type": "ProgressButton"
                                     },
                                     {
-                                        "Value": "@file_browser_cards",
-                                        "Variable": "file_browser_cards",
+                                        "Value": "@templates_cards",
+                                        "Variable": "templates_cards",
                                         "height": "wrap_content",
                                         "width": "match_parent",
-                                        "weight": 0,
+                                        "weight": "0",
                                         "TextBold": false,
                                         "TextItalic": false,
                                         "type": "CardsLayout"
@@ -7026,9 +7036,12 @@
                         "CVResolution": "VGA",
                         "CVMode": "list_and_grey",
                         "CVActionButtons": "Обработать",
+                        "CVRecognitionSettings": "{\"name\": \"Артикул\", \"TypeRecognition\": \"Text\", \"NumberRecognition\": false, \"DateRecognition\": false, \"PlateNumberRecognition\": false, \"mesure_qty\": \"1\", \"min_freq\": \"1\", \"min_length\": \"3\", \"max_length\": \"20\", \"values_list\": \"@list_art\", \"result_var\": \"good_id\"}",
+                        "RecognitionTemplate": "Артикул",
                         "CVAction": "Поиск по артикулу",
                         "CVInfo": "@art_info",
                         "CVCameraDevice": "Back",
+                        "CVDetectorMode": "train",
                         "Handlers": [
                             {
                                 "event": "OnObjectDetected",
@@ -7040,18 +7053,10 @@
                             },
                             {
                                 "event": "OnInput",
-                                "listener": "",
+                                "listener": "Обработать",
                                 "action": "run",
-                                "type": "python",
-                                "method": "article_cv_on_input",
-                                "postExecute": ""
-                            },
-                            {
-                                "event": "OnCreate",
-                                "listener": "",
-                                "action": "run",
-                                "type": "python",
-                                "method": "article_cv_on_start",
+                                "type": "set",
+                                "method": "button_manage_articles=true;FinishProcess",
                                 "postExecute": ""
                             }
                         ]
@@ -7472,15 +7477,6 @@
                 "alias": "on_start"
             },
             {
-                "event": "onLaunch",
-                "listener": "",
-                "action": "run",
-                "type": "python",
-                "method": "timer_update",
-                "postExecute": "",
-                "alias": "timer_update"
-            },
-            {
                 "event": "onWebServiceSyncCommand",
                 "listener": "",
                 "action": "run",
@@ -7512,6 +7508,30 @@
                 "type": "set",
                 "method": "beep",
                 "postExecute": ""
+            },
+            {
+                "event": "onLaunch",
+                "listener": "",
+                "action": "run",
+                "type": "python",
+                "method": "timer_update",
+                "postExecute": "",
+                "alias": "timer_update"
+            }
+        ],
+        "RecognitionTemplates": [
+            {
+                "name": "Артикул",
+                "TypeRecognition": "Text",
+                "NumberRecognition": false,
+                "DateRecognition": false,
+                "PlateNumberRecognition": false,
+                "mesure_qty": "1",
+                "min_freq": "1",
+                "min_length": "3",
+                "max_length": "20",
+                "values_list": "@list_art",
+                "result_var": "good_id"
             }
         ]
     }
