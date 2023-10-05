@@ -3453,7 +3453,7 @@ class BaseGoodSelect(Screen):
         self.hash_map.put('new_qtty', '')
 
     def _handle_choice_by_article(self, current_elem, qtty):
-        if float(qtty) == float(current_elem['qtty'] or 0):
+        if float(qtty) == float(self.hash_map.get('qtty') or 0):
             self.hash_map.show_screen("ВыборТовараАртикул")
             return
 
@@ -3466,7 +3466,8 @@ class BaseGoodSelect(Screen):
         self.hash_map.show_screen("ВыборТовараАртикул")
 
     def _handle_choice_by_other(self, current_elem, qtty):
-        old_qtty = float(current_elem.get('qtty') or 0) if current_elem else float(self.screen_values.get('qtty') or 0)
+        old_qtty = float(self.hash_map.get('qtty') or 0) if current_elem else float(self.screen_values.get('qtty') or 0)
+        self.hash_map.toast(self.hash_map.get('qtty'))
 
         row_id = int(current_elem['key']) if current_elem else  self.screen_values.get('key')
 
