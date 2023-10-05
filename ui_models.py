@@ -3467,8 +3467,6 @@ class BaseGoodSelect(Screen):
 
     def _handle_choice_by_other(self, current_elem, qtty):
         old_qtty = float(self.hash_map.get('qtty') or 0) if current_elem else float(self.screen_values.get('qtty') or 0)
-        self.hash_map.toast(self.hash_map.get('qtty'))
-
         row_id = int(current_elem['key']) if current_elem else  self.screen_values.get('key')
 
         if float(qtty) != old_qtty:
