@@ -3524,7 +3524,6 @@ class BaseGoodSelect(Screen):
 
     def _get_current_elem(self):
         current_elem = self.hash_map.get_json('GoodsSelectScreen_selected_card_data')
-        self.toast(current_elem)
         return current_elem or self.screen_values
 
     def _save_new_delta(self):
@@ -3545,7 +3544,6 @@ class BaseGoodSelect(Screen):
                 return
 
         current_elem = self._get_current_elem()
-        # self.toast(current_elem)
         qtty = new_qtty
         old_qtty = float(current_elem.get('qtty') or 0)
 
@@ -3568,7 +3566,6 @@ class BaseGoodSelect(Screen):
                 'sent': 0,
                 'qtty': qtty,
             }
-            # self.toast(current_elem)
             row_id = int(current_elem['key'])
             self.service.update_doc_table_row(data=update_data, row_id=row_id)
             self.hash_map.put('new_qtty', str(round(qtty, 3)))
@@ -3718,7 +3715,6 @@ class GoodsSelectScreen(BaseGoodSelect):
 
     def _get_current_elem(self):
         selected_card_position = int(self.hash_map.get('selected_card_position'))
-        self.toast(selected_card_position)
         table_data = self.hash_map.get('GoodsSelectScreen_doc_data', from_json=True)
         current_elem = table_data[selected_card_position]
         current_elem['key'] = current_elem.get('id')
