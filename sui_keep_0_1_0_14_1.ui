@@ -7155,14 +7155,14 @@
                                 "Variable": "",
                                 "orientation": "vertical",
                                 "height": "wrap_content",
-                                "width": "wrap_content",
+                                "width": "match_parent",
                                 "weight": "0",
                                 "Elements": [
                                     {
                                         "Value": "@templates_cards",
                                         "Variable": "templates_cards",
                                         "height": "wrap_content",
-                                        "width": "wrap_content",
+                                        "width": "match_parent",
                                         "weight": "0",
                                         "TextBold": false,
                                         "TextItalic": false,
@@ -7397,16 +7397,6 @@
                                         "width": "match_parent",
                                         "weight": "1",
                                         "Elements": [
-                                            {
-                                                "Value": "Отмена",
-                                                "Variable": "btn_cancel",
-                                                "height": "wrap_content",
-                                                "width": "wrap_content",
-                                                "weight": "0",
-                                                "TextBold": false,
-                                                "TextItalic": false,
-                                                "type": "Button"
-                                            },
                                             {
                                                 "Value": "Сохранить",
                                                 "Variable": "btn_save",
@@ -7757,7 +7747,7 @@
                                         "type": "TextView"
                                     },
                                     {
-                                        "Value": "Выбрать шаблон",
+                                        "Value": "Выбрать из списка",
                                         "Variable": "btn_select_label_template",
                                         "height": "wrap_content",
                                         "width": "match_parent",
@@ -8085,7 +8075,7 @@
                         "Timer": false,
                         "hideToolBarScreen": true,
                         "hideBottomBarScreen": true,
-                        "noScroll": false,
+                        "noScroll": true,
                         "handleKeyUp": false,
                         "noConfirmation": true,
                         "Elements": [
@@ -8094,7 +8084,7 @@
                                 "Variable": "",
                                 "orientation": "vertical",
                                 "height": "wrap_content",
-                                "width": "wrap_content",
+                                "width": "match_parent",
                                 "weight": "0",
                                 "Elements": [
                                     {
@@ -8118,11 +8108,11 @@
                                         "type": "ProgressButton"
                                     },
                                     {
-                                        "Value": "@templates_cards",
-                                        "Variable": "templates_cards",
+                                        "Value": "@file_browser_cards",
+                                        "Variable": "file_browser_cards",
                                         "height": "wrap_content",
                                         "width": "match_parent",
-                                        "weight": "0",
+                                        "weight": 0,
                                         "TextBold": false,
                                         "TextItalic": false,
                                         "type": "CardsLayout"
