@@ -4203,7 +4203,7 @@ class GoodsSelectScreen(BaseGoodSelect):
         else:
             qtty = current_elem['qtty']
         
-        qtty = self._format_quantity(self._get_float_value(qtty))
+        qtty = self._format_quantity(self._get_float_value(str(qtty)))
         
         put_data = {
             'Doc_data': title,
