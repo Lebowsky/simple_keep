@@ -4311,6 +4311,18 @@ class AdrGoodsSelectScreen(BaseGoodSelect):
         )
         screen.show_process_result()
 
+    def _update_doc_table_row(self, data: Dict, row_id):
+        if not self.hash_map.get('delta'):
+            return
+
+        update_data = {
+            'sent': 0,
+            'qtty': float(data['qtty']),
+        }
+
+        self.service.update_doc_table_row(data=update_data, row_id=row_id)
+        self.service.set_doc_status_to_upload(self.hash_map.get('id_doc'))
+
 
 class GroupScanItemScreen(BaseGoodSelect):
     screen_name = 'Товар выбор'

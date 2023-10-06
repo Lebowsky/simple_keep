@@ -322,6 +322,18 @@ def barcode_register_doc_on_start(hash_map):
     screen.on_start()
 
 @HashMap()
+def group_elem_view_on_start(hash_map):
+    screen = create_screen(hash_map, ui_models.GroupScanItemScreen)
+    screen.on_start()
+
+
+@HashMap()
+def group_elem_view_on_click(hash_map):
+    screen = create_screen(hash_map, ui_models.GroupScanItemScreen)
+    screen.on_input()
+
+
+@HashMap()
 def barcode_error_screen_listener(hash_map: HashMap):
     if hash_map['listener'] in ['ON_BACK_PRESSED', 'btn_continue_scan']:
         hash_map.show_screen("Документ товары")
