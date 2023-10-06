@@ -311,6 +311,15 @@ def adr_elem_view_on_click(hash_map):
     screen = create_screen(hash_map, ui_models.AdrGoodsSelectScreen)
     screen.on_input()
 
+@HashMap()
+def barcode_register_doc_on_click(hash_map):
+    screen = create_screen(hash_map, ui_models.BarcodeRegistrationScreen)
+    screen.on_input()
+
+@HashMap()
+def barcode_register_doc_on_start(hash_map):
+    screen = create_screen(hash_map, ui_models.BarcodeRegistrationScreen)
+    screen.on_start()
 
 @HashMap()
 def group_elem_view_on_start(hash_map):

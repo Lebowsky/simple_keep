@@ -4202,9 +4202,9 @@ class GoodsSelectScreen(BaseGoodSelect):
             qtty = self.hash_map.get('qtty')
         else:
             qtty = current_elem['qtty']
-        
-        qtty = self._format_quantity(self._get_float_value(qtty))
-        
+
+        qtty = self._format_quantity(self._get_float_value(str(qtty)))
+
         put_data = {
             'Doc_data': title,
             'Good': current_elem['good_name'],
@@ -4395,6 +4395,8 @@ class BarcodeRegistrationScreen(Screen):
         item_type = self.listener
         self.hash_map['table_name'] = item_tables[item_type]
         self.hash_map['result_listener'] = f'{item_type}_success'
+        self.hash_map['return_value_key'] = 'selected_card'
+        self.hash_map['title'] = 'Выбор значения'
         self.hash_map.put('fields', ['name'], to_json=True)
         SelectItemScreen(self.hash_map, self.rs_settings).show()
 
@@ -5187,6 +5189,8 @@ class GoodsBalancesItemCard(Screen):
     def _select_wh(self):
         self.hash_map['table_name'] = 'RS_warehouses'
         self.hash_map['result_listener'] = 'wh_select_success'
+        self.hash_map['return_value_key'] = 'selected_card'
+        self.hash_map['title'] = 'Выберите склад'
         self.hash_map.put('fields', ['name'], to_json=True)
         SelectItemScreen(self.hash_map, self.rs_settings).show()
 
@@ -5579,6 +5583,8 @@ class GoodsPricesItemCard(GoodsBalancesItemCard):
         item_type = self.listener
         self.hash_map['table_name'] = item_tables[item_type]
         self.hash_map['result_listener'] = f'{item_type}_success'
+        self.hash_map['return_value_key'] = 'selected_card'
+        self.hash_map['title'] = 'Выбор значения'
         self.hash_map.put('fields', ['name'], to_json=True)
         SelectItemScreen(self.hash_map, self.rs_settings).show()
 
