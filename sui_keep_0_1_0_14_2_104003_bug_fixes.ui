@@ -7805,28 +7805,6 @@
                                 "Variable": "",
                                 "orientation": "vertical",
                                 "height": "wrap_content",
-                                "width": "wrap_content",
-                                "weight": "0",
-                                "Elements": [
-                                    {
-                                        "Value": "Отсканируйте штрихкод товара",
-                                        "Variable": "",
-                                        "height": "wrap_content",
-                                        "width": "match_parent",
-                                        "weight": "0",
-                                        "TextBold": true,
-                                        "TextItalic": false,
-                                        "TextSize": "20",
-                                        "TextColor": "#7A005C",
-                                        "type": "TextView"
-                                    }
-                                ]
-                            },
-                            {
-                                "type": "LinearLayout",
-                                "Variable": "",
-                                "orientation": "vertical",
-                                "height": "wrap_content",
                                 "width": "match_parent",
                                 "weight": "0",
                                 "Elements": [
@@ -8131,7 +8109,6 @@
                 "alias": "on_start"
             },
             {
-                "event": "onLaunch",
                 "listener": "",
                 "action": "run",
                 "type": "python",
