@@ -432,6 +432,19 @@ class DocService:
 
         self._get_query_result(query)
 
+    def set_doc_values(self, **values):
+        if not values:
+            return
+
+        set_fields =[f'{k}={v}'for k, v in values.items()]
+        query = f'''
+            UPDATE {self.docs_table_name}
+            SET {','.join(set_fields)}
+            WHERE id_doc = "{self.doc_id}"
+            '''
+
+        self._get_query_result(query)
+
     def get_doc_value(self, key, id_doc):
         query = f'SELECT {key} from {self.docs_table_name}  WHERE id_doc = ?'
         res = self._get_query_result(query, (id_doc,), True)
@@ -1357,7 +1370,7 @@ class SeriesService(DbService):
     def update_total_qty(self, qty, row_id):
         q = f'''
             UPDATE RS_docs_table
-            SET qtty = {qty}
+            SET d_qtty = {qty}
             WHERE id = {row_id}
             '''
         get_query_result(q)
