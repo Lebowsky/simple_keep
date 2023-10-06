@@ -240,7 +240,7 @@ class BarcodeService(DbService):
 
 
 class DocService:
-    def __init__(self, doc_id='', is_group_scan=False):
+    def __init__(self, doc_id='', is_group_scan=False, is_flow=False):
         self.doc_id = doc_id
         self.docs_table_name = 'RS_docs'
         self.details_table_name = 'RS_docs_table'
@@ -249,6 +249,7 @@ class DocService:
         self.sql_params = None
         self.debug = False
         self.is_group_scan = is_group_scan
+        self.is_flow = is_flow
         self.provider = SqlQueryProvider(self.docs_table_name, sql_class=sqlClass())
 
     def get_last_edited_goods(self, to_json=False):
@@ -439,6 +440,8 @@ class DocService:
 
     def get_doc_types(self) -> list:
         query = f'SELECT DISTINCT doc_type from {self.docs_table_name}'
+        if not self.is_group_scan and self.docs_table_name == "RS_docs":
+            query += f" WHERE {self.docs_table_name}.is_group_scan=0"
         doc_types = [rec[0] for rec in self._get_query_result(query)]
         return doc_types
 
@@ -494,9 +497,13 @@ class DocService:
                 where += ' AND doc_type=?'
 
         if self.docs_table_name == 'RS_docs' and self.is_group_scan is False:
-            where += f' AND is_group_scan={int(self.is_group_scan)}'
+            if where:
+                where += f' AND is_group_scan={int(self.is_group_scan)}'
+            else:
+                where = f' WHERE is_group_scan={int(self.is_group_scan)}'
         
-        where += ''' AND RS_barc_flow.id_doc IS NULL'''
+        if self.is_flow is False:
+            where += ''' AND RS_barc_flow.id_doc IS NULL'''
         
         query_text = f'''
             {query_text}
@@ -1437,6 +1444,7 @@ class AdrDocService(DocService):
         self.docs_table_name = 'RS_Adr_docs'
         self.details_table_name = 'RS_adr_docs_table'
         self.isAdr = True
+        self.is_flow = False
         self.current_cell = cur_cell
         self.table_type = table_type
         self.provider = SqlQueryProvider(self.docs_table_name, sql_class=sqlClass())
@@ -1587,6 +1595,8 @@ class FlowDocService(DocService):
         self.sql_params = None
         self.debug = False
         self.provider = SqlQueryProvider(self.docs_table_name, sql_class=sqlClass())
+        self.is_group_scan = False
+        self.is_flow = True
 
     def get_doc_view_data(self, doc_type='', doc_status='') -> list:
         fields = [
