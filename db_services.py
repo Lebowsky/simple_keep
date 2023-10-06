@@ -431,6 +431,19 @@ class DocService:
 
         self._get_query_result(query)
 
+    def set_doc_values(self, **values):
+        if not values:
+            return
+
+        set_fields =[f'{k}={v}'for k, v in values.items()]
+        query = f'''
+            UPDATE {self.docs_table_name}
+            SET {','.join(set_fields)}
+            WHERE id_doc = "{self.doc_id}"
+            '''
+
+        self._get_query_result(query)
+
     def get_doc_value(self, key, id_doc):
         query = f'SELECT {key} from {self.docs_table_name}  WHERE id_doc = ?'
         res = self._get_query_result(query, (id_doc,), True)
@@ -458,7 +471,7 @@ class DocService:
 
         if self.docs_table_name == 'RS_docs':
             fields.append(f'{self.docs_table_name}.id_countragents')
-            fields.append(f'{self.docs_table_name}.is_group_scan')
+            fields.append(f'ifnull({self.docs_table_name}.is_group_scan, 0) as is_group_scan')
             fields.append(f'ifnull(RS_countragents.full_name, "") as RS_countragent')
 
         query_text = 'SELECT ' + ',\n'.join(fields)
@@ -1350,7 +1363,7 @@ class SeriesService(DbService):
     def update_total_qty(self, qty, row_id):
         q = f'''
             UPDATE RS_docs_table
-            SET qtty = {qty}
+            SET d_qtty = {qty}
             WHERE id = {row_id}
             '''
         get_query_result(q)
@@ -1603,6 +1616,7 @@ class FlowDocService(DocService):
 
         if self.docs_table_name == 'RS_docs':
             fields.append(f'{self.docs_table_name}.id_countragents')
+            fields.append(f'ifnull({self.docs_table_name}.is_group_scan, 0) as is_group_scan')
             fields.append(f'ifnull(RS_countragents.full_name, "") as RS_countragent')
 
         query_text = 'SELECT ' + ',\n'.join(fields)
