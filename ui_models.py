@@ -3850,7 +3850,7 @@ class BaseGoodSelect(Screen):
 
         new_qtty = float(self.hash_map['new_qtty'] or 0)
         qtty_plan = float(self.hash_map.get('qtty_plan') or 0)
-        qtty = float(current_elem.get('qtty') or 0)
+        qtty = float(current_elem.get('d_qtty') or 0)
 
         if new_qtty < 0:
             self.hash_map.toast('Итоговое количество меньше 0')
@@ -3893,13 +3893,13 @@ class BaseGoodSelect(Screen):
         old_qtty = float(current_elem['qtty'] or 0) if current_elem else float(self.screen_values.get('qtty') or 0)
         row_id = int(current_elem['key']) if current_elem else  self.screen_values.get('key')
 
-        if float(qtty) != old_qtty:
-            update_data = {
-                'sent': 0,
-                'qtty': float(qtty) if qtty else 0,
-            }
-            self._update_doc_table_row(data=update_data, row_id=row_id)
-            self.service.set_doc_status_to_upload(self.hash_map.get('id_doc'))
+        # if float(qtty) != old_qtty:
+        update_data = {
+            'sent': 0,
+            'qtty': float(qtty) if qtty else 0,
+        }
+        self._update_doc_table_row(data=update_data, row_id=row_id)
+        self.service.set_doc_status_to_upload(self.hash_map.get('id_doc'))
         self._back_screen()
 
     def _handle_doc_good_barcode(self):
@@ -4206,7 +4206,7 @@ class GoodsSelectScreen(BaseGoodSelect):
             # тут берем количество с экрана артикулов
             qtty = self.hash_map.get('qtty')
         else:
-            qtty = current_elem['qtty']
+            qtty = current_elem['d_qtty']
 
         qtty = self._format_quantity(self._get_float_value(str(qtty)))
 
@@ -4717,6 +4717,7 @@ class GoodsSelectArticle(Screen):
                 'type_good': record.get('type_good', '—'),
                 'qtty_plan': record['qtty_plan'],
                 'qtty': record['qtty'],
+                'd_qtty': record['qtty'],
                 'properties_name': record['property_name'],
                 'series_name': record['series_name'],
                 'price': record['price'],
@@ -4729,7 +4730,7 @@ class GoodsSelectArticle(Screen):
     def _update_doc_table_row(self, data: Dict, qtty: Optional[float] = None):
         update_data = {
             'sent': 0,
-            'qtty': qtty or float(data['qtty']),
+            'd_qtty': qtty or float(data['qtty']),
         }
         row_id = int(data['key'])
         self.service.update_doc_table_row(data=update_data, row_id=row_id)

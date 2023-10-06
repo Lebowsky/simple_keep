@@ -769,7 +769,7 @@
                                                                         "type": "TextView"
                                                                     },
                                                                     {
-                                                                        "Value": "@qtty",
+                                                                        "Value": "@d_qtty",
                                                                         "Variable": "qtty",
                                                                         "height": "wrap_content",
                                                                         "width": "wrap_content",
@@ -8109,14 +8109,6 @@
                 "alias": "on_start"
             },
             {
-                "listener": "",
-                "action": "run",
-                "type": "python",
-                "method": "timer_update",
-                "postExecute": "",
-                "alias": "timer_update"
-            },
-            {
                 "event": "onWebServiceSyncCommand",
                 "listener": "",
                 "action": "run",
@@ -8148,6 +8140,14 @@
                 "type": "set",
                 "method": "beep",
                 "postExecute": ""
+            },
+            {
+                "listener": "",
+                "action": "run",
+                "type": "python",
+                "method": "timer_update",
+                "postExecute": "",
+                "alias": "timer_update"
             }
         ]
     }

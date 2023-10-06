@@ -1363,7 +1363,7 @@ class SeriesService(DbService):
     def update_total_qty(self, qty, row_id):
         q = f'''
             UPDATE RS_docs_table
-            SET qtty = {qty}
+            SET d_qtty = {qty}
             WHERE id = {row_id}
             '''
         get_query_result(q)
