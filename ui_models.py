@@ -4202,9 +4202,9 @@ class GoodsSelectScreen(BaseGoodSelect):
             qtty = self.hash_map.get('qtty')
         else:
             qtty = current_elem['qtty']
-        
-        qtty = self._format_quantity(self._get_float_value(qtty))
-        
+
+        qtty = self._format_quantity(self._get_float_value(str(qtty)))
+
         put_data = {
             'Doc_data': title,
             'Good': current_elem['good_name'],
