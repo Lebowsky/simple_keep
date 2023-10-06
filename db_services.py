@@ -431,6 +431,19 @@ class DocService:
 
         self._get_query_result(query)
 
+    def set_doc_values(self, **values):
+        if not values:
+            return
+
+        set_fields =[f'{k}={v}'for k, v in values.items()]
+        query = f'''
+            UPDATE {self.docs_table_name}
+            SET {','.join(set_fields)}
+            WHERE id_doc = "{self.doc_id}"
+            '''
+
+        self._get_query_result(query)
+
     def get_doc_value(self, key, id_doc):
         query = f'SELECT {key} from {self.docs_table_name}  WHERE id_doc = ?'
         res = self._get_query_result(query, (id_doc,), True)
