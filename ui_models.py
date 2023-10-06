@@ -1461,6 +1461,9 @@ class DocsListScreen(Screen):
         elif self.listener == 'ON_BACK_PRESSED':
             self._back_screen()
 
+        elif self._is_result_positive('confirm_resend_doc'):
+            self._resend_doc()
+
     def on_post_start(self):
         pass
 
@@ -1493,6 +1496,24 @@ class DocsListScreen(Screen):
     def _doc_status_click(self):
         self.hash_map['selected_doc_status'] = self.hash_map["doc_status_click"]
         self.current_status = self.hash_map["doc_status_click"]
+
+    def _resend_doc(self):
+        id_doc = self.get_id_doc()
+        http_params = self.get_http_settings()
+        answer = post_changes_to_server(f"'{id_doc}'", http_params)
+        if answer.get('Error') is not None:
+            ui_global.write_error_on_log(
+                f'Ошибка повторной отправки документа {self.get_doc_number()}: '
+                f'{str(answer.get("Error"))}'
+            )
+            self.put_notification(
+                text=f'Ошибка при отправке документа {self.get_doc_number()}, '
+                     f'подробнее в логе ошибок.')
+            self.toast('Не удалось отправить документ повторно')
+        else:
+            self.service.doc_id = id_doc
+            self.service.set_doc_values(verified=1, sent=1)
+            self.toast('Документ отправлен повторно')
 
     def _get_doc_list_data(self, doc_type, doc_status) -> list:
         results = self.service.get_doc_view_data(doc_type, doc_status)
@@ -1639,6 +1660,10 @@ class DocsListScreen(Screen):
         id_doc = card_data.get('key') or self.hash_map['selected_card_key']
         return id_doc
 
+    def get_doc_number(self):
+        card_data = self.hash_map.get_json("card_data") or {}
+        doc_number = card_data.get('number')
+        return doc_number
 
 class GroupScanDocsListScreen(DocsListScreen):
     screen_name = 'Документы'
@@ -1728,30 +1753,10 @@ class DocumentsDocsListScreen(DocsListScreen):
                 self.toast('При очистке данных пересчета возникла ошибка.')
                 self.hash_map.error_log(res.get('error'))
 
-        elif self._is_result_positive('confirm_resend_doc'):
-            id_doc = self.get_id_doc()
-            http_params = self.get_http_settings()
-            answer = post_changes_to_server(f"'{id_doc}'", http_params)
-            if answer.get('Error') is not None:
-                ui_global.write_error_on_log(f'Ошибка повторной отправки документа {self.get_doc_number()}: '
-                                             f'{str(answer.get("Error"))}')
-                self.put_notification(text=f'Ошибка при отправке документа {self.get_doc_number()}, '
-                                           f'подробнее в логе ошибок.')
-                self.toast('Не удалось отправить документ повторно')
-            else:
-                self.service.doc_id = id_doc
-                self.service.set_doc_value('sent', 1)
-                self.toast('Документ отправлен повторно')
-
     def get_id_doc(self):
         card_data = self.hash_map.get_json("card_data") or {}
         id_doc = card_data.get('key') or self.hash_map['selected_card_key']
         return id_doc
-
-    def get_doc_number(self):
-        card_data = self.hash_map.get_json("card_data") or {}
-        doc_number = card_data.get('number')
-        return doc_number
 
     def _get_doc_list_data(self, doc_type, doc_status) -> list:
         results = self.service.get_doc_view_data(doc_type, doc_status)
@@ -3845,7 +3850,7 @@ class BaseGoodSelect(Screen):
 
         new_qtty = float(self.hash_map['new_qtty'] or 0)
         qtty_plan = float(self.hash_map.get('qtty_plan') or 0)
-        qtty = float(current_elem.get('qtty') or 0)
+        qtty = float(current_elem.get('d_qtty') or 0)
 
         if new_qtty < 0:
             self.hash_map.toast('Итоговое количество меньше 0')
@@ -3888,13 +3893,13 @@ class BaseGoodSelect(Screen):
         old_qtty = float(current_elem['qtty'] or 0) if current_elem else float(self.screen_values.get('qtty') or 0)
         row_id = int(current_elem['key']) if current_elem else  self.screen_values.get('key')
 
-        if float(qtty) != old_qtty:
-            update_data = {
-                'sent': 0,
-                'qtty': float(qtty) if qtty else 0,
-            }
-            self._update_doc_table_row(data=update_data, row_id=row_id)
-            self.service.set_doc_status_to_upload(self.hash_map.get('id_doc'))
+        # if float(qtty) != old_qtty:
+        update_data = {
+            'sent': 0,
+            'qtty': float(qtty) if qtty else 0,
+        }
+        self._update_doc_table_row(data=update_data, row_id=row_id)
+        self.service.set_doc_status_to_upload(self.hash_map.get('id_doc'))
         self._back_screen()
 
     def _handle_doc_good_barcode(self):
@@ -4201,7 +4206,7 @@ class GoodsSelectScreen(BaseGoodSelect):
             # тут берем количество с экрана артикулов
             qtty = self.hash_map.get('qtty')
         else:
-            qtty = current_elem['qtty']
+            qtty = current_elem['d_qtty']
 
         qtty = self._format_quantity(self._get_float_value(str(qtty)))
 
@@ -4712,6 +4717,7 @@ class GoodsSelectArticle(Screen):
                 'type_good': record.get('type_good', '—'),
                 'qtty_plan': record['qtty_plan'],
                 'qtty': record['qtty'],
+                'd_qtty': record['qtty'],
                 'properties_name': record['property_name'],
                 'series_name': record['series_name'],
                 'price': record['price'],
@@ -4724,7 +4730,7 @@ class GoodsSelectArticle(Screen):
     def _update_doc_table_row(self, data: Dict, qtty: Optional[float] = None):
         update_data = {
             'sent': 0,
-            'qtty': qtty or float(data['qtty']),
+            'd_qtty': qtty or float(data['qtty']),
         }
         row_id = int(data['key'])
         self.service.update_doc_table_row(data=update_data, row_id=row_id)
