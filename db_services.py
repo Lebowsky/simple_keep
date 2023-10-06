@@ -458,7 +458,7 @@ class DocService:
 
         if self.docs_table_name == 'RS_docs':
             fields.append(f'{self.docs_table_name}.id_countragents')
-            fields.append(f'{self.docs_table_name}.is_group_scan')
+            fields.append(f'ifnull({self.docs_table_name}.is_group_scan, 0) as is_group_scan')
             fields.append(f'ifnull(RS_countragents.full_name, "") as RS_countragent')
 
         query_text = 'SELECT ' + ',\n'.join(fields)
@@ -1603,6 +1603,7 @@ class FlowDocService(DocService):
 
         if self.docs_table_name == 'RS_docs':
             fields.append(f'{self.docs_table_name}.id_countragents')
+            fields.append(f'ifnull({self.docs_table_name}.is_group_scan, 0) as is_group_scan')
             fields.append(f'ifnull(RS_countragents.full_name, "") as RS_countragent')
 
         query_text = 'SELECT ' + ',\n'.join(fields)
