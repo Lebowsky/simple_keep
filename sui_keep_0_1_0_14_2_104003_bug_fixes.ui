@@ -824,7 +824,7 @@
                                                                         "Value": "",
                                                                         "Variable": "blank_left",
                                                                         "height": "wrap_content",
-                                                                        "width": "wrap_content",
+                                                                        "width": "match_parent",
                                                                         "weight": "0",
                                                                         "TextBold": false,
                                                                         "TextItalic": false,
@@ -835,7 +835,7 @@
                                                             {
                                                                 "type": "LinearLayout",
                                                                 "Variable": "",
-                                                                "orientation": "vertical",
+                                                                "orientation": "horizontal",
                                                                 "height": "wrap_content",
                                                                 "width": "match_parent",
                                                                 "weight": "1",
@@ -2270,13 +2270,13 @@
                                                                 "orientation": "vertical",
                                                                 "height": "wrap_content",
                                                                 "width": "match_parent",
-                                                                "weight": "2",
+                                                                "weight": "4",
                                                                 "Elements": [
                                                                     {
                                                                         "Value": "",
-                                                                        "Variable": "blank_left",
+                                                                        "Variable": "blank_1",
                                                                         "height": "wrap_content",
-                                                                        "width": "wrap_content",
+                                                                        "width": "match_parent",
                                                                         "weight": "0",
                                                                         "TextBold": false,
                                                                         "TextItalic": false,
@@ -2287,7 +2287,7 @@
                                                             {
                                                                 "type": "LinearLayout",
                                                                 "Variable": "",
-                                                                "orientation": "vertical",
+                                                                "orientation": "horizontal",
                                                                 "height": "wrap_content",
                                                                 "width": "match_parent",
                                                                 "weight": "1",
@@ -2322,11 +2322,11 @@
                                                                 "orientation": "vertical",
                                                                 "height": "wrap_content",
                                                                 "width": "match_parent",
-                                                                "weight": "2",
+                                                                "weight": "4",
                                                                 "Elements": [
                                                                     {
                                                                         "Value": "",
-                                                                        "Variable": "blank_right",
+                                                                        "Variable": "blank_2",
                                                                         "height": "wrap_content",
                                                                         "width": "wrap_content",
                                                                         "weight": "0",
@@ -3240,13 +3240,13 @@
                                                                 "orientation": "vertical",
                                                                 "height": "wrap_content",
                                                                 "width": "match_parent",
-                                                                "weight": "2",
+                                                                "weight": "4",
                                                                 "Elements": [
                                                                     {
                                                                         "Value": "",
-                                                                        "Variable": "blank_left",
+                                                                        "Variable": "blank_1",
                                                                         "height": "wrap_content",
-                                                                        "width": "wrap_content",
+                                                                        "width": "match_parent",
                                                                         "weight": "0",
                                                                         "TextBold": false,
                                                                         "TextItalic": false,
@@ -3257,7 +3257,7 @@
                                                             {
                                                                 "type": "LinearLayout",
                                                                 "Variable": "",
-                                                                "orientation": "vertical",
+                                                                "orientation": "horizontal",
                                                                 "height": "wrap_content",
                                                                 "width": "match_parent",
                                                                 "weight": "1",
@@ -3292,11 +3292,11 @@
                                                                 "orientation": "vertical",
                                                                 "height": "wrap_content",
                                                                 "width": "match_parent",
-                                                                "weight": "2",
+                                                                "weight": "4",
                                                                 "Elements": [
                                                                     {
                                                                         "Value": "",
-                                                                        "Variable": "blank_right",
+                                                                        "Variable": "blank_2",
                                                                         "height": "wrap_content",
                                                                         "width": "wrap_content",
                                                                         "weight": "0",
@@ -7477,7 +7477,7 @@
                                         "weight": "1",
                                         "Elements": [
                                             {
-                                                "Value": "Имя:",
+                                                "Value": "Имя серии:",
                                                 "Variable": "",
                                                 "height": "wrap_content",
                                                 "width": "wrap_content",
@@ -7566,7 +7566,7 @@
                                     {
                                         "type": "LinearLayout",
                                         "Variable": "",
-                                        "orientation": "vertical",
+                                        "orientation": "horizontal",
                                         "height": "wrap_content",
                                         "width": "match_parent",
                                         "weight": "1",

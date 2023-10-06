@@ -3890,14 +3890,13 @@ class BaseGoodSelect(Screen):
         self.hash_map.show_screen("ВыборТовараАртикул")
 
     def _handle_choice_by_other(self, current_elem, qtty):
-        old_qtty = float(current_elem['qtty'] or 0) if current_elem else float(self.screen_values.get('qtty') or 0)
-        row_id = int(current_elem['key']) if current_elem else  self.screen_values.get('key')
-
+        row_id = int(current_elem['key']) if current_elem else self.screen_values.get('key') or self.hash_map.get('key')
         # if float(qtty) != old_qtty:
         update_data = {
             'sent': 0,
             'qtty': float(qtty) if qtty else 0,
         }
+        # self.toast(self.hash_map['key'])
         self._update_doc_table_row(data=update_data, row_id=row_id)
         self.service.set_doc_status_to_upload(self.hash_map.get('id_doc'))
         self._back_screen()
@@ -4344,6 +4343,18 @@ class GroupScanItemScreen(BaseGoodSelect):
         self.hash_map.put('stop_sync_doc', '')
         super().on_input()
 
+    def _update_doc_table_row(self, data: Dict, row_id):
+        
+        if not self.hash_map.get('delta'):
+            return
+
+        update_data = {
+            'sent': 0,
+            'd_qtty': data['qtty'],
+        }
+        # self.toast(float(qtty))
+        self.service.update_doc_table_row(data=update_data, row_id=row_id)
+        self.service.set_doc_status_to_upload(self.hash_map.get('id_doc'))
 
 class BarcodeRegistrationScreen(Screen):
     screen_name = 'BarcodeRegistration'
