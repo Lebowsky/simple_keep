@@ -2511,7 +2511,7 @@
                                 "listener": "",
                                 "action": "run",
                                 "type": "python",
-                                "method": "group_elem_viev_on_start",
+                                "method": "group_elem_view_on_start",
                                 "postExecute": ""
                             },
                             {
@@ -2519,7 +2519,7 @@
                                 "listener": "",
                                 "action": "run",
                                 "type": "python",
-                                "method": "group_elem_viev_on_click",
+                                "method": "group_elem_view_on_click",
                                 "postExecute": ""
                             }
                         ]
