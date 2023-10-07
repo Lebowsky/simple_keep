@@ -4344,7 +4344,7 @@ class GroupScanItemScreen(BaseGoodSelect):
         super().on_input()
 
     def _update_doc_table_row(self, data: Dict, row_id):
-        
+
         if not self.hash_map.get('delta'):
             return
 
