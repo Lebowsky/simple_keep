@@ -769,7 +769,7 @@
                                                                         "type": "TextView"
                                                                     },
                                                                     {
-                                                                        "Value": "@d_qtty",
+                                                                        "Value": "@qtty",
                                                                         "Variable": "qtty",
                                                                         "height": "wrap_content",
                                                                         "width": "wrap_content",
@@ -2511,7 +2511,7 @@
                                 "listener": "",
                                 "action": "run",
                                 "type": "python",
-                                "method": "group_elem_view_on_start",
+                                "method": "group_elem_viev_on_start",
                                 "postExecute": ""
                             },
                             {
@@ -2519,7 +2519,7 @@
                                 "listener": "",
                                 "action": "run",
                                 "type": "python",
-                                "method": "group_elem_view_on_click",
+                                "method": "group_elem_viev_on_click",
                                 "postExecute": ""
                             }
                         ]
@@ -7805,6 +7805,28 @@
                                 "Variable": "",
                                 "orientation": "vertical",
                                 "height": "wrap_content",
+                                "width": "wrap_content",
+                                "weight": "0",
+                                "Elements": [
+                                    {
+                                        "Value": "Отсканируйте штрихкод товара",
+                                        "Variable": "",
+                                        "height": "wrap_content",
+                                        "width": "match_parent",
+                                        "weight": "0",
+                                        "TextBold": true,
+                                        "TextItalic": false,
+                                        "TextSize": "20",
+                                        "TextColor": "#7A005C",
+                                        "type": "TextView"
+                                    }
+                                ]
+                            },
+                            {
+                                "type": "LinearLayout",
+                                "Variable": "",
+                                "orientation": "vertical",
+                                "height": "wrap_content",
                                 "width": "match_parent",
                                 "weight": "0",
                                 "Elements": [
@@ -8109,6 +8131,15 @@
                 "alias": "on_start"
             },
             {
+                "event": "onLaunch",
+                "listener": "",
+                "action": "run",
+                "type": "python",
+                "method": "timer_update",
+                "postExecute": "",
+                "alias": "timer_update"
+            },
+            {
                 "event": "onWebServiceSyncCommand",
                 "listener": "",
                 "action": "run",
@@ -8140,14 +8171,6 @@
                 "type": "set",
                 "method": "beep",
                 "postExecute": ""
-            },
-            {
-                "listener": "",
-                "action": "run",
-                "type": "python",
-                "method": "timer_update",
-                "postExecute": "",
-                "alias": "timer_update"
             }
         ]
     }
