@@ -7174,7 +7174,7 @@ class ActiveCVArticleRecognition(Screen):
 
 # ^^^^^^^^^^^^^^^^^^^^^ ActiveCV ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-# ==================== Timer =============================
+# ==================== Services =============================
 
 
 class Timer:
@@ -7332,7 +7332,17 @@ class Timer:
                 url=hs_service.url)
         return not answer.error
 
-# ^^^^^^^^^^^^^^^^^^^^^ Timer ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+class WebServiceSyncCommand:
+    def __init__(self, hash_map: HashMap):
+        self.hash_map = hash_map
+
+    def get_barcodes_data(self):
+        buffer_service = ExchangeQueueBuffer('barcodes')
+        data_to_send = buffer_service.get_data_to_send()
+        self.hash_map['WSResponse'] = data_to_send
+
+
+# ^^^^^^^^^^^^^^^^^^^^^ Services ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 
 # ==================== Main events =============================

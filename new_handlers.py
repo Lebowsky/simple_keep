@@ -25,7 +25,7 @@ def app_on_start(hash_map: HashMap):
 def timer_update(hash_map: HashMap):
     """ Обработчик для фонового обмена """
 
-    timer = ui_models.Timer(hash_map, rs_settings)
+    timer = ui_models.TimerService(hash_map, rs_settings)
     timer.timer_on_start()
 
 
@@ -33,8 +33,8 @@ def timer_update(hash_map: HashMap):
 def event_service(hash_map):
     """ Обработчик для работы МП в режиме сервера.
      В ws_body по умолчанию лежит текст конфигурации """
-
-    hash_map['ws_body'] = hash_map['ANDROID_ID']
+    ui_models.WebServiceSyncCommand(hash_map).get_barcodes_data()
+    # hash_map['ws_body'] = hash_map['ANDROID_ID']
 
 
 @HashMap()
