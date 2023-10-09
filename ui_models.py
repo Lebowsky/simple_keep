@@ -764,13 +764,12 @@ class PrintLabelTemplatesSettings(Screen):
             self.delete_template_settings()
         elif listener == 'btn_label_template_size_settings':
             path_to_label = self.print_ncl.get('preview_label_template_image')
-            if not os.path.isfile(path_to_label):
+            if not path_to_label or not os.path.isfile(path_to_label):
                 self.hash_map.toast('Сначала нужно выбрать шаблон')
                 return
             self.hash_map.show_screen('Настройки печати Размеры')
         elif listener == 'ON_BACK_PRESSED':
             self.hash_map.show_screen('Настройки печати')
-
 
     def on_post_start(self):
         pass
