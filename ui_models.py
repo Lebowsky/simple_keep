@@ -2269,7 +2269,8 @@ class DocDetailsScreen(Screen):
                 value = self._format_to_float(str(record.get(key, 0.0) or 0.0))
                 product_row[key] = str(int(value)) if value.is_integer() else value
 
-            product_row['_layout'] = self._get_doc_table_row_view()
+            use_series = bool(int(product_row.get('use_series', 0)))
+            product_row['_layout'] = self._get_doc_table_row_view(use_series=use_series)
             self._set_background_row_color(product_row)
 
             if self._added_goods_has_key(product_row['key']):
@@ -2305,20 +2306,21 @@ class DocDetailsScreen(Screen):
 
         return table_view
 
-    def _get_doc_table_row_view(self):
+    def _get_doc_table_row_view(self, use_series=False):
         row_view = widgets.LinearLayout(
             widgets.LinearLayout(
                 widgets.LinearLayout(
                     widgets.LinearLayout(
                         widgets.LinearLayout(
                             widgets.Picture(
-                                Value=sn_icon_green,
+                                Value=sn_icon_green if use_series else None,
                                 width=16,
-                                height=16
-                                ),
+                                height=16,
+                            ),
                             self.TextView('@good_name'),
                             width='match_parent',
                             orientation='horizontal',
+
                         ),
                         widgets.TextView(
                             Value='@good_info',
