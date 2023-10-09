@@ -227,6 +227,7 @@ def database_shema():
         created_at         DATETIME DEFAULT CURRENT_TIMESTAMP,
         control            TEXT DEFAULT 0,
         is_group_scan      TEXT DEFAULT 0,
+        is_barc_flow       TEXT DEFAULT 0,
         allow_fact_input   TEXT DEFAULT 0
         
     )

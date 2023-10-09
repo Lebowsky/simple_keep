@@ -3458,6 +3458,7 @@ class FlowDocDetailsScreen(DocDetailsScreen):
             barcode = self.hash_map.get('barcode_camera')
             self.service.add_barcode_to_database(barcode)
             self.service.set_doc_status_to_upload(self.id_doc)
+            self.service.set_barc_flow_status()
 
         elif self._is_result_positive('ВвестиШтрихкод'):
             barcode = self.hash_map.get('fld_barcode')
