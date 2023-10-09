@@ -2416,7 +2416,7 @@ class DocDetailsScreen(Screen):
             screen_values=screen_values
         )
         screen.parent_screen = self
-        screen.show_process_result()
+        screen.show()
 
     class TextView(widgets.TextView):
         def __init__(self, value):
@@ -3015,7 +3015,7 @@ class DocumentsDocDetailScreen(DocDetailsScreen):
             SeriesSelectScreen,
             screen_values=screen_values
         )
-        screen.show_process_result()
+        screen.show()
 
 class AdrDocDetailsScreen(DocDetailsScreen):
     screen_name = 'Документ товары'
@@ -3854,13 +3854,6 @@ class BaseGoodSelect(Screen):
             self._set_delta(int(listener[4:]))
         elif listener in ["btn_cancel", 'BACK_BUTTON', 'ON_BACK_PRESSED']:
            self._handle_btn_ok()
-           """ self._save_new_delta()
-            self._set_delta(reset=True)
-            self.hash_map.put('new_qtty', '')
-            self.hash_map.put('selected_card_position', '')
-            self.hash_map.remove('selected_card_data')
-            self.hash_map.put('items_on_page', '')
-            self._back_screen()"""
         elif listener == 'btn_print':
             self.print_ticket()
         elif listener == 'barcode':
@@ -6081,14 +6074,6 @@ class SeriesSelectScreen(Screen):
     def _finish_process(self):
         self.hash_map.put('FinishProcessResult')
 
-    def update_hash_map_keys(self):
-        params = self.screen_data
-        exclude_keys = ('hash_map', 'screen_values', 'rs_settings')
-        for key in params.keys():
-            if key in exclude_keys:
-                continue
-            self.hash_map[key] = self.params[key]
-
     def _refresh_series_cards(self):
         list_data = self.service.get_series_by_doc_and_goods()
         list_data = [self._handle_num_keys(item) for item in list_data]
@@ -6174,24 +6159,6 @@ class SeriesSelectScreen(Screen):
         )
 
         return doc_cards
-
-    def _prepare_table_data(self, doc_details):
-
-        table_data = [{}]
-
-        for record in doc_details:
-            product_row = {}
-            for el in record.keys():
-                product_row[el] = record[el]
-
-            product_row['_layout'].BackgroundColor = '#FFFFFF' if record['name'] is not None else "#FBE9E7"
-
-            if self._added_goods_has_key(product_row['key']):
-                table_data.insert(1, product_row)
-            else:
-                table_data.append(product_row)
-
-        return table_data
 
     def _identify_add_barcode_series(self):
         barcode = self.hash_map.get('barcode')
