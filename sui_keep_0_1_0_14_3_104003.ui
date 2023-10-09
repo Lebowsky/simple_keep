@@ -769,7 +769,7 @@
                                                                         "type": "TextView"
                                                                     },
                                                                     {
-                                                                        "Value": "@qtty",
+                                                                        "Value": "@d_qtty",
                                                                         "Variable": "qtty",
                                                                         "height": "wrap_content",
                                                                         "width": "wrap_content",
@@ -822,7 +822,7 @@
                                                                 "Elements": [
                                                                     {
                                                                         "Value": "",
-                                                                        "Variable": "blank_left",
+                                                                        "Variable": "blank_1",
                                                                         "height": "wrap_content",
                                                                         "width": "match_parent",
                                                                         "weight": "0",
@@ -874,7 +874,7 @@
                                                                 "Elements": [
                                                                     {
                                                                         "Value": "",
-                                                                        "Variable": "blank_right",
+                                                                        "Variable": "blank_2",
                                                                         "height": "wrap_content",
                                                                         "width": "wrap_content",
                                                                         "weight": "0",
@@ -2270,13 +2270,13 @@
                                                                 "orientation": "vertical",
                                                                 "height": "wrap_content",
                                                                 "width": "match_parent",
-                                                                "weight": "4",
+                                                                "weight": "2",
                                                                 "Elements": [
                                                                     {
                                                                         "Value": "",
-                                                                        "Variable": "blank_1",
+                                                                        "Variable": "blank_left",
                                                                         "height": "wrap_content",
-                                                                        "width": "match_parent",
+                                                                        "width": "wrap_content",
                                                                         "weight": "0",
                                                                         "TextBold": false,
                                                                         "TextItalic": false,
@@ -2287,7 +2287,7 @@
                                                             {
                                                                 "type": "LinearLayout",
                                                                 "Variable": "",
-                                                                "orientation": "horizontal",
+                                                                "orientation": "vertical",
                                                                 "height": "wrap_content",
                                                                 "width": "match_parent",
                                                                 "weight": "1",
@@ -2322,11 +2322,11 @@
                                                                 "orientation": "vertical",
                                                                 "height": "wrap_content",
                                                                 "width": "match_parent",
-                                                                "weight": "4",
+                                                                "weight": "2",
                                                                 "Elements": [
                                                                     {
                                                                         "Value": "",
-                                                                        "Variable": "blank_2",
+                                                                        "Variable": "blank_right",
                                                                         "height": "wrap_content",
                                                                         "width": "wrap_content",
                                                                         "weight": "0",
@@ -2759,7 +2759,7 @@
                         "Timer": false,
                         "hideToolBarScreen": false,
                         "hideBottomBarScreen": true,
-                        "noScroll": false,
+                        "noScroll": true,
                         "handleKeyUp": false,
                         "noConfirmation": false,
                         "Elements": [
@@ -2771,6 +2771,56 @@
                                 "width": "match_parent",
                                 "weight": "0",
                                 "Elements": [
+                                    {
+                                        "type": "LinearLayout",
+                                        "Variable": "",
+                                        "orientation": "horizontal",
+                                        "height": "wrap_content",
+                                        "width": "match_parent",
+                                        "weight": "0",
+                                        "Elements": [
+                                            {
+                                                "type": "LinearLayout",
+                                                "Variable": "",
+                                                "orientation": "horizontal",
+                                                "height": "wrap_content",
+                                                "width": "match_parent",
+                                                "weight": "1",
+                                                "Elements": [
+                                                    {
+                                                        "type": "LinearLayout",
+                                                        "Variable": "",
+                                                        "orientation": "vertical",
+                                                        "height": "wrap_content",
+                                                        "width": "match_parent",
+                                                        "weight": "0",
+                                                        "Elements": [
+                                                            {
+                                                                "Value": "@doc_title",
+                                                                "Variable": "",
+                                                                "height": "wrap_content",
+                                                                "width": "match_parent",
+                                                                "weight": "0",
+                                                                "TextBold": false,
+                                                                "TextItalic": false,
+                                                                "TextSize": "20",
+                                                                "TextColor": "#7A005C",
+                                                                "type": "TextView"
+                                                            },
+                                                            {
+                                                                "Value": "@warehouse",
+                                                                "Variable": "warehouse",
+                                                                "height": "wrap_content",
+                                                                "width": "match_parent",
+                                                                "weight": "0",
+                                                                "type": "TextView"
+                                                            }
+                                                        ]
+                                                    }
+                                                ]
+                                            }
+                                        ]
+                                    },
                                     {
                                         "type": "LinearLayout",
                                         "Variable": "",
@@ -2803,6 +2853,51 @@
                                                 "width": "wrap_content",
                                                 "weight": "0",
                                                 "type": "TextView"
+                                            },
+                                            {
+                                                "Value": "х",
+                                                "Variable": "btn_clear_cell",
+                                                "height": "wrap_content",
+                                                "width": "wrap_content",
+                                                "weight": "0",
+                                                "TextBold": false,
+                                                "TextItalic": false,
+                                                "type": "Button"
+                                            }
+                                        ]
+                                    },
+                                    {
+                                        "type": "LinearLayout",
+                                        "Variable": "",
+                                        "orientation": "horizontal",
+                                        "height": "wrap_content",
+                                        "width": "match_parent",
+                                        "weight": "0",
+                                        "Elements": [
+                                            {
+                                                "Value": "@doc_type",
+                                                "Variable": "",
+                                                "height": "wrap_content",
+                                                "width": "wrap_content",
+                                                "weight": "1",
+                                                "TextSize": "18",
+                                                "type": "TextView"
+                                            },
+                                            {
+                                                "Value": "Табл.",
+                                                "Variable": "",
+                                                "height": "wrap_content",
+                                                "width": "wrap_content",
+                                                "weight": "0",
+                                                "type": "TextView"
+                                            },
+                                            {
+                                                "Value": "@tables_type",
+                                                "Variable": "table_type",
+                                                "height": "wrap_content",
+                                                "width": "wrap_content",
+                                                "weight": "1",
+                                                "type": "SpinnerLayout"
                                             }
                                         ]
                                     },
@@ -2883,104 +2978,6 @@
                                                 "type": "Button"
                                             }
                                         ]
-                                    },
-                                    {
-                                        "type": "LinearLayout",
-                                        "Variable": "",
-                                        "orientation": "horizontal",
-                                        "height": "wrap_content",
-                                        "width": "match_parent",
-                                        "weight": "0",
-                                        "Elements": [
-                                            {
-                                                "Value": "Отменить выбор",
-                                                "Variable": "btn_clear_cell",
-                                                "height": "wrap_content",
-                                                "width": "wrap_content",
-                                                "weight": "0",
-                                                "type": "Button"
-                                            }
-                                        ]
-                                    },
-                                    {
-                                        "type": "LinearLayout",
-                                        "Variable": "",
-                                        "orientation": "horizontal",
-                                        "height": "wrap_content",
-                                        "width": "match_parent",
-                                        "weight": "0",
-                                        "Elements": [
-                                            {
-                                                "Value": "@doc_type",
-                                                "Variable": "",
-                                                "height": "wrap_content",
-                                                "width": "wrap_content",
-                                                "weight": "1",
-                                                "TextSize": "18",
-                                                "type": "TextView"
-                                            },
-                                            {
-                                                "Value": "Табл.",
-                                                "Variable": "",
-                                                "height": "wrap_content",
-                                                "width": "wrap_content",
-                                                "weight": "0",
-                                                "type": "TextView"
-                                            },
-                                            {
-                                                "Value": "@tables_type",
-                                                "Variable": "table_type",
-                                                "height": "wrap_content",
-                                                "width": "wrap_content",
-                                                "weight": "1",
-                                                "type": "SpinnerLayout"
-                                            }
-                                        ]
-                                    },
-                                    {
-                                        "type": "LinearLayout",
-                                        "Variable": "",
-                                        "orientation": "horizontal",
-                                        "height": "wrap_content",
-                                        "width": "wrap_content",
-                                        "weight": "0",
-                                        "Elements": [
-                                            {
-                                                "Value": "@doc_n",
-                                                "Variable": "",
-                                                "height": "wrap_content",
-                                                "width": "wrap_content",
-                                                "weight": "0",
-                                                "TextBold": true,
-                                                "TextSize": "24",
-                                                "TextColor": "#7A005C",
-                                                "type": "TextView"
-                                            },
-                                            {
-                                                "Value": "@doc_date",
-                                                "Variable": "",
-                                                "height": "0",
-                                                "width": "0",
-                                                "weight": "0",
-                                                "type": "TextView"
-                                            },
-                                            {
-                                                "Value": "|| ||| ||",
-                                                "Variable": "btn_barcodes",
-                                                "height": "0",
-                                                "width": "0",
-                                                "weight": "0",
-                                                "type": "Button"
-                                            }
-                                        ]
-                                    },
-                                    {
-                                        "Value": "@warehouse",
-                                        "Variable": "",
-                                        "height": "wrap_content",
-                                        "width": "wrap_content",
-                                        "weight": "0",
-                                        "type": "TextView"
                                     },
                                     {
                                         "Value": "@doc_goods_table",

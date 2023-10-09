@@ -1519,8 +1519,7 @@ class DocsListScreen(Screen):
         results = self.service.get_doc_view_data(doc_type, doc_status)
         return results
 
-    @staticmethod
-    def _prepare_table_data(list_data):
+    def _prepare_table_data(self, list_data):
         table_data = []
         for record in list_data:
             doc_status = ''
@@ -1532,11 +1531,15 @@ class DocsListScreen(Screen):
             elif not (record['verified'] and record['sent']):
                 doc_status = 'К выполнению'
 
+            doc_title = '{} № {} от {}'.format(
+                self.hash_map['doc_type'], self.hash_map['doc_n'], self.hash_map['doc_date'])
+
             table_data.append({
                 'key': record['id_doc'],
                 'type': record['doc_type'],
                 'number': record['doc_n'],
-                'data': record['doc_date'],
+                'doc_title': doc_title,
+                'data': self._format_date(record['doc_date']),
                 'warehouse': record['RS_warehouse'],
                 'countragent': record['RS_countragent'],
                 'add_mark_selection': record['add_mark_selection'],
@@ -1654,6 +1657,9 @@ class DocsListScreen(Screen):
                 self.hash_map.show_screen('Плитки')
         else:
             self.hash_map.toast('Ошибка удаления документа')
+
+    def _format_date(self, date_str: str):
+        return datetime.fromisoformat(date_str).strftime('%m-%d-%Y %H:%M:%S')
 
     def get_id_doc(self):
         card_data = self.hash_map.get_json("card_data") or {}
@@ -1845,8 +1851,7 @@ class AdrDocsListScreen(DocsListScreen):
         results = self.service.get_doc_view_data(doc_type, doc_status)
         return results
 
-    @staticmethod
-    def _prepare_table_data(list_data) -> list:
+    def _prepare_table_data(self, list_data) -> list:
         table_data = []
         for record in list_data:
             doc_status = ''
@@ -1858,11 +1863,15 @@ class AdrDocsListScreen(DocsListScreen):
             elif not (record['verified'] and record['sent']):
                 doc_status = 'К выполнению'
 
+            doc_title = '{} от {}'.format(
+                record['doc_n'], self._format_date(record['doc_date']))
+
             table_data.append({
                 'key': record['id_doc'],
                 'doc_type': record['doc_type'],
+                'doc_title': doc_title,
                 'doc_n': record['doc_n'],
-                'doc_date': record['doc_date'],
+                'doc_date': self._format_date(record['doc_date']),
                 'warehouse': record['warehouse'],
                 'add_mark_selection': record['add_mark_selection'],
                 'status': doc_status
@@ -1941,6 +1950,7 @@ class AdrDocsListScreen(DocsListScreen):
         put_data['table_type'] = table_type
         put_data['doc_n'] = card_data['doc_n']
         put_data['doc_date'] = card_data['doc_date']
+        put_data['doc_title'] = card_data['doc_title']
         put_data['warehouse'] = card_data['warehouse']
 
         return put_data
@@ -2346,8 +2356,7 @@ class DocDetailsScreen(Screen):
 
     def _set_background_row_color(self, product_row):
         background_color = '#FFFFFF'
-        qtty, qtty_plan = float(product_row['qtty']), float(product_row['qtty_plan'])
-
+        qtty, qtty_plan = float(product_row['d_qtty']), float(product_row['qtty_plan'])
         if qtty_plan > qtty:
             background_color = "#FBE9E7"
 
@@ -2834,11 +2843,13 @@ class GroupScanDocDetailsScreenNew(DocDetailsScreen):
             return self.hash_map
 
         current_elem = json.loads(self.hash_map.get('selected_card_data'))
+        # при клике по шапке таблицы прилетает пустой словарь
+        if not current_elem:
+            return
 
         current_str = self.hash_map["selected_card_position"]
         table_lines_qtty = self.hash_map['table_lines_qtty']
         title = '{} № {} от {}'.format(self.hash_map['doc_type'], self.hash_map['doc_n'], self.hash_map['doc_date'])
-
         put_data_dict = {
             'Doc_data': title,
             'Good': current_elem['good_name'],
@@ -2858,7 +2869,6 @@ class GroupScanDocDetailsScreenNew(DocDetailsScreen):
             'price_type': current_elem['price_name'],
             'qtty': self._format_quantity(current_elem['d_qtty']),
         }
-
         screen = GroupScanItemScreen(self.hash_map, self.rs_settings)
         screen.show(args=put_data_dict)
 
@@ -3033,6 +3043,7 @@ class AdrDocDetailsScreen(DocDetailsScreen):
         self.hash_map.put('tables_type', self.tables_types)
         self.hash_map.put('return_selected_data')
         self.hash_map['table_type'] = 'Размещение' if self.screen_values['table_type']=='in' else 'Отбор'
+        self._set_current_cell()
 
     def on_start(self):
         super()._on_start()
@@ -3131,6 +3142,8 @@ class AdrDocDetailsScreen(DocDetailsScreen):
         if selected_cell:
             self._set_current_cell(selected_cell.get('name'), selected_cell.get('id'))
             self.hash_map.remove('selected_card')
+        else:
+            self._set_current_cell()
 
     def _clear_cell(self):
         self._set_current_cell()
@@ -3411,10 +3424,25 @@ class AdrDocDetailsScreen(DocDetailsScreen):
     def _set_visibility_on_start(self):
         pass
 
+    def _set_background_row_color(self, product_row):
+        background_color = '#FFFFFF'
+        qtty, qtty_plan = float(product_row['qtty']), float(product_row['qtty_plan'])
+        if qtty_plan > qtty:
+            background_color = "#FBE9E7"
+
+        elif qtty_plan < qtty:
+            background_color = "#FFF9C4"
+
+        product_row['_layout'].BackgroundColor = background_color
+
 
     def _set_current_cell(self, current_cell='', current_cell_id=''):
         self.current_cell, self.current_cell_id = current_cell, current_cell_id
         self.hash_map['current_cell'] = current_cell
+        if current_cell_id:
+            self.hash_map['Show_btn_clear_cell'] = 1
+        else:
+            self.hash_map['Show_btn_clear_cell'] = -1
 
 
 class FlowDocDetailsScreen(DocDetailsScreen):
@@ -3891,12 +3919,10 @@ class BaseGoodSelect(Screen):
 
     def _handle_choice_by_other(self, current_elem, qtty):
         row_id = int(current_elem['key']) if current_elem else self.screen_values.get('key') or self.hash_map.get('key')
-        # if float(qtty) != old_qtty:
         update_data = {
             'sent': 0,
             'qtty': float(qtty) if qtty else 0,
         }
-        # self.toast(self.hash_map['key'])
         self._update_doc_table_row(data=update_data, row_id=row_id)
         self.service.set_doc_status_to_upload(self.hash_map.get('id_doc'))
         self._back_screen()
@@ -4344,7 +4370,7 @@ class GroupScanItemScreen(BaseGoodSelect):
         super().on_input()
 
     def _update_doc_table_row(self, data: Dict, row_id):
-
+        
         if not self.hash_map.get('delta'):
             return
 
@@ -4352,7 +4378,6 @@ class GroupScanItemScreen(BaseGoodSelect):
             'sent': 0,
             'd_qtty': data['qtty'],
         }
-        # self.toast(float(qtty))
         self.service.update_doc_table_row(data=update_data, row_id=row_id)
         self.service.set_doc_status_to_upload(self.hash_map.get('id_doc'))
 
