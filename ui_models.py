@@ -3043,6 +3043,7 @@ class AdrDocDetailsScreen(DocDetailsScreen):
         self.hash_map.put('tables_type', self.tables_types)
         self.hash_map.put('return_selected_data')
         self.hash_map['table_type'] = 'Размещение' if self.screen_values['table_type']=='in' else 'Отбор'
+        self._set_current_cell()
 
     def on_start(self):
         super()._on_start()
@@ -3424,9 +3425,14 @@ class AdrDocDetailsScreen(DocDetailsScreen):
         pass
 
 
+
     def _set_current_cell(self, current_cell='', current_cell_id=''):
         self.current_cell, self.current_cell_id = current_cell, current_cell_id
         self.hash_map['current_cell'] = current_cell
+        if current_cell_id:
+            self.hash_map['Show_btn_clear_cell'] = 1
+        else:
+            self.hash_map['Show_btn_clear_cell'] = -1
 
 
 class FlowDocDetailsScreen(DocDetailsScreen):
