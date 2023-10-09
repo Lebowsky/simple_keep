@@ -240,7 +240,7 @@ class BarcodeService(DbService):
 
 
 class DocService:
-    def __init__(self, doc_id='', is_group_scan=False, is_flow=False):
+    def __init__(self, doc_id='', is_group_scan=False, is_barc_flow=False):
         self.doc_id = doc_id
         self.docs_table_name = 'RS_docs'
         self.details_table_name = 'RS_docs_table'
@@ -249,7 +249,7 @@ class DocService:
         self.sql_params = None
         self.debug = False
         self.is_group_scan = is_group_scan
-        self.is_flow = is_flow
+        self.is_barc_flow = is_barc_flow
         self.provider = SqlQueryProvider(self.docs_table_name, sql_class=sqlClass())
 
     def get_last_edited_goods(self, to_json=False):
@@ -455,6 +455,8 @@ class DocService:
         query = f'SELECT DISTINCT doc_type from {self.docs_table_name}'
         if not self.is_group_scan and self.docs_table_name == "RS_docs":
             query += f" WHERE {self.docs_table_name}.is_group_scan=0"
+        if not self.is_barc_flow and self.docs_table_name == 'RS_docs':
+            query += f" AND {self.docs_table_name}.is_barc_flow=0"
         doc_types = [rec[0] for rec in self._get_query_result(query)]
         return doc_types
 
@@ -489,7 +491,6 @@ class DocService:
             LEFT JOIN RS_countragents as RS_countragents
                 ON RS_countragents.id = {self.docs_table_name}.id_countragents
                 '''
-        joins += f'''LEFT JOIN RS_barc_flow ON {self.docs_table_name}.id_doc = RS_barc_flow.id_doc'''
         where = ''
 
         if doc_status:
@@ -509,14 +510,17 @@ class DocService:
             else:
                 where += ' AND doc_type=?'
 
-        if self.docs_table_name == 'RS_docs' and self.is_group_scan is False:
+        if self.is_group_scan is False:
             if where:
                 where += f' AND is_group_scan={int(self.is_group_scan)}'
             else:
                 where = f' WHERE is_group_scan={int(self.is_group_scan)}'
         
-        if self.is_flow is False:
-            where += ''' AND RS_barc_flow.id_doc IS NULL'''
+        if self.is_barc_flow is False:
+            if where:
+                where += f' AND is_barc_flow={int(self.is_barc_flow)}'
+            else:
+                where = f' WHERE is_barc_flow={int(self.is_barc_flow)}'
         
         query_text = f'''
             {query_text}
@@ -568,7 +572,9 @@ class DocService:
         return [doc[0] for doc in docs]
 
     def get_docs_stat(self):
-        w = f'is_group_scan = "0"' if self.is_group_scan is False else True
+        where_group_scan = f'is_group_scan = "0"' if self.is_group_scan is False else True
+        where_barc_flow = f'is_barc_flow = "0"' if self.is_barc_flow is False else True
+        where = f"{where_group_scan} AND {where_barc_flow}"
 
         query_select = f'''
         WITH tmp AS (
@@ -579,6 +585,7 @@ class DocService:
                 IFNULL(docs_table.sent,0) as sent,
                 IFNULL(docs_table.verified,0) as verified,
                 IFNULL(docs_table.is_group_scan, 0) as is_group_scan,
+                IFNULL(docs_table.is_barc_flow, 0) as is_barc_flow,
                 CASE WHEN IFNULL(verified,0)=0 THEN 
                     COUNT(docs_details.id)
                 ELSE 
@@ -615,10 +622,9 @@ class DocService:
             SUM(qtty_plan_verified) as qtty_plan_verified,
             SUM(qtty_plan_unverified) as qtty_plan_unverified
         FROM tmp
-        WHERE {w}
+        WHERE {where}
         GROUP BY doc_type
         '''
-
         res = self._get_query_result(query_select, return_dict=True)
         return res
 
@@ -643,9 +649,10 @@ class DocService:
                 id_doc
                 From 
                 RS_docs_table
-                )              
-                  
-            GROUP BY RS_docs.id_doc
+                )
+                       
+           
+           GROUP BY RS_docs.id_doc
         )
         SELECT 
             doc_type as docType, 
@@ -1457,7 +1464,7 @@ class AdrDocService(DocService):
         self.docs_table_name = 'RS_Adr_docs'
         self.details_table_name = 'RS_adr_docs_table'
         self.isAdr = True
-        self.is_flow = False
+        self.is_barc_flow = False
         self.current_cell = cur_cell
         self.table_type = table_type
         self.provider = SqlQueryProvider(self.docs_table_name, sql_class=sqlClass())
@@ -1568,7 +1575,6 @@ class AdrDocService(DocService):
                 FROM RS_adr_docs_table 
                 WHERE id_doc = ? AND (sent = 0 OR sent IS NULL)
             '''.format(','.join(fields))
-
             goods = self.provider.sql_query(q, id_doc)
             doc_data['RS_adr_docs_table'] = goods
 
@@ -1609,7 +1615,7 @@ class FlowDocService(DocService):
         self.debug = False
         self.provider = SqlQueryProvider(self.docs_table_name, sql_class=sqlClass())
         self.is_group_scan = False
-        self.is_flow = True
+        self.is_barc_flow = True
 
     def get_doc_view_data(self, doc_type='', doc_status='') -> list:
         fields = [
@@ -1627,6 +1633,7 @@ class FlowDocService(DocService):
         if self.docs_table_name == 'RS_docs':
             fields.append(f'{self.docs_table_name}.id_countragents')
             fields.append(f'ifnull({self.docs_table_name}.is_group_scan, 0) as is_group_scan')
+            fields.append(f'ifnull({self.docs_table_name}.is_barc_flow, 0) as is_barc_flow')
             fields.append(f'ifnull(RS_countragents.full_name, "") as RS_countragent')
 
         query_text = 'SELECT ' + ',\n'.join(fields)
@@ -1641,37 +1648,31 @@ class FlowDocService(DocService):
             LEFT JOIN RS_countragents as RS_countragents
                 ON RS_countragents.id = {self.docs_table_name}.id_countragents
                 '''
-        where = []
-        where.append(f'''{self.docs_table_name}.id_doc not in (SELECT distinct
-                id_doc
-                From 
-                {self.details_table_name}
-                ) ''')
+
+        where_barc_flow = f'WHERE {self.docs_table_name}.is_barc_flow = 1'
+        where_empty = ("RS_docs.id_doc not in "
+                       "(SELECT distinct id_doc From RS_docs_table)")
+        where = f"{where_barc_flow} OR {where_empty}"
 
         if doc_status:
             if doc_status == "Выгружен":
-                where.append(" sent=1 AND verified=1")
+                where += "AND sent=1 AND verified=1"
             elif doc_status == "К выгрузке":
-                where.append(" ifnull(verified,0)=1 AND ifnull(sent,0)=0")
+                where += "AND ifnull(verified,0)=1 AND ifnull(sent,0)=0"
             elif doc_status == "К выполнению":
-                where.append(" ifnull(verified,0)=0 AND ifnull(sent,0)=0")
+                where += "AND ifnull(verified,0)=0 AND ifnull(sent,0)=0"
 
         if not doc_type or doc_type == "Все":
             args_tuple = None
         else:
             args_tuple = (doc_type,)
-            if not doc_status or doc_status == "Все":
-                where.append('doc_type=?')
-            else:
-                where.append(' doc_type=?')
-        where_text = f'WHERE ' + ' AND '.join(where)
+            where += ' AND doc_type=?'
         query_text = f'''
             {query_text}
             {joins}
-            {where_text}
+            {where}
             ORDER BY {self.docs_table_name}.doc_date
         '''
-
         result = self._get_query_result(query_text, args_tuple, return_dict=True)
         return result
 
@@ -1729,7 +1730,9 @@ class FlowDocService(DocService):
         self.provider.sql_exec(qtext, ','.join([self.doc_id, barcode]))
         self.set_doc_status_to_upload(self.doc_id)
 
-
+    def set_barc_flow_status(self):
+        self.provider.table_name = self.docs_table_name
+        self.provider.update({'is_barc_flow': '1'}, {'id_doc': self.doc_id})
 class GoodsService(DbService):
     def __init__(self, item_id=''):
         super().__init__()
