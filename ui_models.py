@@ -3035,7 +3035,7 @@ class AdrDocDetailsScreen(DocDetailsScreen):
         self.id_doc = self.screen_values['id_doc']
         self.table_type = self._get_table_type_from_name(self.screen_values['doc_type'])
         self.service = AdrDocService(self.id_doc, table_type=self.table_type)
-        self.current_cell = ''
+        self.current_cell = '- не выбрано -'
         self.current_cell_id = ''
 
     def init_screen(self):
@@ -3435,7 +3435,7 @@ class AdrDocDetailsScreen(DocDetailsScreen):
         product_row['_layout'].BackgroundColor = background_color
 
 
-    def _set_current_cell(self, current_cell='', current_cell_id=''):
+    def _set_current_cell(self, current_cell='- не выбрано -', current_cell_id=''):
         self.current_cell, self.current_cell_id = current_cell, current_cell_id
         self.hash_map['current_cell'] = current_cell
         if current_cell_id:
