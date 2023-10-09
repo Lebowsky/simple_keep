@@ -7364,7 +7364,7 @@ class WebServiceSyncCommand:
     def on_service_request(self):
         listeners = {
             'barcodes': self.get_barcodes_data,
-            'SyncCommand': self.get_barcodes_data,
+            'hash_map': self.get_hash_map
         }
         if self.listener in listeners:
             listeners[self.listener]()
@@ -7373,7 +7373,27 @@ class WebServiceSyncCommand:
     def get_barcodes_data(self):
         buffer_service = ExchangeQueueBuffer('barcodes')
         data_to_send = buffer_service.get_data_to_send()
+        headers = [{'key': 'Content-Type', 'value': 'application/json'}]
+        self.hash_map.put('WSResponseHeaders', headers, to_json=True)
         self.hash_map.put('WSResponse', data_to_send, to_json=True)
+
+    def get_hash_map(self):
+        body = self.hash_map.get_json('ws_body')
+
+        if body:
+            response = []
+
+            if isinstance(body, dict):
+                response.append({body['item']: self.hash_map.get(**body)})
+                self.hash_map.toast(self.hash_map.get('selected_card_data'))
+            elif isinstance(body, list):
+                for item in body:
+                    response.append({item['item']: self.hash_map.get(**item)})
+
+            headers = [{'key': 'Content-Type', 'value': 'application/json'}]
+            self.hash_map.put('WSResponseHeaders', headers, to_json=True)
+            self.hash_map.put('WSResponse', response, to_json=True)
+
 
 
 # ^^^^^^^^^^^^^^^^^^^^^ Services ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
