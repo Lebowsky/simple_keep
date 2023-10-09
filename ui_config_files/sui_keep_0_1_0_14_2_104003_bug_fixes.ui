@@ -769,7 +769,7 @@
                                                                         "type": "TextView"
                                                                     },
                                                                     {
-                                                                        "Value": "@d_qtty",
+                                                                        "Value": "@qtty",
                                                                         "Variable": "qtty",
                                                                         "height": "wrap_content",
                                                                         "width": "wrap_content",

@@ -2346,8 +2346,7 @@ class DocDetailsScreen(Screen):
 
     def _set_background_row_color(self, product_row):
         background_color = '#FFFFFF'
-        qtty, qtty_plan = float(product_row['qtty']), float(product_row['qtty_plan'])
-
+        qtty, qtty_plan = float(product_row['d_qtty']), float(product_row['qtty_plan'])
         if qtty_plan > qtty:
             background_color = "#FBE9E7"
 
@@ -2834,11 +2833,13 @@ class GroupScanDocDetailsScreenNew(DocDetailsScreen):
             return self.hash_map
 
         current_elem = json.loads(self.hash_map.get('selected_card_data'))
+        # при клике по шапке таблицы прилетает пустой словарь
+        if not current_elem:
+            return
 
         current_str = self.hash_map["selected_card_position"]
         table_lines_qtty = self.hash_map['table_lines_qtty']
         title = '{} № {} от {}'.format(self.hash_map['doc_type'], self.hash_map['doc_n'], self.hash_map['doc_date'])
-
         put_data_dict = {
             'Doc_data': title,
             'Good': current_elem['good_name'],
@@ -2858,7 +2859,6 @@ class GroupScanDocDetailsScreenNew(DocDetailsScreen):
             'price_type': current_elem['price_name'],
             'qtty': self._format_quantity(current_elem['d_qtty']),
         }
-
         screen = GroupScanItemScreen(self.hash_map, self.rs_settings)
         screen.show(args=put_data_dict)
 
@@ -3411,6 +3411,16 @@ class AdrDocDetailsScreen(DocDetailsScreen):
     def _set_visibility_on_start(self):
         pass
 
+    def _set_background_row_color(self, product_row):
+        background_color = '#FFFFFF'
+        qtty, qtty_plan = float(product_row['qtty']), float(product_row['qtty_plan'])
+        if qtty_plan > qtty:
+            background_color = "#FBE9E7"
+
+        elif qtty_plan < qtty:
+            background_color = "#FFF9C4"
+
+        product_row['_layout'].BackgroundColor = background_color
 
     def _set_current_cell(self, current_cell='', current_cell_id=''):
         self.current_cell, self.current_cell_id = current_cell, current_cell_id
@@ -3891,12 +3901,10 @@ class BaseGoodSelect(Screen):
 
     def _handle_choice_by_other(self, current_elem, qtty):
         row_id = int(current_elem['key']) if current_elem else self.screen_values.get('key') or self.hash_map.get('key')
-        # if float(qtty) != old_qtty:
         update_data = {
             'sent': 0,
             'qtty': float(qtty) if qtty else 0,
         }
-        # self.toast(self.hash_map['key'])
         self._update_doc_table_row(data=update_data, row_id=row_id)
         self.service.set_doc_status_to_upload(self.hash_map.get('id_doc'))
         self._back_screen()
@@ -4344,7 +4352,7 @@ class GroupScanItemScreen(BaseGoodSelect):
         super().on_input()
 
     def _update_doc_table_row(self, data: Dict, row_id):
-
+        
         if not self.hash_map.get('delta'):
             return
 
@@ -4352,7 +4360,6 @@ class GroupScanItemScreen(BaseGoodSelect):
             'sent': 0,
             'd_qtty': data['qtty'],
         }
-        # self.toast(float(qtty))
         self.service.update_doc_table_row(data=update_data, row_id=row_id)
         self.service.set_doc_status_to_upload(self.hash_map.get('id_doc'))
 
