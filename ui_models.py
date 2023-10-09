@@ -2346,8 +2346,7 @@ class DocDetailsScreen(Screen):
 
     def _set_background_row_color(self, product_row):
         background_color = '#FFFFFF'
-        qtty, qtty_plan = float(product_row['qtty']), float(product_row['qtty_plan'])
-
+        qtty, qtty_plan = float(product_row['d_qtty']), float(product_row['qtty_plan'])
         if qtty_plan > qtty:
             background_color = "#FBE9E7"
 
@@ -3412,6 +3411,16 @@ class AdrDocDetailsScreen(DocDetailsScreen):
     def _set_visibility_on_start(self):
         pass
 
+    def _set_background_row_color(self, product_row):
+        background_color = '#FFFFFF'
+        qtty, qtty_plan = float(product_row['qtty']), float(product_row['qtty_plan'])
+        if qtty_plan > qtty:
+            background_color = "#FBE9E7"
+
+        elif qtty_plan < qtty:
+            background_color = "#FFF9C4"
+
+        product_row['_layout'].BackgroundColor = background_color
 
     def _set_current_cell(self, current_cell='', current_cell_id=''):
         self.current_cell, self.current_cell_id = current_cell, current_cell_id
