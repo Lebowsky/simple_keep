@@ -2834,11 +2834,13 @@ class GroupScanDocDetailsScreenNew(DocDetailsScreen):
             return self.hash_map
 
         current_elem = json.loads(self.hash_map.get('selected_card_data'))
+        # при клике по шапке таблицы прилетает пустой словарь
+        if not current_elem:
+            return
 
         current_str = self.hash_map["selected_card_position"]
         table_lines_qtty = self.hash_map['table_lines_qtty']
         title = '{} № {} от {}'.format(self.hash_map['doc_type'], self.hash_map['doc_n'], self.hash_map['doc_date'])
-
         put_data_dict = {
             'Doc_data': title,
             'Good': current_elem['good_name'],
@@ -2858,7 +2860,6 @@ class GroupScanDocDetailsScreenNew(DocDetailsScreen):
             'price_type': current_elem['price_name'],
             'qtty': self._format_quantity(current_elem['d_qtty']),
         }
-
         screen = GroupScanItemScreen(self.hash_map, self.rs_settings)
         screen.show(args=put_data_dict)
 
