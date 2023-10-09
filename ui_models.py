@@ -7199,7 +7199,6 @@ class Timer:
         if current_screen:
             current_screen.refresh_screen(self.hash_map)
 
-
     def put_notification(self, text, title=None):
         self.hash_map.notification(text, title)
 
@@ -7335,11 +7334,21 @@ class Timer:
 class WebServiceSyncCommand:
     def __init__(self, hash_map: HashMap):
         self.hash_map = hash_map
+        self.listener = self.hash_map.listener
+
+    def on_service_request(self):
+        listeners = {
+            'barcodes': self.get_barcodes_data,
+            'SyncCommand': self.get_barcodes_data,
+        }
+        if self.listener in listeners:
+            listeners[self.listener]()
+
 
     def get_barcodes_data(self):
         buffer_service = ExchangeQueueBuffer('barcodes')
         data_to_send = buffer_service.get_data_to_send()
-        self.hash_map['WSResponse'] = data_to_send
+        self.hash_map.put('WSResponse', data_to_send, to_json=True)
 
 
 # ^^^^^^^^^^^^^^^^^^^^^ Services ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
