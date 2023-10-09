@@ -474,7 +474,6 @@ class BarcodeWorker:
         self.docs_table_update_data = {}
         self.queue_update_data = {}
 
-
     def process_the_barcode(self, barcode):
         self.process_result.barcode = barcode
         self.barcode_info = BarcodeParser(barcode).parse(as_dict=False)

@@ -88,6 +88,15 @@ class TestDocService(unittest.TestCase):
         self.data_creator.insert_data('RS_docs', 'RS_docs_table')
         self.assertTrue(self.service.get_doc_view_data(doc_status='К выгрузке', doc_type='Заказ'))
 
+    def test_get_only_no_group_scan_doc_types(self):
+        self.data_creator.insert_data('RS_docs', 'RS_docs_table')
+        self.service.docs_table_name = 'RS_docs'
+        self.service.is_group_scan = None
+        expect = ['Заказ']
+
+        result = self.service.get_doc_types()
+
+        self.assertEqual(expect, result)
 
 
 class TestTimerService(unittest.TestCase):

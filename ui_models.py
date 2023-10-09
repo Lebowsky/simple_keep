@@ -3901,12 +3901,10 @@ class BaseGoodSelect(Screen):
 
     def _handle_choice_by_other(self, current_elem, qtty):
         row_id = int(current_elem['key']) if current_elem else self.screen_values.get('key') or self.hash_map.get('key')
-        # if float(qtty) != old_qtty:
         update_data = {
             'sent': 0,
             'qtty': float(qtty) if qtty else 0,
         }
-        # self.toast(self.hash_map['key'])
         self._update_doc_table_row(data=update_data, row_id=row_id)
         self.service.set_doc_status_to_upload(self.hash_map.get('id_doc'))
         self._back_screen()
@@ -4362,7 +4360,6 @@ class GroupScanItemScreen(BaseGoodSelect):
             'sent': 0,
             'd_qtty': data['qtty'],
         }
-        # self.toast(float(qtty))
         self.service.update_doc_table_row(data=update_data, row_id=row_id)
         self.service.set_doc_status_to_upload(self.hash_map.get('id_doc'))
 
