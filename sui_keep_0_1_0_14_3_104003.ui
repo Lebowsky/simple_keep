@@ -2830,39 +2830,85 @@
                                         "weight": "0",
                                         "Elements": [
                                             {
-                                                "Value": "Текущая ячейка: ",
+                                                "type": "LinearLayout",
                                                 "Variable": "",
+                                                "orientation": "horizontal",
                                                 "height": "wrap_content",
-                                                "width": "wrap_content",
-                                                "weight": "0",
-                                                "type": "TextView"
+                                                "width": "match_parent",
+                                                "weight": "2",
+                                                "Elements": [
+                                                    {
+                                                        "type": "LinearLayout",
+                                                        "Variable": "",
+                                                        "orientation": "vertical",
+                                                        "height": "wrap_content",
+                                                        "width": "match_parent",
+                                                        "weight": "12",
+                                                        "Elements": [
+                                                            {
+                                                                "Value": "",
+                                                                "Variable": "",
+                                                                "height": "wrap_content",
+                                                                "width": "wrap_content",
+                                                                "weight": "2",
+                                                                "TextBold": false,
+                                                                "TextItalic": false,
+                                                                "type": "TextView"
+                                                            }
+                                                        ]
+                                                    },
+                                                    {
+                                                        "type": "LinearLayout",
+                                                        "Variable": "",
+                                                        "orientation": "vertical",
+                                                        "height": "wrap_content",
+                                                        "width": "match_parent",
+                                                        "weight": "2",
+                                                        "Elements": [
+                                                            {
+                                                                "Value": "Текущая ячейка: ",
+                                                                "Variable": "",
+                                                                "height": "wrap_content",
+                                                                "width": "wrap_content",
+                                                                "weight": "8",
+                                                                "TextBold": false,
+                                                                "TextItalic": false,
+                                                                "type": "TextView"
+                                                            },
+                                                            {
+                                                                "Value": "<___>",
+                                                                "Variable": "",
+                                                                "height": "wrap_content",
+                                                                "width": "wrap_content",
+                                                                "weight": "8",
+                                                                "TextBold": false,
+                                                                "TextItalic": false,
+                                                                "TextSize": "20",
+                                                                "type": "TextView"
+                                                            }
+                                                        ]
+                                                    }
+                                                ]
                                             },
                                             {
-                                                "Value": "@current_cell",
+                                                "type": "LinearLayout",
                                                 "Variable": "",
+                                                "orientation": "horizontal",
                                                 "height": "wrap_content",
-                                                "width": "wrap_content",
-                                                "weight": "0",
-                                                "TextSize": "20",
-                                                "type": "TextView"
-                                            },
-                                            {
-                                                "Value": "",
-                                                "Variable": "",
-                                                "height": "wrap_content",
-                                                "width": "wrap_content",
-                                                "weight": "0",
-                                                "type": "TextView"
-                                            },
-                                            {
-                                                "Value": "х",
-                                                "Variable": "btn_clear_cell",
-                                                "height": "wrap_content",
-                                                "width": "wrap_content",
-                                                "weight": "0",
-                                                "TextBold": false,
-                                                "TextItalic": false,
-                                                "type": "Button"
+                                                "width": "match_parent",
+                                                "weight": "10",
+                                                "Elements": [
+                                                    {
+                                                        "Value": "х",
+                                                        "Variable": "btn_clear_cell",
+                                                        "height": "wrap_content",
+                                                        "width": "match_parent",
+                                                        "weight": "0",
+                                                        "TextBold": false,
+                                                        "TextItalic": false,
+                                                        "type": "Button"
+                                                    }
+                                                ]
                                             }
                                         ]
                                     },
