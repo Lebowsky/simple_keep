@@ -1519,8 +1519,7 @@ class DocsListScreen(Screen):
         results = self.service.get_doc_view_data(doc_type, doc_status)
         return results
 
-    @staticmethod
-    def _prepare_table_data(list_data):
+    def _prepare_table_data(self, list_data):
         table_data = []
         for record in list_data:
             doc_status = ''
@@ -1532,11 +1531,15 @@ class DocsListScreen(Screen):
             elif not (record['verified'] and record['sent']):
                 doc_status = 'К выполнению'
 
+            doc_title = '{} № {} от {}'.format(
+                self.hash_map['doc_type'], self.hash_map['doc_n'], self.hash_map['doc_date'])
+
             table_data.append({
                 'key': record['id_doc'],
                 'type': record['doc_type'],
                 'number': record['doc_n'],
-                'data': record['doc_date'],
+                'doc_title': doc_title,
+                'data': self._format_date(record['doc_date']),
                 'warehouse': record['RS_warehouse'],
                 'countragent': record['RS_countragent'],
                 'add_mark_selection': record['add_mark_selection'],
@@ -1654,6 +1657,9 @@ class DocsListScreen(Screen):
                 self.hash_map.show_screen('Плитки')
         else:
             self.hash_map.toast('Ошибка удаления документа')
+
+    def _format_date(self, date_str: str):
+        return datetime.fromisoformat(date_str).strftime('%m-%d-%Y %H:%M:%S')
 
     def get_id_doc(self):
         card_data = self.hash_map.get_json("card_data") or {}
@@ -1845,8 +1851,7 @@ class AdrDocsListScreen(DocsListScreen):
         results = self.service.get_doc_view_data(doc_type, doc_status)
         return results
 
-    @staticmethod
-    def _prepare_table_data(list_data) -> list:
+    def _prepare_table_data(self, list_data) -> list:
         table_data = []
         for record in list_data:
             doc_status = ''
@@ -1858,11 +1863,15 @@ class AdrDocsListScreen(DocsListScreen):
             elif not (record['verified'] and record['sent']):
                 doc_status = 'К выполнению'
 
+            doc_title = '{} от {}'.format(
+                record['doc_n'], self._format_date(record['doc_date']))
+
             table_data.append({
                 'key': record['id_doc'],
                 'doc_type': record['doc_type'],
+                'doc_title': doc_title,
                 'doc_n': record['doc_n'],
-                'doc_date': record['doc_date'],
+                'doc_date': self._format_date(record['doc_date']),
                 'warehouse': record['warehouse'],
                 'add_mark_selection': record['add_mark_selection'],
                 'status': doc_status
@@ -1941,6 +1950,7 @@ class AdrDocsListScreen(DocsListScreen):
         put_data['table_type'] = table_type
         put_data['doc_n'] = card_data['doc_n']
         put_data['doc_date'] = card_data['doc_date']
+        put_data['doc_title'] = card_data['doc_title']
         put_data['warehouse'] = card_data['warehouse']
 
         return put_data
@@ -3033,6 +3043,7 @@ class AdrDocDetailsScreen(DocDetailsScreen):
         self.hash_map.put('tables_type', self.tables_types)
         self.hash_map.put('return_selected_data')
         self.hash_map['table_type'] = 'Размещение' if self.screen_values['table_type']=='in' else 'Отбор'
+        self._set_current_cell()
 
     def on_start(self):
         super()._on_start()
@@ -3131,6 +3142,8 @@ class AdrDocDetailsScreen(DocDetailsScreen):
         if selected_cell:
             self._set_current_cell(selected_cell.get('name'), selected_cell.get('id'))
             self.hash_map.remove('selected_card')
+        else:
+            self._set_current_cell()
 
     def _clear_cell(self):
         self._set_current_cell()
@@ -3422,9 +3435,14 @@ class AdrDocDetailsScreen(DocDetailsScreen):
 
         product_row['_layout'].BackgroundColor = background_color
 
+
     def _set_current_cell(self, current_cell='', current_cell_id=''):
         self.current_cell, self.current_cell_id = current_cell, current_cell_id
         self.hash_map['current_cell'] = current_cell
+        if current_cell_id:
+            self.hash_map['Show_btn_clear_cell'] = 1
+        else:
+            self.hash_map['Show_btn_clear_cell'] = -1
 
 
 class FlowDocDetailsScreen(DocDetailsScreen):
