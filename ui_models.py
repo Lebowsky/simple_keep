@@ -4953,7 +4953,7 @@ class ItemCard(Screen):
         self.service = GoodsService()
 
     def on_start(self):
-        pass
+        self.init_screen()
 
     def on_input(self):
         listeners = {
@@ -4971,24 +4971,21 @@ class ItemCard(Screen):
         self.hash_map.no_refresh()
 
     def on_post_start(self):
-        if self._is_init_handler():
-            item_properties = self.service.get_values_from_barcode("id_good", self.screen_values['item_id'])
+        item_properties = self.service.get_values_from_barcode("id_good", self.screen_values['item_id'])
 
-            if item_properties:
-                variants_cards_data = self._get_variants_cards_data(item_properties)
-                variants_cards = self._get_variants_cards_view(variants_cards_data)
-                self.hash_map['barcode_cards'] = variants_cards.to_json()
-                self.hash_map.put("load_info", "")
-            else:
-                self.hash_map.put("load_info", "Данные о характеристиках отсутствуют")
+        if item_properties:
+            variants_cards_data = self._get_variants_cards_data(item_properties)
+            variants_cards = self._get_variants_cards_view(variants_cards_data)
+            self.hash_map['barcode_cards'] = variants_cards.to_json()
+            self.hash_map.put("load_info", "")
+        else:
+            self.hash_map.put("load_info", "Данные о характеристиках отсутствуют")
 
-            super().on_post_start()
 
     def init_screen(self):
         super().init_screen()
 
         item_data = self.service.get_item_data_by_id(item_id=self.screen_values['item_id'])
-
         if item_data:
             put_data = {
                 "good_name": item_data['name'],

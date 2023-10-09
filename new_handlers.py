@@ -372,13 +372,13 @@ def select_item_result(hash_map: HashMap):
 
 @HashMap()
 def goods_on_start(hash_map):
-    screen = ui_models.GoodsListScreen(hash_map, rs_settings)
+    screen = create_screen(hash_map, ui_models.GoodsListScreen)
     screen.init_screen().on_start()
 
 
 @HashMap()
 def goods_on_input(hash_map: HashMap):
-    screen = ui_models.GoodsListScreen(hash_map, rs_settings)
+    screen = create_screen(hash_map, ui_models.GoodsListScreen)
     screen.on_input()
 
 
@@ -396,19 +396,19 @@ def select_type_goods_on_input(hash_map):
 
 @HashMap()
 def good_card_on_start(hash_map):
-    screen: ui_models.ItemCard = create_screen(hash_map)
+    screen = create_screen(hash_map, ui_models.ItemCard)
     screen.on_start()
 
 
 @HashMap()
 def good_card_post_start(hash_map):
-    screen: ui_models.ItemCard = create_screen(hash_map)
+    screen = create_screen(hash_map, ui_models.ItemCard)
     screen.on_post_start()
 
 
 @HashMap()
 def good_card_on_input(hash_map):
-    screen: ui_models.ItemCard = create_screen(hash_map)
+    screen = create_screen(hash_map, ui_models.ItemCard)
     screen.on_input()
 
 
