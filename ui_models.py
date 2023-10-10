@@ -2976,58 +2976,6 @@ class DocumentsDocDetailScreen(DocDetailsScreen):
         elif listener == 'btn_doc_mark_verified':
             self.hash_map.show_dialog('confirm_verified', 'Завершить документ?', ['Да', 'Нет'])
 
-    def _get_barcode_card(self):
-        # TODO Переделать через виджеты
-
-        ls = {"customcards": {
-            "options": {
-                "search_enabled": False,
-                "save_position": True
-            },
-            "layout": {
-                "type": "LinearLayout",
-                "orientation": "vertical",
-                "height": "match_parent",
-                "width": "match_parent",
-                "weight": "0",
-                "Elements": [
-                    {
-                        "type": "LinearLayout",
-                        "orientation": "horizontal",
-                        "height": "match_parent",
-                        "width": "match_parent",
-                        "weight": "0",
-                        "Elements": [
-                            {"type": "TextView",
-                             "height": "wrap_content",
-                             "width": "match_parent",
-                             "weight": "1",
-                             "Value": "@barcode",
-                             "TextSize": self.rs_settings.get('goodsTextSize'),
-                             "Variable": ""
-                             },
-                            {
-                                "type": "TextView",
-                                "show_by_condition": "",
-                                "Value": "@picture",
-                                "TextColor": "#DB7093",
-                                "BackgroundColor": "#FFFFFF",
-                                "Variable": "btn_tst1",
-                                "NoRefresh": False,
-                                "document_type": "",
-                                "cardCornerRadius": "15dp",
-                                "weight": "1",
-                                "mask": ""
-                            }]
-                    }
-                ]
-            }}
-        }
-        return ls
-
-    def _get_doc_barcode_data(self, args):
-        return self.service.get_doc_barcode_data(args)
-
     def _set_vision_settings(self, articles: List[str]):
         settings = {
             "values_list": ';'.join(articles),
@@ -3906,6 +3854,8 @@ class BaseGoodSelect(Screen):
             self._handle_doc_good_barcode()
         elif listener == 'btn_series_show':
             self._open_series_screen(self.hash_map['key'])
+        elif listener == 'btn_marks_show':
+            self._open_marks_screen(self.hash_map['key'])
 
     def _handle_btn_ok(self):
         current_elem = self._get_current_elem()
@@ -4103,6 +4053,20 @@ class BaseGoodSelect(Screen):
             self.rs_settings
         )
         screen.show_process_result(screen_values)
+
+    def _open_marks_screen(self, doc_row_id):
+        table_data = self._get_marks_data(doc_row_id)
+
+        screen_args = {
+            'title': 'Марки товара',
+            'table_data': table_data,
+            'table_header': {'mark_code': 'Марка'},
+            'enumerate': True
+        }
+        ShowItemsScreen(self.hash_map, self.rs_settings).show(screen_args)
+
+    def _get_marks_data(self, doc_row_id):
+        return self.service.get_marks_data(self.id_doc, doc_row_id)
 
     def _update_doc_table_row(self, data: Dict, row_id):
         if not self.hash_map.get('delta'):
@@ -7154,7 +7118,7 @@ class Timer:
             service = db_services.TimerService()
             new_documents = service.get_new_load_docs(data)
             service.save_load_data(data)
-            self.db_service.update_data_from_json(docs_data['data'])
+            # self.db_service.update_data_from_json(docs_data['data'])
 
             if new_documents:
                 notify_text = self._get_notify_text(new_documents)
