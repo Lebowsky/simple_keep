@@ -7379,13 +7379,11 @@ class WebServiceSyncCommand:
 
     def get_hash_map(self):
         body = self.hash_map.get_json('ws_body')
-
         if body:
             response = []
 
             if isinstance(body, dict):
                 response.append({body['item']: self.hash_map.get(**body)})
-                self.hash_map.toast(self.hash_map.get('selected_card_data'))
             elif isinstance(body, list):
                 for item in body:
                     response.append({item['item']: self.hash_map.get(**item)})
