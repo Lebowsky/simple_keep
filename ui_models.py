@@ -43,6 +43,7 @@ class Screen(ABC):
         self.finish_process = False
         self.parent_screen = None
         self.on_start_handlers: List[Callable]=[]
+        self.init_params = {}
 
     @abstractmethod
     def on_start(self):
@@ -6189,6 +6190,123 @@ class SelectItemScreen(Screen):
         self.hash_map.remove('return_value_key')
         self.hash_map.remove('title')
         self.hash_map.put('FinishProcessResult')
+
+
+class ShowItemsScreen(Screen):
+    process_name = 'SelectItemProcess'
+    screen_name = 'SelectItemsScreen'
+
+    def __init__(self, hash_map: HashMap, rs_settings):
+        super().__init__(hash_map, rs_settings)
+        self.init_params = ['title', 'table_data', 'table_header', 'enumerate']
+        self.enumerate=True
+        self.table_data = []
+        self.fields = []
+        self.table_header = {}
+
+    def init_screen(self):
+        self.hash_map.set_title(self.hash_map['title'] or 'Список')
+        self.enumerate = self.hash_map.get_bool('enumerate')
+        self.table_data = self.hash_map.get_json('table_data')
+        self.table_header = self.hash_map.get_json('table_header')
+
+        if not self.table_data:
+            raise ValueError ('table_data not initialized')
+
+        if not self.table_header:
+            self.table_header = {key: key for key in next(iter(self.table_data)).keys()}
+
+        table_data = self._prepare_table_data()
+        self.hash_map['items_table'] = self._get_table_view(table_data)
+
+    def on_start(self):
+        self.init_screen()
+
+    def on_input(self):
+        listeners = {
+            'ON_BACK_PRESSED': self._back_screen,
+        }
+        if self.listener in listeners:
+            listeners[self.listener]()
+
+        self.hash_map.no_refresh()
+
+    def _prepare_table_data(self):
+        self.fields = list(self.table_header.keys())
+        table_header_layout = {'_layout': self._get_table_header_view()}
+
+        if self.enumerate:
+            table_data = [dict(**{'pos': 'N'}, **self.table_header, **table_header_layout)]
+            table_data += [dict(**{'pos': pos}, **row) for pos, row in enumerate(self.table_data, start=1)]
+            return table_data
+        else:
+            table_data = [dict(**self.table_header, **table_header_layout)] + self.table_data
+            return table_data
+
+    def _get_table_header_view(self):
+        return self._get_fields_layout(is_header=True)
+
+    def _get_fields_layout(self, is_header=False):
+        if is_header:
+            background_color = '#FFFFFF'
+            text_size = 15
+        else:
+            background_color = '#FBE9E7'
+            text_size = 20
+
+        if not self.table_data:
+            return
+
+        fields_layout = widgets.LinearLayout(
+            orientation='horizontal',
+            width='match_parent',
+            BackgroundColor=background_color,
+        )
+
+        if self.enumerate:
+            pos_layout = self._get_column_view(value='pos', text_size=text_size)
+            fields_layout.append(pos_layout)
+
+        fields_layout.append(
+            widgets.LinearLayout(
+                *[self._get_column_view(value=field, text_size=text_size) for field in self.fields],
+                width='match_parent',
+                orientation='horizontal',
+                weight=8
+            )
+        )
+
+        return fields_layout
+
+    def _get_column_view(self, value, text_size=20, weight=1.0):
+        return widgets.LinearLayout(
+            widgets.TextView(
+                Value=f'@{value}',
+                gravity_horizontal='center',
+                TextSize=text_size,
+                width='match_parent'
+            ),
+            width='match_parent',
+            weight=weight,
+            StrokeWidth=1,
+        )
+
+    def _get_table_view(self, table_data):
+
+
+        table_view = widgets.CustomTable(
+            widgets.LinearLayout(
+                self._get_fields_layout(),
+                width='match_parent',
+            ),
+            options=widgets.Options().options,
+            tabledata=table_data
+        )
+
+        return table_view.to_json()
+
+    def _back_screen(self):
+        self._finish_process()
 
 
 # ^^^^^^^^^^^^^^^^^^^^^ SelectItemScreen ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
