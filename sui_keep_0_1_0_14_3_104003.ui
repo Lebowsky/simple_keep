@@ -1052,6 +1052,11 @@
                                 "type": "MenuItem",
                                 "Value": "Серии",
                                 "Variable": "btn_series_show"
+                            },
+                            {
+                                "type": "MenuItem",
+                                "Value": "Маркировка",
+                                "Variable": "btn_marks_show"
                             }
                         ],
                         "Handlers": [
@@ -8122,7 +8127,7 @@
         "PyTimerTask": [
             {
                 "PyTimerTaskKey": "timer_update",
-                "PyTimerTaskDef": "@timer_update",
+                "PyTimerTaskDef": "timer_update",
                 "PyTimerTaskPeriod": "15000",
                 "PyTimerTaskBuilIn": false
             }
