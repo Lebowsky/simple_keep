@@ -367,6 +367,17 @@ def select_item_on_input(hash_map: HashMap):
 def select_item_result(hash_map: HashMap):
     hash_map.toast('select_item_result')
 
+@HashMap()
+def show_items_screen_on_start(hash_map: HashMap):
+    screen = create_screen(hash_map, ui_models.ShowItemsScreen)
+    screen.on_start()
+
+@HashMap()
+def show_items_screen_on_input(hash_map: HashMap):
+    screen = create_screen(hash_map, ui_models.ShowItemsScreen)
+    screen.on_input()
+
+
 # =============== Goods =================
 
 
