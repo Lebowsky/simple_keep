@@ -4059,11 +4059,11 @@ class BaseGoodSelect(Screen):
 
         screen_args = {
             'title': 'Марки товара',
-            'table_data': table_data,
-            'table_header': {'mark_code': 'Марка'},
+            'table_data': json.dumps(table_data),
+            'table_header': json.dumps({'mark_code': 'Марка'}),
             'enumerate': True
         }
-        ShowItemsScreen(self.hash_map, self.rs_settings).show(screen_args)
+        ShowItemsScreen(self.hash_map, self.rs_settings).show_process_result(screen_args)
 
     def _get_marks_data(self, doc_row_id):
         return self.service.get_marks_data(self.id_doc, doc_row_id)
@@ -6158,7 +6158,7 @@ class SelectItemScreen(Screen):
 
 class ShowItemsScreen(Screen):
     process_name = 'SelectItemProcess'
-    screen_name = 'SelectItemsScreen'
+    screen_name = 'ShowItemsScreen'
 
     def __init__(self, hash_map: HashMap, rs_settings):
         super().__init__(hash_map, rs_settings)
@@ -6167,6 +6167,8 @@ class ShowItemsScreen(Screen):
         self.table_data = []
         self.fields = []
         self.table_header = {}
+        self.text_size = 15
+        self.header_text_size = 15
 
     def init_screen(self):
         self.hash_map.set_title(self.hash_map['title'] or 'Список')
@@ -6213,10 +6215,10 @@ class ShowItemsScreen(Screen):
     def _get_fields_layout(self, is_header=False):
         if is_header:
             background_color = '#FFFFFF'
-            text_size = 15
+            text_size = self.header_text_size
         else:
             background_color = '#FBE9E7'
-            text_size = 20
+            text_size = self.text_size
 
         if not self.table_data:
             return
@@ -6242,7 +6244,7 @@ class ShowItemsScreen(Screen):
 
         return fields_layout
 
-    def _get_column_view(self, value, text_size=20, weight=1.0):
+    def _get_column_view(self, value, text_size=20, weight=1):
         return widgets.LinearLayout(
             widgets.TextView(
                 Value=f'@{value}',
@@ -6251,13 +6253,12 @@ class ShowItemsScreen(Screen):
                 width='match_parent'
             ),
             width='match_parent',
+            height='match_parent',
             weight=weight,
             StrokeWidth=1,
         )
 
     def _get_table_view(self, table_data):
-
-
         table_view = widgets.CustomTable(
             widgets.LinearLayout(
                 self._get_fields_layout(),

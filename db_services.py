@@ -72,6 +72,7 @@ class TimerService(DbService):
                         'id_property': item['id_property'],
                         'id_series': item['id_series'],
                         'id_unit': item['id_unit'],
+                        'mark_code': item['mark_code'],
                         'barcode_from_scanner': '',
                         'is_plan': '',
                         'approved': '',
@@ -814,9 +815,9 @@ class DocService:
                     b.id_good = t.id_good AND
                     b.id_property = t.id_properties AND
                     b.id_series = t.id_series AND
-                    t.id = {doc_row_id}
+                    t.id = "{doc_row_id}"
             
-            WHERE b.id_doc = {id_doc}
+            WHERE b.id_doc = "{id_doc}"
         '''
 
         res = self._get_query_result(query, return_dict=True)
