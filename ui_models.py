@@ -6073,8 +6073,11 @@ class SeriesSelectScreen(Screen):
 
     def _refresh_total_qtty(self):
         real_qtty = self.service.get_total_qtty()
-        self.service.update_total_qty(qty=real_qtty, row_id=self.screen_values['doc_row_id'])
-        self.hash_map['qtty'] = self._format_quantity(real_qtty)
+        old_qty = float(self.hash_map['qtty'] or 0)
+
+        if old_qty != float(real_qtty or 0):
+            self.service.update_total_qty(qty=real_qtty, row_id=self.screen_values['doc_row_id'])
+            self.hash_map['qtty'] = self._format_quantity(real_qtty)
 
     def _barcode_listener(self):
         self._identify_add_barcode_series()
@@ -7197,10 +7200,6 @@ class Timer:
         self.load_docs()
         self._upload_data()
         self._upload_buffer_data()
-
-        if current_screen:
-            current_screen.refresh_screen(self.hash_map)
-
 
     def put_notification(self, text, title=None):
         self.hash_map.notification(text, title)
