@@ -44,6 +44,8 @@ class TimerService(DbService):
         if not data:
             return
 
+        self._prepare_data_to_save(data)
+
         clear_tables = ['RS_docs_table', 'RS_adr_docs_table', 'RS_docs_barcodes, RS_barc_flow', 'RS_docs_series']
 
         for table_name, values in data.items():
@@ -57,6 +59,42 @@ class TimerService(DbService):
                 self.provider.replace(values)
             else:
                 self.provider.replace(values)
+
+    def _prepare_data_to_save(self, data):
+        if 'RS_docs_barcodes' in data:
+            docs_barcodes = []
+            for item in data['RS_docs_barcodes']:
+                barcode_data = self.parse_barcode(item['mark_code'])
+                docs_barcodes.append(
+                    {
+                        'id_doc': item['id_doc'],
+                        'id_good': item['id_good'],
+                        'id_property': item['id_property'],
+                        'id_series': item['id_series'],
+                        'id_unit': item['id_unit'],
+                        'barcode_from_scanner': '',
+                        'is_plan': '',
+                        'approved': '',
+                        'GTIN': barcode_data['GTIN'],
+                        'Series': barcode_data['Series']
+                    }
+                )
+            data['RS_docs_barcodes'] = docs_barcodes
+
+    def parse_barcode(self, val):
+        if len(val) < 21:
+            return {'GTIN': '', 'Series': ''}
+
+        val = val.replace('(01)', '01').replace('(21)', '21')
+
+        if val[:2] == '01':
+            gtin = val[2:16]
+            series = val[18:]
+        else:
+            gtin = val[:14]
+            series = val[14:]
+
+        return {'GTIN': gtin, 'Series': series}
 
     def get_new_load_docs(self, data: dict) -> dict:
         loaded_documents = {}
@@ -765,21 +803,23 @@ class DocService:
 
         return {'result': True, 'error': ''}
 
-    def get_doc_barcode_data(self, args):
-        query = '''
-            SELECT
-            "(01)" || GTIN || "(21)" || Series as mark_code,
-            approved
-            FROM RS_docs_barcodes
-            Where
-            id_doc = :id_doc AND
-            id_good = :id_good AND
-            id_property = :id_property AND
-            id_series = :id_series 
-            --AND  id_unit = :id_unit
-         '''
+    def get_marks_data(self, id_doc, doc_row_id):
+        query = f'''
+            SELECT 
+                b.mark_code,
+                b.approved 
+            FROM RS_docs_barcodes AS b
+            JOIN RS_docs_table as t
+                ON b.id_doc=t.id_doc AND
+                    b.id_good = t.id_good AND
+                    b.id_property = t.id_properties AND
+                    b.id_series = t.id_series AND
+                    t.id = {doc_row_id}
+            
+            WHERE b.id_doc = {id_doc}
+        '''
 
-        res = self._get_query_result(query, args, return_dict=True)
+        res = self._get_query_result(query, return_dict=True)
         return res
 
     def get_docs_count(self, doc_type=''):
