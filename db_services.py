@@ -1022,7 +1022,6 @@ class SeriesService(DbService):
             AND (name = ? OR number = ?)'''
         return get_query_result(q, params, True)
 
-
     def get_adr_series_by_barcode(self, barcode):
         params = [self.params.get('id_doc'), self.params.get('id_good'), self.params.get('cell'),
                   barcode,  barcode]  # self.params.get('id_warehouse'),
@@ -1087,7 +1086,6 @@ class SeriesService(DbService):
         '''
         return get_query_result(q, params, True)
 
-
     def get_series_by_adr_doc_and_goods(self):
         curr_cell = self.params.get('cell') if self.params.get('cell') else self.params.get('id_cell')
         params = (self.params.get('id_doc'), self.params.get('id_good'), curr_cell)  # , self.params.get('id_warehouse')
@@ -1143,7 +1141,6 @@ class SeriesService(DbService):
             '''
         return get_query_result(q, params, True)
 
-
     def add_qtty_to_table_str(self, item_id):
         params = (item_id,)
         q = '''UPDATE RS_docs_series
@@ -1151,7 +1148,6 @@ class SeriesService(DbService):
             WHERE id = ?'''
 
         return get_query_result(q, params)
-
 
     def add_new_series_in_doc_series_table(self, barcode):
         q_params = (
@@ -1171,7 +1167,6 @@ class SeriesService(DbService):
     def delete_current_st(self, id):
         q = 'DELETE FROM RS_docs_series  WHERE id = ?'
         return get_query_result(q, (id,))
-
 
     def get_series_prop_by_id(self, id):
         table_name = self.doc_basic_table_name
@@ -1225,7 +1220,6 @@ class SeriesService(DbService):
         else:
             return {}
 
-
     @staticmethod
     def get_series_table_str(id):
         q = '''
@@ -1255,7 +1249,6 @@ class SeriesService(DbService):
             return res[0]
         else:
             return {}
-
 
     def get_doc_prop_by_id(self, id_doc):
         table_name = self.doc_basic_handler_name
@@ -1344,36 +1337,6 @@ class SeriesService(DbService):
         else:
             return 0
 
-
-    def get_adr_total_qtty(self):
-
-        params = (self.params.get('id_doc'), self.params.get('id_good'),self.params.get('id_properties'), self.params.get('cell'))
-        q = '''
-        SELECT 
-        sum(qtty) FROM RS_docs_series
-         WHERE id_doc = ? AND id_good = ? AND id_properties = ? AND cell = ?'''
-        res = get_query_result(q, params)
-        if res:
-            return res[0][0]
-        else:
-            return 0
-
-
-    def set_total_qtty(self, qtty):
-
-        q_params = (qtty, self.params.get('id_doc'), self.params.get('id_good'), self.params.get('id_properties'))
-        q = '''
-        UPDATE RS_docs_table
-        SET qtty = ?
-        WHERE (RS_docs_table.id_series IS NULL OR RS_docs_table.id_series="" ) 
-        AND RS_docs_table.id_doc = ? AND RS_docs_table.id_good = ? AND RS_docs_table.id_properties = ?
-        '''
-        res = get_query_result(q, q_params)
-
-        DocService().set_doc_status_to_upload(self.params.get('id_doc'))
-
-        return True
-
     def update_total_qty(self, qty, row_id):
         q = f'''
             UPDATE RS_docs_table
@@ -1422,23 +1385,6 @@ class AdrSeriesService(SeriesService):
             return res[0]
         else:
             return {}
-
-
-
-    def set_total_qtty(self, qtty):
-
-        params = (qtty, self.params.get('id_doc'), self.params.get('id_good'), self.params.get('id_properties'), self.params.get('cell'))
-        q = '''
-        UPDATE RS_adr_docs_table
-        SET qtty = ?
-        WHERE (RS_adr_docs_table.id_series IS NULL OR RS_adr_docs_table.id_series="" ) 
-        AND RS_adr_docs_table.id_doc = ? AND RS_adr_docs_table.id_good = ? AND  RS_adr_docs_table.id_properties = ? AND RS_adr_docs_table.id_cell = ?
-        '''
-        res = get_query_result(q, params)
-
-
-        AdrDocService(doc_id = self.params.get('id_doc'), cur_cell = self.params.get('cell')).set_doc_status_to_upload(doc_id = self.params.get('id_doc'))
-        return True
 
     def update_total_qty(self, qty, row_id):
         q = f'''
