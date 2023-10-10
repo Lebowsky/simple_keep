@@ -2236,7 +2236,7 @@ class DocDetailsScreen(Screen):
         row_filter = self.hash_map.get_bool('rows_filter')
 
         for record in doc_details:
-            if row_filter and record['qtty'] == record['qtty_plan']:
+            if row_filter and record['d_qtty'] == record['qtty_plan']:
                 continue
 
             pic = '#f02a' if record['IsDone'] != 0 else '#f00c'
