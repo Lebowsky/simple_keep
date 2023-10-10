@@ -1,6 +1,6 @@
 import json
 from datetime import datetime, timedelta, timezone
-from typing import List, Literal
+from typing import List, Literal, Optional
 
 from ru.travelfood.simple_ui import SimpleSQLProvider as sqlClass
 from ui_global import get_query_result, bulk_query
@@ -510,13 +510,13 @@ class DocService:
             else:
                 where += ' AND doc_type=?'
 
-        if self.is_group_scan is False:
+        if self.is_group_scan is False and self.docs_table_name == 'RS_docs':
             if where:
                 where += f' AND is_group_scan={int(self.is_group_scan)}'
             else:
                 where = f' WHERE is_group_scan={int(self.is_group_scan)}'
         
-        if self.is_barc_flow is False:
+        if self.is_barc_flow is False and self.docs_table_name == 'RS_docs':
             if where:
                 where += f' AND is_barc_flow={int(self.is_barc_flow)}'
             else:
@@ -667,45 +667,15 @@ class DocService:
         res = self._get_query_result(query, return_dict=True)
         return res
 
-    def get_goods_list_with_doc_data(self, articles_list: List[str]) -> List[dict]:
-        qs = ','.join('?' for _ in articles_list)
-        query = f"""
-            SELECT
-            RS_goods.id as id_good,
-            RS_goods.code as code,
-            RS_goods.name as name,
-            RS_goods.art as art,
-            RS_goods.description as description,
-            RS_docs_table.id_unit as id_unit,
-            RS_units.name as unit_name,
-            RS_types_goods.name as type_good,
-            RS_docs_table.id as doc_table_id,
-            RS_docs_table.qtty_plan as qtty_plan,
-            RS_docs_table.qtty as qtty,
-            RS_docs_table.id_properties as id_property,
-            RS_properties.name as property_name,
-            RS_docs_table.id_series as id_series,
-            RS_series.name as series_name,
-            RS_docs_table.price as price,
-            RS_price_types.name as price_name
-            
-            FROM RS_docs_table
-            LEFT JOIN RS_goods ON RS_docs_table.id_good = RS_goods.id
-            LEFT JOIN RS_types_goods ON RS_types_goods.id = RS_goods.type_good
-            LEFT JOIN RS_units ON RS_units.id = RS_goods.unit
-            LEFT JOIN RS_properties ON RS_goods.id = RS_properties.id_owner
-            LEFT JOIN RS_series ON RS_series.id = RS_docs_table.id_series
-            LEFT JOIN RS_price_types ON RS_price_types.id = RS_docs_table.id_price
-            WHERE RS_docs_table.id_doc = ? AND art IN ({qs})
-            """
-
-        goods = self.provider.sql_query(
-            query,
-            f'{self.doc_id},{",".join(articles_list)}'
-        )
-        return goods
-
-    def get_doc_details_data(self, id_doc, first_elem, items_on_page, row_filters=None, search_string=None) -> list:
+    def get_doc_details_data(
+            self,
+            id_doc: str,
+            first_elem: int,
+            items_on_page: int,
+            articles_list: Optional[List[str]] = None,
+            row_filters: Optional[str] = None,
+            search_string: Optional[str] = None
+    ) -> list:
         select_query = f"""
             SELECT
             RS_docs_table.id,
@@ -752,11 +722,15 @@ class DocService:
         {row_filters_condition}
         {search_string_condition}
         """
+        args = ()
+        if articles_list:
+            where_query += f"""AND art IN ({','.join('?' for _ in articles_list)})"""
+            args += tuple(articles_list)
         order_by = """ORDER BY last_updated DESC"""
         limit = f'LIMIT {items_on_page} OFFSET {first_elem}'
         query = f"{select_query} {where_query} {order_by} {limit}"
 
-        res = self._get_query_result(query, return_dict=True)
+        res = self._get_query_result(query, args, return_dict=True)
         # res = self._sql_query(query, '')
         return res
 
@@ -1404,8 +1378,10 @@ class SelectItemService(DbService):
         self.provider.table_name = self.table_name
         return self.provider.select(cond)
 
+
 class AdrDocService(DocService):
     def __init__(self, doc_id='', cur_cell='', table_type='in'):
+        super().__init__()
         self.doc_id = doc_id
         self.docs_table_name = 'RS_Adr_docs'
         self.details_table_name = 'RS_adr_docs_table'
