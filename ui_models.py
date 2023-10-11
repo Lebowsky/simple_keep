@@ -1673,6 +1673,7 @@ class DocsListScreen(Screen):
         doc_number = card_data.get('number')
         return doc_number
 
+
 class GroupScanDocsListScreen(DocsListScreen):
     screen_name = 'Документы'
     process_name = 'Групповая обработка'
@@ -2004,7 +2005,6 @@ class FlowDocScreen(DocsListScreen):
     def on_start(self):
         super().on_start()
 
-
     def on_input(self):
         if self.listener == "CardsClick":
             args = self._get_selected_card_put_data()
@@ -2212,7 +2212,7 @@ class DocDetailsScreen(Screen):
         self.hash_map.put("Show_previous_page", "0")
 
     def _check_next_page(self, elems_count):
-        if elems_count < self.items_on_page:
+        if elems_count <= self.items_on_page:
             if not self.hash_map.containsKey('current_first_element_number'):
                 self.hash_map.put('current_first_element_number', '0')
             self.hash_map.put("Show_next_page", "0")
@@ -3057,6 +3057,7 @@ class DocumentsDocDetailScreen(DocDetailsScreen):
         self.hash_map.put('Show_warehouse', finded_articles)
         self.hash_map.put('Show_countragent', finded_articles)
         self.hash_map.put('Show_finded_by_article', str(-int(finded_articles)))
+
 
 
 class AdrDocDetailsScreen(DocDetailsScreen):
@@ -5865,6 +5866,8 @@ class SelectUnit(GoodsPricesItemCard):
 # ^^^^^^^^^^^^^^^^^^^^^ GoodsPrices ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 # ==================== Series =============================
+
+
 class SeriesSelectScreen(Screen):
     process_name = 'SeriesProcess'
     screen_name = 'SeriesSelectScreen'
@@ -5906,7 +5909,6 @@ class SeriesSelectScreen(Screen):
     def on_start(self):
         self.hash_map.set_title(self.screen_values['title'])
         self.init_screen()
-
         # self._refresh_series_cards()
 
     def on_input(self):
@@ -5919,6 +5921,8 @@ class SeriesSelectScreen(Screen):
             self._barcode_listener()
         elif self.listener == 'LayoutAction':
             self._layout_action()
+        elif self._is_result_positive('confirm_delete'):
+            self.delete_series()
 
         self.hash_map.no_refresh()
 
@@ -5950,8 +5954,18 @@ class SeriesSelectScreen(Screen):
         self._refresh_total_qtty()
         self.hash_map.refresh_screen()
 
+    def _check_qtty_limits(self):
+        if self.hash_map.get_bool('control'):
+            qtty = self._format_quantity(self.hash_map.get('qtty'))
+            qtty_plan = self._format_quantity(self.hash_map.get('qtty_plan'))
+            if qtty > qtty_plan:
+                self.toast("Факт превышает план")
+                return False
+        return True
+
     def _back_screen(self):
-        self._finish_process()
+        if self._check_qtty_limits():
+            self._finish_process()
 
     def _finish_process(self):
         self.hash_map.put('FinishProcessResult')
@@ -6000,6 +6014,10 @@ class SeriesSelectScreen(Screen):
                     widgets.TextView(
                         Value='@best_before',
                         TextSize=title_text_size,
+                    ),
+                    widgets.PopupMenuButton(
+                        Value='Удалить',
+                        Variable="menu_delete",
                     ),
 
                     orientation='horizontal',
@@ -6054,9 +6072,12 @@ class SeriesSelectScreen(Screen):
 
     def _layout_action(self):
         layout_listener = self.hash_map.get('layout_listener')
+
         if layout_listener == 'Удалить':
-            id = self.hash_map.get('selected_card_key')
-            self.service.delete_current_st(id)
+            self.hash_map.show_dialog(
+                listener='confirm_delete',
+                title='Удалить серию?'
+            )
         elif layout_listener == 'Изменить':
             self.hash_map['current_series_id'] = self.hash_map.get('selected_card_key')
             self.hash_map.show_screen('Заполнение серии', self.params)
@@ -6067,6 +6088,9 @@ class SeriesSelectScreen(Screen):
         else:
             return qtty
 
+    def delete_series(self):
+        id = self.hash_map.get('selected_card_key')
+        self.service.delete_current_st(id)
 
 class SeriesItem(Screen):
     process_name = 'SeriesProcess'
