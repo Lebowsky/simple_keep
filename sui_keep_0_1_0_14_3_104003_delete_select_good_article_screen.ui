@@ -70,7 +70,10 @@
                                 "method": "tiles_on_input",
                                 "postExecute": ""
                             }
-                        ]
+                        ],
+                        "onlineOnStart": false,
+                        "onlineOnAfterStart": false,
+                        "onlineOnInput": false
                     },
                     {
                         "type": "Operation",
@@ -114,7 +117,10 @@
                                                 "weight": "1",
                                                 "type": "SpinnerLayout"
                                             }
-                                        ]
+                                        ],
+                                        "BackgroundColor": "",
+                                        "StrokeWidth": "",
+                                        "Padding": ""
                                     },
                                     {
                                         "Value": "@docCards",
@@ -124,7 +130,10 @@
                                         "weight": "0",
                                         "type": "CardsLayout"
                                     }
-                                ]
+                                ],
+                                "BackgroundColor": "",
+                                "StrokeWidth": "",
+                                "Padding": ""
                             }
                         ],
                         "Handlers": [
@@ -144,7 +153,10 @@
                                 "method": "docs_on_select",
                                 "postExecute": ""
                             }
-                        ]
+                        ],
+                        "onlineOnStart": false,
+                        "onlineOnAfterStart": false,
+                        "onlineOnInput": false
                     },
                     {
                         "type": "Operation",
@@ -152,7 +164,7 @@
                         "Timer": false,
                         "hideToolBarScreen": false,
                         "hideBottomBarScreen": true,
-                        "noScroll": false,
+                        "noScroll": true,
                         "handleKeyUp": false,
                         "noConfirmation": true,
                         "Elements": [
@@ -167,67 +179,60 @@
                                     {
                                         "type": "LinearLayout",
                                         "Variable": "",
-                                        "orientation": "horizontal",
+                                        "orientation": "vertical",
                                         "height": "wrap_content",
                                         "width": "match_parent",
                                         "weight": "0",
                                         "Elements": [
                                             {
-                                                "type": "LinearLayout",
+                                                "Value": "@doc_n",
                                                 "Variable": "",
-                                                "orientation": "horizontal",
                                                 "height": "wrap_content",
                                                 "width": "match_parent",
-                                                "weight": "1",
-                                                "Elements": [
-                                                    {
-                                                        "type": "LinearLayout",
-                                                        "Variable": "",
-                                                        "orientation": "vertical",
-                                                        "height": "wrap_content",
-                                                        "width": "match_parent",
-                                                        "weight": "0",
-                                                        "Elements": [
-                                                            {
-                                                                "Value": "@doc_n",
-                                                                "Variable": "",
-                                                                "height": "wrap_content",
-                                                                "width": "match_parent",
-                                                                "weight": "0",
-                                                                "TextSize": "24",
-                                                                "TextColor": "#7A005C",
-                                                                "type": "TextView"
-                                                            },
-                                                            {
-                                                                "Value": "@doc_date",
-                                                                "Variable": "doc_date",
-                                                                "height": "wrap_content",
-                                                                "width": "match_parent",
-                                                                "weight": "0",
-                                                                "TextBold": false,
-                                                                "type": "TextView"
-                                                            },
-                                                            {
-                                                                "Value": "@warehouse",
-                                                                "Variable": "warehouse",
-                                                                "height": "wrap_content",
-                                                                "width": "match_parent",
-                                                                "weight": "0",
-                                                                "type": "TextView"
-                                                            },
-                                                            {
-                                                                "Value": "@countragent",
-                                                                "Variable": "countragent",
-                                                                "height": "wrap_content",
-                                                                "width": "match_parent",
-                                                                "weight": "0",
-                                                                "type": "TextView"
-                                                            }
-                                                        ]
-                                                    }
-                                                ]
+                                                "weight": "0",
+                                                "TextSize": "24",
+                                                "TextColor": "#7A005C",
+                                                "type": "TextView"
+                                            },
+                                            {
+                                                "Value": "@doc_date",
+                                                "Variable": "doc_date",
+                                                "height": "wrap_content",
+                                                "width": "match_parent",
+                                                "weight": "0",
+                                                "TextBold": false,
+                                                "type": "TextView"
+                                            },
+                                            {
+                                                "Value": "@warehouse",
+                                                "Variable": "warehouse",
+                                                "height": "wrap_content",
+                                                "width": "match_parent",
+                                                "weight": "0",
+                                                "type": "TextView"
+                                            },
+                                            {
+                                                "Value": "@countragent",
+                                                "Variable": "countragent",
+                                                "height": "wrap_content",
+                                                "width": "match_parent",
+                                                "weight": "0",
+                                                "type": "TextView"
+                                            },
+                                            {
+                                                "type": "TextView",
+                                                "height": "wrap_content",
+                                                "width": "match_parent",
+                                                "weight": "0",
+                                                "Value": "Найдено по артикулам",
+                                                "Variable": "finded_by_article",
+                                                "TextSize": "20",
+                                                "TextBold": true
                                             }
-                                        ]
+                                        ],
+                                        "BackgroundColor": "",
+                                        "StrokeWidth": "",
+                                        "Padding": ""
                                     },
                                     {
                                         "type": "LinearLayout",
@@ -316,55 +321,27 @@
                                         "type": "TableLayout"
                                     },
                                     {
-                                        "Value": "@doc_goods_table",
-                                        "Variable": "doc_goods_table",
-                                        "height": "wrap_content",
-                                        "width": "match_parent",
-                                        "weight": "0",
-                                        "TextBold": false,
-                                        "TextItalic": false,
-                                        "type": "CardsLayout"
-                                    },
-                                    {
                                         "Value": "Выгрузить документ",
                                         "Variable": "btn_doc_mark_verified",
                                         "height": "wrap_content",
                                         "width": "match_parent",
                                         "weight": "0",
                                         "type": "Button"
-                                    },
-                                    {
-                                        "type": "LinearLayout",
-                                        "Variable": "",
-                                        "orientation": "horizontal",
-                                        "height": "wrap_content",
-                                        "width": "match_parent",
-                                        "weight": "0",
-                                        "Elements": [
-                                            {
-                                                "Value": "",
-                                                "Variable": "",
-                                                "height": "wrap_content",
-                                                "width": "wrap_content",
-                                                "weight": "0",
-                                                "type": "CButtons"
-                                            }
-                                        ]
-                                    },
-                                    {
-                                        "Value": "@new_text",
-                                        "Variable": "new_text",
-                                        "height": "wrap_content",
-                                        "width": "match_parent",
-                                        "weight": "0",
-                                        "type": "TextView"
                                     }
-                                ]
+                                ],
+                                "BackgroundColor": "",
+                                "StrokeWidth": "",
+                                "Padding": ""
                             },
                             {
                                 "type": "barcode",
                                 "Value": "",
                                 "Variable": "barcode_camera"
+                            },
+                            {
+                                "type": "fab",
+                                "Value": "#f031",
+                                "Variable": "btn_goods_ocr"
                             },
                             {
                                 "type": "MenuItem",
@@ -382,14 +359,9 @@
                                 "Variable": "btn_barcodes"
                             },
                             {
-                                "type": "MenuItem",
                                 "Value": "Выгрузить документ",
-                                "Variable": "btn_doc_mark_verified"
-                            },
-                            {
-                                "type": "fab",
-                                "Value": "#f031",
-                                "Variable": "btn_goods_ocr"
+                                "Variable": "btn_doc_mark_verified",
+                                "type": "MenuItem"
                             }
                         ],
                         "Handlers": [
@@ -409,7 +381,10 @@
                                 "method": "doc_details_listener",
                                 "postExecute": ""
                             }
-                        ]
+                        ],
+                        "onlineOnStart": false,
+                        "onlineOnAfterStart": false,
+                        "onlineOnInput": false
                     },
                     {
                         "type": "Operation",
@@ -703,7 +678,10 @@
                                                         "TextSize": "24",
                                                         "type": "TextView"
                                                     }
-                                                ]
+                                                ],
+                                                "BackgroundColor": "",
+                                                "StrokeWidth": "",
+                                                "Padding": ""
                                             },
                                             {
                                                 "type": "LinearLayout",
@@ -885,9 +863,14 @@
                                                                 ]
                                                             }
                                                         ],
-                                                        "Padding": "center"
+                                                        "Padding": "center",
+                                                        "BackgroundColor": "",
+                                                        "StrokeWidth": ""
                                                     }
-                                                ]
+                                                ],
+                                                "BackgroundColor": "",
+                                                "StrokeWidth": "",
+                                                "Padding": ""
                                             },
                                             {
                                                 "type": "LinearLayout",
@@ -917,9 +900,15 @@
                                                         "TextColor": "#000000",
                                                         "type": "TextView"
                                                     }
-                                                ]
+                                                ],
+                                                "BackgroundColor": "",
+                                                "StrokeWidth": "",
+                                                "Padding": ""
                                             }
-                                        ]
+                                        ],
+                                        "BackgroundColor": "",
+                                        "StrokeWidth": "",
+                                        "Padding": ""
                                     },
                                     {
                                         "type": "LinearLayout",
@@ -1006,7 +995,10 @@
                                                         "TextSize": "21",
                                                         "type": "Button"
                                                     }
-                                                ]
+                                                ],
+                                                "BackgroundColor": "",
+                                                "StrokeWidth": "",
+                                                "Padding": ""
                                             },
                                             {
                                                 "type": "LinearLayout",
@@ -1024,9 +1016,15 @@
                                                         "weight": "1",
                                                         "type": "Button"
                                                     }
-                                                ]
+                                                ],
+                                                "BackgroundColor": "",
+                                                "StrokeWidth": "",
+                                                "Padding": ""
                                             }
-                                        ]
+                                        ],
+                                        "BackgroundColor": "",
+                                        "StrokeWidth": "",
+                                        "Padding": ""
                                     },
                                     {
                                         "Value": "@barcode_cards",
@@ -1036,7 +1034,10 @@
                                         "weight": "0",
                                         "type": "CardsLayout"
                                     }
-                                ]
+                                ],
+                                "BackgroundColor": "",
+                                "StrokeWidth": "",
+                                "Padding": ""
                             },
                             {
                                 "type": "MenuItem",
@@ -1052,11 +1053,6 @@
                                 "type": "MenuItem",
                                 "Value": "Серии",
                                 "Variable": "btn_series_show"
-                            },
-                            {
-                                "type": "MenuItem",
-                                "Value": "Маркировка",
-                                "Variable": "btn_marks_show"
                             }
                         ],
                         "Handlers": [
@@ -1076,7 +1072,10 @@
                                 "method": "elem_viev_on_click",
                                 "postExecute": ""
                             }
-                        ]
+                        ],
+                        "onlineOnStart": false,
+                        "onlineOnAfterStart": false,
+                        "onlineOnInput": false
                     },
                     {
                         "type": "Operation",
@@ -1185,7 +1184,10 @@
                                 "method": "delete_barcode_screen_click",
                                 "postExecute": ""
                             }
-                        ]
+                        ],
+                        "onlineOnStart": false,
+                        "onlineOnAfterStart": false,
+                        "onlineOnInput": false
                     },
                     {
                         "type": "Operation",
@@ -1258,7 +1260,10 @@
                                 "method": "barcode_error_screen_listener",
                                 "postExecute": ""
                             }
-                        ]
+                        ],
+                        "onlineOnStart": false,
+                        "onlineOnAfterStart": false,
+                        "onlineOnInput": false
                     },
                     {
                         "type": "Operation",
@@ -1297,7 +1302,10 @@
                                 ]
                             }
                         ],
-                        "Handlers": []
+                        "Handlers": [],
+                        "onlineOnStart": false,
+                        "onlineOnAfterStart": false,
+                        "onlineOnInput": false
                     },
                     {
                         "type": "Operation",
@@ -1422,72 +1430,10 @@
                                 "method": "barcode_flow_listener",
                                 "postExecute": ""
                             }
-                        ]
-                    },
-                    {
-                        "type": "Operation",
-                        "Name": "ВыборТовараАртикул",
-                        "Timer": false,
-                        "hideToolBarScreen": false,
-                        "hideBottomBarScreen": true,
-                        "noScroll": false,
-                        "handleKeyUp": false,
-                        "noConfirmation": true,
-                        "Elements": [
-                            {
-                                "type": "LinearLayout",
-                                "Variable": "",
-                                "orientation": "vertical",
-                                "height": "wrap_content",
-                                "width": "match_parent",
-                                "weight": "0",
-                                "Elements": [
-                                    {
-                                        "Value": "@title_select_good_article",
-                                        "Variable": "",
-                                        "height": "wrap_content",
-                                        "width": "match_parent",
-                                        "weight": "0",
-                                        "TextSize": "25",
-                                        "type": "TextView"
-                                    },
-                                    {
-                                        "Value": "@finded_goods_cards",
-                                        "Variable": "finded_goods_cards",
-                                        "height": "wrap_content",
-                                        "width": "match_parent",
-                                        "weight": "0",
-                                        "type": "CardsLayout"
-                                    },
-                                    {
-                                        "Value": "Внести изменения в документ",
-                                        "Variable": "update_docs_table_article",
-                                        "height": "wrap_content",
-                                        "width": "match_parent",
-                                        "weight": "0",
-                                        "type": "Button"
-                                    }
-                                ]
-                            }
                         ],
-                        "Handlers": [
-                            {
-                                "event": "onInput",
-                                "listener": "",
-                                "action": "run",
-                                "type": "python",
-                                "method": "select_good_article_on_input",
-                                "postExecute": ""
-                            },
-                            {
-                                "event": "onStart",
-                                "listener": "",
-                                "action": "run",
-                                "type": "python",
-                                "method": "select_good_article_on_start",
-                                "postExecute": ""
-                            }
-                        ]
+                        "onlineOnStart": false,
+                        "onlineOnAfterStart": false,
+                        "onlineOnInput": false
                     }
                 ]
             },
@@ -1557,7 +1503,10 @@
                                 "method": "tiles_on_input",
                                 "postExecute": ""
                             }
-                        ]
+                        ],
+                        "onlineOnStart": false,
+                        "onlineOnAfterStart": false,
+                        "onlineOnInput": false
                     },
                     {
                         "type": "Operation",
@@ -1631,7 +1580,10 @@
                                 "method": "group_docs_on_select",
                                 "postExecute": ""
                             }
-                        ]
+                        ],
+                        "onlineOnStart": false,
+                        "onlineOnAfterStart": false,
+                        "onlineOnInput": false
                     },
                     {
                         "type": "Operation",
@@ -1654,67 +1606,50 @@
                                     {
                                         "type": "LinearLayout",
                                         "Variable": "",
-                                        "orientation": "horizontal",
+                                        "orientation": "vertical",
                                         "height": "wrap_content",
                                         "width": "match_parent",
                                         "weight": "0",
                                         "Elements": [
                                             {
-                                                "type": "LinearLayout",
+                                                "Value": "@doc_n",
                                                 "Variable": "",
-                                                "orientation": "horizontal",
                                                 "height": "wrap_content",
                                                 "width": "match_parent",
-                                                "weight": "1",
-                                                "Elements": [
-                                                    {
-                                                        "type": "LinearLayout",
-                                                        "Variable": "",
-                                                        "orientation": "vertical",
-                                                        "height": "wrap_content",
-                                                        "width": "match_parent",
-                                                        "weight": "0",
-                                                        "Elements": [
-                                                            {
-                                                                "Value": "@doc_n",
-                                                                "Variable": "",
-                                                                "height": "wrap_content",
-                                                                "width": "match_parent",
-                                                                "weight": "0",
-                                                                "TextSize": "24",
-                                                                "TextColor": "#7A005C",
-                                                                "type": "TextView"
-                                                            },
-                                                            {
-                                                                "Value": "@doc_date",
-                                                                "Variable": "doc_date",
-                                                                "height": "wrap_content",
-                                                                "width": "match_parent",
-                                                                "weight": "0",
-                                                                "TextBold": false,
-                                                                "type": "TextView"
-                                                            },
-                                                            {
-                                                                "Value": "@warehouse",
-                                                                "Variable": "warehouse",
-                                                                "height": "wrap_content",
-                                                                "width": "match_parent",
-                                                                "weight": "0",
-                                                                "type": "TextView"
-                                                            },
-                                                            {
-                                                                "Value": "@countragent",
-                                                                "Variable": "countragent",
-                                                                "height": "wrap_content",
-                                                                "width": "match_parent",
-                                                                "weight": "0",
-                                                                "type": "TextView"
-                                                            }
-                                                        ]
-                                                    }
-                                                ]
+                                                "weight": "0",
+                                                "TextSize": "24",
+                                                "TextColor": "#7A005C",
+                                                "type": "TextView"
+                                            },
+                                            {
+                                                "Value": "@doc_date",
+                                                "Variable": "doc_date",
+                                                "height": "wrap_content",
+                                                "width": "match_parent",
+                                                "weight": "0",
+                                                "TextBold": false,
+                                                "type": "TextView"
+                                            },
+                                            {
+                                                "Value": "@warehouse",
+                                                "Variable": "warehouse",
+                                                "height": "wrap_content",
+                                                "width": "match_parent",
+                                                "weight": "0",
+                                                "type": "TextView"
+                                            },
+                                            {
+                                                "Value": "@countragent",
+                                                "Variable": "countragent",
+                                                "height": "wrap_content",
+                                                "width": "match_parent",
+                                                "weight": "0",
+                                                "type": "TextView"
                                             }
-                                        ]
+                                        ],
+                                        "BackgroundColor": "",
+                                        "StrokeWidth": "",
+                                        "Padding": ""
                                     },
                                     {
                                         "type": "LinearLayout",
@@ -1828,7 +1763,10 @@
                                             }
                                         ]
                                     }
-                                ]
+                                ],
+                                "BackgroundColor": "",
+                                "StrokeWidth": "",
+                                "Padding": ""
                             },
                             {
                                 "type": "barcode",
@@ -1878,7 +1816,10 @@
                                 "method": "doc_details_listener",
                                 "postExecute": ""
                             }
-                        ]
+                        ],
+                        "onlineOnStart": false,
+                        "onlineOnAfterStart": false,
+                        "onlineOnInput": false
                     },
                     {
                         "type": "Operation",
@@ -2527,7 +2468,10 @@
                                 "method": "group_elem_view_on_click",
                                 "postExecute": ""
                             }
-                        ]
+                        ],
+                        "onlineOnStart": false,
+                        "onlineOnAfterStart": false,
+                        "onlineOnInput": false
                     },
                     {
                         "type": "Operation",
@@ -2600,7 +2544,10 @@
                                 "method": "barcode_error_screen_listener",
                                 "postExecute": ""
                             }
-                        ]
+                        ],
+                        "onlineOnStart": false,
+                        "onlineOnAfterStart": false,
+                        "onlineOnInput": false
                     },
                     {
                         "type": "Operation",
@@ -2639,7 +2586,10 @@
                                 ]
                             }
                         ],
-                        "Handlers": []
+                        "Handlers": [],
+                        "onlineOnStart": false,
+                        "onlineOnAfterStart": false,
+                        "onlineOnInput": false
                     },
                     {
                         "type": "Operation",
@@ -2672,7 +2622,10 @@
                                 ]
                             }
                         ],
-                        "Handlers": []
+                        "Handlers": [],
+                        "onlineOnStart": false,
+                        "onlineOnAfterStart": false,
+                        "onlineOnInput": false
                     }
                 ]
             },
@@ -2726,7 +2679,10 @@
                                                 "weight": "0",
                                                 "type": "SpinnerLayout"
                                             }
-                                        ]
+                                        ],
+                                        "BackgroundColor": "",
+                                        "StrokeWidth": "",
+                                        "Padding": ""
                                     },
                                     {
                                         "Value": "@docAdrCards",
@@ -2736,7 +2692,10 @@
                                         "weight": "0",
                                         "type": "CardsLayout"
                                     }
-                                ]
+                                ],
+                                "BackgroundColor": "",
+                                "StrokeWidth": "",
+                                "Padding": ""
                             }
                         ],
                         "Handlers": [
@@ -2756,7 +2715,10 @@
                                 "method": "adr_doc_on_select",
                                 "postExecute": ""
                             }
-                        ]
+                        ],
+                        "onlineOnStart": false,
+                        "onlineOnAfterStart": false,
+                        "onlineOnInput": false
                     },
                     {
                         "type": "Operation",
@@ -2779,52 +2741,35 @@
                                     {
                                         "type": "LinearLayout",
                                         "Variable": "",
-                                        "orientation": "horizontal",
+                                        "orientation": "vertical",
                                         "height": "wrap_content",
                                         "width": "match_parent",
                                         "weight": "0",
                                         "Elements": [
                                             {
-                                                "type": "LinearLayout",
+                                                "Value": "@doc_title",
                                                 "Variable": "",
-                                                "orientation": "horizontal",
                                                 "height": "wrap_content",
                                                 "width": "match_parent",
-                                                "weight": "1",
-                                                "Elements": [
-                                                    {
-                                                        "type": "LinearLayout",
-                                                        "Variable": "",
-                                                        "orientation": "vertical",
-                                                        "height": "wrap_content",
-                                                        "width": "match_parent",
-                                                        "weight": "0",
-                                                        "Elements": [
-                                                            {
-                                                                "Value": "@doc_title",
-                                                                "Variable": "",
-                                                                "height": "wrap_content",
-                                                                "width": "match_parent",
-                                                                "weight": "0",
-                                                                "TextBold": false,
-                                                                "TextItalic": false,
-                                                                "TextSize": "20",
-                                                                "TextColor": "#7A005C",
-                                                                "type": "TextView"
-                                                            },
-                                                            {
-                                                                "Value": "@warehouse",
-                                                                "Variable": "warehouse",
-                                                                "height": "wrap_content",
-                                                                "width": "match_parent",
-                                                                "weight": "0",
-                                                                "type": "TextView"
-                                                            }
-                                                        ]
-                                                    }
-                                                ]
+                                                "weight": "0",
+                                                "TextBold": false,
+                                                "TextItalic": false,
+                                                "TextSize": "20",
+                                                "TextColor": "#7A005C",
+                                                "type": "TextView"
+                                            },
+                                            {
+                                                "Value": "@warehouse",
+                                                "Variable": "warehouse",
+                                                "height": "wrap_content",
+                                                "width": "match_parent",
+                                                "weight": "0",
+                                                "type": "TextView"
                                             }
-                                        ]
+                                        ],
+                                        "BackgroundColor": "",
+                                        "StrokeWidth": "",
+                                        "Padding": ""
                                     },
                                     {
                                         "type": "LinearLayout",
@@ -2860,7 +2805,10 @@
                                                                 "TextItalic": false,
                                                                 "type": "TextView"
                                                             }
-                                                        ]
+                                                        ],
+                                                        "BackgroundColor": "",
+                                                        "StrokeWidth": "",
+                                                        "Padding": ""
                                                     },
                                                     {
                                                         "type": "LinearLayout",
@@ -2871,7 +2819,7 @@
                                                         "weight": "2",
                                                         "Elements": [
                                                             {
-                                                                "Value": "Текущая ячейка: ",
+                                                                "Value": "Текущая ячейка:",
                                                                 "Variable": "",
                                                                 "height": "wrap_content",
                                                                 "width": "wrap_content",
@@ -2881,19 +2829,25 @@
                                                                 "type": "TextView"
                                                             },
                                                             {
-                                                                "Value": "<___>",
+                                                                "Value": "Не задана",
                                                                 "Variable": "",
                                                                 "height": "wrap_content",
                                                                 "width": "wrap_content",
                                                                 "weight": "8",
                                                                 "TextBold": false,
                                                                 "TextItalic": false,
-                                                                "TextSize": "20",
+                                                                "TextSize": "",
                                                                 "type": "TextView"
                                                             }
-                                                        ]
+                                                        ],
+                                                        "BackgroundColor": "",
+                                                        "StrokeWidth": "",
+                                                        "Padding": ""
                                                     }
-                                                ]
+                                                ],
+                                                "BackgroundColor": "",
+                                                "StrokeWidth": "",
+                                                "Padding": ""
                                             },
                                             {
                                                 "type": "LinearLayout",
@@ -2913,9 +2867,15 @@
                                                         "TextItalic": false,
                                                         "type": "Button"
                                                     }
-                                                ]
+                                                ],
+                                                "BackgroundColor": "",
+                                                "StrokeWidth": "",
+                                                "Padding": ""
                                             }
-                                        ]
+                                        ],
+                                        "BackgroundColor": "",
+                                        "StrokeWidth": "",
+                                        "Padding": ""
                                     },
                                     {
                                         "type": "LinearLayout",
@@ -2950,7 +2910,10 @@
                                                 "weight": "1",
                                                 "type": "SpinnerLayout"
                                             }
-                                        ]
+                                        ],
+                                        "BackgroundColor": "",
+                                        "StrokeWidth": "",
+                                        "Padding": ""
                                     },
                                     {
                                         "type": "LinearLayout",
@@ -3014,7 +2977,10 @@
                                                         "TextColor": "#000000",
                                                         "type": "SpinnerLayout"
                                                     }
-                                                ]
+                                                ],
+                                                "BackgroundColor": "",
+                                                "StrokeWidth": "",
+                                                "Padding": ""
                                             },
                                             {
                                                 "Value": ">",
@@ -3028,7 +2994,10 @@
                                                 "TextColor": "#000000",
                                                 "type": "Button"
                                             }
-                                        ]
+                                        ],
+                                        "BackgroundColor": "",
+                                        "StrokeWidth": "",
+                                        "Padding": ""
                                     },
                                     {
                                         "Value": "@doc_goods_table",
@@ -3046,7 +3015,10 @@
                                         "weight": "0",
                                         "type": "Button"
                                     }
-                                ]
+                                ],
+                                "BackgroundColor": "",
+                                "StrokeWidth": "",
+                                "Padding": ""
                             },
                             {
                                 "type": "barcode",
@@ -3096,7 +3068,10 @@
                                 "method": "adr_doc_details_on_input",
                                 "postExecute": ""
                             }
-                        ]
+                        ],
+                        "onlineOnStart": false,
+                        "onlineOnAfterStart": false,
+                        "onlineOnInput": false
                     },
                     {
                         "type": "Operation",
@@ -3530,7 +3505,10 @@
                                 "method": "adr_elem_view_on_click",
                                 "postExecute": ""
                             }
-                        ]
+                        ],
+                        "onlineOnStart": false,
+                        "onlineOnAfterStart": false,
+                        "onlineOnInput": false
                     },
                     {
                         "type": "Operation",
@@ -3603,7 +3581,10 @@
                                 "method": "barcode_error_screen_listener",
                                 "postExecute": ""
                             }
-                        ]
+                        ],
+                        "onlineOnStart": false,
+                        "onlineOnAfterStart": false,
+                        "onlineOnInput": false
                     },
                     {
                         "type": "Operation",
@@ -3642,7 +3623,10 @@
                                 ]
                             }
                         ],
-                        "Handlers": []
+                        "Handlers": [],
+                        "onlineOnStart": false,
+                        "onlineOnAfterStart": false,
+                        "onlineOnInput": false
                     }
                 ]
             },
@@ -3711,7 +3695,10 @@
                                 "method": "flow_tiles_on_select",
                                 "postExecute": ""
                             }
-                        ]
+                        ],
+                        "onlineOnStart": false,
+                        "onlineOnAfterStart": false,
+                        "onlineOnInput": false
                     },
                     {
                         "type": "Operation",
@@ -3785,7 +3772,10 @@
                                 "method": "flow_docs_on_select",
                                 "postExecute": ""
                             }
-                        ]
+                        ],
+                        "onlineOnStart": false,
+                        "onlineOnAfterStart": false,
+                        "onlineOnInput": false
                     },
                     {
                         "type": "Operation",
@@ -3922,7 +3912,10 @@
                                 "method": "barcode_flow_listener",
                                 "postExecute": ""
                             }
-                        ]
+                        ],
+                        "onlineOnStart": false,
+                        "onlineOnAfterStart": false,
+                        "onlineOnInput": false
                     },
                     {
                         "type": "Operation",
@@ -3961,7 +3954,10 @@
                                 ]
                             }
                         ],
-                        "Handlers": []
+                        "Handlers": [],
+                        "onlineOnStart": false,
+                        "onlineOnAfterStart": false,
+                        "onlineOnInput": false
                     },
                     {
                         "type": "Operation",
@@ -4056,7 +4052,10 @@
                                 ]
                             }
                         ],
-                        "Handlers": []
+                        "Handlers": [],
+                        "onlineOnStart": false,
+                        "onlineOnAfterStart": false,
+                        "onlineOnInput": false
                     }
                 ]
             },
@@ -4114,7 +4113,10 @@
                                 "method": "universal_cards_listener",
                                 "postExecute": ""
                             }
-                        ]
+                        ],
+                        "onlineOnStart": false,
+                        "onlineOnAfterStart": false,
+                        "onlineOnInput": false
                     }
                 ]
             },
@@ -4213,7 +4215,10 @@
                                 "method": "goods_on_input",
                                 "postExecute": ""
                             }
-                        ]
+                        ],
+                        "onlineOnStart": false,
+                        "onlineOnAfterStart": false,
+                        "onlineOnInput": false
                     },
                     {
                         "type": "Operation",
@@ -4450,7 +4455,10 @@
                                 "method": "good_card_post_start",
                                 "postExecute": ""
                             }
-                        ]
+                        ],
+                        "onlineOnStart": false,
+                        "onlineOnAfterStart": false,
+                        "onlineOnInput": false
                     },
                     {
                         "type": "Operation",
@@ -4498,7 +4506,10 @@
                                 "method": "select_type_goods_on_input",
                                 "postExecute": ""
                             }
-                        ]
+                        ],
+                        "onlineOnStart": false,
+                        "onlineOnAfterStart": false,
+                        "onlineOnInput": false
                     }
                 ]
             },
@@ -4797,7 +4808,10 @@
                                 "method": "balances_on_input",
                                 "postExecute": ""
                             }
-                        ]
+                        ],
+                        "onlineOnStart": false,
+                        "onlineOnAfterStart": false,
+                        "onlineOnInput": false
                     }
                 ]
             },
@@ -5128,7 +5142,10 @@
                                 "method": "prices_on_input",
                                 "postExecute": ""
                             }
-                        ]
+                        ],
+                        "onlineOnStart": false,
+                        "onlineOnAfterStart": false,
+                        "onlineOnInput": false
                     }
                 ]
             },
@@ -5311,7 +5328,10 @@
                                 "method": "settings_on_click",
                                 "postExecute": ""
                             }
-                        ]
+                        ],
+                        "onlineOnStart": false,
+                        "onlineOnAfterStart": false,
+                        "onlineOnInput": false
                     },
                     {
                         "type": "Operation",
@@ -5351,7 +5371,10 @@
                                 "method": "file_list_on_start",
                                 "postExecute": ""
                             }
-                        ]
+                        ],
+                        "onlineOnStart": false,
+                        "onlineOnAfterStart": false,
+                        "onlineOnInput": false
                     },
                     {
                         "type": "Operation",
@@ -5479,7 +5502,10 @@
                                 "method": "font_size_settings_listener",
                                 "postExecute": ""
                             }
-                        ]
+                        ],
+                        "onlineOnStart": false,
+                        "onlineOnAfterStart": false,
+                        "onlineOnInput": false
                     },
                     {
                         "type": "Operation",
@@ -5589,7 +5615,10 @@
                                 "method": "test_barcode_listener",
                                 "postExecute": ""
                             }
-                        ]
+                        ],
+                        "onlineOnStart": false,
+                        "onlineOnAfterStart": false,
+                        "onlineOnInput": false
                     },
                     {
                         "type": "Operation",
@@ -5665,7 +5694,10 @@
                                 "method": "settings_errors_on_click",
                                 "postExecute": ""
                             }
-                        ]
+                        ],
+                        "onlineOnStart": false,
+                        "onlineOnAfterStart": false,
+                        "onlineOnInput": false
                     },
                     {
                         "type": "Operation",
@@ -5785,7 +5817,10 @@
                                 "method": "http_settings_on_click",
                                 "postExecute": ""
                             }
-                        ]
+                        ],
+                        "onlineOnStart": false,
+                        "onlineOnAfterStart": false,
+                        "onlineOnInput": false
                     },
                     {
                         "type": "Operation",
@@ -5845,7 +5880,10 @@
                                 "method": "sound_settings_listener",
                                 "postExecute": ""
                             }
-                        ]
+                        ],
+                        "onlineOnStart": false,
+                        "onlineOnAfterStart": false,
+                        "onlineOnInput": false
                     },
                     {
                         "type": "Operation",
@@ -5929,7 +5967,10 @@
                                 "method": "documents_settings_on_input",
                                 "postExecute": ""
                             }
-                        ]
+                        ],
+                        "onlineOnStart": false,
+                        "onlineOnAfterStart": false,
+                        "onlineOnInput": false
                     }
                 ]
             },
@@ -6093,7 +6134,10 @@
                                 "method": "debug_on_start",
                                 "postExecute": ""
                             }
-                        ]
+                        ],
+                        "onlineOnStart": false,
+                        "onlineOnAfterStart": false,
+                        "onlineOnInput": false
                     }
                 ]
             },
@@ -6183,7 +6227,10 @@
                                 "method": "print_settings_on_input",
                                 "postExecute": ""
                             }
-                        ]
+                        ],
+                        "onlineOnStart": false,
+                        "onlineOnAfterStart": false,
+                        "onlineOnInput": false
                     },
                     {
                         "type": "Operation",
@@ -6233,7 +6280,10 @@
                                 "method": "template_list_on_input",
                                 "postExecute": ""
                             }
-                        ]
+                        ],
+                        "onlineOnStart": false,
+                        "onlineOnAfterStart": false,
+                        "onlineOnInput": false
                     },
                     {
                         "type": "Operation",
@@ -6474,7 +6524,10 @@
                                 "method": "html_view_on_start",
                                 "postExecute": ""
                             }
-                        ]
+                        ],
+                        "onlineOnStart": false,
+                        "onlineOnAfterStart": false,
+                        "onlineOnInput": false
                     },
                     {
                         "type": "Operation",
@@ -6505,7 +6558,10 @@
                                 ]
                             }
                         ],
-                        "Handlers": []
+                        "Handlers": [],
+                        "onlineOnStart": false,
+                        "onlineOnAfterStart": false,
+                        "onlineOnInput": false
                     },
                     {
                         "type": "Operation",
@@ -6635,7 +6691,10 @@
                                 "method": "print_bluetooth_settings_on_start",
                                 "postExecute": ""
                             }
-                        ]
+                        ],
+                        "onlineOnStart": false,
+                        "onlineOnAfterStart": false,
+                        "onlineOnInput": false
                     },
                     {
                         "type": "Operation",
@@ -6747,7 +6806,10 @@
                                 "method": "print_wifi_settings_on_start",
                                 "postExecute": ""
                             }
-                        ]
+                        ],
+                        "onlineOnStart": false,
+                        "onlineOnAfterStart": false,
+                        "onlineOnInput": false
                     },
                     {
                         "type": "Operation",
@@ -6843,7 +6905,10 @@
                                 "method": "print_label_templates_on_input",
                                 "postExecute": ""
                             }
-                        ]
+                        ],
+                        "onlineOnStart": false,
+                        "onlineOnAfterStart": false,
+                        "onlineOnInput": false
                     },
                     {
                         "type": "Operation",
@@ -7102,7 +7167,10 @@
                                 "method": "print_label_template_size_on_input",
                                 "postExecute": ""
                             }
-                        ]
+                        ],
+                        "onlineOnStart": false,
+                        "onlineOnAfterStart": false,
+                        "onlineOnInput": false
                     }
                 ]
             },
@@ -7182,7 +7250,10 @@
                                 "method": "file_browser_on_input",
                                 "postExecute": ""
                             }
-                        ]
+                        ],
+                        "onlineOnStart": false,
+                        "onlineOnAfterStart": false,
+                        "onlineOnInput": false
                     }
                 ]
             },
@@ -7484,7 +7555,10 @@
                                 "method": "series_list_on_input",
                                 "postExecute": ""
                             }
-                        ]
+                        ],
+                        "onlineOnStart": false,
+                        "onlineOnAfterStart": false,
+                        "onlineOnInput": false
                     },
                     {
                         "type": "Operation",
@@ -7716,7 +7790,10 @@
                                 "method": "series_item_on_input",
                                 "postExecute": ""
                             }
-                        ]
+                        ],
+                        "onlineOnStart": false,
+                        "onlineOnAfterStart": false,
+                        "onlineOnInput": false
                     }
                 ]
             },
@@ -7821,57 +7898,10 @@
                                 "method": "select_item_on_input",
                                 "postExecute": ""
                             }
-                        ]
-                    },
-                    {
-                        "type": "Operation",
-                        "Name": "ShowItemsScreen",
-                        "Timer": false,
-                        "hideToolBarScreen": false,
-                        "hideBottomBarScreen": true,
-                        "noScroll": true,
-                        "handleKeyUp": false,
-                        "noConfirmation": true,
-                        "Elements": [
-                            {
-                                "type": "LinearLayout",
-                                "Variable": "",
-                                "orientation": "vertical",
-                                "height": "match_parent",
-                                "width": "match_parent",
-                                "weight": "0",
-                                "Elements": [
-                                    {
-                                        "Value": "@items_table",
-                                        "Variable": "",
-                                        "height": "wrap_content",
-                                        "width": "wrap_content",
-                                        "weight": "0",
-                                        "TextBold": false,
-                                        "TextItalic": false,
-                                        "type": "TableLayout"
-                                    }
-                                ]
-                            }
                         ],
-                        "Handlers": [
-                            {
-                                "event": "onStart",
-                                "listener": "",
-                                "action": "run",
-                                "type": "python",
-                                "method": "show_items_screen_on_start",
-                                "postExecute": ""
-                            },
-                            {
-                                "event": "onInput",
-                                "listener": "",
-                                "action": "run",
-                                "type": "python",
-                                "method": "show_items_screen_on_input",
-                                "postExecute": ""
-                            }
-                        ]
+                        "onlineOnStart": false,
+                        "onlineOnAfterStart": false,
+                        "onlineOnInput": false
                     }
                 ]
             },
@@ -8086,7 +8116,10 @@
                                 "method": "barcode_register_doc_on_click",
                                 "postExecute": ""
                             }
-                        ]
+                        ],
+                        "onlineOnStart": false,
+                        "onlineOnAfterStart": false,
+                        "onlineOnInput": false
                     }
                 ]
             }
@@ -8127,7 +8160,7 @@
         "PyTimerTask": [
             {
                 "PyTimerTaskKey": "timer_update",
-                "PyTimerTaskDef": "timer_update",
+                "PyTimerTaskDef": "@timer_update",
                 "PyTimerTaskPeriod": "15000",
                 "PyTimerTaskBuilIn": false
             }
@@ -8191,10 +8224,6 @@
             },
             {
                 "PyFileKey": "tiny_db_services",
-                "PyFileData": ""
-            },
-            {
-                "PyFileKey": "static_data",
                 "PyFileData": ""
             }
         ],

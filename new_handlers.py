@@ -97,13 +97,6 @@ def barcode_flow_listener(hash_map: HashMap):
 
 
 @HashMap()
-def serial_key_recognition_ocr(hash_map: HashMap):
-    """Процесс: Сбор ШК. Экран: ПотокШтрихкодовДокумента.
-       Шаблон Распознавания: Серийный номер"""
-    ui_models.FlowDocDetailsScreen.serial_key_recognition_ocr(hash_map, rs_settings)
-
-
-@HashMap()
 def article_cv_on_object_detected(hash_map: HashMap):
     """Процесс: Распознавание артикулов. Шаг: Новый шаг ActiveCV."""
     screen = ui_models.ActiveCVArticleRecognition(hash_map, rs_settings)
@@ -125,17 +118,23 @@ def article_cv_on_start(hash_map: HashMap):
 
 
 @HashMap()
-def select_good_article_on_input(hash_map: HashMap):
-    """Процесс: Документы. Экран: ВыборТовараАртикул."""
-    screen = ui_models.GoodsSelectArticle(hash_map, rs_settings)
+def serial_number_ocr_settings_on_start(hash_map: HashMap):
+    """Процесс: OcrTextRecognition. Экран: SerialNumberOCRSettings."""
+    screen = ui_models.SerialNumberOCRSettings(hash_map, rs_settings)
+    screen.on_start()
+
+
+@HashMap()
+def serial_number_ocr_settings_on_input(hash_map: HashMap):
+    """Процесс: OcrTextRecognition. Экран: SerialNumberOCRSettings."""
+    screen = ui_models.SerialNumberOCRSettings(hash_map, rs_settings)
     screen.on_input()
 
 
 @HashMap()
-def select_good_article_on_start(hash_map: HashMap):
-    """Процесс: Документы. Экран: ВыборТовараАртикул."""
-    screen = ui_models.GoodsSelectArticle(hash_map, rs_settings)
-    screen.on_start()
+def serial_key_recognition_ocr(hash_map: HashMap):
+    """Процесс: OcrTextRecognition. Экран: SerialNumberOCRSettings."""
+    ui_models.SerialNumberOCRSettings.serial_key_recognition_ocr(hash_map)
 
 
 @HashMap()
@@ -368,18 +367,29 @@ def select_item_on_input(hash_map: HashMap):
 def select_item_result(hash_map: HashMap):
     hash_map.toast('select_item_result')
 
+@HashMap()
+def show_items_screen_on_start(hash_map: HashMap):
+    screen = create_screen(hash_map, ui_models.ShowItemsScreen)
+    screen.on_start()
+
+@HashMap()
+def show_items_screen_on_input(hash_map: HashMap):
+    screen = create_screen(hash_map, ui_models.ShowItemsScreen)
+    screen.on_input()
+
+
 # =============== Goods =================
 
 
 @HashMap()
 def goods_on_start(hash_map):
-    screen = ui_models.GoodsListScreen(hash_map, rs_settings)
+    screen = create_screen(hash_map, ui_models.GoodsListScreen)
     screen.init_screen().on_start()
 
 
 @HashMap()
 def goods_on_input(hash_map: HashMap):
-    screen = ui_models.GoodsListScreen(hash_map, rs_settings)
+    screen = create_screen(hash_map, ui_models.GoodsListScreen)
     screen.on_input()
 
 
@@ -397,19 +407,19 @@ def select_type_goods_on_input(hash_map):
 
 @HashMap()
 def good_card_on_start(hash_map):
-    screen: ui_models.ItemCard = create_screen(hash_map)
+    screen = create_screen(hash_map, ui_models.ItemCard)
     screen.on_start()
 
 
 @HashMap()
 def good_card_post_start(hash_map):
-    screen: ui_models.ItemCard = create_screen(hash_map)
+    screen = create_screen(hash_map, ui_models.ItemCard)
     screen.on_post_start()
 
 
 @HashMap()
 def good_card_on_input(hash_map):
-    screen: ui_models.ItemCard = create_screen(hash_map)
+    screen = create_screen(hash_map, ui_models.ItemCard)
     screen.on_input()
 
 
@@ -483,13 +493,13 @@ def series_item_on_input(hash_map):
 
 @HashMap()
 def settings_on_start(hash_map: HashMap):
-    screen: ui_models.SettingsScreen = create_screen(hash_map)
+    screen: ui_models.SettingsScreen = create_screen(hash_map, ui_models.SettingsScreen)
     screen.on_start()
 
 
 @HashMap()
 def settings_on_click(hash_map: HashMap):
-    screen: ui_models.SettingsScreen = create_screen(hash_map)
+    screen: ui_models.SettingsScreen = create_screen(hash_map, ui_models.SettingsScreen)
     screen.on_input()
 
 

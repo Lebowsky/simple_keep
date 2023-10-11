@@ -227,6 +227,7 @@ def database_shema():
         created_at         DATETIME DEFAULT CURRENT_TIMESTAMP,
         control            TEXT DEFAULT 0,
         is_group_scan      TEXT DEFAULT 0,
+        is_barc_flow       TEXT DEFAULT 0,
         allow_fact_input   TEXT DEFAULT 0
         
     )
@@ -263,25 +264,23 @@ def database_shema():
     # Коды маркировки в документе RS_docs_barcodes
     Rs.append('''
     CREATE TABLE IF NOT EXISTS RS_docs_barcodes (
-    id                   INTEGER PRIMARY KEY AUTOINCREMENT,
-    id_doc               TEXT    NOT NULL 
-                                 REFERENCES RS_docs (id_doc) ON DELETE CASCADE,
-    id_good     TEXT NOT NULL
-         REFERENCES RS_goods (id),
-    id_property TEXT NOT NULL
-                     REFERENCES RS_properties (id),
-    id_series   TEXT NOT NULL
-                     REFERENCES RS_series (id),
-    id_unit     TEXT NOT NULL
-                     REFERENCES RS_units (id) ,
-    --# id_barcode           TEXT    NOT NULL
-    --#                              REFERENCES RS_marking_codes (id),
-    barcode_from_scanner TEXT,
-    is_plan              TEXT    DEFAULT 0
-                                 NOT NULL,
-    approved             TEXT    DEFAULT 0,
-    GTIN                 TEXT,
-    Series               TEXT
+    id                      INTEGER PRIMARY KEY AUTOINCREMENT,
+    id_doc                  TEXT NOT NULL 
+                                REFERENCES RS_docs (id_doc) ON DELETE CASCADE,
+    id_good                 TEXT NOT NULL
+                                REFERENCES RS_goods (id),
+    id_property             TEXT NOT NULL
+                                REFERENCES RS_properties (id),
+    id_series               TEXT NOT NULL
+                                REFERENCES RS_series (id),
+    id_unit                 TEXT NOT NULL
+                                REFERENCES RS_units (id) ,
+    mark_code               TEXT NOT NULL,
+    barcode_from_scanner    TEXT,
+    is_plan                 INTEGER DEFAULT 0 NOT NULL,
+    approved                INTEGER DEFAULT 0,
+    GTIN                    TEXT,
+    Series                  TEXT
     )
     ''')
 
