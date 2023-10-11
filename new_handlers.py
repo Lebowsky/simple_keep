@@ -25,7 +25,7 @@ def app_on_start(hash_map: HashMap):
 def timer_update(hash_map: HashMap):
     """ Обработчик для фонового обмена """
 
-    timer = ui_models.TimerService(hash_map, rs_settings)
+    timer = ui_models.Timer(hash_map, rs_settings)
     timer.timer_on_start()
 
 

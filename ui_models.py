@@ -7221,7 +7221,7 @@ class SerialNumberOCRSettings(Screen):
 # ^^^^^^^^^^^^^^^^^^^^^ OCR ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 
-# ==================== Timer =============================
+# ==================== Services =============================
 
 
 class Timer:
@@ -7269,7 +7269,7 @@ class Timer:
             service = db_services.TimerService()
             new_documents = service.get_new_load_docs(data)
             service.save_load_data(data)
-            self.db_service.update_data_from_json(docs_data['data'])
+            # self.db_service.update_data_from_json(docs_data['data'])
 
             if new_documents:
                 notify_text = self._get_notify_text(new_documents)
