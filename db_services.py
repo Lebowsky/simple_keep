@@ -452,11 +452,18 @@ class DocService:
             return res[0][key]
 
     def get_doc_types(self) -> list:
-        query = f'SELECT DISTINCT doc_type from {self.docs_table_name}'
-        if not self.is_group_scan and self.docs_table_name == "RS_docs":
-            query += f" WHERE {self.docs_table_name}.is_group_scan=0"
-        if not self.is_barc_flow and self.docs_table_name == 'RS_docs':
-            query += f" AND {self.docs_table_name}.is_barc_flow=0"
+        where_group_scan = f'is_group_scan = "0"' if self.is_group_scan is False else True
+
+        where_empty = ("RS_docs.id_doc not in "
+                       "(SELECT distinct id_doc From RS_docs_table)")
+        where_barc_flow = f'(is_barc_flow = "1" OR {where_empty})' \
+            if self.is_barc_flow else f'is_barc_flow = "0"'
+
+        where = f"{where_group_scan} AND {where_barc_flow}"
+
+        query_text = f'SELECT DISTINCT doc_type from {self.docs_table_name}'
+        query = f"{query_text} WHERE {where}"
+        print(query)
         doc_types = [rec[0] for rec in self._get_query_result(query)]
         return doc_types
 
@@ -510,13 +517,13 @@ class DocService:
             else:
                 where += ' AND doc_type=?'
 
-        if self.is_group_scan is False:
+        if self.is_group_scan is False and self.docs_table_name == "RS_docs":
             if where:
                 where += f' AND is_group_scan={int(self.is_group_scan)}'
             else:
                 where = f' WHERE is_group_scan={int(self.is_group_scan)}'
         
-        if self.is_barc_flow is False:
+        if self.is_barc_flow is False and self.docs_table_name == "RS_docs":
             if where:
                 where += f' AND is_barc_flow={int(self.is_barc_flow)}'
             else:
@@ -1143,7 +1150,6 @@ class SeriesService(DbService):
             '''
         return get_query_result(q, params, True)
 
-
     def add_qtty_to_table_str(self, item_id):
         params = (item_id,)
         q = '''UPDATE RS_docs_series
@@ -1458,6 +1464,7 @@ class SelectItemService(DbService):
         self.provider.table_name = self.table_name
         return self.provider.select(cond)
 
+
 class AdrDocService(DocService):
     def __init__(self, doc_id='', cur_cell='', table_type='in'):
         self.doc_id = doc_id
@@ -1468,6 +1475,8 @@ class AdrDocService(DocService):
         self.current_cell = cur_cell
         self.table_type = table_type
         self.provider = SqlQueryProvider(self.docs_table_name, sql_class=sqlClass())
+        self.is_group_scan = False
+        self.is_barc_flow = False
 
     def get_doc_details_data(
             self,
@@ -1733,6 +1742,8 @@ class FlowDocService(DocService):
     def set_barc_flow_status(self):
         self.provider.table_name = self.docs_table_name
         self.provider.update({'is_barc_flow': '1'}, {'id_doc': self.doc_id})
+
+
 class GoodsService(DbService):
     def __init__(self, item_id=''):
         super().__init__()

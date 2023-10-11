@@ -1670,6 +1670,7 @@ class DocsListScreen(Screen):
         doc_number = card_data.get('number')
         return doc_number
 
+
 class GroupScanDocsListScreen(DocsListScreen):
     screen_name = 'Документы'
     process_name = 'Групповая обработка'
@@ -1998,7 +1999,6 @@ class FlowDocScreen(DocsListScreen):
     def on_start(self):
         super().on_start()
 
-
     def on_input(self):
         if self.listener == "CardsClick":
             args = self._get_selected_card_put_data()
@@ -2205,7 +2205,413 @@ class DocDetailsScreen(Screen):
         self.hash_map.put("Show_previous_page", "0")
 
     def _check_next_page(self, elems_count):
-        if elems_count < self.items_on_page:
+        if elems_count <= self.items_on_page:
+            if not self.hash_map.containsKey('current_first_element_number'):
+                self.hash_map.put('current_first_element_number', '0')
+            self.hash_map.put("Show_next_page", "0")
+        else:
+            self.hash_map.put("Show_next_page", "1")
+
+        if self.hash_map.get('Show_previous_page') == '0' and self.hash_map.get('Show_next_page') == '0':
+            self.hash_map.put("Show_pagination_controls", "-1")
+        else:
+            self.hash_map.put("Show_pagination_controls", "1")
+
+    def _set_items_on_page(self):
+        value = self.hash_map.get('items_on_page_click')
+        self.items_on_page = int(value)
+        new_page = int(self.hash_map.get('current_first_element_number'))//self.items_on_page + 1
+        self.hash_map.put('current_page', new_page)
+        new_current_first = self.items_on_page * (new_page - 1)
+        self.hash_map.put('current_first_element_number', str(new_current_first))
+
+    def _prepare_table_data(self, doc_details):
+        table_data = [{}]
+        row_filter = self.hash_map.get_bool('rows_filter')
+
+        for record in doc_details:
+            if row_filter and record['qtty'] == record['qtty_plan']:
+                continue
+
+            pic = '#f02a' if record['IsDone'] != 0 else '#f00c'
+            if record['qtty'] == 0 and record['qtty_plan'] == 0:
+                pic = ''
+
+            product_row = {
+                'key': str(record['id']),
+                'good_name': str(record['good_name']),
+                'id_good': str(record['id_good']),
+                'id_properties': str(record['id_properties']),
+                'properties_name': str(record['properties_name'] or ''),
+                'id_series': str(record['id_series']),
+                'series_name': str(record['series_name'] or ''),
+                'id_unit': str(record['id_unit']),
+                'units_name': str(record['units_name'] or ''),
+                'code_art': 'Код: ' + str(record['code']),
+                'art': str(record['art']),
+                'price': str(record['price'] if record['price'] is not None else 0),
+                'price_name': str(record['price_name'] or ''),
+                'picture': pic,
+                'use_series': str(record['use_series'])
+            }
+
+            props = [
+                '{} '.format(product_row['art']) if product_row['art'] else '',
+                '({}) '.format(product_row['properties_name']) if product_row['properties_name'] else '',
+                '{}'.format(product_row['series_name']) if product_row['series_name'] else '',
+                ', {}'.format(product_row['units_name']) if product_row['units_name'] else '',
+            ]
+            product_row['good_info'] = ''.join(props)
+
+            for key in ['qtty', 'd_qtty', 'qtty_plan']:
+                value = self._format_to_float(str(record.get(key, 0.0) or 0.0))
+                product_row[key] = str(int(value)) if value.is_integer() else value
+
+            product_row['_layout'] = self._get_doc_table_row_view()
+            self._set_background_row_color(product_row)
+
+            if self._added_goods_has_key(product_row['key']):
+                table_data.insert(1, product_row)
+            else:
+                table_data.append(product_row)
+
+        return table_data
+
+    def _get_doc_table_view(self, table_data):
+        table_view = widgets.CustomTable(
+            widgets.LinearLayout(
+                self.LinearLayout(
+                    self.TextView('Название'),
+                    weight=3
+                ),
+                self.LinearLayout(
+                    self.TextView('План'),
+                    weight=1
+                ),
+                self.LinearLayout(
+                    self.TextView('Факт'),
+                    weight=1
+                ),
+                orientation='horizontal',
+                height="match_parent",
+                width="match_parent",
+                BackgroundColor='#FFFFFF'
+            ),
+            options=widgets.Options(override_search=True).options,
+            tabledata=table_data
+        )
+
+        return table_view
+
+    def _get_doc_table_row_view(self):
+        row_view = widgets.LinearLayout(
+            widgets.LinearLayout(
+                widgets.LinearLayout(
+                    widgets.LinearLayout(
+                        self.TextView('@good_name'),
+                        widgets.TextView(
+                            Value='@good_info',
+                            TextSize=15,
+                            width='match_parent'
+                        ),
+                        width='match_parent',
+                    ),
+                    width='match_parent',
+                    orientation='horizontal',
+                    StrokeWidth=1
+                ),
+                width='match_parent',
+                weight=3,
+                StrokeWidth=1
+            ),
+            widgets.LinearLayout(
+                widgets.TextView(
+                    Value='@qtty_plan',
+                    TextSize=15,
+                    width='match_parent',
+                ),
+                width='match_parent',
+                height='match_parent',
+                weight=1,
+                StrokeWidth=1
+            ),
+            widgets.LinearLayout(
+                widgets.TextView(
+                    Value='@d_qtty',
+                    TextSize=15,
+                    width='match_parent'
+                ),
+                width='match_parent',
+                height='match_parent',
+                weight=1,
+                StrokeWidth=1
+            ),
+            orientation='horizontal',
+            width='match_parent',
+            BackgroundColor='#FFFFFF'
+        )
+
+        return row_view
+
+    def _set_background_row_color(self, product_row):
+        background_color = '#FFFFFF'
+        qtty, qtty_plan = float(product_row['d_qtty']), float(product_row['qtty_plan'])
+        if qtty_plan > qtty:
+            background_color = "#FBE9E7"
+
+        elif qtty_plan < qtty:
+            background_color = "#FFF9C4"
+
+        product_row['_layout'].BackgroundColor = background_color
+
+    def _added_goods_has_key(self, key):
+        added_goods = self.hash_map.get_json('added_goods')
+        result = False
+
+        if added_goods:
+            added_goods_doc = added_goods.get(self.id_doc, [])
+            result = str(key) in [str(item) for item in added_goods_doc]
+            self.toast(result)
+
+        return result
+
+    @staticmethod
+    def enable_highlight(customtable):
+        customtable['tabledata'][1]['_layout'].BackgroundColor = '#F0F8FF'
+
+    def disable_highlight(self):
+        self._on_start()
+        self.hash_map.refresh_screen()
+
+    def _fill_none_values(self, data, keys, default=''):
+        none_list = [None, 'None']
+        for key in keys:
+            data[key] = default if data[key] in none_list else data[key]
+
+    def scan_error_sound(self):
+        if self.hash_map.get('scan_error') and self.hash_map.get('scan_error') != "None":
+            if self.hash_map.get('scan_error') in ['QuantityPlanReached', 'AlreadyScanned', 'Zero_plan_error']:
+                self.hash_map.playsound('warning')
+            else:
+                self.hash_map.playsound('error')
+        self.hash_map.refresh_screen()
+
+    def _format_to_float(self, value: str):
+        return float(value.replace(u'\xa0', u'').replace(',', '.') or '0.0')
+
+    def _get_have_mark_plan(self):
+        count = self.service.get_count_mark_codes(id_doc=self.id_doc)
+        return count > 0
+
+    def _open_series_screen(self, doc_row_key):
+        screen_values = {
+            'doc_row_id': doc_row_key,
+            'title': 'Серии',
+            'use_adr_docs_tables': '0'
+        }
+
+        screen = create_screen(
+            self.hash_map,
+            SeriesSelectScreen,
+            screen_values=screen_values
+        )
+        screen.parent_screen = self
+        screen.show_process_result()
+
+    class TextView(widgets.TextView):
+        def __init__(self, value):
+            super().__init__()
+            self.TextSize = '15'
+            self.TextBold = True
+            self.width = 'match_parent'
+            self.Value = value
+
+    class LinearLayout(widgets.LinearLayout):
+        def __init__(self, *args, **kwargs):
+            super().__init__(*args, **kwargs)
+            self.orientation = 'horizontal'
+            self.height = "match_parent"
+            self.width = "match_parent"
+            self.StrokeWidth = 1
+class DocDetailsScreen(Screen):
+    def __init__(self, hash_map, rs_settings):
+        super().__init__(hash_map, rs_settings)
+        self.barcode_worker = None
+        self.rs_settings = rs_settings
+        self.id_doc = self.hash_map['id_doc']
+        self.service = DocService(self.id_doc)
+        self.items_on_page = 20
+        self.queue_service = ScanningQueueService()
+
+    def on_start(self) -> None:
+        pass
+
+    def on_input(self) -> None:
+
+        listener = self.listener
+
+        if listener == "next_page":
+            self._next_page()
+        elif listener == 'previous_page':
+            self._previous_page()
+
+        elif listener == 'items_on_page_click':
+            self._set_items_on_page()
+
+        elif listener == 'btn_rows_filter_on':
+            self.hash_map.put('current_first_element_number', '0')
+            self.hash_map.put('current_page', '1')
+            self.hash_map.put('rows_filter', '1')
+            self.hash_map.refresh_screen()
+
+        elif listener == 'btn_rows_filter_off':
+            self.hash_map.remove('rows_filter')
+            self.hash_map.put('SearchString', '')
+            self.hash_map.refresh_screen()
+
+        elif listener == "Search":
+            self.hash_map.put('current_first_element_number', '0')
+            self.hash_map.put('current_page', '1')
+            self._on_start()
+            self.hash_map.refresh_screen()
+
+    def on_post_start(self):
+        pass
+
+    def _on_start(self):
+        self._set_visibility_on_start()
+        self.hash_map.put('SetTitle', self.hash_map["doc_type"])
+
+        have_qtty_plan = False
+        have_zero_plan = False
+        have_mark_plan = False
+
+        last_scanned_details = self._get_doc_details_data(last_scanned=True)
+        last_scanned_data = self._prepare_table_data(last_scanned_details)
+        last_scanned_item = last_scanned_data[1] if len(last_scanned_data) >= 2 else None
+        doc_details = self._get_doc_details_data()
+        table_data = self._prepare_table_data(doc_details)
+        if table_data and last_scanned_item:
+            table_data.insert(1, last_scanned_item)
+            if self.hash_map.get('current_page') == '1':
+                table_data.pop(1)
+            table_data[1] = last_scanned_item
+        table_view = self._get_doc_table_view(table_data=table_data)
+
+        self.hash_map['items_on_page_select'] = '20;40;60'
+        if self.hash_map.get_bool('highlight'):
+            self.hash_map.put('highlight', False)
+            # self.enable_highlight(table_view.customtable)
+            # self.hash_map.run_event_async('highlight_scanned_item')
+
+        if doc_details:
+            self.hash_map['table_lines_qtty'] = len(doc_details)
+            have_qtty_plan = sum(
+                [self._format_to_float(str(item['qtty_plan'])) for item in doc_details if item['qtty_plan']]) > 0
+            # have_zero_plan = not have_qtty_plan
+            have_zero_plan = True
+            have_mark_plan = self._get_have_mark_plan()
+
+        self.hash_map['have_qtty_plan'] = have_qtty_plan
+        self.hash_map['have_zero_plan'] = have_zero_plan
+        self.hash_map['have_mark_plan'] = have_mark_plan
+
+        control = self.service.get_doc_value('control', self.id_doc) not in (0, '0', 'false', 'False', None)
+        self.hash_map['control'] = control
+
+        self.hash_map['return_selected_data'] = ''
+        self.hash_map.put("doc_goods_table", table_view.to_json())
+
+    def _item_barcode_scanned(self):
+        id_doc = self.hash_map.get('id_doc')
+        doc = RsDoc(id_doc)
+        self.hash_map.put("SearchString", "")
+        if self.hash_map.get("event") == "onResultPositive":
+            barcode = self.hash_map.get('fld_barcode')
+        else:
+            barcode = self.hash_map.get('barcode_camera')
+
+        if not barcode:
+            return {}
+
+        self.barcode_worker = BarcodeWorker(id_doc=self.id_doc,
+                                            **self._get_barcode_process_params(),
+                                            use_scanning_queue=True)
+        result = self.barcode_worker.process_the_barcode(barcode)
+        if result.error:
+            self._process_error_scan_barcode(result)
+            return result.error
+
+    def _get_barcode_process_params(self):
+        return {
+            'have_qtty_plan': self.hash_map.get_bool('have_qtty_plan'),
+            'have_zero_plan': self.hash_map.get_bool('have_zero_plan'),
+            'have_mark_plan': self.hash_map.get_bool('have_mark_plan'),
+            'control': self.hash_map.get_bool('control')
+        }
+
+    def _process_error_scan_barcode(self, scan_result):
+        if scan_result.error == 'use_series':
+            self.on_start_handlers.append(
+                lambda: self._open_series_screen(scan_result.row_key)
+            )
+        else:
+            self.hash_map.toast(scan_result.description)
+            self.hash_map.playsound('error')
+
+    def _set_visibility_on_start(self):
+        _vars = ['warehouse', 'countragent']
+
+        for v in _vars:
+            name = f'Show_{v}'
+            self.hash_map[name] = '1' if self.hash_map[v] else '-1'
+
+        allow_fact_input = self.rs_settings.get('allow_fact_input') or False
+        self.hash_map.put("Show_fact_qtty_input", '1' if allow_fact_input else '-1')
+        self.hash_map.put("Show_fact_qtty_note", '-1' if allow_fact_input else '1')
+
+    def _get_doc_details_data(self, last_scanned=False):
+        self._check_previous_page()
+        first_element = int(self.hash_map.get('current_first_element_number'))
+        row_filters = self.hash_map.get('rows_filter')
+        search_string = self.hash_map.get('SearchString') if self.hash_map.get('SearchString') else None
+
+        data = self.service.get_doc_details_data(
+            self.id_doc,
+            0 if last_scanned else first_element,
+            1 if last_scanned else self.items_on_page,
+            row_filters,
+            search_string
+        )
+
+        if not last_scanned:
+            self._check_next_page(len(data))
+        return data
+
+    def _next_page(self):
+        first_element = int(self.hash_map.get('current_first_element_number')) + self.items_on_page
+        self.hash_map.put('current_first_element_number', str(first_element))
+        current_page = int(self.hash_map.get('current_page')) + 1 or 1
+        self.hash_map.put('current_page', str(current_page))
+
+    def _previous_page(self):
+        first_element = int(self.hash_map.get('current_first_element_number')) - self.items_on_page
+        self.hash_map.put('current_first_element_number', str(first_element))
+        current_page = int(self.hash_map.get('current_page')) - 1 or 1
+        self.hash_map.put('current_page', str(current_page))
+
+    def _check_previous_page(self):
+        if self.hash_map.get('current_first_element_number'):
+            first_element = int(self.hash_map.get('current_first_element_number'))
+            if first_element > 0:
+                self.hash_map.put("Show_previous_page", "1")
+                return
+        self.hash_map.put('current_first_element_number', '0')
+        self.hash_map.put('current_page', '1')
+        self.hash_map.put("Show_previous_page", "0")
+
+    def _check_next_page(self, elems_count):
+        if elems_count <= self.items_on_page:
             if not self.hash_map.containsKey('current_first_element_number'):
                 self.hash_map.put('current_first_element_number', '0')
             self.hash_map.put("Show_next_page", "0")
@@ -3016,6 +3422,7 @@ class DocumentsDocDetailScreen(DocDetailsScreen):
             screen_values=screen_values
         )
         screen.show_process_result()
+
 
 class AdrDocDetailsScreen(DocDetailsScreen):
     screen_name = 'Документ товары'
@@ -5997,6 +6404,8 @@ class SelectUnit(GoodsPricesItemCard):
 # ^^^^^^^^^^^^^^^^^^^^^ GoodsPrices ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 # ==================== Series =============================
+
+
 class SeriesSelectScreen(Screen):
     process_name = 'SeriesProcess'
     screen_name = 'SeriesSelectScreen'
@@ -6038,7 +6447,6 @@ class SeriesSelectScreen(Screen):
     def on_start(self):
         self.hash_map.set_title(self.screen_values['title'])
         self.init_screen()
-
         # self._refresh_series_cards()
 
     def on_input(self):
@@ -6051,6 +6459,8 @@ class SeriesSelectScreen(Screen):
             self._barcode_listener()
         elif self.listener == 'LayoutAction':
             self._layout_action()
+        elif self._is_result_positive('confirm_delete'):
+            self.delete_series()
 
         self.hash_map.no_refresh()
 
@@ -6079,8 +6489,18 @@ class SeriesSelectScreen(Screen):
         self._refresh_total_qtty()
         self.hash_map.refresh_screen()
 
+    def _check_qtty_limits(self):
+        if self.hash_map.get_bool('control'):
+            qtty = self._format_quantity(self.hash_map.get('qtty'))
+            qtty_plan = self._format_quantity(self.hash_map.get('qtty_plan'))
+            if qtty > qtty_plan:
+                self.toast("Факт превышает план")
+                return False
+        return True
+
     def _back_screen(self):
-        self._finish_process()
+        if self._check_qtty_limits():
+            self._finish_process()
 
     def _finish_process(self):
         self.hash_map.put('FinishProcessResult')
@@ -6137,6 +6557,10 @@ class SeriesSelectScreen(Screen):
                     widgets.TextView(
                         Value='@best_before',
                         TextSize=title_text_size,
+                    ),
+                    widgets.PopupMenuButton(
+                        Value='Удалить',
+                        Variable="menu_delete",
                     ),
 
                     orientation='horizontal',
@@ -6209,9 +6633,12 @@ class SeriesSelectScreen(Screen):
 
     def _layout_action(self):
         layout_listener = self.hash_map.get('layout_listener')
+
         if layout_listener == 'Удалить':
-            id = self.hash_map.get('selected_card_key')
-            self.service.delete_current_st(id)
+            self.hash_map.show_dialog(
+                listener='confirm_delete',
+                title='Удалить серию?'
+            )
         elif layout_listener == 'Изменить':
             self.hash_map['current_series_id'] = self.hash_map.get('selected_card_key')
             self.hash_map.show_screen('Заполнение серии', self.params)
@@ -6222,6 +6649,9 @@ class SeriesSelectScreen(Screen):
         else:
             return qtty
 
+    def delete_series(self):
+        id = self.hash_map.get('selected_card_key')
+        self.service.delete_current_st(id)
 
 class SeriesItem(Screen):
     process_name = 'SeriesProcess'

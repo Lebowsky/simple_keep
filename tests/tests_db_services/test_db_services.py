@@ -88,6 +88,27 @@ class TestDocService(unittest.TestCase):
 
             self.assertEqual(len(samples_docs_for_tile), docs_count)
 
+    @unittest.skip
+    def test_get_only_barc_flow_stat(self):  # TODO Олег починить тест
+        self.data_creator.insert_data('RS_docs', 'RS_docs_table')
+
+        result = self.service.get_doc_flow_stat()
+        docs = []
+        id = '"37c4c709-d22b-11e4-869d-0050568b35ac2"'
+        doc = self.data_creator.samples['RS_docs'][1]
+        print(doc['is_group_scan'] == '0' and doc['is_barc_flow'] == '1' or not self.doc_has_lines(id) and doc['doc_type'] == '"Тип2"')
+        for tile in result:
+            docs_count = tile['count']
+            doc_type = tile['docType']
+            samples_docs_for_tile = [x for x in self.data_creator.samples['RS_docs']
+                      if x['is_group_scan'] == '0'
+                      and (x['is_barc_flow'] == '1' or not self.doc_has_lines(x['id_doc']))
+                      and x['doc_type'] == f'"{doc_type}"']
+            docs.append(samples_docs_for_tile)
+
+            # self.assertEqual(len(samples_docs_for_tile), docs_count)
+        print(docs)
+
     def test_can_get_doc_view_data_if_no_group_scan(self):
         self.data_creator.insert_data('RS_docs', 'RS_docs_table')
         self.assertTrue(self.service.get_doc_view_data(doc_status='К выгрузке', doc_type='Заказ'))
@@ -97,20 +118,51 @@ class TestDocService(unittest.TestCase):
         self.service.is_group_scan = True
         self.assertTrue(self.service.get_docs_stat())
 
-    # @unittest.skip
     def test_can_get_doc_view_data_if_group_scan(self):
         self.data_creator.insert_data('RS_docs', 'RS_docs_table')
+        self.service.is_group_scan = True
         self.assertTrue(self.service.get_doc_view_data(doc_status='К выгрузке', doc_type='Заказ'))
 
-    def test_get_only_documents_doc_types(self):
+    def test_get_correct_documents_doc_types(self):
         self.data_creator.insert_data('RS_docs', 'RS_docs_table')
         self.service.docs_table_name = 'RS_docs'
-        self.service.is_group_scan = None
+        self.service.is_group_scan = False
+        self.service.is_barc_flow = False
         expect = [x['doc_type'] for x in self.data_creator.samples['RS_docs'] if
                   x['is_group_scan'] == '0' and x['is_barc_flow'] == '0']
+
         result = [f'"{x}"' for x in self.service.get_doc_types()]
 
         self.assertListEqual(expect, result)
+
+    def test_get_correct_group_scan_doc_types(self):
+        self.data_creator.insert_data('RS_docs', 'RS_docs_table')
+        self.service.is_group_scan = True
+        self.service.docs_table_name = 'RS_docs'
+        expect = [x['doc_type'] for x in self.data_creator.samples['RS_docs']
+                  if x['is_barc_flow'] == '0']
+
+        result = [f'"{x}"' for x in self.service.get_doc_types()]
+
+        self.assertListEqual(expect, result)
+
+    def test_get_correct_barc_flow_doc_types(self):
+        self.data_creator.insert_data('RS_docs', 'RS_docs_table')
+        self.service.is_group_scan = False
+        self.service.is_barc_flow = True
+        self.service.docs_table_name = 'RS_docs'
+
+        expect = [x['doc_type'] for x in self.data_creator.samples['RS_docs']
+                  if (x['is_barc_flow'] == '1' or not self.doc_has_lines(x['id_doc']))
+                  and x['is_group_scan'] == '0']
+
+        result = [f'"{x}"' for x in self.service.get_doc_types()]
+
+        self.assertListEqual(expect, result)
+
+    def doc_has_lines(self, doc_id):
+        result = [x for x in self.data_creator.samples['RS_docs_table'] if x['id_doc'] == doc_id]
+        return True if result else False
 
 
 class TestTimerService(unittest.TestCase):
@@ -523,13 +575,13 @@ class TestFlowDocService(unittest.TestCase):
 
         result_docs_list = self.service.get_doc_view_data(doc_type='Заказ')
 
-        result_flow_values = ['1' if self.doc_does_not_have_lines(expect)
+        result_flow_values = ['1' if not self.doc_has_lines(expect)
                               else x['is_barc_flow'] for x in result_docs_list]
 
         self.assertNotIn('0', result_flow_values)
 
-    def doc_does_not_have_lines(self, doc_id):
-        result = [x for x in self.data_creator.samples['RS_docs'] if x['id_doc'] == doc_id]
+    def doc_has_lines(self, doc_id):
+        result = [x for x in self.data_creator.samples['RS_docs_table'] if x['id_doc'] == doc_id]
         return True if result else False
 
 
