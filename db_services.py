@@ -135,7 +135,7 @@ class BarcodeService(DbService):
 
     def get_barcode_data(self, barcode_info, id_doc, is_adr_doc=False, id_cell='', table_type=''):
         if barcode_info.scheme == 'GS1':
-            search_value = barcode_info.gtin
+            search_value = barcode_info.gtin[1:]
         else:
             search_value = barcode_info.barcode
 
