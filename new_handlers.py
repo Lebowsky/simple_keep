@@ -34,7 +34,8 @@ def event_service(hash_map):
     """ Обработчик для работы МП в режиме сервера.
      В ws_body по умолчанию лежит текст конфигурации """
 
-    hash_map['ws_body'] = hash_map['ANDROID_ID']
+    ui_models.WebServiceSyncCommand(hash_map).on_service_request()
+
 
 
 @HashMap()
