@@ -1,6 +1,6 @@
 import json
 from datetime import datetime, timedelta, timezone
-from typing import List, Literal
+from typing import List, Literal, Optional
 
 from ru.travelfood.simple_ui import SimpleSQLProvider as sqlClass
 from ui_global import get_query_result, bulk_query
@@ -517,13 +517,13 @@ class DocService:
             else:
                 where += ' AND doc_type=?'
 
-        if self.is_group_scan is False and self.docs_table_name == "RS_docs":
+        if self.is_group_scan is False and self.docs_table_name == 'RS_docs':
             if where:
                 where += f' AND is_group_scan={int(self.is_group_scan)}'
             else:
                 where = f' WHERE is_group_scan={int(self.is_group_scan)}'
         
-        if self.is_barc_flow is False and self.docs_table_name == "RS_docs":
+        if self.is_barc_flow is False and self.docs_table_name == 'RS_docs':
             if where:
                 where += f' AND is_barc_flow={int(self.is_barc_flow)}'
             else:

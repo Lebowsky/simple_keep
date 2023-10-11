@@ -26,7 +26,9 @@ from java import jclass
 noClass = jclass("ru.travelfood.simple_ui.NoSQL")
 current_screen: 'Screen' = None
 _rs_settings = noClass("rs_settings")
-
+sn_icon_green = 'AAABAAEAGBgAAAEAIAAoCQAAFgAAACgAAAAYAAAAMAAAAAEAIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAjACZAIwAmQCMAJkAjACZAIwAmQCMAJkAjACZAIwAmQCMAJkAjACZAIwAmQCMAJkAjACZAIwAmQCMAJkAjACZAIwAmQCMAJkAjACZAIwAmQCMAJkAjACZAIwAmQCMAJkAjACZAIwAmQCMAJkAjACZAIwAmQCMAJkAjACZAIwAmQCMAJkAjACZAIwAmQCMAJkAjACZAIwAmQCMAJkAjACZAIwAmQCMAJkAjACZAIwAmQCMAJkAjACZAIwAmQCMAJkAjACZAIwAmQCMAJkAjACZAIwAmQCMAJkAjACZAIwAmQCMAJkAjACZAIwAmQCMAJkAjACZAIwAmQCMAJkAjACZAIwAmQCMAJkAjACZAIwAmQCMAJkAjACZAIwAmQCMAJkAjACZAIwAmQCMAJkAjACZAIwAmQCMAJkAjACZAIwAmQCMAJkAjACZAIwAmQCMAJkAjACZAIwAmQCMAJkAjACZAIwAmQCMAJkAjACZAIwAmQCMAJkAjACZAIwAmQCMAJkAjACZAIwAmQCMAJkAjACZAIwAmQCMAJkAjACZAIwAmQCMAJkAjACZAIwAmQCMAJkAjACZAIwAmQCMAJkAjACZAIwAmQCMAJkAjACZAIwAmQCMAJkAjACZAIwAmQCMAJkAjACZ////Xf////L////VAIwAmQCMAJkAjACZAIwAmQCMAJkAjACZ////9/////////+8AIwAmQCMAJkAjACZAIwAmQCMAJkAjACZAIwAmQCMAJkAjACZAIwAmQCMAJkAjACZ////Xf////L////VAIwAmQCMAJkAjACZAIwAmQCMAJkAjACZ//////////////+8AIwAmQCMAJkAjACZAIwAmQCMAJkAjACZAIwAmQCMAJkAjACZAIwAmQCMAJkAjACZ////Xf////L////VAIwAmQCMAJkAjACZAIwAmQCMAJn////2//////////////+8AIwAmQCMAJn/////////8v//////////////////////////AIwAmQCMAJkAjACZ////Xf////L////VAIwAmQCMAJkAjACZAIwAmf///8T////+////3v////////+8AIwAmQCMAJkAjACZAIwAmQCMAJkAjACZAIwAmQCMAJkAjACZAIwAmQCMAJkAjACZ////Xf////L////VAIwAmQCMAJkAjACZAIwAmf////P////t////r/////////+8AIwAmQCMAJkAjACZAIwAmQCMAJkAjACZAIwAmQCMAJkAjACZAIwAmQCMAJkAjACZ////Xf////L////VAIwAmQCMAJkAjACZ////wv////////+0////nP////////+8AIwAmQCMAJkAjACZAIwAmQCMAJkAjACZAIwAmQCMAJkAjACZAIwAmQCMAJkAjACZ////Xf////L////VAIwAmQCMAJkAjACZ////7////+7///9a////nP////////+8AIwAmQCMAJkAjACZ////0f////z////+////7f///48AjACZAIwAmQCMAJkAjACZ////Xf////L////VAIwAmQCMAJn///+0/////////7wAjACZ////nP////////+8AIwAmQCMAJn////a//////////////////////////f///+AAIwAmQCMAJkAjACZ////Xf////L////VAIwAmQCMAJn////u////8////2oAjACZ////nP////////+8AIwAmQCMAJn////4////5gCMAJkAjACZAIwAmf////7////FAIwAmQCMAJkAjACZ////Xf////L////VAIwAmf///7L////+////wgCMAJkAjACZ////nP////////+8AIwAmf///5z/////AIwAmQCMAJkAjACZAIwAmQCMAJn////f////NQCMAJkAjACZ////Xf////L////V////Uf///+n////0////bgCMAJkAjACZ////nP////////+8AIwAmf///5z/////AIwAmQCMAJkAjACZAIwAmQCMAJn////k////QgCMAJkAjACZ////Xf////L////V////qf////7////LAIwAmQCMAJkAjACZ////nP////////+8AIwAmf///5z/////AIwAmQCMAJkAjACZAIwAmQCMAJn////f////NQCMAJkAjACZ////Xf////L////e////6P////f///95AIwAmQCMAJkAjACZ////nP////////+8AIwAmQCMAJn////2////5gCMAJkAjACZAIwAmf////7////FAIwAmQCMAJkAjACZ////Xf////L////9/////v///84AjACZAIwAmQCMAJkAjACZ////nP////////+8AIwAmQCMAJn////a//////////////////////////f///+AAIwAmQCMAJkAjACZ////Xf////L/////////+f///4IAjACZAIwAmQCMAJkAjACZ////nP////////+8AIwAmQCMAJkAjACZ////zf////z////+////7f///48AjACZAIwAmQCMAJkAjACZAIwAmQCMAJkAjACZAIwAmQCMAJkAjACZAIwAmQCMAJkAjACZAIwAmQCMAJkAjACZAIwAmQCMAJkAjACZAIwAmQCMAJkAjACZAIwAmQCMAJkAjACZAIwAmQCMAJkAjACZAIwAmQCMAJkAjACZAIwAmQCMAJkAjACZAIwAmQCMAJkAjACZAIwAmQCMAJkAjACZAIwAmQCMAJkAjACZAIwAmQCMAJkAjACZAIwAmQCMAJkAjACZAIwAmQCMAJkAjACZAIwAmQCMAJkAjACZAIwAmQCMAJkAjACZAIwAmQCMAJkAjACZAIwAmQCMAJkAjACZAIwAmQCMAJkAjACZAIwAmQCMAJkAjACZAIwAmQCMAJkAjACZAIwAmQCMAJkAjACZAIwAmQCMAJkAjACZAIwAmQCMAJkAjACZAIwAmQCMAJkAjACZAIwAmQCMAJkAjACZAIwAmQCMAJkAjACZAIwAmQCMAJkAjACZAIwAmQCMAJkAjACZAIwAmQCMAJk='
+sn_icon_red = 'AAABAAEAGBgAAAEAIAAoCQAAFgAAACgAAAAYAAAAMAAAAAEAIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAP+ZAAD/mQAA/5kAAP+ZAAD/mQAA/5kAAP+ZAAD/mQAA/5kAAP+ZAAD/mQAA/5kAAP+ZAAD/mQAA/5kAAP+ZAAD/mQAA/5kAAP+ZAAD/mQAA/5kAAP+ZAAD/mQAA/5kAAP+ZAAD/mQAA/5kAAP+ZAAD/mQAA/5kAAP+ZAAD/mQAA/5kAAP+ZAAD/mQAA/5kAAP+ZAAD/mQAA/5kAAP+ZAAD/mQAA/5kAAP+ZAAD/mQAA/5kAAP+ZAAD/mQAA/5kAAP+ZAAD/mQAA/5kAAP+ZAAD/mQAA/5kAAP+ZAAD/mQAA/5kAAP+ZAAD/mQAA/5kAAP+ZAAD/mQAA/5kAAP+ZAAD/mQAA/5kAAP+ZAAD/mQAA/5kAAP+ZAAD/mQAA/5kAAP+ZAAD/mQAA/5kAAP+ZAAD/mQAA/5kAAP+ZAAD/mQAA/5kAAP+ZAAD/mQAA/5kAAP+ZAAD/mQAA/5kAAP+ZAAD/mQAA/5kAAP+ZAAD/mQAA/5kAAP+ZAAD/mQAA/5kAAP+ZAAD/mQAA/5kAAP+ZAAD/mQAA/5kAAP+ZAAD/mQAA/5kAAP+ZAAD/mQAA/5kAAP+ZAAD/mQAA/5kAAP+ZAAD/mQAA/5kAAP+ZAAD/mQAA/5kAAP+ZAAD/mQAA/5kAAP+Z////Xf////L////VAAD/mQAA/5kAAP+ZAAD/mQAA/5kAAP+Z////9/////////+8AAD/mQAA/5kAAP+ZAAD/mQAA/5kAAP+ZAAD/mQAA/5kAAP+ZAAD/mQAA/5kAAP+Z////Xf////L////VAAD/mQAA/5kAAP+ZAAD/mQAA/5kAAP+Z//////////////+8AAD/mQAA/5kAAP+ZAAD/mQAA/5kAAP+ZAAD/mQAA/5kAAP+ZAAD/mQAA/5kAAP+Z////Xf////L////VAAD/mQAA/5kAAP+ZAAD/mQAA/5n////2//////////////+8AAD/mQAA/5n/////////8v//////////////////////////AAD/mQAA/5kAAP+Z////Xf////L////VAAD/mQAA/5kAAP+ZAAD/mf///8T////+////3v////////+8AAD/mQAA/5kAAP+ZAAD/mQAA/5kAAP+ZAAD/mQAA/5kAAP+ZAAD/mQAA/5kAAP+Z////Xf////L////VAAD/mQAA/5kAAP+ZAAD/mf////P////t////r/////////+8AAD/mQAA/5kAAP+ZAAD/mQAA/5kAAP+ZAAD/mQAA/5kAAP+ZAAD/mQAA/5kAAP+Z////Xf////L////VAAD/mQAA/5kAAP+Z////wv////////+0////nP////////+8AAD/mQAA/5kAAP+ZAAD/mQAA/5kAAP+ZAAD/mQAA/5kAAP+ZAAD/mQAA/5kAAP+Z////Xf////L////VAAD/mQAA/5kAAP+Z////7////+7///9a////nP////////+8AAD/mQAA/5kAAP+Z////0f////z////+////7f///48AAP+ZAAD/mQAA/5kAAP+Z////Xf////L////VAAD/mQAA/5n///+0/////////7wAAP+Z////nP////////+8AAD/mQAA/5n////a//////////////////////////f///+AAAD/mQAA/5kAAP+Z////Xf////L////VAAD/mQAA/5n////u////8////2oAAP+Z////nP////////+8AAD/mQAA/5n////4////5gAA/5kAAP+ZAAD/mf////7////FAAD/mQAA/5kAAP+Z////Xf////L////VAAD/mf///7L////+////wgAA/5kAAP+Z////nP////////+8AAD/mf///5z/////AAD/mQAA/5kAAP+ZAAD/mQAA/5n////f////NQAA/5kAAP+Z////Xf////L////V////Uf///+n////0////bgAA/5kAAP+Z////nP////////+8AAD/mf///5z/////AAD/mQAA/5kAAP+ZAAD/mQAA/5n////k////QgAA/5kAAP+Z////Xf////L////V////qf////7////LAAD/mQAA/5kAAP+Z////nP////////+8AAD/mf///5z/////AAD/mQAA/5kAAP+ZAAD/mQAA/5n////f////NQAA/5kAAP+Z////Xf////L////e////6P////f///95AAD/mQAA/5kAAP+Z////nP////////+8AAD/mQAA/5n////2////5gAA/5kAAP+ZAAD/mf////7////FAAD/mQAA/5kAAP+Z////Xf////L////9/////v///84AAP+ZAAD/mQAA/5kAAP+Z////nP////////+8AAD/mQAA/5n////a//////////////////////////f///+AAAD/mQAA/5kAAP+Z////Xf////L/////////+f///4IAAP+ZAAD/mQAA/5kAAP+Z////nP////////+8AAD/mQAA/5kAAP+Z////zf////z////+////7f///48AAP+ZAAD/mQAA/5kAAP+ZAAD/mQAA/5kAAP+ZAAD/mQAA/5kAAP+ZAAD/mQAA/5kAAP+ZAAD/mQAA/5kAAP+ZAAD/mQAA/5kAAP+ZAAD/mQAA/5kAAP+ZAAD/mQAA/5kAAP+ZAAD/mQAA/5kAAP+ZAAD/mQAA/5kAAP+ZAAD/mQAA/5kAAP+ZAAD/mQAA/5kAAP+ZAAD/mQAA/5kAAP+ZAAD/mQAA/5kAAP+ZAAD/mQAA/5kAAP+ZAAD/mQAA/5kAAP+ZAAD/mQAA/5kAAP+ZAAD/mQAA/5kAAP+ZAAD/mQAA/5kAAP+ZAAD/mQAA/5kAAP+ZAAD/mQAA/5kAAP+ZAAD/mQAA/5kAAP+ZAAD/mQAA/5kAAP+ZAAD/mQAA/5kAAP+ZAAD/mQAA/5kAAP+ZAAD/mQAA/5kAAP+ZAAD/mQAA/5kAAP+ZAAD/mQAA/5kAAP+ZAAD/mQAA/5kAAP+ZAAD/mQAA/5kAAP+ZAAD/mQAA/5kAAP+ZAAD/mQAA/5kAAP+ZAAD/mQAA/5k='
+sn_icon_gray = 'AAABAAEAGBgAAAEAIAAoCQAAFgAAACgAAAAYAAAAMAAAAAEAIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABmZmaZZmZmmWZmZplmZmaZZmZmmWZmZplmZmaZZmZmmWZmZplmZmaZZmZmmWZmZplmZmaZZmZmmWZmZplmZmaZZmZmmWZmZplmZmaZZmZmmWZmZplmZmaZZmZmmWZmZplmZmaZZmZmmWZmZplmZmaZZmZmmWZmZplmZmaZZmZmmWZmZplmZmaZZmZmmWZmZplmZmaZZmZmmWZmZplmZmaZZmZmmWZmZplmZmaZZmZmmWZmZplmZmaZZmZmmWZmZplmZmaZZmZmmWZmZplmZmaZZmZmmWZmZplmZmaZZmZmmWZmZplmZmaZZmZmmWZmZplmZmaZZmZmmWZmZplmZmaZZmZmmWZmZplmZmaZZmZmmWZmZplmZmaZZmZmmWZmZplmZmaZZmZmmWZmZplmZmaZZmZmmWZmZplmZmaZZmZmmWZmZplmZmaZZmZmmWZmZplmZmaZZmZmmWZmZplmZmaZZmZmmWZmZplmZmaZZmZmmWZmZplmZmaZZmZmmWZmZplmZmaZZmZmmWZmZplmZmaZZmZmmWZmZplmZmaZZmZmmWZmZplmZmaZZmZmmWZmZplmZmaZZmZmmWZmZplmZmaZZmZmmWZmZplmZmaZZmZmmWZmZplmZmaZZmZmmWZmZplmZmaZ////Xf////L////VZmZmmWZmZplmZmaZZmZmmWZmZplmZmaZ////9/////////+8ZmZmmWZmZplmZmaZZmZmmWZmZplmZmaZZmZmmWZmZplmZmaZZmZmmWZmZplmZmaZ////Xf////L////VZmZmmWZmZplmZmaZZmZmmWZmZplmZmaZ//////////////+8ZmZmmWZmZplmZmaZZmZmmWZmZplmZmaZZmZmmWZmZplmZmaZZmZmmWZmZplmZmaZ////Xf////L////VZmZmmWZmZplmZmaZZmZmmWZmZpn////2//////////////+8ZmZmmWZmZpn/////////8v//////////////////////////ZmZmmWZmZplmZmaZ////Xf////L////VZmZmmWZmZplmZmaZZmZmmf///8T////+////3v////////+8ZmZmmWZmZplmZmaZZmZmmWZmZplmZmaZZmZmmWZmZplmZmaZZmZmmWZmZplmZmaZ////Xf////L////VZmZmmWZmZplmZmaZZmZmmf////P////t////r/////////+8ZmZmmWZmZplmZmaZZmZmmWZmZplmZmaZZmZmmWZmZplmZmaZZmZmmWZmZplmZmaZ////Xf////L////VZmZmmWZmZplmZmaZ////wv////////+0////nP////////+8ZmZmmWZmZplmZmaZZmZmmWZmZplmZmaZZmZmmWZmZplmZmaZZmZmmWZmZplmZmaZ////Xf////L////VZmZmmWZmZplmZmaZ////7////+7///9a////nP////////+8ZmZmmWZmZplmZmaZ////0f////z////+////7f///49mZmaZZmZmmWZmZplmZmaZ////Xf////L////VZmZmmWZmZpn///+0/////////7xmZmaZ////nP////////+8ZmZmmWZmZpn////a//////////////////////////f///+AZmZmmWZmZplmZmaZ////Xf////L////VZmZmmWZmZpn////u////8////2pmZmaZ////nP////////+8ZmZmmWZmZpn////4////5mZmZplmZmaZZmZmmf////7////FZmZmmWZmZplmZmaZ////Xf////L////VZmZmmf///7L////+////wmZmZplmZmaZ////nP////////+8ZmZmmf///5z/////ZmZmmWZmZplmZmaZZmZmmWZmZpn////f////NWZmZplmZmaZ////Xf////L////V////Uf///+n////0////bmZmZplmZmaZ////nP////////+8ZmZmmf///5z/////ZmZmmWZmZplmZmaZZmZmmWZmZpn////k////QmZmZplmZmaZ////Xf////L////V////qf////7////LZmZmmWZmZplmZmaZ////nP////////+8ZmZmmf///5z/////ZmZmmWZmZplmZmaZZmZmmWZmZpn////f////NWZmZplmZmaZ////Xf////L////e////6P////f///95ZmZmmWZmZplmZmaZ////nP////////+8ZmZmmWZmZpn////2////5mZmZplmZmaZZmZmmf////7////FZmZmmWZmZplmZmaZ////Xf////L////9/////v///85mZmaZZmZmmWZmZplmZmaZ////nP////////+8ZmZmmWZmZpn////a//////////////////////////f///+AZmZmmWZmZplmZmaZ////Xf////L/////////+f///4JmZmaZZmZmmWZmZplmZmaZ////nP////////+8ZmZmmWZmZplmZmaZ////zf////z////+////7f///49mZmaZZmZmmWZmZplmZmaZZmZmmWZmZplmZmaZZmZmmWZmZplmZmaZZmZmmWZmZplmZmaZZmZmmWZmZplmZmaZZmZmmWZmZplmZmaZZmZmmWZmZplmZmaZZmZmmWZmZplmZmaZZmZmmWZmZplmZmaZZmZmmWZmZplmZmaZZmZmmWZmZplmZmaZZmZmmWZmZplmZmaZZmZmmWZmZplmZmaZZmZmmWZmZplmZmaZZmZmmWZmZplmZmaZZmZmmWZmZplmZmaZZmZmmWZmZplmZmaZZmZmmWZmZplmZmaZZmZmmWZmZplmZmaZZmZmmWZmZplmZmaZZmZmmWZmZplmZmaZZmZmmWZmZplmZmaZZmZmmWZmZplmZmaZZmZmmWZmZplmZmaZZmZmmWZmZplmZmaZZmZmmWZmZplmZmaZZmZmmWZmZplmZmaZZmZmmWZmZplmZmaZZmZmmWZmZplmZmaZZmZmmWZmZplmZmaZZmZmmWZmZplmZmaZZmZmmWZmZplmZmaZZmZmmWZmZpk=' 
 
 class Screen(ABC):
     screen_name: str
@@ -41,6 +43,7 @@ class Screen(ABC):
         self.finish_process = False
         self.parent_screen = None
         self.on_start_handlers: List[Callable]=[]
+        self.init_params = {}
 
     @abstractmethod
     def on_start(self):
@@ -1438,8 +1441,8 @@ class DocsListScreen(Screen):
         doc_status = self.hash_map['selected_doc_status']
         self.hash_map['doc_type_click'] = doc_type
         self.hash_map['selected_tile_key'] = ''
-
         list_data = self._get_doc_list_data(doc_type, doc_status)
+
         prepared_data = self._prepare_table_data(list_data)
         self.hash_map['return_selected_data'] = ''
         doc_cards = self._get_doc_cards_view(prepared_data, self.popup_menu_data)
@@ -1739,6 +1742,7 @@ class DocumentsDocsListScreen(DocsListScreen):
             # id_doc = self.hash_map['selected_card_key']
             self.service.doc_id = id_doc
 
+            noClass('articles_ocr_ncl').delete('finded_articles')
             screen_name = 'Документ товары'
             screen = ScreensFactory.create_screen(
                 screen_name=screen_name,
@@ -1775,6 +1779,7 @@ class AdrDocsListScreen(DocsListScreen):
 
     def __init__(self, hash_map: HashMap, rs_settings):
         super().__init__(hash_map, rs_settings)
+
         self.service = AdrDocService()
         self.screen_values = {}
         self.doc_types = ('Все', 'Отбор', 'Размещение', 'Перемещение')
@@ -1809,6 +1814,7 @@ class AdrDocsListScreen(DocsListScreen):
         super().on_input()
 
     def _cards_click(self):
+
         args = self._get_selected_card_put_data()
         screen = create_screen(self.hash_map, AdrDocDetailsScreen, args)
         screen.show()
@@ -2160,7 +2166,7 @@ class DocDetailsScreen(Screen):
             name = f'Show_{v}'
             self.hash_map[name] = '1' if self.hash_map[v] else '-1'
 
-        allow_fact_input = self.rs_settings.get('allow_fact_input') or False
+        allow_fact_input = self.rs_settings.get('allow_fact_input')
         self.hash_map.put("Show_fact_qtty_input", '1' if allow_fact_input else '-1')
         self.hash_map.put("Show_fact_qtty_note", '-1' if allow_fact_input else '1')
 
@@ -2169,13 +2175,14 @@ class DocDetailsScreen(Screen):
         first_element = int(self.hash_map.get('current_first_element_number'))
         row_filters = self.hash_map.get('rows_filter')
         search_string = self.hash_map.get('SearchString') if self.hash_map.get('SearchString') else None
-
+        finded_articles = noClass('articles_ocr_ncl').get('finded_articles')
         data = self.service.get_doc_details_data(
-            self.id_doc,
-            0 if last_scanned else first_element,
-            1 if last_scanned else self.items_on_page,
-            row_filters,
-            search_string
+            id_doc=self.id_doc,
+            first_elem=0 if last_scanned else first_element,
+            items_on_page=1 if last_scanned else self.items_on_page,
+            articles_list=json.loads(finded_articles) if finded_articles else None,
+            row_filters=row_filters,
+            search_string=search_string
         )
 
         if not last_scanned:
@@ -2636,7 +2643,7 @@ class DocDetailsScreen(Screen):
         row_filter = self.hash_map.get_bool('rows_filter')
 
         for record in doc_details:
-            if row_filter and record['qtty'] == record['qtty_plan']:
+            if row_filter and record['d_qtty'] == record['qtty_plan']:
                 continue
 
             pic = '#f02a' if record['IsDone'] != 0 else '#f00c'
@@ -2673,7 +2680,8 @@ class DocDetailsScreen(Screen):
                 value = self._format_to_float(str(record.get(key, 0.0) or 0.0))
                 product_row[key] = str(int(value)) if value.is_integer() else value
 
-            product_row['_layout'] = self._get_doc_table_row_view()
+            use_series = bool(int(product_row.get('use_series', 0)))
+            product_row['_layout'] = self._get_doc_table_row_view(use_series=use_series)
             self._set_background_row_color(product_row)
 
             if self._added_goods_has_key(product_row['key']):
@@ -2709,12 +2717,22 @@ class DocDetailsScreen(Screen):
 
         return table_view
 
-    def _get_doc_table_row_view(self):
+    def _get_doc_table_row_view(self, use_series=False):
         row_view = widgets.LinearLayout(
             widgets.LinearLayout(
                 widgets.LinearLayout(
                     widgets.LinearLayout(
-                        self.TextView('@good_name'),
+                        widgets.LinearLayout(
+                            widgets.Picture(
+                                Value=sn_icon_green if use_series else None,
+                                width=16,
+                                height=16,
+                            ),
+                            self.TextView('@good_name'),
+                            width='match_parent',
+                            orientation='horizontal',
+
+                        ),
                         widgets.TextView(
                             Value='@good_info',
                             TextSize=15,
@@ -2822,7 +2840,7 @@ class DocDetailsScreen(Screen):
             screen_values=screen_values
         )
         screen.parent_screen = self
-        screen.show_process_result()
+        screen.show()
 
     class TextView(widgets.TextView):
         def __init__(self, value):
@@ -3289,6 +3307,7 @@ class DocumentsDocDetailScreen(DocDetailsScreen):
 
     def on_start(self) -> None:
         super()._on_start()
+        self._set_visibility_on_start()
 
     def on_input(self) -> None:
         super().on_input()
@@ -3299,7 +3318,18 @@ class DocumentsDocDetailScreen(DocDetailsScreen):
             selected_card_data = self.hash_map.get_json('selected_card_data')
             if not selected_card_data:
                 return
-
+            if (self.articles_ocr_ncl.get('finded_articles')
+                    and not self.rs_settings.get('allow_fact_input')):
+                self.service.update_doc_table_row(
+                    data={'sent': 0, 'd_qtty': float(selected_card_data['d_qtty']) + 1.0},
+                    row_id=int(selected_card_data['key']))
+                self.articles_ocr_ncl.delete('finded_articles')
+                self.hash_map.toast(
+                    f'Артикул: {selected_card_data["art"]}\n'
+                    f'{selected_card_data["good_name"]}\n'
+                    f'{selected_card_data["properties_name"]}\n'
+                    f'Количество увеличено на 1')
+                return
             if selected_card_data.get('use_series') == '1':
                 self._open_series_screen(selected_card_data['key'])
                 return
@@ -3308,6 +3338,7 @@ class DocumentsDocDetailScreen(DocDetailsScreen):
                 self.hash_map.show_screen("Товар выбор")
 
         elif listener == 'barcode' or self._is_result_positive('ВвестиШтрихкод'):
+            self.articles_ocr_ncl.delete('finded_articles')
             res = self._item_barcode_scanned()
             # TODO с результатом обработку
 
@@ -3327,12 +3358,14 @@ class DocumentsDocDetailScreen(DocDetailsScreen):
             if finded_articles is None:
                 self.hash_map.toast('Артикулы не найдены')
                 return
-            self.hash_map.show_screen('ВыборТовараАртикул')
 
         elif listener == 'btn_barcodes':
             self.hash_map.show_dialog('ВвестиШтрихкод')
 
         elif listener in ['ON_BACK_PRESSED', 'BACK_BUTTON']:
+            if self.articles_ocr_ncl.get('finded_articles'):
+                self.articles_ocr_ncl.delete('finded_articles')
+                return
             self.hash_map.remove('rows_filter')
             self.hash_map.put('current_first_element_number', '0')
             self.hash_map.put('items_on_page_click', '')
@@ -3421,7 +3454,16 @@ class DocumentsDocDetailScreen(DocDetailsScreen):
             SeriesSelectScreen,
             screen_values=screen_values
         )
-        screen.show_process_result()
+        screen.show()
+
+    def _set_visibility_on_start(self):
+        finded_articles = '-1' if self.articles_ocr_ncl.get('finded_articles') else '1'
+        self.hash_map.put('Show_btn_doc_mark_verified', finded_articles)
+        self.hash_map.put('Show_doc_date', finded_articles)
+        self.hash_map.put('Show_warehouse', finded_articles)
+        self.hash_map.put('Show_countragent', finded_articles)
+        self.hash_map.put('Show_finded_by_article', str(-int(finded_articles)))
+
 
 
 class AdrDocDetailsScreen(DocDetailsScreen):
@@ -3456,7 +3498,6 @@ class AdrDocDetailsScreen(DocDetailsScreen):
         self._run_on_start_handlers()
 
     def on_input(self) -> None:
-
         listeners = {
             'CardsClick': self._cards_click,
             'btn_barcodes': lambda : self.hash_map.show_dialog(listener="ВвестиШтрихкод"),
@@ -4262,13 +4303,6 @@ class BaseGoodSelect(Screen):
             self._set_delta(int(listener[4:]))
         elif listener in ["btn_cancel", 'BACK_BUTTON', 'ON_BACK_PRESSED']:
            self._handle_btn_ok()
-           """ self._save_new_delta()
-            self._set_delta(reset=True)
-            self.hash_map.put('new_qtty', '')
-            self.hash_map.put('selected_card_position', '')
-            self.hash_map.remove('selected_card_data')
-            self.hash_map.put('items_on_page', '')
-            self._back_screen()"""
         elif listener == 'btn_print':
             self.print_ticket()
         elif listener == 'barcode':
@@ -4303,28 +4337,12 @@ class BaseGoodSelect(Screen):
         current_elem = self.hash_map.get_json('GoodsSelectScreen_selected_card_data')
         qtty = new_qtty
 
-        if self.hash_map.get('parent_screen') == 'ВыборТовараАртикул':
-            self._handle_choice_by_article(current_elem, qtty)
-        else:
-            self._handle_choice_by_other(current_elem, qtty)
+        self._handle_choice(current_elem, qtty)
 
         self._set_delta(reset=True)
         self.hash_map.put('new_qtty', '')
 
-    def _handle_choice_by_article(self, current_elem, qtty):
-        if float(qtty) == float(current_elem['qtty'] or 0):
-            self.hash_map.show_screen("ВыборТовараАртикул")
-            return
-
-        finded_goods_cards = self.hash_map.get('finded_goods_cards', from_json=True)
-        cardsdata = finded_goods_cards['customcards']['cardsdata']
-
-        card_data = next(elem for elem in cardsdata if elem['key'] == current_elem['key'])
-        card_data['qtty'] = float(qtty)
-        self.hash_map.put('finded_goods_cards', finded_goods_cards, to_json=True)
-        self.hash_map.show_screen("ВыборТовараАртикул")
-
-    def _handle_choice_by_other(self, current_elem, qtty):
+    def _handle_choice(self, current_elem, qtty):
         row_id = int(current_elem['key']) if current_elem else self.screen_values.get('key') or self.hash_map.get('key')
         update_data = {
             'sent': 0,
@@ -4402,21 +4420,7 @@ class BaseGoodSelect(Screen):
         qtty = new_qtty
         old_qtty = float(current_elem.get('qtty') or 0)
 
-        if self.hash_map.get('parent_screen') == 'ВыборТовараАртикул':
-            current_elem = self.hash_map.get_json('GoodsSelectScreen_selected_card_data')
-            if qtty == self._get_float_value(self.hash_map.get('qtty')):
-                self.hash_map.show_screen("ВыборТовараАртикул")
-                return
-            finded_goods_cards = self.hash_map.get('finded_goods_cards', from_json=True)
-            cardsdata = finded_goods_cards['customcards']['cardsdata']
-
-            card_data = next(elem for elem in cardsdata
-                                if elem['key'] == current_elem['key'])
-            card_data['qtty'] = qtty
-            self.hash_map.put('finded_goods_cards', finded_goods_cards, to_json=True)
-            self.hash_map.show_screen("ВыборТовараАртикул")
-
-        elif qtty != old_qtty:
+        if qtty != old_qtty:
             update_data = {
                 'sent': 0,
                 'qtty': qtty,
@@ -4559,11 +4563,7 @@ class GoodsSelectScreen(BaseGoodSelect):
             if current_elem is None or 'good_name' not in current_elem:
                 return
 
-            if self.hash_map.get('parent_screen') == 'ВыборТовараАртикул':
-                self.hash_map.put('qtty', current_elem['d_qtty'])
-                show_hide = '-1'
-            else:
-                show_hide = '1'
+            show_hide = '1'
             # Видимость кнопок '<' '>'
             self.hash_map['Show_btn_next_good'] = show_hide
             self.hash_map['Show_btn_previous_good'] = show_hide
@@ -4634,12 +4634,8 @@ class GoodsSelectScreen(BaseGoodSelect):
             return
 
         title = '{} № {} от {}'.format(self.hash_map['doc_type'], self.hash_map['doc_n'], self.hash_map['doc_date'])
-        if self.hash_map.get('parent_screen') == 'ВыборТовараАртикул':
-            # тут берем количество с экрана артикулов
-            qtty = self.hash_map.get('qtty')
-        else:
-            qtty = current_elem['d_qtty']
 
+        qtty = current_elem['d_qtty']
         qtty = self._format_quantity(self._get_float_value(str(qtty)))
 
         put_data = {
@@ -4787,6 +4783,7 @@ class GroupScanItemScreen(BaseGoodSelect):
         }
         self.service.update_doc_table_row(data=update_data, row_id=row_id)
         self.service.set_doc_status_to_upload(self.hash_map.get('id_doc'))
+
 
 class BarcodeRegistrationScreen(Screen):
     screen_name = 'BarcodeRegistration'
@@ -4999,187 +4996,6 @@ class BarcodeRegistrationScreen(Screen):
         self.hash_map.finish_process_result()
 
 
-class GoodsSelectArticle(Screen):
-    screen_name = 'ВыборТовараАртикул'
-    process_name = 'Документы'
-
-    def __init__(self, hash_map: HashMap, rs_settings):
-        super().__init__(hash_map, rs_settings)
-        self.id_doc = self.hash_map['id_doc']
-        self.service = DocService(self.id_doc)
-        self.articles_ocr_ncl = noClass('articles_ocr_ncl')
-
-    def on_start(self):
-        title = 'Выберите товар'
-        allowed_fact_input = self.rs_settings.get('allow_fact_input')
-        if allowed_fact_input:
-            title += ' и укажите количество'
-        self.hash_map.put('title_select_good_article', title)
-
-        if not self.hash_map['finded_goods_cards']:
-            articles = json.loads(self.articles_ocr_ncl.get('finded_articles'))
-            goods = self.service.get_goods_list_with_doc_data(articles)
-            self.hash_map.put('selected_goods', json.dumps(goods))
-            cards_data = self._get_goods_list_data(goods)
-            goods_cards = self._get_goods_cards_view(cards_data)
-            self.hash_map['finded_goods_cards'] = goods_cards.to_json()
-
-    def on_input(self):
-        listener = self.listener
-        if listener == 'CardsClick':
-            if not self.rs_settings.get('allow_fact_input'):
-                current_elem = self.hash_map.get('selected_card_data', from_json=True)
-                self._update_doc_table_row(current_elem, current_elem['qtty'] + 1.0)
-                self.hash_map.delete('finded_goods_cards')
-                self.hash_map.show_screen('Документ товары')
-                return
-
-            self.hash_map.put('was_clicked', '1')
-            self.hash_map.show_screen("Товар выбор")
-
-        elif listener == 'ON_BACK_PRESSED':
-            self.hash_map.delete('finded_goods_cards')
-            self.hash_map.show_screen("Документ товары")
-
-        elif listener == 'update_docs_table_article':
-            finded_goods_cards = self.hash_map.get('finded_goods_cards', from_json=True)
-            cardsdata = finded_goods_cards['customcards']['cardsdata']
-
-            for card_data in cardsdata:
-                self._update_doc_table_row(card_data)
-            self.hash_map.delete('finded_goods_cards')
-            self.hash_map.show_screen('Документ товары')
-
-    def on_post_start(self):
-        pass
-
-    def show(self, args=None):
-        pass
-
-    def _get_goods_cards_view(self, cards_data: List[Dict]) -> widgets.CustomCards:
-        card_title_text_size = str(self.rs_settings.get('CardTitleTextSize'))
-        card_text_size = str(self.rs_settings.get('CardTextSize'))
-
-        v_layout_1 = widgets.LinearLayout(
-                widgets.TextView(
-                    Value='@good_name',
-                    width='match_parent',
-                    gravity_horizontal='left',
-                    TextSize=card_title_text_size,
-                    TextColor='#7A005C'
-                ),
-                widgets.TextView(
-                    Value='@code',
-                    TextSize=card_text_size,
-                ),
-                widgets.TextView(
-                    Value='@art',
-                    TextSize=card_text_size,
-                ),
-                widgets.TextView(
-                    Value='@unit_id',
-                    TextSize=card_text_size,
-                ),
-                widgets.TextView(
-                    Value='@type_good',
-                    TextSize=card_text_size,
-                ),
-                widgets.TextView(
-                    Value='@properties_name',
-                    TextSize=card_text_size,
-                ),
-                orientation='vertical',
-                width='match_parent',
-                StrokeWidth=1,
-                weight=2
-            )
-        v_layout_2 = widgets.LinearLayout(
-                widgets.TextView(
-                    Value='План:',
-                    TextSize=card_text_size,
-                    height='match_parent',
-                    weight=1,
-                ),
-                widgets.TextView(
-                    Value='Факт:',
-                    TextSize=card_text_size,
-                    height='match_parent',
-                    weight=1,
-                ),
-
-                orientation='vertical',
-                width='match_parent',
-                height='match_parent',
-                StrokeWidth=1,
-                weight=1
-            )
-        v_layout_3 = widgets.LinearLayout(
-                widgets.TextView(
-                    Value='@qtty_plan',
-                    TextSize=card_text_size,
-                    height='match_parent',
-                    weight=1,
-                ),
-                widgets.TextView(
-                    Value='@qtty',
-                    TextSize=card_text_size,
-                    height='match_parent',
-                    weight=1,
-                ),
-                orientation='vertical',
-                width='match_parent',
-                height='match_parent',
-                StrokeWidth=1,
-                weight=1
-            )
-        h_layout = widgets.LinearLayout(
-                v_layout_1, v_layout_2, v_layout_3,
-                orientation='horizontal',
-                width='match_parent'
-            )
-        goods_cards = widgets.CustomCards(
-            h_layout,
-            options=widgets.Options().options,
-            cardsdata=cards_data
-        )
-        return goods_cards
-
-    def _get_goods_list_data(self, goods_list: List[Dict]) -> List[Dict]:
-        cards_data = []
-        for record in goods_list:
-            single_card_data = {
-                'id_good': record['id_good'],
-                'id_properties': record['id_property'],
-                'key': record['doc_table_id'],
-                'code': record.get('code', '—'),
-                'good_name': record['name'],
-                'art': record.get('art', '—'),
-                'description': record.get('description', '—'),
-                'id_unit': record.get('id_unit'),
-                'units_name': record['unit_name'],
-                'type_good': record.get('type_good', '—'),
-                'qtty_plan': record['qtty_plan'],
-                'qtty': record['qtty'],
-                'd_qtty': record['qtty'],
-                'properties_name': record['property_name'],
-                'series_name': record['series_name'],
-                'price': record['price'],
-                'price_name': record['price_name'],
-            }
-            cards_data.append(single_card_data)
-
-        return cards_data
-
-    def _update_doc_table_row(self, data: Dict, qtty: Optional[float] = None):
-        update_data = {
-            'sent': 0,
-            'd_qtty': qtty or float(data['qtty']),
-        }
-        row_id = int(data['key'])
-        self.service.update_doc_table_row(data=update_data, row_id=row_id)
-        self.service.set_doc_status_to_upload(self.hash_map.get('id_doc'))
-
-
 # ^^^^^^^^^^^^^^^^^^^^^ Goods select ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 
@@ -5360,7 +5176,7 @@ class ItemCard(Screen):
         self.service = GoodsService()
 
     def on_start(self):
-        pass
+        self.init_screen()
 
     def on_input(self):
         listeners = {
@@ -5378,24 +5194,21 @@ class ItemCard(Screen):
         self.hash_map.no_refresh()
 
     def on_post_start(self):
-        if self._is_init_handler():
-            item_properties = self.service.get_values_from_barcode("id_good", self.screen_values['item_id'])
+        item_properties = self.service.get_values_from_barcode("id_good", self.screen_values['item_id'])
 
-            if item_properties:
-                variants_cards_data = self._get_variants_cards_data(item_properties)
-                variants_cards = self._get_variants_cards_view(variants_cards_data)
-                self.hash_map['barcode_cards'] = variants_cards.to_json()
-                self.hash_map.put("load_info", "")
-            else:
-                self.hash_map.put("load_info", "Данные о характеристиках отсутствуют")
+        if item_properties:
+            variants_cards_data = self._get_variants_cards_data(item_properties)
+            variants_cards = self._get_variants_cards_view(variants_cards_data)
+            self.hash_map['barcode_cards'] = variants_cards.to_json()
+            self.hash_map.put("load_info", "")
+        else:
+            self.hash_map.put("load_info", "Данные о характеристиках отсутствуют")
 
-            super().on_post_start()
 
     def init_screen(self):
         super().init_screen()
 
         item_data = self.service.get_item_data_by_id(item_id=self.screen_values['item_id'])
-
         if item_data:
             put_data = {
                 "good_name": item_data['name'],
@@ -6480,8 +6293,11 @@ class SeriesSelectScreen(Screen):
 
     def _refresh_total_qtty(self):
         real_qtty = self.service.get_total_qtty()
-        self.service.update_total_qty(qty=real_qtty, row_id=self.screen_values['doc_row_id'])
-        self.hash_map['qtty'] = self._format_quantity(real_qtty)
+        old_qty = float(self.hash_map['qtty'] or 0)
+
+        if old_qty != float(real_qtty or 0):
+            self.service.update_total_qty(qty=real_qtty, row_id=self.screen_values['doc_row_id'])
+            self.hash_map['qtty'] = self._format_quantity(real_qtty)
 
     def _barcode_listener(self):
         self._identify_add_barcode_series()
@@ -6504,14 +6320,6 @@ class SeriesSelectScreen(Screen):
 
     def _finish_process(self):
         self.hash_map.put('FinishProcessResult')
-
-    def update_hash_map_keys(self):
-        params = self.screen_data
-        exclude_keys = ('hash_map', 'screen_values', 'rs_settings')
-        for key in params.keys():
-            if key in exclude_keys:
-                continue
-            self.hash_map[key] = self.params[key]
 
     def _refresh_series_cards(self):
         list_data = self.service.get_series_by_doc_and_goods()
@@ -6602,24 +6410,6 @@ class SeriesSelectScreen(Screen):
         )
 
         return doc_cards
-
-    def _prepare_table_data(self, doc_details):
-
-        table_data = [{}]
-
-        for record in doc_details:
-            product_row = {}
-            for el in record.keys():
-                product_row[el] = record[el]
-
-            product_row['_layout'].BackgroundColor = '#FFFFFF' if record['name'] is not None else "#FBE9E7"
-
-            if self._added_goods_has_key(product_row['key']):
-                table_data.insert(1, product_row)
-            else:
-                table_data.append(product_row)
-
-        return table_data
 
     def _identify_add_barcode_series(self):
         barcode = self.hash_map.get('barcode')
@@ -6830,6 +6620,123 @@ class SelectItemScreen(Screen):
         self.hash_map.remove('return_value_key')
         self.hash_map.remove('title')
         self.hash_map.put('FinishProcessResult')
+
+
+class ShowItemsScreen(Screen):
+    process_name = 'SelectItemProcess'
+    screen_name = 'SelectItemsScreen'
+
+    def __init__(self, hash_map: HashMap, rs_settings):
+        super().__init__(hash_map, rs_settings)
+        self.init_params = ['title', 'table_data', 'table_header', 'enumerate']
+        self.enumerate=True
+        self.table_data = []
+        self.fields = []
+        self.table_header = {}
+
+    def init_screen(self):
+        self.hash_map.set_title(self.hash_map['title'] or 'Список')
+        self.enumerate = self.hash_map.get_bool('enumerate')
+        self.table_data = self.hash_map.get_json('table_data')
+        self.table_header = self.hash_map.get_json('table_header')
+
+        if not self.table_data:
+            raise ValueError ('table_data not initialized')
+
+        if not self.table_header:
+            self.table_header = {key: key for key in next(iter(self.table_data)).keys()}
+
+        table_data = self._prepare_table_data()
+        self.hash_map['items_table'] = self._get_table_view(table_data)
+
+    def on_start(self):
+        self.init_screen()
+
+    def on_input(self):
+        listeners = {
+            'ON_BACK_PRESSED': self._back_screen,
+        }
+        if self.listener in listeners:
+            listeners[self.listener]()
+
+        self.hash_map.no_refresh()
+
+    def _prepare_table_data(self):
+        self.fields = list(self.table_header.keys())
+        table_header_layout = {'_layout': self._get_table_header_view()}
+
+        if self.enumerate:
+            table_data = [dict(**{'pos': 'N'}, **self.table_header, **table_header_layout)]
+            table_data += [dict(**{'pos': pos}, **row) for pos, row in enumerate(self.table_data, start=1)]
+            return table_data
+        else:
+            table_data = [dict(**self.table_header, **table_header_layout)] + self.table_data
+            return table_data
+
+    def _get_table_header_view(self):
+        return self._get_fields_layout(is_header=True)
+
+    def _get_fields_layout(self, is_header=False):
+        if is_header:
+            background_color = '#FFFFFF'
+            text_size = 15
+        else:
+            background_color = '#FBE9E7'
+            text_size = 20
+
+        if not self.table_data:
+            return
+
+        fields_layout = widgets.LinearLayout(
+            orientation='horizontal',
+            width='match_parent',
+            BackgroundColor=background_color,
+        )
+
+        if self.enumerate:
+            pos_layout = self._get_column_view(value='pos', text_size=text_size)
+            fields_layout.append(pos_layout)
+
+        fields_layout.append(
+            widgets.LinearLayout(
+                *[self._get_column_view(value=field, text_size=text_size) for field in self.fields],
+                width='match_parent',
+                orientation='horizontal',
+                weight=8
+            )
+        )
+
+        return fields_layout
+
+    def _get_column_view(self, value, text_size=20, weight=1.0):
+        return widgets.LinearLayout(
+            widgets.TextView(
+                Value=f'@{value}',
+                gravity_horizontal='center',
+                TextSize=text_size,
+                width='match_parent'
+            ),
+            width='match_parent',
+            weight=weight,
+            StrokeWidth=1,
+        )
+
+    def _get_table_view(self, table_data):
+
+
+        table_view = widgets.CustomTable(
+            widgets.LinearLayout(
+                self._get_fields_layout(),
+                width='match_parent',
+            ),
+            options=widgets.Options().options,
+            tabledata=table_data
+        )
+
+        return table_view.to_json()
+
+    def _back_screen(self):
+        self._finish_process()
 
 
 # ^^^^^^^^^^^^^^^^^^^^^ SelectItemScreen ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -7651,10 +7558,6 @@ class Timer:
         self._upload_data()
         self._upload_buffer_data()
 
-        if current_screen:
-            current_screen.refresh_screen(self.hash_map)
-
-
     def put_notification(self, text, title=None):
         self.hash_map.notification(text, title)
 
@@ -7974,7 +7877,6 @@ def create_screen(hash_map: HashMap, screen_class=None, screen_values=None):
     Реализован синглтон через глобальную переменную current_screen, для сохренения состояния текущего экрана
     """
     global current_screen
-
     screen_params = {
         'hash_map': hash_map,
         'rs_settings': _rs_settings

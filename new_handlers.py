@@ -124,20 +124,6 @@ def article_cv_on_start(hash_map: HashMap):
 
 
 @HashMap()
-def select_good_article_on_input(hash_map: HashMap):
-    """Процесс: Документы. Экран: ВыборТовараАртикул."""
-    screen = ui_models.GoodsSelectArticle(hash_map, rs_settings)
-    screen.on_input()
-
-
-@HashMap()
-def select_good_article_on_start(hash_map: HashMap):
-    """Процесс: Документы. Экран: ВыборТовараАртикул."""
-    screen = ui_models.GoodsSelectArticle(hash_map, rs_settings)
-    screen.on_start()
-
-
-@HashMap()
 def docs_tiles_on_start(hash_map: HashMap):
     """Отдельные обработчики плиток для определения процесса hash_map'ом"""
     screen: ui_models.DocumentsTiles = ui_models.DocumentsTiles(hash_map, rs_settings)
@@ -367,18 +353,29 @@ def select_item_on_input(hash_map: HashMap):
 def select_item_result(hash_map: HashMap):
     hash_map.toast('select_item_result')
 
+@HashMap()
+def show_items_screen_on_start(hash_map: HashMap):
+    screen = create_screen(hash_map, ui_models.ShowItemsScreen)
+    screen.on_start()
+
+@HashMap()
+def show_items_screen_on_input(hash_map: HashMap):
+    screen = create_screen(hash_map, ui_models.ShowItemsScreen)
+    screen.on_input()
+
+
 # =============== Goods =================
 
 
 @HashMap()
 def goods_on_start(hash_map):
-    screen = ui_models.GoodsListScreen(hash_map, rs_settings)
+    screen = create_screen(hash_map, ui_models.GoodsListScreen)
     screen.init_screen().on_start()
 
 
 @HashMap()
 def goods_on_input(hash_map: HashMap):
-    screen = ui_models.GoodsListScreen(hash_map, rs_settings)
+    screen = create_screen(hash_map, ui_models.GoodsListScreen)
     screen.on_input()
 
 
@@ -396,19 +393,19 @@ def select_type_goods_on_input(hash_map):
 
 @HashMap()
 def good_card_on_start(hash_map):
-    screen: ui_models.ItemCard = create_screen(hash_map)
+    screen = create_screen(hash_map, ui_models.ItemCard)
     screen.on_start()
 
 
 @HashMap()
 def good_card_post_start(hash_map):
-    screen: ui_models.ItemCard = create_screen(hash_map)
+    screen = create_screen(hash_map, ui_models.ItemCard)
     screen.on_post_start()
 
 
 @HashMap()
 def good_card_on_input(hash_map):
-    screen: ui_models.ItemCard = create_screen(hash_map)
+    screen = create_screen(hash_map, ui_models.ItemCard)
     screen.on_input()
 
 
