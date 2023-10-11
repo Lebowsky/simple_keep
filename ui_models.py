@@ -4081,6 +4081,22 @@ class BaseGoodSelect(Screen):
         )
         screen.show_process_result(screen_values)
 
+    def _open_marks_screen(self, doc_row_id):
+        table_data = self._get_marks_data(doc_row_id)
+        if not table_data:
+            return
+
+        screen_args = {
+            'title': 'Марки товара',
+            'table_data': json.dumps(table_data),
+            'table_header': json.dumps({'mark_code': 'Марка'}),
+            'enumerate': True
+        }
+        ShowItemsScreen(self.hash_map, self.rs_settings).show_process_result(screen_args)
+
+    def _get_marks_data(self, doc_row_id):
+        return self.service.get_marks_data(self.id_doc, doc_row_id)
+
     def _update_doc_table_row(self, data: Dict, row_id):
         if not self.hash_map.get('delta'):
             return
@@ -6230,7 +6246,7 @@ class SelectItemScreen(Screen):
 
 class ShowItemsScreen(Screen):
     process_name = 'SelectItemProcess'
-    screen_name = 'SelectItemsScreen'
+    screen_name = 'ShowItemsScreen'
 
     def __init__(self, hash_map: HashMap, rs_settings):
         super().__init__(hash_map, rs_settings)
@@ -6239,6 +6255,8 @@ class ShowItemsScreen(Screen):
         self.table_data = []
         self.fields = []
         self.table_header = {}
+        self.text_size = 15
+        self.header_text_size = 15
 
     def init_screen(self):
         self.hash_map.set_title(self.hash_map['title'] or 'Список')
@@ -6282,13 +6300,12 @@ class ShowItemsScreen(Screen):
     def _get_table_header_view(self):
         return self._get_fields_layout(is_header=True)
 
-    def _get_fields_layout(self, is_header=False):
+    def _get_fields_layout(self, is_header=False, background_color='#FBE9E7', weight=1):
         if is_header:
             background_color = '#FFFFFF'
-            text_size = 15
+            text_size = self.header_text_size
         else:
-            background_color = '#FBE9E7'
-            text_size = 20
+            text_size = self.text_size
 
         if not self.table_data:
             return
@@ -6300,12 +6317,12 @@ class ShowItemsScreen(Screen):
         )
 
         if self.enumerate:
-            pos_layout = self._get_column_view(value='pos', text_size=text_size)
+            pos_layout = self._get_column_view(value='pos', text_size=text_size, weight=weight)
             fields_layout.append(pos_layout)
 
         fields_layout.append(
             widgets.LinearLayout(
-                *[self._get_column_view(value=field, text_size=text_size) for field in self.fields],
+                *[self._get_column_view(value=field, text_size=text_size, weight=weight) for field in self.fields],
                 width='match_parent',
                 orientation='horizontal',
                 weight=8
@@ -6314,7 +6331,7 @@ class ShowItemsScreen(Screen):
 
         return fields_layout
 
-    def _get_column_view(self, value, text_size=20, weight=1.0):
+    def _get_column_view(self, value, text_size=20, weight=1):
         return widgets.LinearLayout(
             widgets.TextView(
                 Value=f'@{value}',
@@ -6323,13 +6340,12 @@ class ShowItemsScreen(Screen):
                 width='match_parent'
             ),
             width='match_parent',
+            height='match_parent',
             weight=weight,
             StrokeWidth=1,
         )
 
     def _get_table_view(self, table_data):
-
-
         table_view = widgets.CustomTable(
             widgets.LinearLayout(
                 self._get_fields_layout(),
@@ -7190,7 +7206,7 @@ class Timer:
             service = db_services.TimerService()
             new_documents = service.get_new_load_docs(data)
             service.save_load_data(data)
-            self.db_service.update_data_from_json(docs_data['data'])
+            # self.db_service.update_data_from_json(docs_data['data'])
 
             if new_documents:
                 notify_text = self._get_notify_text(new_documents)
