@@ -8192,6 +8192,10 @@
             {
                 "PyFileKey": "tiny_db_services",
                 "PyFileData": ""
+            },
+            {
+                "PyFileKey": "static_data",
+                "PyFileData": ""
             }
         ],
         "StyleTemplates": [],

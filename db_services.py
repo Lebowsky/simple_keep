@@ -890,7 +890,7 @@ class DocService:
             q = '''
                 SELECT {}
                 FROM RS_docs_barcodes
-                WHERE id_doc = ?
+                WHERE id_doc = ? AND IFNULL(barcode_from_scanner, '') <> '', 
             '''.format(','.join(fields))
 
             doc_barcodes = self.provider.sql_query(q, id_doc)
