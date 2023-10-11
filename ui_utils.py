@@ -324,6 +324,10 @@ class HashMap:
             if data:
                 self.put_data(data)
 
+    def switch_process_screen(self, process: str, screen: Optional[str] = None):
+        process_screen = f'{process}|{screen}' if screen else process
+        self.hash_map.put('SwitchProcessScreen', process_screen)
+
     def show_dialog(self, listener, title='', buttons=None, dialog_layout=None):
         self.put("ShowDialog", listener)
         
