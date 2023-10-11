@@ -355,12 +355,11 @@ def barcode_error_screen_listener(hash_map: HashMap):
 
 @HashMap()
 def select_item_on_start(hash_map: HashMap):
-    ui_models.SelectItemScreen(hash_map, rs_settings).on_start()
-
+    create_screen(hash_map, ui_models.SelectItemScreen).on_start()
 
 @HashMap()
 def select_item_on_input(hash_map: HashMap):
-    ui_models.SelectItemScreen(hash_map, rs_settings).on_input()
+    create_screen(hash_map, ui_models.SelectItemScreen).on_input()
 
 
 @HashMap()
