@@ -7289,9 +7289,19 @@
                                 ]
                             },
                             {
+                                "type": "Vision",
+                                "Value": "#f002",
+                                "Variable": "btn_series_ocr_serial_number"
+                            },
+                            {
                                 "type": "barcode",
                                 "Value": "",
                                 "Variable": "barcode"
+                            },
+                            {
+                                "type": "MenuItem",
+                                "Value": "Настройки шаблона",
+                                "Variable": "btn_ocr_serial_template_settings"
                             }
                         ],
                         "Handlers": [
@@ -7911,6 +7921,146 @@
                                 "action": "run",
                                 "type": "python",
                                 "method": "barcode_register_doc_on_click",
+                                "postExecute": ""
+                            }
+                        ]
+                    }
+                ]
+            },
+            {
+                "type": "Process",
+                "ProcessName": "OcrTextRecognition",
+                "DefineOnBackPressed": true,
+                "hidden": true,
+                "login_screen": false,
+                "SC": false,
+                "Operations": [
+                    {
+                        "type": "Operation",
+                        "Name": "SerialNumberOCRSettings",
+                        "Timer": false,
+                        "hideToolBarScreen": false,
+                        "hideBottomBarScreen": true,
+                        "noScroll": false,
+                        "handleKeyUp": false,
+                        "noConfirmation": true,
+                        "Elements": [
+                            {
+                                "type": "LinearLayout",
+                                "Variable": "",
+                                "orientation": "vertical",
+                                "height": "wrap_content",
+                                "width": "match_parent",
+                                "weight": "0",
+                                "Elements": [
+                                    {
+                                        "type": "LinearLayout",
+                                        "Variable": "",
+                                        "orientation": "horizontal",
+                                        "height": "wrap_content",
+                                        "width": "match_parent",
+                                        "weight": "0",
+                                        "Elements": [
+                                            {
+                                                "Value": "Количество цифр",
+                                                "Variable": "",
+                                                "height": "wrap_content",
+                                                "width": "match_parent",
+                                                "weight": "1",
+                                                "type": "TextView"
+                                            },
+                                            {
+                                                "Value": "@ocr_serial_template_num_amount",
+                                                "Variable": "ocr_serial_template_num_amount",
+                                                "height": "wrap_content",
+                                                "width": "match_parent",
+                                                "weight": "1",
+                                                "type": "EditTextNumeric"
+                                            },
+                                            {
+                                                "Value": "Префикс",
+                                                "Variable": "",
+                                                "height": "wrap_content",
+                                                "width": "match_parent",
+                                                "weight": "1",
+                                                "type": "TextView"
+                                            },
+                                            {
+                                                "Value": "@ocr_serial_template_prefix",
+                                                "Variable": "ocr_serial_template_prefix",
+                                                "height": "wrap_content",
+                                                "width": "match_parent",
+                                                "weight": "1",
+                                                "type": "EditTextText"
+                                            }
+                                        ]
+                                    },
+                                    {
+                                        "Value": "@ocr_serial_current_template",
+                                        "Variable": "",
+                                        "height": "wrap_content",
+                                        "width": "match_parent",
+                                        "weight": "0",
+                                        "type": "TextView"
+                                    },
+                                    {
+                                        "Value": "Минимальное количество обнаружений",
+                                        "Variable": "",
+                                        "height": "wrap_content",
+                                        "width": "match_parent",
+                                        "weight": "0",
+                                        "type": "TextView"
+                                    },
+                                    {
+                                        "Value": "@ocr_serial_template_min_rec_amount",
+                                        "Variable": "ocr_serial_template_min_rec_amount",
+                                        "height": "wrap_content",
+                                        "width": "match_parent",
+                                        "weight": "0",
+                                        "type": "EditTextNumeric"
+                                    },
+                                    {
+                                        "Value": "Непрерывное распознавание",
+                                        "Variable": "ocr_serial_template_continuous_recognition",
+                                        "height": "wrap_content",
+                                        "width": "wrap_content",
+                                        "weight": "0",
+                                        "type": "CheckBox"
+                                    },
+                                    {
+                                        "Value": "Учитывать префикс",
+                                        "Variable": "ocr_serial_template_use_prefix",
+                                        "height": "wrap_content",
+                                        "width": "wrap_content",
+                                        "weight": "0",
+                                        "type": "CheckBox"
+                                    },
+                                    {
+                                        "Value": "Сохранить",
+                                        "Variable": "btn_save_ocr_settings",
+                                        "height": "wrap_content",
+                                        "width": "wrap_content",
+                                        "weight": "0",
+                                        "type": "Button"
+                                    }
+                                ]
+                            }
+                        ],
+                        "Handlers": [
+                            {
+                                "event": "onStart",
+                                "listener": "",
+                                "action": "run",
+                                "type": "python",
+                                "method": "serial_number_ocr_settings_on_start",
+                                "postExecute": ""
+                            },
+                            {
+                                "event": "onInput",
+                                "listener": "",
+                                "action": "run",
+                                "type": "python",
+                                "method": "serial_number_ocr_settings_on_input",
                                 "postExecute": ""
                             }
                         ]
