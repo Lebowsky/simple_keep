@@ -324,8 +324,11 @@ class HashMap:
             if data:
                 self.put_data(data)
 
-    def show_dialog(self, listener, title='', buttons=None):
+    def show_dialog(self, listener, title='', buttons=None, dialog_layout=None):
         self.put("ShowDialog", listener)
+        
+        if dialog_layout:
+            self.put('ShowDialogLayout', dialog_layout)
 
         if title or buttons:
             dialog_style = {
