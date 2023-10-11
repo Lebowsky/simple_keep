@@ -2266,7 +2266,7 @@ class DocDetailsScreen(Screen):
                 product_row[key] = str(int(value)) if value.is_integer() else value
 
             use_series = bool(int(product_row.get('use_series', 0)))
-            product_row['_layout'] = self._get_doc_table_row_view(use_series=use_series)
+            product_row['_layout'] = self._get_doc_table_row_view()
             self._set_background_row_color(product_row)
 
             if self._added_goods_has_key(product_row['key']):
