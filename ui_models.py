@@ -3884,16 +3884,14 @@ class BaseGoodSelect(Screen):
 
         listener = self.listener
 
-        if listener is None:
-            """Ввод дельты из современного поля ввода (через enter клавиатуры)"""
-            if self._validate_delta_input():
-                self._set_delta(0)
-
-        elif listener == "btn_ok":
+        if listener == "btn_ok":
             self._handle_btn_ok()
         elif 'ops' in listener:
             """Префикс кнопок +/-, значение в названиях кнопок"""
-            self._set_delta(int(listener[4:]))
+            if self.hash_map.get('use_series') == "1":
+                self._open_series_screen(self.hash_map['key'])
+            else:
+                self._set_delta(int(listener[4:]))
         elif listener in ["btn_cancel", 'BACK_BUTTON', 'ON_BACK_PRESSED']:
            self._handle_btn_ok()
         elif listener == 'btn_print':
@@ -3906,6 +3904,14 @@ class BaseGoodSelect(Screen):
             self._handle_doc_good_barcode()
         elif listener == 'btn_series_show':
             self._open_series_screen(self.hash_map['key'])
+        elif listener == 'btn_input_qtty':
+            if self.hash_map.get('use_series') == "1":
+                self._open_series_screen(self.hash_map['key'])
+            else:
+                self._show_dialog_qtty()
+        elif self._is_result_positive('modal_dialog_input_qtty'):
+            if self._validate_delta_input():
+                self._set_delta(0)
 
     def _handle_btn_ok(self):
         current_elem = self._get_current_elem()
@@ -3983,7 +3989,10 @@ class BaseGoodSelect(Screen):
         id_good_br, id_property_br, id_unit_br, ratio = res['id_good'], res['id_property'], res['id_unit'], int(res['ratio'])
 
         if id_good == id_good_br and id_property == id_property_br and id_unit == id_unit_br:
-            self._set_delta(ratio)
+            if self.hash_map.get('use_series') == "1":
+                self._open_series_screen(self.hash_map['key'])
+            else:
+                self._set_delta(ratio)
             return True
 
         return False
@@ -4012,8 +4021,20 @@ class BaseGoodSelect(Screen):
         current_elem = self._get_current_elem()
         qtty = new_qtty
         old_qtty = float(current_elem.get('qtty') or 0)
+        if self.hash_map.get('parent_screen') == 'ВыборТовараАртикул':
+            current_elem = self.hash_map.get_json('GoodsSelectScreen_selected_card_data')
+            if qtty == self._get_float_value(self.hash_map.get('qtty')):
+                self.hash_map.show_screen("ВыборТовараАртикул")
+                return
+            finded_goods_cards = self.hash_map.get('finded_goods_cards', from_json=True)
+            cardsdata = finded_goods_cards['customcards']['cardsdata']
 
-        if qtty != old_qtty:
+            card_data = next(elem for elem in cardsdata
+                                if elem['key'] == current_elem['key'])
+            card_data['qtty'] = qtty
+            self.hash_map.put('finded_goods_cards', finded_goods_cards, to_json=True)
+            self.hash_map.show_screen("ВыборТовараАртикул")
+        elif qtty != old_qtty:
             update_data = {
                 'sent': 0,
                 'qtty': qtty,
@@ -4032,7 +4053,6 @@ class BaseGoodSelect(Screen):
     def _process_the_barcode(self):
         barcode = self.hash_map.get('barcode_good_select')
         allowed_fact_input = self.rs_settings.get('allow_fact_input')
-
         if not (barcode and allowed_fact_input):
             self.hash_map.playsound('error')
             self.hash_map.toast('Штрихкод не найден в документе!') # пока тост, модалка очищает дельту
@@ -4040,11 +4060,10 @@ class BaseGoodSelect(Screen):
             return
 
         id_good = self.hash_map.get('id_good')
-        id_property = self.hash_map.get('id_property')
-        id_unit = self.hash_map.get('id_unit')
+        id_property = self.hash_map.get('id_property') or ''
+        id_unit = self.hash_map.get('id_unit') or ''
 
         res = self.service.get_barcode(barcode)
-
         if res and self._handle_found_barcode(res, id_good, id_property, id_unit):
             return
         self.hash_map.playsound('error')
@@ -4054,14 +4073,14 @@ class BaseGoodSelect(Screen):
     def _set_delta(self, value: int = 0, reset: bool = False):
         """Создаем (обнуляем) поле ввода"""
         if reset:
-            delta_field = widgets.ModernField(default_text='', input_type=3)
+            delta = ''
             self.hash_map.put('new_qtty', self.hash_map.get('qtty'))
         else:
             delta = float(self.hash_map.get('delta') or 0) + value if self.hash_map.get('delta') else value
             delta = self._format_quantity(delta)
-            delta_field = widgets.ModernField(default_text=delta, input_type=3)
             self._set_result_qtty(delta)
-        self.hash_map.put('delta', delta_field.to_json())
+        
+        self.hash_map.put('delta', delta)
 
     def _format_quantity(self, qtty):
         if float(qtty) % 1 == 0:
@@ -4132,6 +4151,27 @@ class BaseGoodSelect(Screen):
         barcode_worker = BarcodeWorker(self.hash_map.get("id_doc"))
         barcode_worker.queue_update_data = insert_to_queue
         barcode_worker.update_document_barcode_data()
+    
+    def _show_dialog_qtty(self):
+        loyaut = '''{
+            "type": "LinearLayout",
+            "Variable": "",
+            "orientation": "horizontal",
+            "height": "wrap_content",
+            "width": "match_parent",
+            "weight": "0",
+            "Elements": [
+                {
+                    "Value": "@delta",
+                    "Variable": "delta",
+                    "height": "wrap_content",
+                    "width": "match_parent",
+                    "weight": "0",
+                    "type": "EditTextNumeric"
+                }
+            ]
+        }'''
+        self.hash_map.show_dialog('modal_dialog_input_qtty', title="Ввод количества товара", dialog_layout=loyaut)
 
 
 class GoodsSelectScreen(BaseGoodSelect):
@@ -4176,7 +4216,6 @@ class GoodsSelectScreen(BaseGoodSelect):
         super().on_input()
 
         listener = self.listener
-
         if listener == 'btn_next_good':
             self._goods_selector("next")
         elif listener == 'btn_previous_good':
@@ -4208,7 +4247,7 @@ class GoodsSelectScreen(BaseGoodSelect):
         if index is None:
             # перед перелистыванием сохраним дельту и обновим кол-во в словаре
             self._save_new_delta()
-            doc_data[global_position]['qtty'] = self.hash_map.get('qtty')
+            doc_data[global_position]['d_qtty'] = self.hash_map.get('qtty')
             doc_data[global_position]['new_qtty'] = self.hash_map.get('new_qtty')
             self.hash_map.put('GoodsSelectScreen_doc_data', doc_data, to_json=True)
 
@@ -4230,11 +4269,12 @@ class GoodsSelectScreen(BaseGoodSelect):
 
         qtty = current_elem['d_qtty']
         qtty = self._format_quantity(self._get_float_value(str(qtty)))
-
         put_data = {
             'Doc_data': title,
             'Good': current_elem['good_name'],
             'id_good': current_elem['id_good'],
+            'id_unit': current_elem['id_unit'],
+            'id_property': current_elem['id_properties'],
             'good_art': current_elem['art'],
             'good_sn': current_elem['series_name'],
             'good_property': current_elem['properties_name'],
@@ -4248,6 +4288,7 @@ class GoodsSelectScreen(BaseGoodSelect):
             'price_type': current_elem['price_name'] if 'price_name' in current_elem else '',
             'qtty': qtty,
             'new_qtty': qtty,
+            'use_series': current_elem['use_series']
         }
 
         self._fill_none_values(
@@ -4263,7 +4304,10 @@ class GoodsSelectScreen(BaseGoodSelect):
         id_good_br, id_property_br, id_unit_br, ratio = res['id_good'], res['id_property'], res['id_unit'], int(res['ratio'])
 
         if id_good == id_good_br and id_property == id_property_br and id_unit == id_unit_br:
-            self._set_delta(ratio)
+            if self.hash_map.get('use_series') == "1":
+                self._open_series_screen(self.hash_map['key'])
+            else:
+                self._set_delta(ratio)
             return True
 
         if id_good != id_good_br:
@@ -4271,12 +4315,23 @@ class GoodsSelectScreen(BaseGoodSelect):
             match_index = self._find_matching_good(table_data, id_good_br, id_property_br, id_unit_br)
 
             if match_index is not None:
+                # сохраним данные и обновим словарь перед переходом на новую позицию
+                self._save_new_delta()
+                self._refresh_qtty_in_table(table_data)
                 self._goods_selector("index", index=match_index)
-                self._set_delta(ratio)
+                if self.hash_map.get('use_series') == "1":
+                    self._open_series_screen(self.hash_map['key'])
+                else:
+                    self._set_delta(ratio)
                 return True
 
         return False
 
+    def _refresh_qtty_in_table(self, table_data):
+        index = int(self.hash_map.get('selected_card_position'))
+        table_data[index]['d_qtty'] = self.hash_map.get('qtty')
+        table_data[index]['new_qtty'] = self.hash_map.get('new_qtty')
+        self.hash_map.put('GoodsSelectScreen_doc_data', table_data, to_json=True)
 
 class AdrGoodsSelectScreen(BaseGoodSelect):
     screen_name = 'Товар выбор'
