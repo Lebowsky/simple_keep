@@ -3904,6 +3904,14 @@ class BaseGoodSelect(Screen):
             self._handle_doc_good_barcode()
         elif listener == 'btn_series_show':
             self._open_series_screen(self.hash_map['key'])
+        elif listener == 'btn_input_qtty':
+            if self.hash_map.get('use_series') == "1":
+                self._open_series_screen(self.hash_map['key'])
+            else:
+                self._show_dialog_qtty()
+        elif self._is_result_positive('modal_dialog_input_qtty'):
+            if self._validate_delta_input():
+                self._set_delta(0)
 
     def _handle_btn_ok(self):
         current_elem = self._get_current_elem()
@@ -4045,7 +4053,6 @@ class BaseGoodSelect(Screen):
     def _process_the_barcode(self):
         barcode = self.hash_map.get('barcode_good_select')
         allowed_fact_input = self.rs_settings.get('allow_fact_input')
-
         if not (barcode and allowed_fact_input):
             self.hash_map.playsound('error')
             self.hash_map.toast('Штрихкод не найден в документе!') # пока тост, модалка очищает дельту
@@ -4144,6 +4151,27 @@ class BaseGoodSelect(Screen):
         barcode_worker = BarcodeWorker(self.hash_map.get("id_doc"))
         barcode_worker.queue_update_data = insert_to_queue
         barcode_worker.update_document_barcode_data()
+    
+    def _show_dialog_qtty(self):
+        loyaut = '''{
+            "type": "LinearLayout",
+            "Variable": "",
+            "orientation": "horizontal",
+            "height": "wrap_content",
+            "width": "match_parent",
+            "weight": "0",
+            "Elements": [
+                {
+                    "Value": "@delta",
+                    "Variable": "delta",
+                    "height": "wrap_content",
+                    "width": "match_parent",
+                    "weight": "0",
+                    "type": "EditTextNumeric"
+                }
+            ]
+        }'''
+        self.hash_map.show_dialog('modal_dialog_input_qtty', title="Ввод количества товара", dialog_layout=loyaut)
 
 
 class GoodsSelectScreen(BaseGoodSelect):
@@ -4192,14 +4220,6 @@ class GoodsSelectScreen(BaseGoodSelect):
             self._goods_selector("next")
         elif listener == 'btn_previous_good':
             self._goods_selector("previous")
-        elif listener == 'btn_input_qtty':
-            if self.hash_map.get('use_series') == "1":
-                self._open_series_screen(self.hash_map['key'])
-            else:
-                self._show_dialog_qtty()
-        elif self._is_result_positive('modal_dialog_input_qtty'):
-            if self._validate_delta_input():
-                self._set_delta(0)
 
     def on_post_start(self):
         pass
@@ -4312,28 +4332,6 @@ class GoodsSelectScreen(BaseGoodSelect):
         table_data[index]['d_qtty'] = self.hash_map.get('qtty')
         table_data[index]['new_qtty'] = self.hash_map.get('new_qtty')
         self.hash_map.put('GoodsSelectScreen_doc_data', table_data, to_json=True)
-                
-
-    def _show_dialog_qtty(self):
-        loyaut = '''{
-            "type": "LinearLayout",
-            "Variable": "",
-            "orientation": "horizontal",
-            "height": "wrap_content",
-            "width": "match_parent",
-            "weight": "0",
-            "Elements": [
-                {
-                    "Value": "@delta",
-                    "Variable": "delta",
-                    "height": "wrap_content",
-                    "width": "match_parent",
-                    "weight": "0",
-                    "type": "EditTextNumeric"
-                }
-            ]
-        }'''
-        self.hash_map.show_dialog('modal_dialog_input_qtty', title="Ввод количества товара", dialog_layout=loyaut)
 
 class AdrGoodsSelectScreen(BaseGoodSelect):
     screen_name = 'Товар выбор'

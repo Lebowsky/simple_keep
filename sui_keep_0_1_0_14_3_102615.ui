@@ -3397,16 +3397,15 @@
                                                         "type": "Button"
                                                     },
                                                     {
-                                                        "Value": "@delta",
-                                                        "Variable": "delta",
+                                                        "Value": "...",
+                                                        "Variable": "btn_input_qtty",
                                                         "height": "wrap_content",
                                                         "width": "match_parent",
+                                                        "orientation": "horizontal",
                                                         "weight": "1",
                                                         "TextBold": false,
                                                         "TextItalic": false,
-                                                        "TextSize": "24",
-                                                        "TextColor": "#000000",
-                                                        "type": "ModernEditText"
+                                                        "type": "Button"
                                                     },
                                                     {
                                                         "Value": "+1",
@@ -3466,6 +3465,11 @@
                                 "type": "MenuItem",
                                 "Value": "Серии",
                                 "Variable": "btn_series_show"
+                            },
+                            {
+                                "type": "barcode",
+                                "Value": "",
+                                "Variable": "barcode_good_select"
                             }
                         ],
                         "Handlers": [
