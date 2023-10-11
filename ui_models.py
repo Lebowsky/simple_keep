@@ -110,13 +110,6 @@ class Screen(ABC):
     def put_notification(self, text, title=None):
         self.hash_map.notification(text, title)
 
-    @staticmethod
-    def delete_template_settings(rs_settings):
-        for item in ScreensFactory.screens:
-            param_name =  getattr(item, 'printing_template_name', '')
-            if param_name and rs_settings.get(param_name):
-                rs_settings.delete(param_name)
-
     def can_launch_timer(self):
         return True
 
@@ -3444,8 +3437,6 @@ class AdrDocDetailsScreen(DocDetailsScreen):
 class FlowDocDetailsScreen(DocDetailsScreen):
     screen_name = 'ПотокШтрихкодовДокумента'
     process_name = 'Сбор ШК'
-    printing_template_name = 'flow_doc_details_screen'
-    ocr_nosql = noClass("ocr_nosql")
 
     def __init__(self, hash_map: HashMap, rs_settings):
         super().__init__(hash_map, rs_settings)
@@ -3498,63 +3489,22 @@ class FlowDocDetailsScreen(DocDetailsScreen):
                                       'Завершить документ?',
                                       ['Да', 'Нет'])
 
-        elif listener == 'btn_ocr_serial_template_settings':
-            min_rec_amount = self.rs_settings.get('ocr_serial_template_min_rec_amount') or 5
-            self.hash_map.put('ocr_serial_template_min_rec_amount', str(min_rec_amount))
-            num_amount = self.rs_settings.get('ocr_serial_template_num_amount') or 10
-            self.hash_map.put('ocr_serial_template_num_amount', str(num_amount))
-            prefix = self.rs_settings.get('ocr_serial_template_prefix') or 'SN'
-            self.hash_map.put('ocr_serial_template_prefix', prefix)
-            flag_rec = self.rs_settings.get('ocr_serial_template_continuous_recognition')
-            flag_rec = str(flag_rec).lower() if flag_rec is not None else 'false'
-            flag_pref = self.rs_settings.get('ocr_serial_template_use_prefix')
-            flag_pref = str(flag_pref).lower() if flag_pref is not None else 'false'
-            current_template = f'Текущий шаблон: {prefix if flag_pref == "true" else ""}{"*"*num_amount}'
-            self.hash_map.put('current_ocr_serial_template', current_template)
-            self.hash_map.put('ocr_serial_template_continuous_recognition', flag_rec)
-            self.hash_map.put('ocr_serial_template_use_prefix', flag_pref)
-            self.hash_map.show_dialog('ШаблонРаспознавания',
-                                      'Настройка шаблона распознавания',
-                                      ['Принять', 'Отмена'])
-
-        elif self._is_result_positive('ШаблонРаспознавания'):
-            min_rec_amount = self.hash_map.get('ocr_serial_template_min_rec_amount')
-            num_amount = self.hash_map.get('ocr_serial_template_num_amount') or '10'
-            prefix = self.hash_map.get('ocr_serial_template_prefix')
-            continuous_recognition = self.hash_map.get('ocr_serial_template_continuous_recognition')
-            continuous_recognition = True if continuous_recognition == 'true' else False
-            use_prefix = self.hash_map.get('ocr_serial_template_use_prefix')
-            use_prefix = True if use_prefix == 'true' else False
-            is_valid, error = self._validate_ocr_settings(min_rec_amount, num_amount,
-                                                          prefix, use_prefix)
-            if not is_valid:
-                self.hash_map.toast(error)
-                return
-            prefix = prefix.strip()
-            self.rs_settings.put('ocr_serial_template_num_amount', int(num_amount), True)
-            self.rs_settings.put('ocr_serial_template_prefix', prefix, True)
-            self.rs_settings.put('ocr_serial_template_continuous_recognition', continuous_recognition, True)
-            self.rs_settings.put('ocr_serial_template_use_prefix', use_prefix, True)
-            self.rs_settings.put('ocr_serial_template_min_rec_amount', int(min_rec_amount), True)
-
-            if use_prefix:
-                patterns = [rf'^{prefix}', rf'([^\doO])(\d{{{num_amount}}})$']
-            else:
-                patterns = [rf'\d{{{num_amount}}}']
-            self.rs_settings.put('ocr_serial_template_patterns', json.dumps(patterns), True)
-            self.hash_map.toast('Шаблон сохранён')
-
         elif listener == 'ON_BACK_PRESSED':
             self.hash_map.show_screen("Документы")
 
         elif listener == 'vision_cancel':
-            FlowDocDetailsScreen.ocr_nosql.destroy()
+            SerialNumberOCRSettings.ocr_nosql_counter.destroy()
 
         elif listener == 'vision':
-            FlowDocDetailsScreen.ocr_nosql.destroy()
+            SerialNumberOCRSettings.ocr_nosql_counter.destroy()
 
         elif listener == 'ПечатьПревью':
             self.hash_map.put('RefreshScreen', '')
+
+        elif listener == 'btn_ocr_serial_template_settings':
+            ocr_nosql = SerialNumberOCRSettings.ocr_nosql
+            ocr_nosql.put('show_process_result', True, True)
+            self.hash_map.show_process_result('OcrTextRecognition', 'SerialNumberOCRSettings')
 
     def _barcode_flow_on_start(self):
 
@@ -3734,77 +3684,13 @@ class FlowDocDetailsScreen(DocDetailsScreen):
         return table
 
     def _set_vision_settings(self) -> None:
-        """Устанавливает настройки для кнопки распознавания текста"""
-        num_amount = self.rs_settings.get('ocr_serial_template_num_amount') or 10
-        use_prefix = self.rs_settings.get('ocr_serial_template_use_prefix')
-        if use_prefix:
-            prefix = self.rs_settings.get('ocr_serial_template_prefix')
-            min_length = num_amount + len(prefix)
-            max_length = min_length + 2
-        else:
-            min_length, max_length = num_amount, num_amount
-        values_list = ("~[{\"action\":\"run\",\"type\":\"python\","
-                       "\"method\":\"serial_key_recognition_ocr\"}]")
-        rec_settings = dict(
-            values_list=values_list,
-            max_length=max_length,
-            min_length=min_length,
-        )
-        self.hash_map.set_vision_settings(**rec_settings)
+        ocr_nosql = SerialNumberOCRSettings.ocr_nosql
+        serial_ocr_settings = ocr_nosql.get('serial_ocr_settings')
+        if serial_ocr_settings:
+            serial_ocr_settings = json.loads(serial_ocr_settings)
+            self.hash_map.set_vision_settings(**serial_ocr_settings)
+            ocr_nosql.put('from_screen', 'FlowDocDetailsScreen', True)
 
-    def _validate_ocr_settings(
-            self,
-            min_rec_amount: str,
-            num_amount: str,
-            prefix: str,
-            use_prefix: bool
-    ) -> Tuple[bool, str]:
-        """Валидация данных введенных в диалоге ШаблонРаспознавания"""
-        if not min_rec_amount.isdigit() or int(min_rec_amount) == 0:
-            error = 'Укажите минимальное количество обнаружений серийного номера'
-            return False, error
-        if not num_amount.isdigit():
-            error = 'Количество цифр в шаблоне не корректно'
-            return False, error
-        if not 1 < int(num_amount) < 21:
-            error = 'Количество цифр в шаблоне должно быть в интервале от 2 до 20'
-            return False, error
-        if prefix.isspace() and use_prefix:
-            error = 'Не указан префикс'
-            return False, error
-        return True, ''
-
-    @staticmethod
-    def serial_key_recognition_ocr(hash_map: HashMap, rs_settings) -> None:
-        """Находит в переданной из OCR строке серийный номер, по заданному шаблону"""
-        ocr_nosql = FlowDocDetailsScreen.ocr_nosql
-        ocr_text = hash_map.get("ocr_text")
-        use_prefix = rs_settings.get('ocr_serial_template_use_prefix')
-        num_amount = rs_settings.get('ocr_serial_template_num_amount') or 10
-        patterns = rs_settings.get('ocr_serial_template_patterns')
-        patterns = json.loads(patterns) if patterns else [rf'\d{{{num_amount}}}']
-        for pattern in patterns:
-            match_num = re.search(pattern, ocr_text)
-            if not match_num:
-                return
-        result = match_num.group(2) if use_prefix else match_num.group()
-        min_rec_amount = rs_settings.get('ocr_serial_template_min_rec_amount')
-        result_in_memory = ocr_nosql.get(result)
-        if result_in_memory is None:
-            ocr_nosql.put(result, 1, True)
-        elif result_in_memory < min_rec_amount:
-            ocr_nosql.put(result, result_in_memory + 1, True)
-        elif result_in_memory == min_rec_amount:
-            ocr_nosql.put(result, result_in_memory + 1, True)
-            db_services.FlowDocService(hash_map['id_doc']).add_barcode_to_database(result)
-            hash_map.beep()
-            hash_map.toast('Серийный номер: ' + result)
-            if not rs_settings.get('ocr_serial_template_continuous_recognition'):
-                hash_map.put("ocr_result", result)
-                return
-            for serial in json.loads(ocr_nosql.getallkeys()):
-                if ocr_nosql.get(serial) < min_rec_amount:
-                    ocr_nosql.put(serial, 0, True)
 
 
 # ^^^^^^^^^^^^^^^^^^^^^ DocDetails ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -4151,8 +4037,6 @@ class BaseGoodSelect(Screen):
 class GoodsSelectScreen(BaseGoodSelect):
     screen_name = 'Товар выбор'
     process_name = 'Документы'
-    printing_template_name = 'goods_select_screen'
-
 
     def __init__(self, hash_map: HashMap, rs_settings):
         super().__init__(hash_map, rs_settings)
@@ -4382,7 +4266,6 @@ class AdrGoodsSelectScreen(BaseGoodSelect):
 class GroupScanItemScreen(BaseGoodSelect):
     screen_name = 'Товар выбор'
     process_name = 'Групповая обработка'
-    printing_template_name = 'group_scan_select_screen'
 
     def __init__(self, hash_map: HashMap, rs_settings):
         super().__init__(hash_map, rs_settings)
@@ -4788,7 +4671,6 @@ class SelectGoodsType(Screen):
 class ItemCard(Screen):
     screen_name = 'Карточка товара'
     process_name = 'Товары'
-    printing_template_name = 'item_card'
 
     def __init__(self, hash_map, rs_settings):
         super().__init__(hash_map, rs_settings)
@@ -5882,6 +5764,7 @@ class SeriesSelectScreen(Screen):
     def on_start(self):
         self.hash_map.set_title(self.screen_values['title'])
         self.init_screen()
+        self._set_vision_settings()
         # self._refresh_series_cards()
 
     def on_input(self):
@@ -5892,11 +5775,20 @@ class SeriesSelectScreen(Screen):
             self._back_screen()
         elif listener == 'barcode':
             self._barcode_listener()
+        elif listener == 'vision_cancel':
+            SerialNumberOCRSettings.ocr_nosql_counter.destroy()
+        elif listener == 'vision':
+            self._barcode_listener()
+            SerialNumberOCRSettings.ocr_nosql_counter.destroy()
         elif self.listener == 'LayoutAction':
             self._layout_action()
         elif self._is_result_positive('confirm_delete'):
             self.delete_series()
-
+        elif listener == 'btn_ocr_serial_template_settings':
+            ocr_nosql = SerialNumberOCRSettings.ocr_nosql
+            ocr_nosql.put('show_process_result', True, True)
+            self.hash_map.show_process_result('OcrTextRecognition',
+                                              'SerialNumberOCRSettings')
         self.hash_map.no_refresh()
 
     def show(self, args=None):
@@ -6034,8 +5926,11 @@ class SeriesSelectScreen(Screen):
         return doc_cards
 
     def _identify_add_barcode_series(self):
-        barcode = self.hash_map.get('barcode')
+        ocr_nosql = SerialNumberOCRSettings.ocr_nosql
+        barcode = self.hash_map.get('barcode') or ocr_nosql.get('ocr_result')
         if barcode:
+            ocr_nosql.delete('ocr_result')
+            self.hash_map.delete('barcode')
             values = self.service.get_series_by_barcode(barcode, self.screen_data)
             if values:
                 item_id = values[0]['id']
@@ -6064,6 +5959,14 @@ class SeriesSelectScreen(Screen):
     def delete_series(self):
         id = self.hash_map.get('selected_card_key')
         self.service.delete_current_st(id)
+
+    def _set_vision_settings(self) -> None:
+        ocr_nosql = SerialNumberOCRSettings.ocr_nosql
+        serial_ocr_settings = ocr_nosql.get('serial_ocr_settings')
+        if serial_ocr_settings:
+            serial_ocr_settings = json.loads(serial_ocr_settings)
+            self.hash_map.set_vision_settings(**serial_ocr_settings)
+            ocr_nosql.put('from_screen', 'SeriesSelectScreen', True)
 
 class SeriesItem(Screen):
     process_name = 'SeriesProcess'
@@ -6400,12 +6303,12 @@ class SettingsScreen(Screen):
             'btn_size': lambda: self._show_screen('Настройки Шрифтов'),
             'btn_sound_settings': lambda: self._show_screen('Настройка звука'),
             'btn_documents_settings': lambda: self._show_screen('Настройки документов'),
+            'btn_ocr_recognition_settings': lambda: self.hash_map.put('StartProcess', 'OcrTextRecognition'),
             'btn_print_settings': lambda: self.hash_map.put('StartProcess', 'Печать'),
             'btn_test_barcode': lambda: self._show_screen('Тест сканера'),
             'btn_err_log': lambda: self._show_screen('Ошибки'),
             'btn_upload_docs': self._upload_docs,
             'btn_timer': self._load_docs,
-            'btn_delete_template_settings': self.delete_template_settings(self.rs_settings),
             'ON_BACK_PRESSED': lambda: self.hash_map.put('FinishProcess', ''),
         }
         if self.listener in listeners:
@@ -7157,6 +7060,166 @@ class ActiveCVArticleRecognition(Screen):
         self.hash_map.set_vision_settings(**json.loads(settings))
 
 # ^^^^^^^^^^^^^^^^^^^^^ ActiveCV ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+
+# ==================== OCR =============================
+
+class SerialNumberOCRSettings(Screen):
+    screen_name = 'SerialNumberOCRSettings'
+    process_name = 'OcrTextRecognition'
+    ocr_nosql = noClass("ocr_nosql")
+    ocr_nosql_counter = noClass("ocr_nosql_counter")
+
+    def __init__(self, hash_map: HashMap, rs_settings):
+        super().__init__(hash_map, rs_settings)
+        self.articles_ocr_ncl = noClass('articles_ocr_ncl')
+        self.ocr_nosql = noClass("ocr_nosql")
+        self.screen_title = 'Шаблон распознавания S/N'
+        self.screen_values = {
+            'ocr_serial_template_min_rec_amount': '5',
+            'ocr_serial_template_num_amount': '10',
+            'ocr_serial_template_prefix': 'SN',
+            'ocr_serial_template_continuous_recognition': 'false',
+            'ocr_serial_template_use_prefix': 'true',
+            'ocr_serial_current_template': ""
+        }
+
+    def on_start(self):
+        self.hash_map.set_title(self.screen_title)
+        self._set_screen_values()
+
+    def on_input(self):
+        if self.listener == 'btn_save_ocr_settings':
+            is_valid, error = self._validate_ocr_settings()
+            if not is_valid:
+                self.hash_map.toast(error)
+                return
+            self._save_template_patterns()
+            self._save_template_settings()
+            self._set_vision_settings()
+            self.hash_map.toast('Шаблон сохранён')
+            if self.ocr_nosql.get('show_process_result'):
+                self.ocr_nosql.delete('show_process_result')
+                self.hash_map.finish_process_result()
+        elif self.listener == 'ON_BACK_PRESSED':
+            if self.ocr_nosql.get('show_process_result'):
+                self.ocr_nosql.delete('show_process_result')
+                self.hash_map.finish_process_result()
+            else:
+                self.hash_map.finish_process()
+
+    def on_post_start(self):
+        pass
+
+    def show(self, args=None):
+        pass
+
+    def _set_screen_values(self):
+        for value_name, value in self.screen_values.items():
+            new_value = self.hash_map.get(value_name) or self.ocr_nosql.get(value_name) or value
+            self.hash_map.put(value_name, new_value)
+
+
+    def _save_template_settings(self):
+        for value_name in self.screen_values:
+            self.ocr_nosql.put(value_name, self.hash_map.get(value_name), True)
+
+    def _save_template_patterns(self):
+        num_amount = self.hash_map.get('ocr_serial_template_num_amount')
+        prefix = self.hash_map.get('ocr_serial_template_prefix')
+        use_prefix = self.hash_map.get('ocr_serial_template_use_prefix')
+        if use_prefix == 'true':
+            patterns = [rf'^{prefix}', rf'([^\doO])(\d{{{num_amount}}})$']
+        else:
+            patterns = [rf'\d{{{num_amount}}}']
+        current_template = (f'Текущий шаблон: {prefix if use_prefix == "true" else ""}'
+                            f'{"*" * int(num_amount)}')
+        self.hash_map.put('ocr_serial_current_template', current_template)
+        self.ocr_nosql.put('ocr_serial_template_patterns', json.dumps(patterns), True)
+
+    def _set_vision_settings(self) -> None:
+        """Устанавливает настройки для кнопки распознавания текста"""
+        num_amount = int(self.ocr_nosql.get('ocr_serial_template_num_amount') or '10')
+        use_prefix = self.ocr_nosql.get('ocr_serial_template_use_prefix')
+        if use_prefix == 'true':
+            prefix = self.ocr_nosql.get('ocr_serial_template_prefix')
+            min_length = num_amount + len(prefix)
+            max_length = min_length + 2
+        else:
+            min_length, max_length = num_amount, num_amount
+        values_list = ("~[{\"action\":\"run\",\"type\":\"python\","
+                       "\"method\":\"serial_key_recognition_ocr\"}]")
+        rec_settings = dict(
+            values_list=values_list,
+            max_length=max_length,
+            min_length=min_length,
+        )
+        SerialNumberOCRSettings.ocr_nosql.put('serial_ocr_settings', json.dumps(rec_settings), True)
+
+    def _validate_ocr_settings(self) -> Tuple[bool, str]:
+        """Валидация данных введенных в диалоге ШаблонРаспознавания"""
+        min_rec_amount = self.hash_map.get('ocr_serial_template_min_rec_amount')
+        num_amount = self.hash_map.get('ocr_serial_template_num_amount')
+        prefix: str = self.hash_map.get('ocr_serial_template_prefix')
+        use_prefix = self.hash_map.get('ocr_serial_template_use_prefix')
+        if not min_rec_amount.isdigit() or int(min_rec_amount) == 0:
+            error = ('Укажите корректное минимальное количество'
+                    ' обнаружений серийного номера')
+            return False, error
+        if not num_amount.isdigit():
+            error = 'Количество цифр в шаблоне не корректно'
+            return False, error
+        if not 1 < int(num_amount) < 21:
+            error = 'Количество цифр в шаблоне должно быть в интервале от 2 до 20'
+            return False, error
+        if prefix.isspace() and use_prefix == 'true':
+            error = 'Не указан префикс'
+            return False, error
+        if prefix != prefix.strip():
+            error = 'Пробелы в начале или в конце префикса'
+            return False, error
+        return True, ''
+
+    @staticmethod
+    def serial_key_recognition_ocr(hash_map: HashMap) -> None:
+        """Находит в переданной из OCR строке серийный номер, по заданному шаблону"""
+        ocr_nosql = noClass("ocr_nosql")
+        ocr_nosql_counter = noClass("ocr_nosql_counter")
+        ocr_text = hash_map.get("ocr_text")
+        use_prefix = ocr_nosql.get('ocr_serial_template_use_prefix')
+        num_amount = int(ocr_nosql.get('ocr_serial_template_num_amount')) or 10
+        patterns = ocr_nosql.get('ocr_serial_template_patterns')
+        patterns = json.loads(patterns) if patterns else [rf'\d{{{num_amount}}}']
+        for pattern in patterns:
+            match_num = re.search(pattern, ocr_text)
+            if not match_num:
+                return
+        result = match_num.group(2) if use_prefix == 'true' else match_num.group()
+        min_rec_amount = int(ocr_nosql.get('ocr_serial_template_min_rec_amount'))
+        result_in_memory = ocr_nosql_counter.get(result)
+        if result_in_memory is None:
+            ocr_nosql_counter.put(result, 1, True)
+        elif result_in_memory < min_rec_amount:
+            ocr_nosql_counter.put(result, result_in_memory + 1, True)
+        elif result_in_memory == min_rec_amount:
+            ocr_nosql_counter.put(result, result_in_memory + 1, True)
+            from_screen = ocr_nosql.get('from_screen')
+            if from_screen == 'FlowDocDetailsScreen':
+                db_services.FlowDocService(hash_map['id_doc']).add_barcode_to_database(result)
+            elif from_screen == 'SeriesSelectScreen':
+                hash_map.put("ocr_result", result)
+                ocr_nosql.put('ocr_result', result, True)
+                return
+            hash_map.beep()
+            hash_map.toast('Серийный номер: ' + result)
+            if ocr_nosql.get('ocr_serial_template_continuous_recognition') == 'false':
+                hash_map.put("ocr_result", result)
+                return
+            for serial in json.loads(ocr_nosql_counter.getallkeys()):
+                if ocr_nosql_counter.get(serial) < min_rec_amount:
+                    ocr_nosql_counter.put(serial, 0, True)
+# ^^^^^^^^^^^^^^^^^^^^^ OCR ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
 
 # ==================== Timer =============================
 
