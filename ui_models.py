@@ -4067,6 +4067,7 @@ class GoodsSelectScreen(BaseGoodSelect):
             self.hash_map.put('GoodsSelectScreen_selected_card_data', current_elem, to_json=True)
 
             if doc_position:
+                self.hash_map.put('goods_select_selected_card_position', str(doc_position))
                 self._goods_selector('index', index=doc_position)
             self.hash_map.put('was_clicked', '-1')
 
@@ -4089,7 +4090,7 @@ class GoodsSelectScreen(BaseGoodSelect):
         pass
 
     def _get_current_elem(self):
-        selected_card_position = int(self.hash_map.get('selected_card_position'))
+        selected_card_position = int(self.hash_map.get('goods_select_selected_card_position'))
         table_data = self.hash_map.get('GoodsSelectScreen_doc_data', from_json=True)
         current_elem = table_data[selected_card_position]
         current_elem['key'] = current_elem.get('id')
@@ -4097,7 +4098,7 @@ class GoodsSelectScreen(BaseGoodSelect):
 
     def _goods_selector(self, action, index = None):
         
-        global_position = index if index else int(self.hash_map.get('selected_card_position'))
+        global_position = index if index else int(self.hash_map.get('goods_select_selected_card_position'))
 
         doc_rows = int(self.hash_map.get('doc_rows'))
         doc_data = self.hash_map.get('GoodsSelectScreen_doc_data', from_json=True)
@@ -4154,7 +4155,7 @@ class GoodsSelectScreen(BaseGoodSelect):
             ('good_art', 'good_sn', 'good_property', 'good_price', 'good_plan', 'price', 'price_type'),
             default='отсутствует')
 
-        self.hash_map.put("selected_card_position", current_str)
+        self.hash_map.put("goods_select_selected_card_position", current_str)
         self.hash_map.put_data(put_data)
         self._set_delta(reset=True)
 
@@ -4186,7 +4187,7 @@ class GoodsSelectScreen(BaseGoodSelect):
         return False
 
     def _refresh_qtty_in_table(self, table_data):
-        index = int(self.hash_map.get('selected_card_position'))
+        index = int(self.hash_map.get('goods_select_selected_card_position'))
         table_data[index]['d_qtty'] = self.hash_map.get('qtty')
         table_data[index]['new_qtty'] = self.hash_map.get('new_qtty')
         self.hash_map.put('GoodsSelectScreen_doc_data', table_data, to_json=True)
