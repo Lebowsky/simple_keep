@@ -8125,14 +8125,6 @@
                 "alias": "event_service"
             },
             {
-                "event": "onWebServiceSyncCommand",
-                "listener": "",
-                "action": "run",
-                "type": "python",
-                "method": "put_notification",
-                "postExecute": ""
-            },
-            {
                 "event": "onBackgroundCommand",
                 "listener": "menu_2",
                 "action": "run",
