@@ -15,6 +15,7 @@ from ui_utils import HashMap, RsDoc, BarcodeWorker, get_ip_address, BarcodeAdrWo
 from db_services import DocService, ErrorService, GoodsService, BarcodeService, AdrDocService, TimerService
 from tiny_db_services import ScanningQueueService, ExchangeQueueBuffer
 from hs_services import HsService
+import static_data
 from ru.travelfood.simple_ui import SimpleUtilites as suClass
 
 from http_exchange import post_changes_to_server
@@ -26,9 +27,6 @@ from java import jclass
 noClass = jclass("ru.travelfood.simple_ui.NoSQL")
 current_screen: 'Screen' = None
 _rs_settings = noClass("rs_settings")
-sn_icon_green = 'AAABAAEAGBgAAAEAIAAoCQAAFgAAACgAAAAYAAAAMAAAAAEAIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAjACZAIwAmQCMAJkAjACZAIwAmQCMAJkAjACZAIwAmQCMAJkAjACZAIwAmQCMAJkAjACZAIwAmQCMAJkAjACZAIwAmQCMAJkAjACZAIwAmQCMAJkAjACZAIwAmQCMAJkAjACZAIwAmQCMAJkAjACZAIwAmQCMAJkAjACZAIwAmQCMAJkAjACZAIwAmQCMAJkAjACZAIwAmQCMAJkAjACZAIwAmQCMAJkAjACZAIwAmQCMAJkAjACZAIwAmQCMAJkAjACZAIwAmQCMAJkAjACZAIwAmQCMAJkAjACZAIwAmQCMAJkAjACZAIwAmQCMAJkAjACZAIwAmQCMAJkAjACZAIwAmQCMAJkAjACZAIwAmQCMAJkAjACZAIwAmQCMAJkAjACZAIwAmQCMAJkAjACZAIwAmQCMAJkAjACZAIwAmQCMAJkAjACZAIwAmQCMAJkAjACZAIwAmQCMAJkAjACZAIwAmQCMAJkAjACZAIwAmQCMAJkAjACZAIwAmQCMAJkAjACZAIwAmQCMAJkAjACZAIwAmQCMAJkAjACZAIwAmQCMAJkAjACZAIwAmQCMAJkAjACZAIwAmQCMAJkAjACZAIwAmQCMAJkAjACZAIwAmQCMAJkAjACZAIwAmQCMAJkAjACZ////Xf////L////VAIwAmQCMAJkAjACZAIwAmQCMAJkAjACZ////9/////////+8AIwAmQCMAJkAjACZAIwAmQCMAJkAjACZAIwAmQCMAJkAjACZAIwAmQCMAJkAjACZ////Xf////L////VAIwAmQCMAJkAjACZAIwAmQCMAJkAjACZ//////////////+8AIwAmQCMAJkAjACZAIwAmQCMAJkAjACZAIwAmQCMAJkAjACZAIwAmQCMAJkAjACZ////Xf////L////VAIwAmQCMAJkAjACZAIwAmQCMAJn////2//////////////+8AIwAmQCMAJn/////////8v//////////////////////////AIwAmQCMAJkAjACZ////Xf////L////VAIwAmQCMAJkAjACZAIwAmf///8T////+////3v////////+8AIwAmQCMAJkAjACZAIwAmQCMAJkAjACZAIwAmQCMAJkAjACZAIwAmQCMAJkAjACZ////Xf////L////VAIwAmQCMAJkAjACZAIwAmf////P////t////r/////////+8AIwAmQCMAJkAjACZAIwAmQCMAJkAjACZAIwAmQCMAJkAjACZAIwAmQCMAJkAjACZ////Xf////L////VAIwAmQCMAJkAjACZ////wv////////+0////nP////////+8AIwAmQCMAJkAjACZAIwAmQCMAJkAjACZAIwAmQCMAJkAjACZAIwAmQCMAJkAjACZ////Xf////L////VAIwAmQCMAJkAjACZ////7////+7///9a////nP////////+8AIwAmQCMAJkAjACZ////0f////z////+////7f///48AjACZAIwAmQCMAJkAjACZ////Xf////L////VAIwAmQCMAJn///+0/////////7wAjACZ////nP////////+8AIwAmQCMAJn////a//////////////////////////f///+AAIwAmQCMAJkAjACZ////Xf////L////VAIwAmQCMAJn////u////8////2oAjACZ////nP////////+8AIwAmQCMAJn////4////5gCMAJkAjACZAIwAmf////7////FAIwAmQCMAJkAjACZ////Xf////L////VAIwAmf///7L////+////wgCMAJkAjACZ////nP////////+8AIwAmf///5z/////AIwAmQCMAJkAjACZAIwAmQCMAJn////f////NQCMAJkAjACZ////Xf////L////V////Uf///+n////0////bgCMAJkAjACZ////nP////////+8AIwAmf///5z/////AIwAmQCMAJkAjACZAIwAmQCMAJn////k////QgCMAJkAjACZ////Xf////L////V////qf////7////LAIwAmQCMAJkAjACZ////nP////////+8AIwAmf///5z/////AIwAmQCMAJkAjACZAIwAmQCMAJn////f////NQCMAJkAjACZ////Xf////L////e////6P////f///95AIwAmQCMAJkAjACZ////nP////////+8AIwAmQCMAJn////2////5gCMAJkAjACZAIwAmf////7////FAIwAmQCMAJkAjACZ////Xf////L////9/////v///84AjACZAIwAmQCMAJkAjACZ////nP////////+8AIwAmQCMAJn////a//////////////////////////f///+AAIwAmQCMAJkAjACZ////Xf////L/////////+f///4IAjACZAIwAmQCMAJkAjACZ////nP////////+8AIwAmQCMAJkAjACZ////zf////z////+////7f///48AjACZAIwAmQCMAJkAjACZAIwAmQCMAJkAjACZAIwAmQCMAJkAjACZAIwAmQCMAJkAjACZAIwAmQCMAJkAjACZAIwAmQCMAJkAjACZAIwAmQCMAJkAjACZAIwAmQCMAJkAjACZAIwAmQCMAJkAjACZAIwAmQCMAJkAjACZAIwAmQCMAJkAjACZAIwAmQCMAJkAjACZAIwAmQCMAJkAjACZAIwAmQCMAJkAjACZAIwAmQCMAJkAjACZAIwAmQCMAJkAjACZAIwAmQCMAJkAjACZAIwAmQCMAJkAjACZAIwAmQCMAJkAjACZAIwAmQCMAJkAjACZAIwAmQCMAJkAjACZAIwAmQCMAJkAjACZAIwAmQCMAJkAjACZAIwAmQCMAJkAjACZAIwAmQCMAJkAjACZAIwAmQCMAJkAjACZAIwAmQCMAJkAjACZAIwAmQCMAJkAjACZAIwAmQCMAJkAjACZAIwAmQCMAJkAjACZAIwAmQCMAJkAjACZAIwAmQCMAJkAjACZAIwAmQCMAJk='
-sn_icon_red = 'AAABAAEAGBgAAAEAIAAoCQAAFgAAACgAAAAYAAAAMAAAAAEAIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAP+ZAAD/mQAA/5kAAP+ZAAD/mQAA/5kAAP+ZAAD/mQAA/5kAAP+ZAAD/mQAA/5kAAP+ZAAD/mQAA/5kAAP+ZAAD/mQAA/5kAAP+ZAAD/mQAA/5kAAP+ZAAD/mQAA/5kAAP+ZAAD/mQAA/5kAAP+ZAAD/mQAA/5kAAP+ZAAD/mQAA/5kAAP+ZAAD/mQAA/5kAAP+ZAAD/mQAA/5kAAP+ZAAD/mQAA/5kAAP+ZAAD/mQAA/5kAAP+ZAAD/mQAA/5kAAP+ZAAD/mQAA/5kAAP+ZAAD/mQAA/5kAAP+ZAAD/mQAA/5kAAP+ZAAD/mQAA/5kAAP+ZAAD/mQAA/5kAAP+ZAAD/mQAA/5kAAP+ZAAD/mQAA/5kAAP+ZAAD/mQAA/5kAAP+ZAAD/mQAA/5kAAP+ZAAD/mQAA/5kAAP+ZAAD/mQAA/5kAAP+ZAAD/mQAA/5kAAP+ZAAD/mQAA/5kAAP+ZAAD/mQAA/5kAAP+ZAAD/mQAA/5kAAP+ZAAD/mQAA/5kAAP+ZAAD/mQAA/5kAAP+ZAAD/mQAA/5kAAP+ZAAD/mQAA/5kAAP+ZAAD/mQAA/5kAAP+ZAAD/mQAA/5kAAP+ZAAD/mQAA/5kAAP+ZAAD/mQAA/5kAAP+ZAAD/mQAA/5kAAP+Z////Xf////L////VAAD/mQAA/5kAAP+ZAAD/mQAA/5kAAP+Z////9/////////+8AAD/mQAA/5kAAP+ZAAD/mQAA/5kAAP+ZAAD/mQAA/5kAAP+ZAAD/mQAA/5kAAP+Z////Xf////L////VAAD/mQAA/5kAAP+ZAAD/mQAA/5kAAP+Z//////////////+8AAD/mQAA/5kAAP+ZAAD/mQAA/5kAAP+ZAAD/mQAA/5kAAP+ZAAD/mQAA/5kAAP+Z////Xf////L////VAAD/mQAA/5kAAP+ZAAD/mQAA/5n////2//////////////+8AAD/mQAA/5n/////////8v//////////////////////////AAD/mQAA/5kAAP+Z////Xf////L////VAAD/mQAA/5kAAP+ZAAD/mf///8T////+////3v////////+8AAD/mQAA/5kAAP+ZAAD/mQAA/5kAAP+ZAAD/mQAA/5kAAP+ZAAD/mQAA/5kAAP+Z////Xf////L////VAAD/mQAA/5kAAP+ZAAD/mf////P////t////r/////////+8AAD/mQAA/5kAAP+ZAAD/mQAA/5kAAP+ZAAD/mQAA/5kAAP+ZAAD/mQAA/5kAAP+Z////Xf////L////VAAD/mQAA/5kAAP+Z////wv////////+0////nP////////+8AAD/mQAA/5kAAP+ZAAD/mQAA/5kAAP+ZAAD/mQAA/5kAAP+ZAAD/mQAA/5kAAP+Z////Xf////L////VAAD/mQAA/5kAAP+Z////7////+7///9a////nP////////+8AAD/mQAA/5kAAP+Z////0f////z////+////7f///48AAP+ZAAD/mQAA/5kAAP+Z////Xf////L////VAAD/mQAA/5n///+0/////////7wAAP+Z////nP////////+8AAD/mQAA/5n////a//////////////////////////f///+AAAD/mQAA/5kAAP+Z////Xf////L////VAAD/mQAA/5n////u////8////2oAAP+Z////nP////////+8AAD/mQAA/5n////4////5gAA/5kAAP+ZAAD/mf////7////FAAD/mQAA/5kAAP+Z////Xf////L////VAAD/mf///7L////+////wgAA/5kAAP+Z////nP////////+8AAD/mf///5z/////AAD/mQAA/5kAAP+ZAAD/mQAA/5n////f////NQAA/5kAAP+Z////Xf////L////V////Uf///+n////0////bgAA/5kAAP+Z////nP////////+8AAD/mf///5z/////AAD/mQAA/5kAAP+ZAAD/mQAA/5n////k////QgAA/5kAAP+Z////Xf////L////V////qf////7////LAAD/mQAA/5kAAP+Z////nP////////+8AAD/mf///5z/////AAD/mQAA/5kAAP+ZAAD/mQAA/5n////f////NQAA/5kAAP+Z////Xf////L////e////6P////f///95AAD/mQAA/5kAAP+Z////nP////////+8AAD/mQAA/5n////2////5gAA/5kAAP+ZAAD/mf////7////FAAD/mQAA/5kAAP+Z////Xf////L////9/////v///84AAP+ZAAD/mQAA/5kAAP+Z////nP////////+8AAD/mQAA/5n////a//////////////////////////f///+AAAD/mQAA/5kAAP+Z////Xf////L/////////+f///4IAAP+ZAAD/mQAA/5kAAP+Z////nP////////+8AAD/mQAA/5kAAP+Z////zf////z////+////7f///48AAP+ZAAD/mQAA/5kAAP+ZAAD/mQAA/5kAAP+ZAAD/mQAA/5kAAP+ZAAD/mQAA/5kAAP+ZAAD/mQAA/5kAAP+ZAAD/mQAA/5kAAP+ZAAD/mQAA/5kAAP+ZAAD/mQAA/5kAAP+ZAAD/mQAA/5kAAP+ZAAD/mQAA/5kAAP+ZAAD/mQAA/5kAAP+ZAAD/mQAA/5kAAP+ZAAD/mQAA/5kAAP+ZAAD/mQAA/5kAAP+ZAAD/mQAA/5kAAP+ZAAD/mQAA/5kAAP+ZAAD/mQAA/5kAAP+ZAAD/mQAA/5kAAP+ZAAD/mQAA/5kAAP+ZAAD/mQAA/5kAAP+ZAAD/mQAA/5kAAP+ZAAD/mQAA/5kAAP+ZAAD/mQAA/5kAAP+ZAAD/mQAA/5kAAP+ZAAD/mQAA/5kAAP+ZAAD/mQAA/5kAAP+ZAAD/mQAA/5kAAP+ZAAD/mQAA/5kAAP+ZAAD/mQAA/5kAAP+ZAAD/mQAA/5kAAP+ZAAD/mQAA/5kAAP+ZAAD/mQAA/5kAAP+ZAAD/mQAA/5k='
-sn_icon_gray = 'AAABAAEAGBgAAAEAIAAoCQAAFgAAACgAAAAYAAAAMAAAAAEAIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABmZmaZZmZmmWZmZplmZmaZZmZmmWZmZplmZmaZZmZmmWZmZplmZmaZZmZmmWZmZplmZmaZZmZmmWZmZplmZmaZZmZmmWZmZplmZmaZZmZmmWZmZplmZmaZZmZmmWZmZplmZmaZZmZmmWZmZplmZmaZZmZmmWZmZplmZmaZZmZmmWZmZplmZmaZZmZmmWZmZplmZmaZZmZmmWZmZplmZmaZZmZmmWZmZplmZmaZZmZmmWZmZplmZmaZZmZmmWZmZplmZmaZZmZmmWZmZplmZmaZZmZmmWZmZplmZmaZZmZmmWZmZplmZmaZZmZmmWZmZplmZmaZZmZmmWZmZplmZmaZZmZmmWZmZplmZmaZZmZmmWZmZplmZmaZZmZmmWZmZplmZmaZZmZmmWZmZplmZmaZZmZmmWZmZplmZmaZZmZmmWZmZplmZmaZZmZmmWZmZplmZmaZZmZmmWZmZplmZmaZZmZmmWZmZplmZmaZZmZmmWZmZplmZmaZZmZmmWZmZplmZmaZZmZmmWZmZplmZmaZZmZmmWZmZplmZmaZZmZmmWZmZplmZmaZZmZmmWZmZplmZmaZZmZmmWZmZplmZmaZZmZmmWZmZplmZmaZZmZmmWZmZplmZmaZZmZmmWZmZplmZmaZ////Xf////L////VZmZmmWZmZplmZmaZZmZmmWZmZplmZmaZ////9/////////+8ZmZmmWZmZplmZmaZZmZmmWZmZplmZmaZZmZmmWZmZplmZmaZZmZmmWZmZplmZmaZ////Xf////L////VZmZmmWZmZplmZmaZZmZmmWZmZplmZmaZ//////////////+8ZmZmmWZmZplmZmaZZmZmmWZmZplmZmaZZmZmmWZmZplmZmaZZmZmmWZmZplmZmaZ////Xf////L////VZmZmmWZmZplmZmaZZmZmmWZmZpn////2//////////////+8ZmZmmWZmZpn/////////8v//////////////////////////ZmZmmWZmZplmZmaZ////Xf////L////VZmZmmWZmZplmZmaZZmZmmf///8T////+////3v////////+8ZmZmmWZmZplmZmaZZmZmmWZmZplmZmaZZmZmmWZmZplmZmaZZmZmmWZmZplmZmaZ////Xf////L////VZmZmmWZmZplmZmaZZmZmmf////P////t////r/////////+8ZmZmmWZmZplmZmaZZmZmmWZmZplmZmaZZmZmmWZmZplmZmaZZmZmmWZmZplmZmaZ////Xf////L////VZmZmmWZmZplmZmaZ////wv////////+0////nP////////+8ZmZmmWZmZplmZmaZZmZmmWZmZplmZmaZZmZmmWZmZplmZmaZZmZmmWZmZplmZmaZ////Xf////L////VZmZmmWZmZplmZmaZ////7////+7///9a////nP////////+8ZmZmmWZmZplmZmaZ////0f////z////+////7f///49mZmaZZmZmmWZmZplmZmaZ////Xf////L////VZmZmmWZmZpn///+0/////////7xmZmaZ////nP////////+8ZmZmmWZmZpn////a//////////////////////////f///+AZmZmmWZmZplmZmaZ////Xf////L////VZmZmmWZmZpn////u////8////2pmZmaZ////nP////////+8ZmZmmWZmZpn////4////5mZmZplmZmaZZmZmmf////7////FZmZmmWZmZplmZmaZ////Xf////L////VZmZmmf///7L////+////wmZmZplmZmaZ////nP////////+8ZmZmmf///5z/////ZmZmmWZmZplmZmaZZmZmmWZmZpn////f////NWZmZplmZmaZ////Xf////L////V////Uf///+n////0////bmZmZplmZmaZ////nP////////+8ZmZmmf///5z/////ZmZmmWZmZplmZmaZZmZmmWZmZpn////k////QmZmZplmZmaZ////Xf////L////V////qf////7////LZmZmmWZmZplmZmaZ////nP////////+8ZmZmmf///5z/////ZmZmmWZmZplmZmaZZmZmmWZmZpn////f////NWZmZplmZmaZ////Xf////L////e////6P////f///95ZmZmmWZmZplmZmaZ////nP////////+8ZmZmmWZmZpn////2////5mZmZplmZmaZZmZmmf////7////FZmZmmWZmZplmZmaZ////Xf////L////9/////v///85mZmaZZmZmmWZmZplmZmaZ////nP////////+8ZmZmmWZmZpn////a//////////////////////////f///+AZmZmmWZmZplmZmaZ////Xf////L/////////+f///4JmZmaZZmZmmWZmZplmZmaZ////nP////////+8ZmZmmWZmZplmZmaZ////zf////z////+////7f///49mZmaZZmZmmWZmZplmZmaZZmZmmWZmZplmZmaZZmZmmWZmZplmZmaZZmZmmWZmZplmZmaZZmZmmWZmZplmZmaZZmZmmWZmZplmZmaZZmZmmWZmZplmZmaZZmZmmWZmZplmZmaZZmZmmWZmZplmZmaZZmZmmWZmZplmZmaZZmZmmWZmZplmZmaZZmZmmWZmZplmZmaZZmZmmWZmZplmZmaZZmZmmWZmZplmZmaZZmZmmWZmZplmZmaZZmZmmWZmZplmZmaZZmZmmWZmZplmZmaZZmZmmWZmZplmZmaZZmZmmWZmZplmZmaZZmZmmWZmZplmZmaZZmZmmWZmZplmZmaZZmZmmWZmZplmZmaZZmZmmWZmZplmZmaZZmZmmWZmZplmZmaZZmZmmWZmZplmZmaZZmZmmWZmZplmZmaZZmZmmWZmZplmZmaZZmZmmWZmZplmZmaZZmZmmWZmZplmZmaZZmZmmWZmZplmZmaZZmZmmWZmZplmZmaZZmZmmWZmZplmZmaZZmZmmWZmZpk=' 
 
 class Screen(ABC):
     screen_name: str
@@ -2311,16 +2309,25 @@ class DocDetailsScreen(Screen):
 
         return table_view
 
-    def _get_doc_table_row_view(self, use_series=False):
+    def _get_doc_table_row_view(self, use_series=False, use_mark=False):
         row_view = widgets.LinearLayout(
             widgets.LinearLayout(
                 widgets.LinearLayout(
                     widgets.LinearLayout(
                         widgets.LinearLayout(
-                            widgets.Picture(
-                                Value=sn_icon_green if use_series else None,
-                                width=16,
-                                height=16,
+                            widgets.LinearLayout(
+                                widgets.Picture(
+                                    Value=static_data.sn_icon_green if use_series else None,
+                                    width=16,
+                                    height=12,
+                                ),
+                                widgets.Picture(
+                                    Value=static_data.mark_green if use_mark else None,
+                                    width=16,
+                                    height=12,
+                                ),
+                                orientation='horizontal',
+                                Padding = 16
                             ),
                             self.TextView('@good_name'),
                             width='match_parent',
@@ -2975,58 +2982,6 @@ class DocumentsDocDetailScreen(DocDetailsScreen):
 
         elif listener == 'btn_doc_mark_verified':
             self.hash_map.show_dialog('confirm_verified', 'Завершить документ?', ['Да', 'Нет'])
-
-    def _get_barcode_card(self):
-        # TODO Переделать через виджеты
-
-        ls = {"customcards": {
-            "options": {
-                "search_enabled": False,
-                "save_position": True
-            },
-            "layout": {
-                "type": "LinearLayout",
-                "orientation": "vertical",
-                "height": "match_parent",
-                "width": "match_parent",
-                "weight": "0",
-                "Elements": [
-                    {
-                        "type": "LinearLayout",
-                        "orientation": "horizontal",
-                        "height": "match_parent",
-                        "width": "match_parent",
-                        "weight": "0",
-                        "Elements": [
-                            {"type": "TextView",
-                             "height": "wrap_content",
-                             "width": "match_parent",
-                             "weight": "1",
-                             "Value": "@barcode",
-                             "TextSize": self.rs_settings.get('goodsTextSize'),
-                             "Variable": ""
-                             },
-                            {
-                                "type": "TextView",
-                                "show_by_condition": "",
-                                "Value": "@picture",
-                                "TextColor": "#DB7093",
-                                "BackgroundColor": "#FFFFFF",
-                                "Variable": "btn_tst1",
-                                "NoRefresh": False,
-                                "document_type": "",
-                                "cardCornerRadius": "15dp",
-                                "weight": "1",
-                                "mask": ""
-                            }]
-                    }
-                ]
-            }}
-        }
-        return ls
-
-    def _get_doc_barcode_data(self, args):
-        return self.service.get_doc_barcode_data(args)
 
     def _set_vision_settings(self, articles: List[str]):
         settings = {
@@ -3913,6 +3868,8 @@ class BaseGoodSelect(Screen):
         elif self._is_result_positive('modal_dialog_input_qtty'):
             if self._validate_delta_input():
                 self._set_delta(0)
+        elif listener == 'btn_marks_show':
+            self._open_marks_screen(self.hash_map['key'])
 
     def _handle_btn_ok(self):
         current_elem = self._get_current_elem()
@@ -4080,7 +4037,7 @@ class BaseGoodSelect(Screen):
             delta = float(self.hash_map.get('delta') or 0) + value if self.hash_map.get('delta') else value
             delta = self._format_quantity(delta)
             self._set_result_qtty(delta)
-        
+
         self.hash_map.put('delta', delta)
 
     def _format_quantity(self, qtty):
@@ -4124,6 +4081,22 @@ class BaseGoodSelect(Screen):
         )
         screen.show_process_result(screen_values)
 
+    def _open_marks_screen(self, doc_row_id):
+        table_data = self._get_marks_data(doc_row_id)
+        if not table_data:
+            return
+
+        screen_args = {
+            'title': 'Марки товара',
+            'table_data': json.dumps(table_data),
+            'table_header': json.dumps({'mark_code': 'Марка'}),
+            'enumerate': True
+        }
+        ShowItemsScreen(self.hash_map, self.rs_settings).show_process_result(screen_args)
+
+    def _get_marks_data(self, doc_row_id):
+        return self.service.get_marks_data(self.id_doc, doc_row_id)
+
     def _update_doc_table_row(self, data: Dict, row_id):
         if not self.hash_map.get('delta'):
             return
@@ -4152,7 +4125,7 @@ class BaseGoodSelect(Screen):
         barcode_worker = BarcodeWorker(self.hash_map.get("id_doc"))
         barcode_worker.queue_update_data = insert_to_queue
         barcode_worker.update_document_barcode_data()
-    
+
     def _show_dialog_qtty(self):
         loyaut = '''{
             "type": "LinearLayout",
@@ -6273,7 +6246,7 @@ class SelectItemScreen(Screen):
 
 class ShowItemsScreen(Screen):
     process_name = 'SelectItemProcess'
-    screen_name = 'SelectItemsScreen'
+    screen_name = 'ShowItemsScreen'
 
     def __init__(self, hash_map: HashMap, rs_settings):
         super().__init__(hash_map, rs_settings)
@@ -6282,6 +6255,8 @@ class ShowItemsScreen(Screen):
         self.table_data = []
         self.fields = []
         self.table_header = {}
+        self.text_size = 15
+        self.header_text_size = 15
 
     def init_screen(self):
         self.hash_map.set_title(self.hash_map['title'] or 'Список')
@@ -6325,13 +6300,12 @@ class ShowItemsScreen(Screen):
     def _get_table_header_view(self):
         return self._get_fields_layout(is_header=True)
 
-    def _get_fields_layout(self, is_header=False):
+    def _get_fields_layout(self, is_header=False, background_color='#FBE9E7', weight=1):
         if is_header:
             background_color = '#FFFFFF'
-            text_size = 15
+            text_size = self.header_text_size
         else:
-            background_color = '#FBE9E7'
-            text_size = 20
+            text_size = self.text_size
 
         if not self.table_data:
             return
@@ -6343,12 +6317,12 @@ class ShowItemsScreen(Screen):
         )
 
         if self.enumerate:
-            pos_layout = self._get_column_view(value='pos', text_size=text_size)
+            pos_layout = self._get_column_view(value='pos', text_size=text_size, weight=weight)
             fields_layout.append(pos_layout)
 
         fields_layout.append(
             widgets.LinearLayout(
-                *[self._get_column_view(value=field, text_size=text_size) for field in self.fields],
+                *[self._get_column_view(value=field, text_size=text_size, weight=weight) for field in self.fields],
                 width='match_parent',
                 orientation='horizontal',
                 weight=8
@@ -6357,7 +6331,7 @@ class ShowItemsScreen(Screen):
 
         return fields_layout
 
-    def _get_column_view(self, value, text_size=20, weight=1.0):
+    def _get_column_view(self, value, text_size=20, weight=1):
         return widgets.LinearLayout(
             widgets.TextView(
                 Value=f'@{value}',
@@ -6366,13 +6340,12 @@ class ShowItemsScreen(Screen):
                 width='match_parent'
             ),
             width='match_parent',
+            height='match_parent',
             weight=weight,
             StrokeWidth=1,
         )
 
     def _get_table_view(self, table_data):
-
-
         table_view = widgets.CustomTable(
             widgets.LinearLayout(
                 self._get_fields_layout(),
@@ -7233,7 +7206,7 @@ class Timer:
             service = db_services.TimerService()
             new_documents = service.get_new_load_docs(data)
             service.save_load_data(data)
-            self.db_service.update_data_from_json(docs_data['data'])
+            # self.db_service.update_data_from_json(docs_data['data'])
 
             if new_documents:
                 notify_text = self._get_notify_text(new_documents)
