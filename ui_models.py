@@ -6324,13 +6324,11 @@ class SettingsScreen(Screen):
         self.db_service = db_services.DocService()
 
     def on_start(self):
-        # self.hash_map.remove('toast')
         settings_keys = [
             'use_mark',
             'allow_fact_input',
             'add_if_not_in_plan',
             'path',
-            'delete_files',
             'allow_overscan',
             'offline_mode'
         ]
@@ -6959,7 +6957,6 @@ class DebugSettingsScreen(Screen):
             'btn_fill_ratio': self._fill_ratio,
             'btn_copy_base': self._copy_base,
             'btn_unload_log': self._unload_log,
-            'btn_local_files': self._local_files,
             'btn_templates': self.open_templates_screen,
             'ON_BACK_PRESSED': self._on_back_pressed
         }
@@ -7019,22 +7016,6 @@ class DebugSettingsScreen(Screen):
             self.hash_map.toast('Лог успешно выгружен')
         else:
             self.hash_map.toast('Ошибка соединения')
-
-    def _local_files(self):
-        import ui_csv
-
-        path = self.hash_map['path']
-        delete_files = self.hash_map['delete_files']
-
-        if not delete_files:
-            delete_files = '0'
-        if not path:
-            path = '//storage/emulated/0/download/'
-
-        ret_text = ui_csv.list_folder(path, delete_files)
-
-        self.hash_map.toast(ret_text)
-
     def _on_back_pressed(self):
         ip_host = self.hash_map['ip_host']
         self.rs_settings.put('debug_host_ip', ip_host, True)
@@ -7491,7 +7472,6 @@ class MainEvents:
             'use_mark': 'false',
             'add_if_not_in_plan': 'false',
             'path': '',
-            'delete_files': 'false',
             'success_signal': 7,
             'warning_signal': 8,
             'error_signal': 5,
