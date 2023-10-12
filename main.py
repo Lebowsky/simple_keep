@@ -40,7 +40,7 @@ def event_service(hash_map):
 
 @HashMap()
 def on_sql_error(hash_map):
-    model = ui_models.MainEvents(hash_map, rs_settings)
+    model = ui_models.MainEvents(hash_map)
     model.on_sql_error()
 
 
