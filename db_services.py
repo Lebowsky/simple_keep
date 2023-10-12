@@ -783,6 +783,31 @@ class DocService:
         # res = self._sql_query(query, '')
         return res
 
+    def get_doc_details_rows_count(self,
+                                   id_doc,
+                                   articles_list: Optional[List[str]] = None,
+                                   row_filters: Optional[str] = None,
+                                   search_string: Optional[str] = None
+):
+        select_query = f"""SELECT COUNT(*) FROM RS_docs_table"""
+        where = f"""WHERE id_doc = '{str(id_doc)}'"""
+        row_filters_condition = """AND qtty != COALESCE(qtty_plan, '0') """ if row_filters else ''
+        search_string_condition = f"""AND good_name LIKE '%{search_string}%'""" if search_string else ''
+
+        where_query = f"""
+                {where}
+                {row_filters_condition}
+                {search_string_condition}
+                """
+        args = ()
+        if articles_list:
+            where_query += f"""AND art IN ({','.join('?' for _ in articles_list)})"""
+            args += tuple(articles_list)
+        query = f"{select_query} {where_query}"
+        res = self._get_query_result(query, args, return_dict=True)
+        return res[0]['COUNT(*)']
+
+
     def parse_barcode(self, val):
         if len(val) < 21:
             return {'GTIN': '', 'Series': ''}
