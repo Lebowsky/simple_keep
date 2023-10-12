@@ -7463,9 +7463,9 @@ class WebServiceSyncCommand:
 
 
 class MainEvents:
-    def __init__(self, hash_map: HashMap, rs_settings):
+    def __init__(self, hash_map: HashMap):
         self.hash_map = hash_map
-        self.rs_settings = rs_settings
+        self.rs_settings = _rs_settings
 
     def app_on_start(self):
 
@@ -7476,17 +7476,13 @@ class MainEvents:
         toast = 'Готов к работе'
 
         current_release = self.hash_map['_configurationVersion']
-        # toast = (f'Обновляемся с {release} на {current_release}')
 
         self._create_tables()
 
         if current_release is None:
             toast = 'Не удалось определить версию конфигурации'
 
-        # self.hash_map.toast(f'Обновляемся с {release} на {current_release}')
         if current_release and release != current_release:
-            # toast = (f'Обновляемся с {release} на {current_release}')
-            # pass
             # import version_control
             # result_list = version_control.run_releases(release, current_release)
             # for elem in result_list:
@@ -7531,10 +7527,10 @@ class MainEvents:
             'delete_old_docs': False
         }
 
-        if os.path.exists('//data/data/ru.travelfood.simple_ui/databases/'):  # локально
+        if os.path.exists('//data/data/ru.travelfood.simple_ui/databases/'):
             rs_default_settings['path_to_databases'] = '//data/data/ru.travelfood.simple_ui/databases'
         else:
-            rs_default_settings['path_to_databases'] = "./"  # D:\PythonProjects\RightScan\SUI_noPony\
+            rs_default_settings['path_to_databases'] = "./"
 
         for k, v in rs_default_settings.items():
             if self.rs_settings.get(k) is None:

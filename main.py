@@ -17,7 +17,7 @@ rs_settings = noClass("rs_settings")
 def app_on_start(hash_map: HashMap):
     """ Обработчик при старте приложения """
 
-    model = ui_models.MainEvents(hash_map, rs_settings)
+    model = ui_models.MainEvents(hash_map)
     model.app_on_start()
 
 
