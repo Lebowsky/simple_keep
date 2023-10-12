@@ -175,7 +175,9 @@ class BarcodeService(DbService):
                 IFNULL(doc_table.qtty, 0.0) AS qtty,
                 IFNULL(doc_table.qtty_plan, 0.0) AS qtty_plan,
                 IFNULL({price_field}, 0.0) AS price,
-                IFNULL({id_price_field}, '') AS id_price
+                IFNULL({id_price_field}, '') AS id_price,
+                IFNULL(doc_table.qtty_plan, 0.0) AS qtty_plan,
+
             FROM RS_barcodes AS barcodes
             LEFT JOIN 
                     (SELECT 
@@ -696,6 +698,7 @@ class DocService:
                 From 
                 RS_docs_table
                 )
+           AND is_group_scan = 0
                        
            
            GROUP BY RS_docs.id_doc
@@ -801,6 +804,8 @@ class DocService:
                       'Delete From RS_docs_barcodes Where  id_doc=:id_doc And is_plan = 0',
                       'Update RS_docs_table Set qtty = 0 Where id_doc=:id_doc',
                       'Update RS_docs_table Set d_qtty = 0 Where id_doc=:id_doc',
+                      'Update RS_docs Set is_group_scan = "0" Where id_doc=:id_doc',
+                      'Update RS_docs Set is_barc_flow = "0" Where id_doc=:id_doc',
                       'Delete From RS_docs_table Where id_doc=:id_doc and is_plan = "False"',
                       'Delete From RS_barc_flow Where id_doc = :id_doc')
         try:
@@ -1625,10 +1630,11 @@ class FlowDocService(DocService):
                 ON RS_countragents.id = {self.docs_table_name}.id_countragents
                 '''
 
-        where_barc_flow = f'WHERE {self.docs_table_name}.is_barc_flow = 1'
+        where_not_group_scan = f'WHERE {self.docs_table_name}.is_group_scan = 0'
+        where_barc_flow = f'{self.docs_table_name}.is_barc_flow = 1'
         where_empty = ("RS_docs.id_doc not in "
                        "(SELECT distinct id_doc From RS_docs_table)")
-        where = f"{where_barc_flow} OR {where_empty}"
+        where = f"{where_not_group_scan} AND ({where_barc_flow} OR {where_empty})"
 
         if doc_status:
             if doc_status == "Выгружен":
