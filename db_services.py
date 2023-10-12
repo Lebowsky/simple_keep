@@ -176,7 +176,7 @@ class BarcodeService(DbService):
                 IFNULL(doc_table.qtty_plan, 0.0) AS qtty_plan,
                 IFNULL({price_field}, 0.0) AS price,
                 IFNULL({id_price_field}, '') AS id_price,
-                IFNULL(doc_table.qtty_plan, 0.0) AS qtty_plan,
+                IFNULL(doc_table.qtty_plan, 0.0) AS qtty_plan
 
             FROM RS_barcodes AS barcodes
             LEFT JOIN 

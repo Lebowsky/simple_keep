@@ -6355,15 +6355,14 @@ class SettingsScreen(Screen):
 
     def _upload_docs(self):
         if self._check_http_settings():
-            timer = Timer(self.hash_map, self.rs_settings)
-            # timer.upload_all_docs()
-            timer._upload_data()
+            timer = Timer(self.hash_map)
+            timer.upload_data()
         else:
             self.toast('Не заданы настройки соединения')
 
     def _load_docs(self):
         if self._check_http_settings():
-            timer = Timer(self.hash_map, self.rs_settings)
+            timer = Timer(self.hash_map)
             timer.timer_on_start()
         else:
             self.toast('Не заданы настройки соединения')
@@ -7259,9 +7258,9 @@ class SerialNumberOCRSettings(Screen):
 
 
 class Timer:
-    def __init__(self, hash_map: HashMap, rs_settings):
+    def __init__(self, hash_map: HashMap):
         self.hash_map = hash_map
-        self.rs_settings = rs_settings
+        self.rs_settings = _rs_settings
         self.http_settings = self._get_http_settings()
         self.db_service = DocService()
         self.http_service = HsService(self.http_settings)
@@ -7273,11 +7272,11 @@ class Timer:
         if not self._check_connection():
             return
 
-        self.load_docs()
-        self._upload_data()
+        self._load_docs()
+        self.upload_data()
         self._upload_buffer_data()
 
-    def put_notification(self, text, title=None):
+    def _put_notification(self, text, title=None):
         self.hash_map.notification(text, title)
 
     def _get_http_settings(self):
@@ -7290,7 +7289,7 @@ class Timer:
             'user_name': self.rs_settings.get('user_name')}
         return http_settings
 
-    def load_docs(self):
+    def _load_docs(self):
         if not self._check_http_settings():
             return
 
@@ -7303,16 +7302,16 @@ class Timer:
             service = db_services.TimerService()
             new_documents = service.get_new_load_docs(data)
             service.save_load_data(data)
-            # self.db_service.update_data_from_json(docs_data['data'])
+            # self.db_service.update_data_from_json(docs_data['data']) Старый вариант обмена.
 
             if new_documents:
                 notify_text = self._get_notify_text(new_documents)
-                self.put_notification(text=notify_text, title="Загружены документы:")
+                self._put_notification(text=notify_text, title="Загружены документы:")
 
         except Exception as e:
             self.db_service.write_error_on_log(f'Ошибка загрузки документов: {e}')
 
-    def _upload_data(self):
+    def upload_data(self):
         if not self._check_http_settings():
             return
 
@@ -7329,7 +7328,6 @@ class Timer:
             return
 
         if answer.error:
-            # self.put_notification(title='Ошибка при отправке документов', text=answer.error_text)
             self.db_service.write_error_on_log(f'Ошибка выгрузки документов: {answer.error_text}')
         else:
             docs_list_string = ', '.join([f"'{d['id_doc']}'" for d in data])
@@ -7352,38 +7350,6 @@ class Timer:
 
                 if not res.error:
                     buffer_service.remove_sent_data(data_to_send)
-
-    def upload_all_docs(self):
-        self.db_service = DocService()
-        self.upload_docs()
-        self.db_service = AdrDocService()
-        self.upload_docs()
-
-    def load_all_docs(self):
-        self.db_service = DocService()
-        self.load_docs()
-        self.db_service = AdrDocService()
-        self.load_docs()
-
-    def upload_docs(self):
-
-        if self._check_http_settings():
-            try:
-
-                docs_goods_formatted_list = self.db_service.get_docs_and_goods_for_upload()
-                if docs_goods_formatted_list:
-                    answer = self.http_service.send_documents(docs_goods_formatted_list)
-                    if answer:
-                        if answer.get('Error') is not None:
-                            self.put_notification(text='Ошибка при отправке документов')
-                            err_text = answer.get('text').decode('utf-8')
-                            error = answer.get("Error") or ''
-                            self.db_service.write_error_on_log(f'Ошибка выгрузки документов: {err_text}\n{error}')
-                        else:
-                            docs_list_string = ', '.join([f"'{d['id_doc']}'" for d in docs_goods_formatted_list])
-                            self.db_service.update_uploaded_docs_status(docs_list_string)
-            except Exception as e:
-                self.db_service.write_error_on_log(f'Ошибка выгрузки документов: {e}')
 
     def _check_http_settings(self) -> bool:
         http = self._get_http_settings()
@@ -7463,9 +7429,9 @@ class WebServiceSyncCommand:
 
 
 class MainEvents:
-    def __init__(self, hash_map: HashMap, rs_settings):
+    def __init__(self, hash_map: HashMap):
         self.hash_map = hash_map
-        self.rs_settings = rs_settings
+        self.rs_settings = _rs_settings
 
     def app_on_start(self):
 
@@ -7476,17 +7442,13 @@ class MainEvents:
         toast = 'Готов к работе'
 
         current_release = self.hash_map['_configurationVersion']
-        # toast = (f'Обновляемся с {release} на {current_release}')
 
         self._create_tables()
 
         if current_release is None:
             toast = 'Не удалось определить версию конфигурации'
 
-        # self.hash_map.toast(f'Обновляемся с {release} на {current_release}')
         if current_release and release != current_release:
-            # toast = (f'Обновляемся с {release} на {current_release}')
-            # pass
             # import version_control
             # result_list = version_control.run_releases(release, current_release)
             # for elem in result_list:
@@ -7531,10 +7493,10 @@ class MainEvents:
             'delete_old_docs': False
         }
 
-        if os.path.exists('//data/data/ru.travelfood.simple_ui/databases/'):  # локально
+        if os.path.exists('//data/data/ru.travelfood.simple_ui/databases/'):
             rs_default_settings['path_to_databases'] = '//data/data/ru.travelfood.simple_ui/databases'
         else:
-            rs_default_settings['path_to_databases'] = "./"  # D:\PythonProjects\RightScan\SUI_noPony\
+            rs_default_settings['path_to_databases'] = "./"
 
         for k, v in rs_default_settings.items():
             if self.rs_settings.get(k) is None:

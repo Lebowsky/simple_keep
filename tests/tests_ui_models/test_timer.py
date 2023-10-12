@@ -19,7 +19,7 @@ class TestMainEvents(unittest.TestCase):
         self.hash_map['DEVICE_MODEL'] = self.rs_settings.get('DEVICE_MODEL')
         self.hash_map['ANDROID_ID'] = self.rs_settings.get('ANDROID_ID')
         self.data_path = './data_for_tests/http_requests'
-        self.sut = Timer(self.hash_map, self.rs_settings)
+        self.sut = Timer(self.hash_map)
 
     def test_setUp(self):
         pass
@@ -31,7 +31,7 @@ class TestMainEvents(unittest.TestCase):
         self.rs_settings.put('USER', 'user', True)
         self.rs_settings.put('PASS', '1234', True)
         self.rs_settings.put('notification_id', None, True)
-        sut = Timer(self.hash_map, self.rs_settings)
+        sut = Timer(self.hash_map)
 
         load_data = self.get_load_data()
         HsService.get_data = MagicMock(return_value=load_data)
