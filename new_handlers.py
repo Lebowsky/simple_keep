@@ -355,12 +355,11 @@ def barcode_error_screen_listener(hash_map: HashMap):
 
 @HashMap()
 def select_item_on_start(hash_map: HashMap):
-    ui_models.SelectItemScreen(hash_map, rs_settings).on_start()
-
+    create_screen(hash_map, ui_models.SelectItemScreen).on_start()
 
 @HashMap()
 def select_item_on_input(hash_map: HashMap):
-    ui_models.SelectItemScreen(hash_map, rs_settings).on_input()
+    create_screen(hash_map, ui_models.SelectItemScreen).on_input()
 
 
 @HashMap()
@@ -452,13 +451,13 @@ def balances_on_input(hash_map):
 
 @HashMap()
 def prices_on_start(hash_map):
-    screen: ui_models.GoodsPricesItemCard = create_screen(hash_map)
+    screen = create_screen(hash_map, ui_models.GoodsPricesItemCard)
     screen.on_start()
 
 
 @HashMap()
 def prices_on_input(hash_map):
-    screen = ui_models.GoodsPricesItemCard(hash_map, rs_settings)
+    screen = create_screen(hash_map, ui_models.GoodsPricesItemCard)
     screen.on_input()
 
 
@@ -549,9 +548,6 @@ def http_settings_on_click(hash_map):
 def sound_settings_on_start(hash_map):
     screen = ui_models.SoundSettings(hash_map, rs_settings)
     screen.on_start()
-
-    # screen = ui_models.SelectGoodsType(hash_map, rs_settings)
-    # screen.on_input()
 
 
 @HashMap()

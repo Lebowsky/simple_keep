@@ -7629,7 +7629,7 @@
                                 "weight": "0",
                                 "Elements": [
                                     {
-                                        "Value": "@cards_data",
+                                        "Value": "@SelectItemScreen_items_cards",
                                         "Variable": "",
                                         "height": "wrap_content",
                                         "width": "match_parent",
@@ -8195,14 +8195,6 @@
                 "method": "event_service",
                 "postExecute": "",
                 "alias": "event_service"
-            },
-            {
-                "event": "onWebServiceSyncCommand",
-                "listener": "",
-                "action": "run",
-                "type": "python",
-                "method": "put_notification",
-                "postExecute": ""
             },
             {
                 "event": "onBackgroundCommand",
