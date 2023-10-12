@@ -183,6 +183,8 @@ class TestDocService(unittest.TestCase):
         result_doc = [x for x in self.service.get_doc_view_data() if x['id_doc'] == id_doc][0]
         self.assertEqual(expect, result_doc['is_barc_flow'])
 
+    def test_must_get_send_documents_data(self):
+        print(self.service.get_data_to_send_by_doc_id(id_doc='123'))
 
     def doc_has_lines(self, doc_id):
         result = [x for x in self.data_creator.samples['RS_docs_table'] if x['id_doc'] == doc_id]

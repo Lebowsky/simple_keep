@@ -872,12 +872,14 @@ class DocService:
             return None
         return self.form_data_for_request(res_docs, res_goods, False)
 
-    def get_data_to_send(self):
+    def get_data_to_send(self, id_doc=''):
         data = []
+
+        doc_id_condition = f'id_doc="{id_doc}"' if id_doc else 'verified = 1 AND IFNULL(sent, 0) = 0'
 
         q = f'''SELECT id_doc
                 FROM {self.docs_table_name} 
-                WHERE verified = 1  AND (sent = 0 OR sent IS NULL)
+                WHERE {doc_id_condition}
             '''
         res = self.provider.sql_query(q)
 
@@ -902,7 +904,7 @@ class DocService:
             q = '''
                 SELECT {}
                 FROM RS_docs_barcodes
-                WHERE id_doc = ? AND IFNULL(barcode_from_scanner, '') <> '', 
+                WHERE id_doc = ? AND IFNULL(barcode_from_scanner, '') <> ''
             '''.format(','.join(fields))
 
             doc_barcodes = self.provider.sql_query(q, id_doc)
@@ -931,6 +933,9 @@ class DocService:
             data.append(doc_data)
 
         return data
+
+    def get_data_to_send_by_doc_id(self, id_doc):
+        return self.get_data_to_send(id_doc=id_doc)
 
     def get_count_mark_codes(self, id_doc):
         q = '''
@@ -1533,12 +1538,14 @@ class AdrDocService(DocService):
 
         return {'result': True, 'error': ''}
 
-    def get_data_to_send(self):
+    def get_data_to_send(self, id_doc=''):
         data = []
+
+        doc_id_condition = f'id_doc="{id_doc}"' if id_doc else 'verified = 1 AND IFNULL(sent, 0) = 0'
 
         q = f'''SELECT id_doc
                 FROM {self.docs_table_name} 
-                WHERE verified = 1  AND (sent = 0 OR sent IS NULL)
+                WHERE {doc_id_condition}
             '''
         res = self.provider.sql_query(q)
 
