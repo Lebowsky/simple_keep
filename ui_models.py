@@ -4221,6 +4221,8 @@ class AdrGoodsSelectScreen(BaseGoodSelect):
     def on_input(self):
         listeners = {
             'btn_series_show': lambda: self._open_series_screen(self.screen_values['key']),
+            'btn_doc_good_barcode': lambda: self._open_barcode_register_screen(),
+            'btn_print': lambda: self._print_ticket()
         }
 
         if self.listener in listeners:
@@ -4250,6 +4252,26 @@ class AdrGoodsSelectScreen(BaseGoodSelect):
             screen_values=screen_values
         )
         screen.show_process_result()
+
+    def _open_barcode_register_screen(self):
+        init_data = {
+            'item_id': self.hash_map.get('item_id'),
+            'property_id': '',
+            'unit_id': ''
+        }
+        BarcodeRegistrationScreen(self.hash_map, self.rs_settings).show_process_result(init_data)
+    
+    def _print_ticket(self):
+        barcode = db_services.BarcodeService().get_barcode_from_doc_table(self.hash_map.get('key'))
+
+        data = {'Дата_док': 'Doc_data', 'Номенклатура': 'Good',
+                'Артикул': 'good_art', 'Серийный номер': 'good_sn',
+                'Характеристика': 'good_property', 'Цена': 'good_price',
+                'ЕдИзм': 'good_unit', 'Ключ': 'key', 'Валюта': 'price_type'}
+        for key in data:
+            data[key] = self.hash_map.get(data[key])
+        data['barcode'] = barcode if barcode else '0000000000000'
+        PrintService.print(self.hash_map, data)
 
     def _update_doc_table_row(self, data: Dict, row_id):
         if not self.hash_map.get('delta'):
