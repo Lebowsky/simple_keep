@@ -1229,7 +1229,7 @@ class FlowTilesScreen(Tiles):
 
     def __init__(self, hash_map: HashMap, rs_settings):
         super().__init__(hash_map, rs_settings)
-        self.db_service = DocService()
+        self.db_service = DocService(is_barc_flow=True)
 
     def on_start(self) -> None:
 
@@ -5822,8 +5822,8 @@ class SeriesSelectScreen(Screen):
 
     def _check_qtty_limits(self):
         if self.hash_map.get_bool('control'):
-            qtty = self._format_quantity(self.hash_map.get('qtty'))
-            qtty_plan = self._format_quantity(self.hash_map.get('qtty_plan'))
+            qtty = float(self.hash_map.get('qtty'))
+            qtty_plan = float(self.hash_map.get('qtty_plan'))
             if qtty > qtty_plan:
                 self.toast("Факт превышает план")
                 return False

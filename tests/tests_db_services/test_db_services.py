@@ -116,7 +116,10 @@ class TestDocService(unittest.TestCase):
     def test_can_get_docs_stat_for_group_scan_docs(self):
         self.data_creator.insert_data('RS_docs', 'RS_docs_table')
         self.service.is_group_scan = True
-        self.assertTrue(self.service.get_docs_stat())
+
+        result = self.service.get_docs_stat()
+
+        self.assertTrue(result)
 
     def test_can_get_doc_view_data_if_group_scan(self):
         self.data_creator.insert_data('RS_docs', 'RS_docs_table')
@@ -186,7 +189,7 @@ class TestTimerService(unittest.TestCase):
     def test_get_data_to_send(self):
         self.data_creator.insert_data(*list(self.data_creator.samples.keys()))
         actual = self.service.get_data_to_send()
-        print(actual[1])
+
         self.assertIsInstance(actual, list)
         self.assertEqual(len(actual), self.get_count_docs_to_send_from_samples())
 

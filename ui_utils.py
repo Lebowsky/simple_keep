@@ -514,10 +514,8 @@ class BarcodeWorker:
     def check_barcode(self):
         if self.process_result.error:
             return
-
         if self._use_mark():
             self._check_mark_in_document()
-
         self._check_barcode_in_document()
 
     def _check_mark_in_document(self):
@@ -567,7 +565,8 @@ class BarcodeWorker:
             'barcode_from_scanner': self.barcode_info.barcode,
             'approved': '1',
             'gtin': self.barcode_info.gtin,
-            'series': self.barcode_info.serial
+            'series': self.barcode_info.serial,
+            # 'mark_code': self.barcode_data['mark_id']
         }
 
         if self.barcode_data['mark_id']:
