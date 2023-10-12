@@ -33,13 +33,13 @@ class Screen(ABC):
     screen_name: str
     process_name: str
 
-    def __init__(self, hash_map: HashMap, rs_settings):
+    def __init__(self, hash_map: HashMap, rs_settings=_rs_settings):
         self.hash_map: HashMap = hash_map
         self.screen_values = {}
         self.rs_settings = rs_settings
         self.listener = self.hash_map['listener']
         self.event: str = self.hash_map['event']
-        self.finish_process = False
+        self.is_finish_process = False
         self.parent_screen = None
         self.on_start_handlers: List[Callable]=[]
         self.init_params = {}
@@ -63,7 +63,6 @@ class Screen(ABC):
         self.hash_map.show_screen(self.screen_name)
 
     def show_process_result(self, args=None):
-        set_next_screen(self)
         self.hash_map.put_data(args)
         self._init_screen_values()
         self._validate_screen_values()
@@ -126,8 +125,12 @@ class Screen(ABC):
             self.screen_values[k] = self.hash_map[k]
 
     def _finish_process(self):
-        self.finish_process = True
+        self.is_finish_process = True
         self.hash_map.finish_process()
+
+    def _finish_process_result(self):
+        self.is_finish_process = True
+        self.hash_map.finish_process_result()
 
     def _get_selected_card_data(self):
         selected_card_data = self.hash_map.get_json('selected_card_data')
@@ -3120,7 +3123,6 @@ class AdrDocDetailsScreen(DocDetailsScreen):
     def _open_select_cell_screen(self):
         screen = SelectItemScreen(
             self.hash_map,
-            self.rs_settings,
             table_name='RS_cells',
             result_listener='cell_select_success'
         )
@@ -4344,12 +4346,12 @@ class BarcodeRegistrationScreen(Screen):
         }
 
         item_type = self.listener
-        self.hash_map['table_name'] = item_tables[item_type]
-        self.hash_map['result_listener'] = f'{item_type}_success'
-        self.hash_map['return_value_key'] = 'selected_card'
-        self.hash_map['title'] = 'Выбор значения'
-        self.hash_map.put('fields', ['name'], to_json=True)
-        SelectItemScreen(self.hash_map, self.rs_settings).show()
+        screen = SelectItemScreen(
+            self.hash_map,
+            table_name=item_tables[item_type],
+            result_listener=f'{item_type}_success'
+        )
+        screen.show()
 
     def _select_item_result(self, field_name):
         selected_card = self.hash_map.get_json('selected_card')
@@ -4409,7 +4411,7 @@ class BarcodeRegistrationScreen(Screen):
         table_data = [{}]
 
         for row in barcodes_data:
-            row['_layout'] = self._get_doc_table_row_view()
+            # row['_layout'] = self._get_doc_table_row_view() проблема производительности
             table_data.append(row)
 
         return table_data
@@ -4418,15 +4420,15 @@ class BarcodeRegistrationScreen(Screen):
         table_view = widgets.CustomTable(
             widgets.LinearLayout(
                 self.LinearLayout(
-                    self.TextView('Штрихкод'),
+                    self.TextView('@barcode'),
                     weight=1
                 ),
                 self.LinearLayout(
-                    self.TextView('Характеристика'),
+                    self.TextView('@property'),
                     weight=1
                 ),
                 self.LinearLayout(
-                    self.TextView('Упаковка'),
+                    self.TextView('@unit'),
                     weight=1
                 ),
                 orientation='horizontal',
@@ -4532,6 +4534,8 @@ class GoodsListScreen(Screen):
             self.hash_map.put("FinishProcess", "")
         elif listener == 'barcode':
             self._identify_barcode_goods()
+
+        self.hash_map.no_refresh()
 
     def _get_goods_list_data(self, selected_good_type=None) -> list:
         results = self.service.get_goods_list_data(selected_good_type)
@@ -4954,12 +4958,12 @@ class GoodsBalancesItemCard(Screen):
             })
 
     def _select_wh(self):
-        self.hash_map['table_name'] = 'RS_warehouses'
-        self.hash_map['result_listener'] = 'wh_select_success'
-        self.hash_map['return_value_key'] = 'selected_card'
-        self.hash_map['title'] = 'Выберите склад'
-        self.hash_map.put('fields', ['name'], to_json=True)
-        SelectItemScreen(self.hash_map, self.rs_settings).show()
+        SelectItemScreen(
+            self.hash_map,
+            table_name='RS_warehouses',
+            result_listener='wh_select_success',
+            title='Выберите склад'
+        ).show()
 
     def _select_wh_result(self):
         selected_wh = self.hash_map.get_json('selected_card')
@@ -5348,12 +5352,12 @@ class GoodsPricesItemCard(GoodsBalancesItemCard):
             'unit_select': 'RS_units',
         }
         item_type = self.listener
-        self.hash_map['table_name'] = item_tables[item_type]
-        self.hash_map['result_listener'] = f'{item_type}_success'
-        self.hash_map['return_value_key'] = 'selected_card'
-        self.hash_map['title'] = 'Выбор значения'
-        self.hash_map.put('fields', ['name'], to_json=True)
-        SelectItemScreen(self.hash_map, self.rs_settings).show()
+
+        SelectItemScreen(
+            self.hash_map,
+            table_name=item_tables[item_type],
+            result_listener=f'{item_type}_success'
+        ).show()
 
     def _select_item_result(self, field_name):
         selected_card = self.hash_map.get_json('selected_card')
@@ -5723,7 +5727,6 @@ class SelectUnit(GoodsPricesItemCard):
 
 # ==================== Series =============================
 
-
 class SeriesSelectScreen(Screen):
     process_name = 'SeriesProcess'
     screen_name = 'SeriesSelectScreen'
@@ -6055,16 +6058,19 @@ class SeriesItem(Screen):
         else:
             return qtty
 
+
+# ^^^^^^^^^^^^^^^^^^^^^ Series ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
 # ==================== SelectItemScreen =============================
 
 class SelectItemScreen(Screen):
     process_name = 'SelectItemProcess'
     screen_name = 'SelectItemScreen'
 
-    def __init__(self, hash_map: HashMap, rs_settings, **kwargs):
-        super().__init__(hash_map, rs_settings)
+    def __init__(self, hash_map: HashMap, table_name, **kwargs):
+        super().__init__(hash_map)
 
-        self.table_name = kwargs['table_name']
+        self.table_name = table_name
         self.fields: List[str] = kwargs.get('fields', ['name'])
         self.result_listener = kwargs.get('result_listener', 'select_success')
         self.return_value_key = kwargs.get('return_value_key', 'selected_card')
@@ -6095,7 +6101,7 @@ class SelectItemScreen(Screen):
 
     def show(self, args=None):
         self.hash_map['SetResultListener'] = self.result_listener
-        # set_next_screen(self)
+        set_next_screen(self)
         self.show_process_result()
 
     def _get_cards(self, cards_data):
@@ -6129,7 +6135,7 @@ class SelectItemScreen(Screen):
         return cards
 
     def _cards_click(self):
-        self.hash_map[self.return_value_key] = self._get_selected_card_data()
+        self.hash_map.put(self.return_value_key, self._get_selected_card_data(), to_json=True)
         self._finish_process()
 
     def _back_screen(self):
@@ -6137,8 +6143,8 @@ class SelectItemScreen(Screen):
         self._finish_process()
 
     def _finish_process(self):
-        self.finish_process = True
-        self.hash_map.put('FinishProcessResult')
+        self.hash_map.remove('SelectItemScreen_items_cards')
+        self._finish_process_result()
 
 
 class ShowItemsScreen(Screen):
@@ -6260,7 +6266,7 @@ class ShowItemsScreen(Screen):
 
 # ^^^^^^^^^^^^^^^^^^^^^ SelectItemScreen ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-# ^^^^^^^^^^^^^^^^^^^^^ Series ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
 
 # ==================== Settings =============================
 
@@ -7212,6 +7218,7 @@ class SerialNumberOCRSettings(Screen):
             for serial in json.loads(ocr_nosql_counter.getallkeys()):
                 if ocr_nosql_counter.get(serial) < min_rec_amount:
                     ocr_nosql_counter.put(serial, 0, True)
+
 # ^^^^^^^^^^^^^^^^^^^^^ OCR ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 
@@ -7376,35 +7383,44 @@ class WebServiceSyncCommand:
 
     def on_service_request(self):
         listeners = {
-            'barcodes': self.get_barcodes_data,
-            'hash_map': self.get_hash_map
+            'barcodes': self._get_barcodes_data,
+            'hash_map': self._get_hash_map,
+            'hash_map_size': self._get_hash_map_size,
         }
         if self.listener in listeners:
             listeners[self.listener]()
 
-
-    def get_barcodes_data(self):
+    def _get_barcodes_data(self):
         buffer_service = ExchangeQueueBuffer('barcodes')
         data_to_send = buffer_service.get_data_to_send()
         headers = [{'key': 'Content-Type', 'value': 'application/json'}]
         self.hash_map.put('WSResponseHeaders', headers, to_json=True)
         self.hash_map.put('WSResponse', data_to_send, to_json=True)
 
-    def get_hash_map(self):
+    def _get_hash_map(self):
+        process_map = self.hash_map.get_json('process_map')
+
         body = self.hash_map.get_json('ws_body')
         if body:
-            response = []
-
-            if isinstance(body, dict):
-                response.append({body['item']: self.hash_map.get(**body)})
-            elif isinstance(body, list):
-                for item in body:
-                    response.append({item['item']: self.hash_map.get(**item)})
+            response = process_map.get(body['item'])
 
             headers = [{'key': 'Content-Type', 'value': 'application/json'}]
             self.hash_map.put('WSResponseHeaders', headers, to_json=True)
-            self.hash_map.put('WSResponse', response, to_json=True)
+            self.hash_map.put('WSResponse', response)
 
+    def _get_hash_map_size(self):
+        import sys
+        process_map = self.hash_map.get_json('process_map')
+
+        headers = [{'key': 'Content-Type', 'value': 'application/json'}]
+        self.hash_map.put('WSResponseHeaders', headers, to_json=True)
+
+        resp = {key: round(sys.getsizeof(v) / 1024, 3) for key, v  in process_map.items()}
+        resp['total'] = round(sum(resp.values()), 3)
+
+        resp_sorted = {k: v for k, v in sorted(resp.items(), key=lambda item: item[1], reverse=True)}
+
+        self.hash_map.put('WSResponse', resp_sorted, to_json=True)
 
 
 # ^^^^^^^^^^^^^^^^^^^^^ Services ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -7623,7 +7639,7 @@ def create_screen(hash_map: HashMap, screen_class=None, screen_values=None):
         current_screen.listener = hash_map['listener']
         current_screen.event = hash_map['event']
 
-    if current_screen.finish_process:
+    if current_screen.is_finish_process:
         finish_screen = current_screen
         current_screen = None
         return finish_screen
