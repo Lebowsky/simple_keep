@@ -1234,7 +1234,7 @@ class FlowTilesScreen(Tiles):
 
     def __init__(self, hash_map: HashMap, rs_settings):
         super().__init__(hash_map, rs_settings)
-        self.db_service = DocService()
+        self.db_service = DocService(is_barc_flow=True)
 
     def on_start(self) -> None:
 
@@ -1677,7 +1677,8 @@ class GroupScanDocsListScreen(DocsListScreen):
     def __init__(self, hash_map, rs_settings):
         super().__init__(hash_map, rs_settings)
         self.service.is_group_scan = True
-        self.popup_menu_data = 'Удалить'
+        self.popup_menu_data = ';'.join(
+            ['Удалить', ])  #'Очистить данные пересчета'
 
     def on_start(self):
         super().on_start()
@@ -1686,7 +1687,7 @@ class GroupScanDocsListScreen(DocsListScreen):
         super().on_input()
         if self.listener == "CardsClick":
             current_mode = "оффлайн" if self.rs_settings.get('offline_mode') else "онлайн"
-            warning_msg = "Документ не будет доступен в процессе 'Документы'"
+            warning_msg = " Документ не будет доступен в других процессах."
             msg = (f"Вы открываете документ групповую обработку документа "
                    f"в {current_mode.upper()} режиме.")
             if self.hash_map.get_json('selected_card_data')['is_group_scan'] == '0':
@@ -1712,6 +1713,16 @@ class GroupScanDocsListScreen(DocsListScreen):
 
             screen.show(args=self._get_selected_card_put_data())
 
+        elif self._is_result_positive('confirm_clear_barcode_data'):
+            id_doc = self.get_id_doc()
+            res = self._clear_barcode_data(id_doc)
+            self.queue_service.remove_doc_lines(id_doc)
+            if res.get('result'):
+                self.toast('Данные пересчета и маркировки очищены')
+                self.service.set_doc_status_to_upload(id_doc)
+            else:
+                self.toast('При очистке данных пересчета возникла ошибка.')
+                self.hash_map.error_log(res.get('error'))
     def can_launch_timer(self):
         return False
 
@@ -4223,6 +4234,8 @@ class AdrGoodsSelectScreen(BaseGoodSelect):
     def on_input(self):
         listeners = {
             'btn_series_show': lambda: self._open_series_screen(self.screen_values['key']),
+            'btn_doc_good_barcode': lambda: self._open_barcode_register_screen(),
+            'btn_print': lambda: self._print_ticket()
         }
 
         if self.listener in listeners:
@@ -4252,6 +4265,26 @@ class AdrGoodsSelectScreen(BaseGoodSelect):
             screen_values=screen_values
         )
         screen.show_process_result()
+
+    def _open_barcode_register_screen(self):
+        init_data = {
+            'item_id': self.hash_map.get('item_id'),
+            'property_id': '',
+            'unit_id': ''
+        }
+        BarcodeRegistrationScreen(self.hash_map, self.rs_settings).show_process_result(init_data)
+    
+    def _print_ticket(self):
+        barcode = db_services.BarcodeService().get_barcode_from_doc_table(self.hash_map.get('key'))
+
+        data = {'Дата_док': 'Doc_data', 'Номенклатура': 'Good',
+                'Артикул': 'good_art', 'Серийный номер': 'good_sn',
+                'Характеристика': 'good_property', 'Цена': 'good_price',
+                'ЕдИзм': 'good_unit', 'Ключ': 'key', 'Валюта': 'price_type'}
+        for key in data:
+            data[key] = self.hash_map.get(data[key])
+        data['barcode'] = barcode if barcode else '0000000000000'
+        PrintService.print(self.hash_map, data)
 
     def _update_doc_table_row(self, data: Dict, row_id):
         if not self.hash_map.get('delta'):
@@ -5825,8 +5858,8 @@ class SeriesSelectScreen(Screen):
 
     def _check_qtty_limits(self):
         if self.hash_map.get_bool('control'):
-            qtty = self._format_quantity(self.hash_map.get('qtty'))
-            qtty_plan = self._format_quantity(self.hash_map.get('qtty_plan'))
+            qtty = float(self.hash_map.get('qtty'))
+            qtty_plan = float(self.hash_map.get('qtty_plan'))
             if qtty > qtty_plan:
                 self.toast("Факт превышает план")
                 return False
