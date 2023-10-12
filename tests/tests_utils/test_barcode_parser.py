@@ -2,7 +2,6 @@ import unittest
 
 from unittest.mock import MagicMock
 from ui_utils import BarcodeParser, BarcodeWorker, BarcodeAdrWorker
-from ui_barcodes import parse_barcode
 from java import jclass
 
 noClass = jclass("ru.travelfood.simple_ui.NoSQL")

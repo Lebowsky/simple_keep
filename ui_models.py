@@ -11,7 +11,7 @@ import shutil
 import db_services
 import hs_services
 from printing_factory import HTMLDocument, PrintService, bt
-from ui_utils import HashMap, RsDoc, BarcodeWorker, get_ip_address, BarcodeAdrWorker
+from ui_utils import HashMap, BarcodeWorker, get_ip_address, BarcodeAdrWorker
 from db_services import DocService, ErrorService, GoodsService, BarcodeService, AdrDocService, TimerService
 from tiny_db_services import ScanningQueueService, ExchangeQueueBuffer
 from hs_services import HsService
@@ -2136,7 +2136,7 @@ class DocDetailsScreen(Screen):
 
     def _item_barcode_scanned(self):
         id_doc = self.hash_map.get('id_doc')
-        doc = RsDoc(id_doc)
+
         self.hash_map.put("SearchString", "")
         if self.hash_map.get("event") == "onResultPositive":
             barcode = self.hash_map.get('fld_barcode')
@@ -2996,8 +2996,7 @@ class DocumentsDocDetailScreen(DocDetailsScreen):
 
         elif self._is_result_positive('confirm_verified'):
             id_doc = self.hash_map['id_doc']
-            doc = RsDoc(id_doc)
-            doc.mark_verified(1)
+            self.service.mark_verified()
             self.hash_map.put("SearchString", "")
             self.hash_map.show_screen("Документы")
 
@@ -3506,7 +3505,7 @@ class FlowDocDetailsScreen(DocDetailsScreen):
             self.service.set_doc_status_to_upload(self.id_doc)
 
         elif self._is_result_positive('confirm_verified'):
-            RsDoc(self.id_doc).mark_verified(1)
+            self.service.mark_verified()
             self.hash_map.show_screen("Документы")
 
         elif listener == 'btn_doc_mark_verified':
