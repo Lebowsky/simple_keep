@@ -183,11 +183,22 @@ class TestDocService(unittest.TestCase):
         result_doc = [x for x in self.service.get_doc_view_data() if x['id_doc'] == id_doc][0]
         self.assertEqual(expect, result_doc['is_barc_flow'])
 
+    def test_get_doc_details_rows_count(self):
+        self.data_creator.insert_data('RS_docs', 'RS_docs_table')
+        id_doc = '37c4c709-d22b-11e4-869d-0050568b35ac1'
+        expect_count = len(self.get_lines_by_field_value('id_doc', id_doc))
+
+        actual_count = self.service.get_doc_details_rows_count(id_doc)
+
+        self.assertEqual(expect_count, actual_count)
 
     def doc_has_lines(self, doc_id):
         result = [x for x in self.data_creator.samples['RS_docs_table'] if x['id_doc'] == doc_id]
         return True if result else False
 
+    def get_lines_by_field_value(self, field, value):
+        result = [x for x in self.data_creator.samples['RS_docs_table'] if x[field] == f'"{value}"']
+        return result
 
 class TestTimerService(unittest.TestCase):
     def setUp(self) -> None:
