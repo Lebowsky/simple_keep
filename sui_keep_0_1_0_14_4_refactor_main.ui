@@ -842,6 +842,36 @@
                                                         "Padding": "center"
                                                     }
                                                 ]
+                                            },
+                                            {
+                                                "type": "LinearLayout",
+                                                "Variable": "fact_qtty_note",
+                                                "orientation": "vertical",
+                                                "height": "wrap_content",
+                                                "width": "match_parent",
+                                                "weight": "1",
+                                                "Elements": [
+                                                    {
+                                                        "Value": "Факт",
+                                                        "Variable": "",
+                                                        "height": "wrap_content",
+                                                        "width": "match_parent",
+                                                        "weight": "0",
+                                                        "type": "TextView"
+                                                    },
+                                                    {
+                                                        "Value": "@qtty",
+                                                        "Variable": "qtty",
+                                                        "height": "wrap_content",
+                                                        "width": "match_parent",
+                                                        "weight": "0",
+                                                        "TextBold": false,
+                                                        "TextItalic": false,
+                                                        "TextSize": "24",
+                                                        "TextColor": "#000000",
+                                                        "type": "TextView"
+                                                    }
+                                                ]
                                             }
                                         ]
                                     },
@@ -3884,64 +3914,6 @@
                             }
                         ],
                         "Handlers": []
-                    }
-                ]
-            },
-            {
-                "type": "Process",
-                "ProcessName": "Универсальный справочник",
-                "DefineOnBackPressed": false,
-                "hidden": true,
-                "login_screen": false,
-                "SC": false,
-                "Operations": [
-                    {
-                        "type": "Operation",
-                        "Name": "Справочник",
-                        "Timer": false,
-                        "hideToolBarScreen": false,
-                        "hideBottomBarScreen": true,
-                        "noScroll": false,
-                        "handleKeyUp": false,
-                        "noConfirmation": true,
-                        "Elements": [
-                            {
-                                "type": "LinearLayout",
-                                "Variable": "",
-                                "orientation": "vertical",
-                                "height": "match_parent",
-                                "width": "match_parent",
-                                "weight": "0",
-                                "Elements": [
-                                    {
-                                        "Value": "@cards",
-                                        "Variable": "current_card",
-                                        "height": "wrap_content",
-                                        "width": "match_parent",
-                                        "weight": "0",
-                                        "type": "CardsLayout"
-                                    }
-                                ]
-                            }
-                        ],
-                        "Handlers": [
-                            {
-                                "event": "onStart",
-                                "listener": "",
-                                "action": "run",
-                                "type": "python",
-                                "method": "universal_cards_on_start",
-                                "postExecute": ""
-                            },
-                            {
-                                "event": "onInput",
-                                "listener": "",
-                                "action": "run",
-                                "type": "python",
-                                "method": "universal_cards_listener",
-                                "postExecute": ""
-                            }
-                        ]
                     }
                 ]
             },
@@ -7629,7 +7601,7 @@
                                 "weight": "0",
                                 "Elements": [
                                     {
-                                        "Value": "@SelectItemScreen_items_cards",
+                                        "Value": "@cards_data",
                                         "Variable": "",
                                         "height": "wrap_content",
                                         "width": "match_parent",
@@ -8159,10 +8131,6 @@
                 "PyFileData": ""
             },
             {
-                "PyFileKey": "new_handlers",
-                "PyFileData": ""
-            },
-            {
                 "PyFileKey": "printing_factory",
                 "PyFileData": ""
             },
@@ -8195,6 +8163,14 @@
                 "method": "event_service",
                 "postExecute": "",
                 "alias": "event_service"
+            },
+            {
+                "event": "onWebServiceSyncCommand",
+                "listener": "",
+                "action": "run",
+                "type": "python",
+                "method": "put_notification",
+                "postExecute": ""
             },
             {
                 "event": "onBackgroundCommand",
