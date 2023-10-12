@@ -2229,7 +2229,6 @@ class DocDetailsScreen(Screen):
         if not self.hash_map.containsKey('current_first_element_number'):
             self.hash_map.put('current_first_element_number', '0')
         page_elems_sum = int(self.hash_map.get('current_first_element_number')) + self.items_on_page
-        self.toast(f"товаров: {str(self.doc_rows)}, сумма: {page_elems_sum}")
         if page_elems_sum < self.doc_rows:
             self.hash_map.put("Show_next_page", "1")
         else:
