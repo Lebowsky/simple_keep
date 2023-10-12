@@ -4339,6 +4339,7 @@ class BarcodeRegistrationScreen(Screen):
             'property_id': self.hash_map['property_id'] or '',
             'unit_id': self.hash_map['unit_id'] or '',
         }
+        self.title = 'Регистрация штрихкода'
 
     def init_screen(self):
         init_data = self.goods_service.get_item_data_by_condition(**self.screen_values)
@@ -4354,7 +4355,7 @@ class BarcodeRegistrationScreen(Screen):
             self._fill_barcodes_table(self.screen_values['item_id'])
 
     def on_start(self):
-        pass
+        self.hash_map.set_title(self.title)
 
     def on_input(self):
         listeners = {
@@ -4441,28 +4442,70 @@ class BarcodeRegistrationScreen(Screen):
         self.hash_map['barcodes_data'] = self._get_barcodes_table_view(table_data).to_json()
 
     def _prepare_table_data(self, barcodes_data):
-        table_data = [{}]
-
+        table_data = []
+        table_data.append({'_layout': self._get_table_header()}) # шапка
         for row in barcodes_data:
             # row['_layout'] = self._get_doc_table_row_view() проблема производительности
             table_data.append(row)
 
         return table_data
 
+    def _get_table_header(self):
+        return widgets.LinearLayout(
+                self.LinearLayout(
+                    self.TextView('Штрихкод'),
+                    weight=1,
+                ),
+                self.LinearLayout(
+                    self.TextView('Характеристика'),
+                    weight=1,
+                ),
+                self.LinearLayout(
+                    self.TextView('Упаковка'),
+                    weight=1
+                ),
+                orientation='horizontal',
+                height="match_parent",
+                width="match_parent",
+                BackgroundColor='#FFFFFF'
+            )
+
     def _get_barcodes_table_view(self, table_data):
         table_view = widgets.CustomTable(
             widgets.LinearLayout(
-                self.LinearLayout(
-                    self.TextView('@barcode'),
-                    weight=1
+                widgets.LinearLayout(
+                    widgets.TextView(
+                        Value='@barcode', 
+                        TextSize=15, 
+                        width='match_parent',
+                        TextBold = True
+                        ),
+                    weight=1,
+                    width='match_parent',
+                    height='match_parent',
+                    StrokeWidth=1
                 ),
-                self.LinearLayout(
-                    self.TextView('@property'),
-                    weight=1
+                widgets.LinearLayout(
+                    widgets.TextView(
+                        Value='@property',
+                        TextSize=15, 
+                        width='match_parent'
+                        ),
+                    weight=1,
+                    width='match_parent',
+                    height='match_parent',
+                    StrokeWidth=1
                 ),
-                self.LinearLayout(
-                    self.TextView('@unit'),
-                    weight=1
+                widgets.LinearLayout(
+                    widgets.TextView(
+                        Value='@unit',
+                        TextSize=15, 
+                        width='match_parent'
+                        ),
+                    weight=1,
+                    width='match_parent',
+                    height='match_parent',
+                    StrokeWidth=1
                 ),
                 orientation='horizontal',
                 height="match_parent",
@@ -4474,48 +4517,6 @@ class BarcodeRegistrationScreen(Screen):
         )
 
         return table_view
-
-    def _get_doc_table_row_view(self):
-        row_view = widgets.LinearLayout(
-            widgets.LinearLayout(
-                widgets.LinearLayout(
-                    self.TextView('@barcode'),
-                    width='match_parent',
-                ),
-                width='match_parent',
-                height='match_parent',
-                weight=1,
-                StrokeWidth=1
-            ),
-            widgets.LinearLayout(
-                widgets.TextView(
-                    Value='@property',
-                    TextSize=15,
-                    width='match_parent',
-                ),
-                width='match_parent',
-                height='match_parent',
-                weight=1,
-                StrokeWidth=1
-            ),
-            widgets.LinearLayout(
-                widgets.TextView(
-                    Value='@unit',
-                    TextSize=15,
-                    width='match_parent'
-                ),
-                width='match_parent',
-                height='match_parent',
-                weight=1,
-                StrokeWidth=1
-            ),
-            orientation='horizontal',
-            width='match_parent',
-            BackgroundColor='#FFFFFF',
-            StrokeWidth = 1
-        )
-
-        return row_view
 
     class TextView(widgets.TextView):
         def __init__(self, value):
