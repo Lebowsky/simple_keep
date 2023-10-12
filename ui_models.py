@@ -18,7 +18,6 @@ from hs_services import HsService
 import static_data
 from ru.travelfood.simple_ui import SimpleUtilites as suClass
 
-from http_exchange import post_changes_to_server
 import widgets
 import ui_global
 import base64
@@ -1497,21 +1496,26 @@ class DocsListScreen(Screen):
 
     def _resend_doc(self):
         id_doc = self.get_id_doc()
-        http_params = self.get_http_settings()
-        answer = post_changes_to_server(f"'{id_doc}'", http_params)
-        if answer.get('Error') is not None:
-            ui_global.write_error_on_log(
-                f'Ошибка повторной отправки документа {self.get_doc_number()}: '
-                f'{str(answer.get("Error"))}'
-            )
-            self.put_notification(
-                text=f'Ошибка при отправке документа {self.get_doc_number()}, '
-                     f'подробнее в логе ошибок.')
-            self.toast('Не удалось отправить документ повторно')
+        self.hash_map['debug_id_doc'] = id_doc
+        doc_data = self.service.get_data_to_send_by_doc_id(id_doc)
+
+        if doc_data:
+            http_service = hs_services.HsService(http_params=self.get_http_settings())
+            try:
+                answer = http_service.send_data(doc_data)
+            except Exception as e:
+                self.service.write_error_on_log(f'Ошибка выгрузки документа: {e}')
+                return
+
+            if answer.error:
+                self.service.write_error_on_log(f'Ошибка выгрузки документа: {answer.error_text}')
+            else:
+                self.service.doc_id = id_doc
+                self.service.set_doc_values(verified=1, sent=1)
+                self.toast('Документ отправлен повторно')
         else:
-            self.service.doc_id = id_doc
-            self.service.set_doc_values(verified=1, sent=1)
-            self.toast('Документ отправлен повторно')
+            self.toast('Нет данных для отправки')
+            return
 
     def _get_doc_list_data(self, doc_type, doc_status) -> list:
         results = self.service.get_doc_view_data(doc_type, doc_status)
