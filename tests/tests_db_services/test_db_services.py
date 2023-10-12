@@ -163,6 +163,27 @@ class TestDocService(unittest.TestCase):
 
         self.assertListEqual(expect, result)
 
+    def test_clear_barcode_data_nulify_is_group_scan(self):
+        self.data_creator.insert_data('RS_docs', 'RS_docs_table')
+        self.service.is_group_scan = True
+        expect = '0'
+
+        id_doc = '37c4c709-d22b-11e4-869d-0050568b35ac2'
+        self.service.clear_barcode_data(id_doc)
+        result_doc = [x for x in self.service.get_doc_view_data() if x['id_doc'] == id_doc][0]
+        self.assertEqual(expect, result_doc['is_group_scan'])
+
+    def test_clear_barcode_data_nulify_is_barc_flow(self):
+        self.data_creator.insert_data('RS_docs', 'RS_docs_table')
+        self.service = FlowDocService()
+        expect = '0'
+
+        id_doc = '37c4c709-d22b-11e4-869d-0050568b35ac3'
+        self.service.clear_barcode_data(id_doc)
+        result_doc = [x for x in self.service.get_doc_view_data() if x['id_doc'] == id_doc][0]
+        self.assertEqual(expect, result_doc['is_barc_flow'])
+
+
     def doc_has_lines(self, doc_id):
         result = [x for x in self.data_creator.samples['RS_docs_table'] if x['id_doc'] == doc_id]
         return True if result else False

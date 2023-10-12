@@ -1672,7 +1672,8 @@ class GroupScanDocsListScreen(DocsListScreen):
     def __init__(self, hash_map, rs_settings):
         super().__init__(hash_map, rs_settings)
         self.service.is_group_scan = True
-        self.popup_menu_data = 'Удалить'
+        self.popup_menu_data = ';'.join(
+            ['Удалить', ])  #'Очистить данные пересчета'
 
     def on_start(self):
         super().on_start()
@@ -1681,7 +1682,7 @@ class GroupScanDocsListScreen(DocsListScreen):
         super().on_input()
         if self.listener == "CardsClick":
             current_mode = "оффлайн" if self.rs_settings.get('offline_mode') else "онлайн"
-            warning_msg = "Документ не будет доступен в процессе 'Документы'"
+            warning_msg = " Документ не будет доступен в других процессах."
             msg = (f"Вы открываете документ групповую обработку документа "
                    f"в {current_mode.upper()} режиме.")
             if self.hash_map.get_json('selected_card_data')['is_group_scan'] == '0':
@@ -1707,6 +1708,16 @@ class GroupScanDocsListScreen(DocsListScreen):
 
             screen.show(args=self._get_selected_card_put_data())
 
+        elif self._is_result_positive('confirm_clear_barcode_data'):
+            id_doc = self.get_id_doc()
+            res = self._clear_barcode_data(id_doc)
+            self.queue_service.remove_doc_lines(id_doc)
+            if res.get('result'):
+                self.toast('Данные пересчета и маркировки очищены')
+                self.service.set_doc_status_to_upload(id_doc)
+            else:
+                self.toast('При очистке данных пересчета возникла ошибка.')
+                self.hash_map.error_log(res.get('error'))
     def can_launch_timer(self):
         return False
 
