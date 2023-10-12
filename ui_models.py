@@ -2049,6 +2049,7 @@ class DocDetailsScreen(Screen):
         self.service = DocService(self.id_doc)
         self.items_on_page = 20
         self.queue_service = ScanningQueueService()
+        self.doc_rows = None
 
     def on_start(self) -> None:
         pass
@@ -2191,6 +2192,12 @@ class DocDetailsScreen(Screen):
             row_filters=row_filters,
             search_string=search_string
         )
+        self.doc_rows = self.service.get_doc_details_rows_count(
+            id_doc=self.id_doc,
+            articles_list=json.loads(finded_articles) if finded_articles else None,
+            row_filters=row_filters,
+            search_string=search_string
+        )
 
         if not last_scanned:
             self._check_next_page(len(data))
@@ -2219,12 +2226,13 @@ class DocDetailsScreen(Screen):
         self.hash_map.put("Show_previous_page", "0")
 
     def _check_next_page(self, elems_count):
-        if elems_count <= self.items_on_page:
-            if not self.hash_map.containsKey('current_first_element_number'):
-                self.hash_map.put('current_first_element_number', '0')
-            self.hash_map.put("Show_next_page", "0")
-        else:
+        if not self.hash_map.containsKey('current_first_element_number'):
+            self.hash_map.put('current_first_element_number', '0')
+        page_elems_sum = int(self.hash_map.get('current_first_element_number')) + self.items_on_page
+        if page_elems_sum < self.doc_rows:
             self.hash_map.put("Show_next_page", "1")
+        else:
+            self.hash_map.put("Show_next_page", "0")
 
         if self.hash_map.get('Show_previous_page') == '0' and self.hash_map.get('Show_next_page') == '0':
             self.hash_map.put("Show_pagination_controls", "-1")
