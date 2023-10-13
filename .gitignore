@@ -7,6 +7,4 @@ local_utils
 local_data
 *.db
 *.sqlite
-rs_settings.json
-rs_settings_local.json
-SimpleKeep.json
+tests\*.json
