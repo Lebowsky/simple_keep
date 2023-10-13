@@ -2634,7 +2634,7 @@
                                                 "weight": "0",
                                                 "TextBold": false,
                                                 "TextItalic": false,
-                                                "TextSize": "20",
+                                                "TextSize": "16",
                                                 "TextColor": "#7A005C",
                                                 "type": "TextView"
                                             },
@@ -2748,12 +2748,13 @@
                                         "weight": "0",
                                         "Elements": [
                                             {
-                                                "Value": "@doc_type",
+                                                "Value": "",
                                                 "Variable": "",
                                                 "height": "wrap_content",
                                                 "width": "wrap_content",
-                                                "weight": "1",
-                                                "TextSize": "18",
+                                                "weight": 0,
+                                                "TextBold": false,
+                                                "TextItalic": false,
                                                 "type": "TextView"
                                             },
                                             {
@@ -6967,7 +6968,7 @@
                                 "weight": "0",
                                 "Elements": [
                                     {
-                                        "Value": "@doc_data",
+                                        "Value": "@doc_title",
                                         "Variable": "",
                                         "height": "wrap_content",
                                         "width": "match_parent",

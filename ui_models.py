@@ -36,7 +36,6 @@ class Screen(ABC):
         self.hash_map: HashMap = hash_map
         self.screen_values = {}
         self.rs_settings = rs_settings
-        self.listener = self.hash_map['listener']
         self.event: str = self.hash_map['event']
         self.is_finish_process = False
         self.parent_screen = None
@@ -76,6 +75,14 @@ class Screen(ABC):
 
     def refresh_screen(self, hash_map: HashMap):
         hash_map.refresh_screen()
+
+    @property
+    def listener(self):
+        return self.hash_map.listener
+
+    @listener.setter
+    def listener(self, v):
+        pass
 
     def _clear_screen_values(self):
         for key in self.screen_values:
@@ -131,11 +138,15 @@ class Screen(ABC):
 
     def _finish_process_result(self):
         self.is_finish_process = True
+        if self.parent_screen:
+            self.parent_screen.hash_map = self.hash_map
+            set_next_screen(self.parent_screen)
         self.hash_map.finish_process_result()
 
-    def _get_selected_card_data(self):
+    def _get_selected_card_data(self, remove=True):
         selected_card_data = self.hash_map.get_json('selected_card_data')
-        self.hash_map.remove('selected_card_data')
+        if remove:
+            self.hash_map.remove('selected_card_data')
 
         return selected_card_data
 
@@ -150,6 +161,10 @@ class Screen(ABC):
             return int(float(qtty))
         else:
             return qtty
+
+    @staticmethod
+    def _format_date(date_str: str):
+        return datetime.fromisoformat(date_str).strftime('%m-%d-%Y %H:%M:%S')
 
     class TextView(widgets.TextView):
         def __init__(self, value, rs_settings):
@@ -3087,8 +3102,8 @@ class FlowDocDetailsScreen(DocDetailsScreen):
 # ==================== Goods select =============================
 
 class BaseGoodSelect(Screen):
-    def __init__(self, hash_map: HashMap, rs_settings):
-        super().__init__(hash_map, rs_settings)
+    def __init__(self, hash_map: HashMap, rs_settings=None):
+        super().__init__(hash_map, _rs_settings)
         self.screen_values = {
             'id_doc': ''
         }
@@ -5071,13 +5086,14 @@ class SeriesSelectScreen(Screen):
         self.service.params = self.screen_data
         self._refresh_series_cards()
 
-        title = '{} № {} от {}'.format(
-            self.screen_data['doc_type'],
-            self.screen_data['doc_n'],
-            self.screen_data['doc_date']
-        )
+        if not self.hash_map.get('doc_title'):
+            title = '{} № {} от {}'.format(
+                self.screen_data['doc_type'],
+                self.screen_data['doc_n'],
+                self.screen_data['doc_date']
+            )
+            self.hash_map.put('doc_title', title)
 
-        self.hash_map.put('doc_data', title)
         self.hash_map.put_data(self.screen_data)
         self._refresh_total_qtty()
 
@@ -5153,7 +5169,7 @@ class SeriesSelectScreen(Screen):
             self._finish_process()
 
     def _finish_process(self):
-        self.hash_map.put('FinishProcessResult')
+        super()._finish_process_result()
 
     def _refresh_series_cards(self):
         list_data = self.service.get_series_by_doc_and_goods()

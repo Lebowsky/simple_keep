@@ -1467,9 +1467,9 @@ class SelectItemService(DbService):
 
 
 class AdrDocService(DocService):
-    def __init__(self, doc_id='', cur_cell='', table_type='in'):
+    def __init__(self, id_doc='', cur_cell='', table_type='in'):
         super().__init__()
-        self.doc_id = doc_id
+        self.doc_id = id_doc
         self.docs_table_name = 'RS_Adr_docs'
         self.details_table_name = 'RS_adr_docs_table'
         self.isAdr = True
@@ -1615,6 +1615,22 @@ class AdrDocService(DocService):
 
         if res:
             return res[0]
+
+    def get_doc_data(self):
+        if self.doc_id:
+            q = f'''
+                SELECT 
+                    d.*, 
+                    w.name AS warehouse 
+                FROM RS_adr_docs as d
+                
+                LEFT JOIN RS_warehouses as w 
+                    ON d.id_warehouse = w.id
+                    
+                WHERE d.id_doc = "{self.doc_id}"
+            '''
+            doc_data = self._get_query_result(q, return_dict=True)
+            return doc_data[0] if doc_data else None
 
 class FlowDocService(DocService):
 
