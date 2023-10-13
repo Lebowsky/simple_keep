@@ -2952,6 +2952,7 @@ class DocumentsDocDetailScreen(DocDetailsScreen):
                     f'{selected_card_data["properties_name"]}\n'
                     f'Количество увеличено на 1')
                 return
+            self.hash_map.remove('doc_goods_table')
             if selected_card_data.get('use_series') == '1':
                 self._open_series_screen(selected_card_data['key'])
                 return
@@ -7407,7 +7408,7 @@ class WebServiceSyncCommand:
 
     def _get_hash_map_size(self):
         import sys
-        process_map = self.hash_map.get_json('process_map')
+        process_map = self.hash_map.get_json('process_map') or {}
 
         headers = [{'key': 'Content-Type', 'value': 'application/json'}]
         self.hash_map.put('WSResponseHeaders', headers, to_json=True)
