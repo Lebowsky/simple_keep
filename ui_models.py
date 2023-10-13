@@ -1705,6 +1705,8 @@ class GroupScanDocsListScreen(DocsListScreen):
         elif self._is_result_positive('Подтвердите действие'):
             id_doc = self.hash_map['id_doc']
             self.service.doc_id = id_doc
+            if self.hash_map.get_json('selected_card_data')['is_group_scan'] == '0':
+                self.service.reset_doc_tables_qtty()
             self.service.set_doc_value('verified', 1)
             self.service.set_doc_value('is_group_scan', '1')
 
@@ -2677,7 +2679,8 @@ class GroupScanDocDetailsScreenNew(DocDetailsScreen):
 
         self.barcode_worker = BarcodeWorker(id_doc=self.id_doc,
                                             **self._get_barcode_process_params(),
-                                            use_scanning_queue=True)
+                                            use_scanning_queue=True,
+                                            group_scan=True)
         result = self.barcode_worker.process_the_barcode(barcode)
 
         if result.error:
@@ -3726,6 +3729,7 @@ class FlowDocDetailsScreen(DocDetailsScreen):
 
 # ==================== Goods select =============================
 
+
 class BaseGoodSelect(Screen):
     def __init__(self, hash_map: HashMap, rs_settings):
         super().__init__(hash_map, rs_settings)
@@ -4019,8 +4023,8 @@ class BaseGoodSelect(Screen):
         update_data = {
             'sent': 0,
             'd_qtty': float(data['qtty']),
+            'qtty': float(data['qtty']),
         }
-
         self.service.update_doc_table_row(data=update_data, row_id=row_id)
         self.service.set_doc_status_to_upload(self.hash_map.get('id_doc'))
 
@@ -4330,7 +4334,7 @@ class GroupScanItemScreen(BaseGoodSelect):
         super().on_input()
 
     def _update_doc_table_row(self, data: Dict, row_id):
-        
+
         if not self.hash_map.get('delta'):
             return
 
