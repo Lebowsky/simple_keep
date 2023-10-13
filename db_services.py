@@ -1039,6 +1039,10 @@ class DocService:
         self.provider.table_name = self.docs_table_name
         self.provider.update({'verified': value}, {'id_doc': self.doc_id})
 
+    def reset_doc_tables_qtty(self):
+        self.provider.table_name = self.details_table_name
+        self.provider.update({'qtty': 0}, {'id_doc': self.doc_id})
+
 
 class SeriesService(DbService):
     doc_basic_table_name = 'RS_docs_table'

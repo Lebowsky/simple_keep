@@ -406,6 +406,7 @@ class BarcodeWorker:
         self.mark_update_data = {}
         self.docs_table_update_data = {}
         self.queue_update_data = {}
+        self.group_scan = kwargs.get('group_scan', False)
 
     def process_the_barcode(self, barcode):
         self.process_result.barcode = barcode
@@ -514,6 +515,9 @@ class BarcodeWorker:
             'price': self.barcode_data['price'],
             'id_price': self.barcode_data['id_price']
         }
+
+        if not self.group_scan:
+            self.docs_table_update_data['qtty'] = float(qty)
 
         if self.barcode_data['row_key']:
             self.docs_table_update_data['id'] = self.barcode_data['row_key']
