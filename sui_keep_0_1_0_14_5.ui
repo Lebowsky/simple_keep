@@ -842,36 +842,6 @@
                                                         "Padding": "center"
                                                     }
                                                 ]
-                                            },
-                                            {
-                                                "type": "LinearLayout",
-                                                "Variable": "fact_qtty_note",
-                                                "orientation": "vertical",
-                                                "height": "wrap_content",
-                                                "width": "match_parent",
-                                                "weight": "1",
-                                                "Elements": [
-                                                    {
-                                                        "Value": "Факт",
-                                                        "Variable": "",
-                                                        "height": "wrap_content",
-                                                        "width": "match_parent",
-                                                        "weight": "0",
-                                                        "type": "TextView"
-                                                    },
-                                                    {
-                                                        "Value": "@qtty",
-                                                        "Variable": "qtty",
-                                                        "height": "wrap_content",
-                                                        "width": "match_parent",
-                                                        "weight": "0",
-                                                        "TextBold": false,
-                                                        "TextItalic": false,
-                                                        "TextSize": "24",
-                                                        "TextColor": "#000000",
-                                                        "type": "TextView"
-                                                    }
-                                                ]
                                             }
                                         ]
                                     },
@@ -3294,16 +3264,15 @@
                                                         "type": "Button"
                                                     },
                                                     {
-                                                        "Value": "@delta",
-                                                        "Variable": "delta",
+                                                        "Value": "...",
+                                                        "Variable": "btn_input_qtty",
                                                         "height": "wrap_content",
                                                         "width": "match_parent",
+                                                        "orientation": "horizontal",
                                                         "weight": "1",
                                                         "TextBold": false,
                                                         "TextItalic": false,
-                                                        "TextSize": "24",
-                                                        "TextColor": "#000000",
-                                                        "type": "ModernEditText"
+                                                        "type": "Button"
                                                     },
                                                     {
                                                         "Value": "+1",
@@ -3360,14 +3329,24 @@
                                 ]
                             },
                             {
-                                "type": "MenuItem",
-                                "Value": "Серии",
-                                "Variable": "btn_series_show"
-                            },
-                            {
                                 "type": "barcode",
                                 "Value": "",
                                 "Variable": "barcode_good_select"
+                            },
+                            {
+                                "type": "MenuItem",
+                                "Value": "Печать",
+                                "Variable": "btn_print"
+                            },
+                            {
+                                "type": "MenuItem",
+                                "Value": "Добавить штрихкод",
+                                "Variable": "btn_doc_good_barcode"
+                            },
+                            {
+                                "type": "MenuItem",
+                                "Value": "Серии",
+                                "Variable": "btn_series_show"
                             }
                         ],
                         "Handlers": [
@@ -3914,64 +3893,6 @@
                             }
                         ],
                         "Handlers": []
-                    }
-                ]
-            },
-            {
-                "type": "Process",
-                "ProcessName": "Универсальный справочник",
-                "DefineOnBackPressed": false,
-                "hidden": true,
-                "login_screen": false,
-                "SC": false,
-                "Operations": [
-                    {
-                        "type": "Operation",
-                        "Name": "Справочник",
-                        "Timer": false,
-                        "hideToolBarScreen": false,
-                        "hideBottomBarScreen": true,
-                        "noScroll": false,
-                        "handleKeyUp": false,
-                        "noConfirmation": true,
-                        "Elements": [
-                            {
-                                "type": "LinearLayout",
-                                "Variable": "",
-                                "orientation": "vertical",
-                                "height": "match_parent",
-                                "width": "match_parent",
-                                "weight": "0",
-                                "Elements": [
-                                    {
-                                        "Value": "@cards",
-                                        "Variable": "current_card",
-                                        "height": "wrap_content",
-                                        "width": "match_parent",
-                                        "weight": "0",
-                                        "type": "CardsLayout"
-                                    }
-                                ]
-                            }
-                        ],
-                        "Handlers": [
-                            {
-                                "event": "onStart",
-                                "listener": "",
-                                "action": "run",
-                                "type": "python",
-                                "method": "universal_cards_on_start",
-                                "postExecute": ""
-                            },
-                            {
-                                "event": "onInput",
-                                "listener": "",
-                                "action": "run",
-                                "type": "python",
-                                "method": "universal_cards_listener",
-                                "postExecute": ""
-                            }
-                        ]
                     }
                 ]
             },
@@ -5865,30 +5786,6 @@
                                         "type": "EditTextText"
                                     },
                                     {
-                                        "Value": "Удалять файлы после загрузки",
-                                        "Variable": "delete_files",
-                                        "height": "wrap_content",
-                                        "width": "match_parent",
-                                        "weight": "0",
-                                        "type": "CheckBox"
-                                    },
-                                    {
-                                        "Value": "Загрузить локальные csv файлы",
-                                        "Variable": "btn_local_files",
-                                        "height": "wrap_content",
-                                        "width": "match_parent",
-                                        "weight": "0",
-                                        "type": "ProgressButton"
-                                    },
-                                    {
-                                        "Value": "Выгрузить изменения в csv ",
-                                        "Variable": "btn_export",
-                                        "height": "wrap_content",
-                                        "width": "match_parent",
-                                        "weight": "0",
-                                        "type": "ProgressButton"
-                                    },
-                                    {
                                         "Value": "Создать таблицы БД",
                                         "Variable": "btn_init",
                                         "height": "wrap_content",
@@ -7659,7 +7556,7 @@
                                 "weight": "0",
                                 "Elements": [
                                     {
-                                        "Value": "@cards_data",
+                                        "Value": "@SelectItemScreen_items_cards",
                                         "Variable": "",
                                         "height": "wrap_content",
                                         "width": "match_parent",
@@ -8153,22 +8050,6 @@
                 "PyFileData": ""
             },
             {
-                "PyFileKey": "http_exchange",
-                "PyFileData": ""
-            },
-            {
-                "PyFileKey": "ui_barcodes",
-                "PyFileData": ""
-            },
-            {
-                "PyFileKey": "ui_csv",
-                "PyFileData": ""
-            },
-            {
-                "PyFileKey": "ui_form_data",
-                "PyFileData": ""
-            },
-            {
                 "PyFileKey": "ui_global",
                 "PyFileData": ""
             },
@@ -8186,10 +8067,6 @@
             },
             {
                 "PyFileKey": "version_control",
-                "PyFileData": ""
-            },
-            {
-                "PyFileKey": "new_handlers",
                 "PyFileData": ""
             },
             {
@@ -8225,14 +8102,6 @@
                 "method": "event_service",
                 "postExecute": "",
                 "alias": "event_service"
-            },
-            {
-                "event": "onWebServiceSyncCommand",
-                "listener": "",
-                "action": "run",
-                "type": "python",
-                "method": "put_notification",
-                "postExecute": ""
             },
             {
                 "event": "onBackgroundCommand",
