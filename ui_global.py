@@ -2,7 +2,6 @@ from typing import List
 import sqlite3
 from sqlite3 import Error
 import os
-import ui_form_data
 import queue
 
 
@@ -17,68 +16,6 @@ else:
 
 conn = None
 
-
-
-def find_barcode_in_marking_codes_table(self, struct_barcode: list):
-    """Функция получает строки маркировки документа по значению маркировки"""
-
-    query_text = ui_form_data.get_query_mark_find_in_doc()
-    args_dict = {}
-    args_dict['GTIN'] = struct_barcode['GTIN']
-    args_dict['Series'] = struct_barcode['SERIAL']
-    args_dict['id_doc'] = self.id_doc
-
-    res = get_query_result(query_text, args_dict, True)
-    return res
-
-
-def find_barcode_in_barcode_table(barcode: str):
-    query_text = ui_form_data.get_barcode_query()
-    res = get_query_result(query_text, (barcode,), True)
-    return res
-
-
-def check_barcode_compliance(el_dict: dict, id_doc):
-    """ 1 Такой товар в принципе есть в документе """
-
-    query_text = ui_form_data.get_plan_good_from_doc()
-    args_dict = {}
-    args_dict['idDoc'] = id_doc
-    args_dict['id_good'] = el_dict['id_good']
-    args_dict['id_properties'] = el_dict['id_property']
-    args_dict['id_series'] = el_dict['id_series']
-    #args_dict['id_unit'] = el_dict['id_unit']
-
-    res = get_query_result(query_text, args_dict, True)
-
-    return res
-
-
-def check_adr_barcode_compliance(el_dict: dict, id_doc):
-    """ 1 Такой товар в принципе есть в документе """
-
-    query_text =  '''
-    SELECT ifnull(qtty_plan,0) as qtty_plan,
-    ifnull(qtty,0) as qtty, id_good, id_cell, id, use_series
-    FROM RS_adr_docs_table
-    WHERE 
-    id_doc = :idDoc 
-    AND id_good = :id_good
-    AND id_properties = :id_properties
-    AND id_series = :id_series
-    AND id_cell = :id_cell or id_cell = "" OR id_cell is Null
-    '''
-    args_dict = {}
-    args_dict['idDoc'] = id_doc
-    args_dict['id_good'] = el_dict['id_good']
-    args_dict['id_properties'] = el_dict['id_property']
-    args_dict['id_series'] = el_dict['id_series']
-    args_dict['id_cell'] = el_dict['id_cell']
-    #args_dict['id_unit'] = el_dict['id_unit']
-
-    res = get_query_result(query_text, args_dict, True)
-
-    return res
 
 
 def get_query_result(query_text: str, args = "", return_dict=False) -> list:
