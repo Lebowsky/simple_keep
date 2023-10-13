@@ -3209,6 +3209,11 @@ class AdrDocDetailsScreen(DocDetailsScreen):
             row_filters=row_filters,
             search_string=search_string
         )
+        self.doc_rows = self.service.get_doc_details_rows_count(
+            id_doc=self.id_doc,
+            row_filters=row_filters,
+            search_string=search_string
+        )
 
         if not last_scanned:
             super()._check_next_page(len(data))
