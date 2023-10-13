@@ -63,6 +63,7 @@ class Screen(ABC):
         self.hash_map.show_screen(self.screen_name)
 
     def show_process_result(self, args=None):
+        set_next_screen(self)
         self.hash_map.put_data(args)
         self._init_screen_values()
         self._validate_screen_values()
@@ -1421,8 +1422,8 @@ class DocumentsTiles(GroupScanTiles):
 
 
 class DocsListScreen(Screen):
-    def __init__(self, hash_map: HashMap, rs_settings):
-        super().__init__(hash_map, rs_settings)
+    def __init__(self, hash_map: HashMap, rs_settings=None):
+        super().__init__(hash_map)
         self.service = DocService()
         self.screen_values = {}
         self.popup_menu_data = ''
@@ -5048,8 +5049,8 @@ class SeriesSelectScreen(Screen):
     doc_basic_table_name = 'RS_docs_table'
     doc_basic_handler_name = 'RS_docs'
 
-    def __init__(self, hash_map: HashMap, rs_settings):
-        super().__init__(hash_map, rs_settings)
+    def __init__(self, hash_map: HashMap, rs_settings=None):
+        super().__init__(hash_map)
         self.service = db_services.SeriesService()
         self.screen_data = {}
         self.screen_values = {

@@ -8080,6 +8080,10 @@
             {
                 "PyFileKey": "static_data",
                 "PyFileData": ""
+            },
+            {
+                "PyFileKey": "sm_adr_docs",
+                "PyFileData": ""
             }
         ],
         "StyleTemplates": [],

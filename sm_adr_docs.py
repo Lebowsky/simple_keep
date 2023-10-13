@@ -2,22 +2,19 @@ from typing import Dict
 
 import db_services
 import widgets
-from db_services import AdrDocService
+import ui_models
 from printing_factory import PrintService
-from ui_models import DocsListScreen, create_screen, DocDetailsScreen, SelectItemScreen, BaseGoodSelect, \
-    SeriesSelectScreen, BarcodeRegistrationScreen
-
 from ui_utils import HashMap, BarcodeAdrWorker
 
 
-class AdrDocsListScreen(DocsListScreen):
+class AdrDocsListScreen(ui_models.DocsListScreen):
     screen_name = 'Документы'
     process_name = 'Адресное хранение'
 
-    def __init__(self, hash_map: HashMap, rs_settings):
-        super().__init__(hash_map, rs_settings)
+    def __init__(self, hash_map: HashMap):
+        super().__init__(hash_map)
 
-        self.service = AdrDocService()
+        self.service = db_services.AdrDocService()
         self.screen_values = {}
         self.doc_types = ('Все', 'Отбор', 'Размещение', 'Перемещение')
         self.doc_statuses = ('Все', 'К выполнению', 'Выгружен', 'К выгрузке')
@@ -220,7 +217,7 @@ class AdrDocsListScreen(DocsListScreen):
         return id_doc
 
 
-class AdrDocDetailsScreen(DocDetailsScreen):
+class AdrDocDetailsScreen(ui_models.DocDetailsScreen):
     screen_name = 'Документ товары'
     process_name = 'Адресное хранение'
 
@@ -237,7 +234,7 @@ class AdrDocDetailsScreen(DocDetailsScreen):
         }
         self.id_doc = self.screen_values['id_doc']
         self.table_type = self._get_table_type_from_name(self.screen_values['doc_type'])
-        self.service = AdrDocService(self.id_doc, table_type=self.table_type)
+        self.service = db_services.AdrDocService(self.id_doc, table_type=self.table_type)
         self.current_cell = '- не выбрано -'
         self.current_cell_id = ''
 
@@ -321,14 +318,14 @@ class AdrDocDetailsScreen(DocDetailsScreen):
         self.service.mark_verified()
         self._set_current_cell()
         self.hash_map.put("SearchString", "")
-        AdrDocsListScreen(self.hash_map, self.rs_settings).show()
+        AdrDocsListScreen(self.hash_map).show()
 
     def _select_cell(self):
         self.hash_map.put("SearchString", "")
         self.on_start_handlers.append(self._open_select_cell_screen)
 
     def _open_select_cell_screen(self):
-        screen = SelectItemScreen(
+        screen = ui_models.SelectItemScreen(
             self.hash_map,
             table_name='RS_cells',
             result_listener='cell_select_success'
@@ -360,7 +357,7 @@ class AdrDocDetailsScreen(DocDetailsScreen):
             self.hash_map.refresh_screen()
         else:
             self.hash_map.remove('return_selected_data')
-            create_screen(self.hash_map, AdrDocsListScreen).show()
+            AdrDocsListScreen(self.hash_map).show()
 
     def _open_select_goods_screen(self, data):
         screen_values = {
@@ -492,7 +489,7 @@ class AdrDocDetailsScreen(DocDetailsScreen):
 
         return table_view
 
-    def _get_doc_table_row_view(self):
+    def _get_doc_table_row_view(self,use_series=False, use_mark=False):
 
         row_view = widgets.LinearLayout(
             widgets.LinearLayout(
@@ -595,7 +592,6 @@ class AdrDocDetailsScreen(DocDetailsScreen):
 
                 if current_cell != record['cell_name']:
                     c = {"group": record['cell_name']}
-                    # doc_detail_list['customcards']['cardsdata'].append(c)
                     cards.customcards['cardsdata'].append(c)
                     current_cell = record['cell_name']
 
@@ -631,7 +627,7 @@ class AdrDocDetailsScreen(DocDetailsScreen):
         elif qtty_plan < qtty:
             background_color = "#FFF9C4"
 
-        product_row['_layout'].BackgroundColor = background_color
+        setattr(product_row['_layout'], 'BackgroundColor', background_color)
 
 
     def _set_current_cell(self, current_cell='- не выбрано -', current_cell_id=''):
@@ -643,14 +639,14 @@ class AdrDocDetailsScreen(DocDetailsScreen):
             self.hash_map['Show_btn_clear_cell'] = -1
 
 
-class AdrGoodsSelectScreen(BaseGoodSelect):
+class AdrGoodsSelectScreen(ui_models.BaseGoodSelect):
     screen_name = 'Товар выбор'
     process_name = 'Адресное хранение'
 
     def __init__(self, hash_map: HashMap, rs_settings):
         super().__init__(hash_map, rs_settings)
         self.id_doc = self.hash_map['id_doc']
-        self.service = AdrDocService()
+        self.service = db_services.AdrDocService()
         self.screen_values = {
             'id_doc': self.hash_map['id_doc'],
             'doc_title': self.hash_map['doc_title'],
@@ -687,7 +683,7 @@ class AdrGoodsSelectScreen(BaseGoodSelect):
         self.hash_map.put("Show_fact_qtty_note", '-1' if allow_fact_input else '1')
 
     def _back_screen(self):
-        screen = AdrDocDetailsScreen(self.hash_map, self.rs_settings)
+        screen = AdrDocDetailsScreen(self.hash_map)
         screen.show()
 
     def _open_series_screen(self, doc_row_key):
@@ -696,13 +692,7 @@ class AdrGoodsSelectScreen(BaseGoodSelect):
             'title': 'Серии',
             'use_adr_docs_tables': '1'
         }
-
-        screen = create_screen(
-            self.hash_map,
-            SeriesSelectScreen,
-            screen_values=screen_values
-        )
-        screen.show_process_result()
+        ui_models.SeriesSelectScreen(self.hash_map).show_process_result(screen_values)
 
     def _open_barcode_register_screen(self):
         init_data = {
@@ -710,7 +700,7 @@ class AdrGoodsSelectScreen(BaseGoodSelect):
             'property_id': '',
             'unit_id': ''
         }
-        BarcodeRegistrationScreen(self.hash_map, self.rs_settings).show_process_result(init_data)
+        ui_models.BarcodeRegistrationScreen(self.hash_map, self.rs_settings).show_process_result(init_data)
 
     def _print_ticket(self):
         barcode = db_services.BarcodeService().get_barcode_from_doc_table(self.hash_map.get('key'))
