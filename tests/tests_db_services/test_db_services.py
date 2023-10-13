@@ -88,15 +88,13 @@ class TestDocService(unittest.TestCase):
 
             self.assertEqual(len(samples_docs_for_tile), docs_count)
 
-    @unittest.skip
-    def test_get_only_barc_flow_stat(self):  # TODO Олег починить тест
+    def test_get_only_barc_flow_stat(self):
         self.data_creator.insert_data('RS_docs', 'RS_docs_table')
 
         result = self.service.get_doc_flow_stat()
         docs = []
         id = '"37c4c709-d22b-11e4-869d-0050568b35ac2"'
         doc = self.data_creator.samples['RS_docs'][1]
-        print(doc['is_group_scan'] == '0' and doc['is_barc_flow'] == '1' or not self.doc_has_lines(id) and doc['doc_type'] == '"Тип2"')
         for tile in result:
             docs_count = tile['count']
             doc_type = tile['docType']
@@ -106,8 +104,7 @@ class TestDocService(unittest.TestCase):
                       and x['doc_type'] == f'"{doc_type}"']
             docs.append(samples_docs_for_tile)
 
-            # self.assertEqual(len(samples_docs_for_tile), docs_count)
-        print(docs)
+            self.assertEqual(len(samples_docs_for_tile), docs_count)
 
     def test_can_get_doc_view_data_if_no_group_scan(self):
         self.data_creator.insert_data('RS_docs', 'RS_docs_table')
