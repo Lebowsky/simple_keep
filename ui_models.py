@@ -2086,6 +2086,8 @@ class DocDetailsScreen(Screen):
             self.hash_map.put('current_page', '1')
             self._on_start()
             self.hash_map.refresh_screen()
+        elif listener == 'btn_barcodes':
+            self._show_dialog_input_barcode()
 
     def on_post_start(self):
         pass
@@ -2464,6 +2466,27 @@ class DocDetailsScreen(Screen):
         screen.parent_screen = self
         screen.show()
 
+    def _show_dialog_input_barcode(self):
+        loyaut = '''{
+            "type": "LinearLayout",
+            "Variable": "",
+            "orientation": "horizontal",
+            "height": "wrap_content",
+            "width": "match_parent",
+            "weight": "0",
+            "Elements": [
+                {
+                    "Value": "@fld_barcode",
+                    "Variable": "fld_barcode",
+                    "height": "wrap_content",
+                    "width": "match_parent",
+                    "weight": "0",
+                    "type": "EditTextNumeric"
+                }
+            ]
+        }'''
+        self.hash_map.show_dialog('modal_dialog_input_barcode', title="Введите штрихкод товара", dialog_layout=loyaut)
+
     class TextView(widgets.TextView):
         def __init__(self, value):
             super().__init__()
@@ -2512,7 +2535,7 @@ class GroupScanDocDetailsScreen(DocDetailsScreen):
             self.hash_map.put("SearchString", "")
             self._run_progress_barcode_scanning()
 
-        elif self._is_result_positive('ВвестиШтрихкод'):
+        elif self._is_result_positive('modal_dialog_input_barcode'):
             self._run_progress_barcode_scanning()
 
         elif self._is_result_positive('RetryConnection'):
@@ -2520,10 +2543,6 @@ class GroupScanDocDetailsScreen(DocDetailsScreen):
 
         elif self._is_result_negative('RetryConnection'):
             self.set_scanner_lock(False)
-
-        elif listener == 'btn_barcodes':
-            self.hash_map.show_dialog('ВвестиШтрихкод')
-
         elif listener in ['ON_BACK_PRESSED', 'BACK_BUTTON']:
             self.hash_map.put("SearchString", "")
             self.hash_map.put("ShowScreen", "Документы")
@@ -2660,7 +2679,7 @@ class GroupScanDocDetailsScreenNew(DocDetailsScreen):
         super().on_input()
         listeners = {
             'barcode': lambda: self._group_barcode_scanned(self.hash_map.get('barcode_camera')),
-            'btn_barcodes': lambda: self.hash_map.show_dialog(listener="ВвестиШтрихкод"),
+            'btn_barcodes': lambda: self._show_dialog_input_barcode(),
             'ON_BACK_PRESSED': self.go_back,
             'sync_doc': self._sync_doc,
             'send_all_scan_lines': self.send_all_scan_lines_call_handler,
@@ -2668,7 +2687,7 @@ class GroupScanDocDetailsScreenNew(DocDetailsScreen):
         }
         if self.listener in listeners:
             listeners[self.listener]()
-        elif self._is_result_positive('ВвестиШтрихкод'):
+        elif self._is_result_positive('modal_dialog_input_barcode'):
             self._group_barcode_scanned(self.hash_map.get('fld_barcode'))
 
     def _group_barcode_scanned(self, barcode):
@@ -2960,7 +2979,7 @@ class DocumentsDocDetailScreen(DocDetailsScreen):
                 self.hash_map.put('was_clicked', '1')
                 self.hash_map.show_screen("Товар выбор")
 
-        elif listener == 'barcode' or self._is_result_positive('ВвестиШтрихкод'):
+        elif listener == 'barcode' or self._is_result_positive('modal_dialog_input_barcode'):
             self.articles_ocr_ncl.delete('finded_articles')
             res = self._item_barcode_scanned()
             # TODO с результатом обработку
@@ -2981,10 +3000,6 @@ class DocumentsDocDetailScreen(DocDetailsScreen):
             if finded_articles is None:
                 self.hash_map.toast('Артикулы не найдены')
                 return
-
-        elif listener == 'btn_barcodes':
-            self.hash_map.show_dialog('ВвестиШтрихкод')
-
         elif listener in ['ON_BACK_PRESSED', 'BACK_BUTTON']:
             if self.articles_ocr_ncl.get('finded_articles'):
                 self.articles_ocr_ncl.delete('finded_articles')
@@ -3033,7 +3048,6 @@ class DocumentsDocDetailScreen(DocDetailsScreen):
         self.hash_map.put('Show_warehouse', finded_articles)
         self.hash_map.put('Show_countragent', finded_articles)
         self.hash_map.put('Show_finded_by_article', str(-int(finded_articles)))
-
 
 
 class AdrDocDetailsScreen(DocDetailsScreen):
@@ -3497,7 +3511,7 @@ class FlowDocDetailsScreen(DocDetailsScreen):
             self.hash_map.finish_process()
 
         elif listener == 'btn_barcodes':
-            self.hash_map.show_dialog('ВвестиШтрихкод')
+            self._show_dialog_input_barcode()
 
         elif listener == 'barcode':
             barcode = self.hash_map.get('barcode_camera')
@@ -3505,7 +3519,7 @@ class FlowDocDetailsScreen(DocDetailsScreen):
             self.service.set_doc_status_to_upload(self.id_doc)
             self.service.set_barc_flow_status()
 
-        elif self._is_result_positive('ВвестиШтрихкод'):
+        elif self._is_result_positive('modal_dialog_input_barcode'):
             barcode = self.hash_map.get('fld_barcode')
             self.service.add_barcode_to_database(barcode)
             self.service.set_doc_status_to_upload(self.id_doc)
