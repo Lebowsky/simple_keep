@@ -492,7 +492,7 @@ class BarcodeWorker:
             'approved': '1',
             'gtin': self.barcode_info.gtin,
             'series': self.barcode_info.serial,
-            # 'mark_code': self.barcode_data['mark_id']
+            'mark_code': self.barcode_info.barcode
         }
 
         if self.barcode_data['mark_id']:
