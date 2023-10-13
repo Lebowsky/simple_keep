@@ -5807,30 +5807,6 @@
                                         "type": "EditTextText"
                                     },
                                     {
-                                        "Value": "Удалять файлы после загрузки",
-                                        "Variable": "delete_files",
-                                        "height": "wrap_content",
-                                        "width": "match_parent",
-                                        "weight": "0",
-                                        "type": "CheckBox"
-                                    },
-                                    {
-                                        "Value": "Загрузить локальные csv файлы",
-                                        "Variable": "btn_local_files",
-                                        "height": "wrap_content",
-                                        "width": "match_parent",
-                                        "weight": "0",
-                                        "type": "ProgressButton"
-                                    },
-                                    {
-                                        "Value": "Выгрузить изменения в csv ",
-                                        "Variable": "btn_export",
-                                        "height": "wrap_content",
-                                        "width": "match_parent",
-                                        "weight": "0",
-                                        "type": "ProgressButton"
-                                    },
-                                    {
                                         "Value": "Создать таблицы БД",
                                         "Variable": "btn_init",
                                         "height": "wrap_content",
@@ -8092,22 +8068,6 @@
             },
             {
                 "PyFileKey": "hs_services",
-                "PyFileData": ""
-            },
-            {
-                "PyFileKey": "http_exchange",
-                "PyFileData": ""
-            },
-            {
-                "PyFileKey": "ui_barcodes",
-                "PyFileData": ""
-            },
-            {
-                "PyFileKey": "ui_csv",
-                "PyFileData": ""
-            },
-            {
-                "PyFileKey": "ui_form_data",
                 "PyFileData": ""
             },
             {

@@ -11,14 +11,13 @@ import shutil
 import db_services
 import hs_services
 from printing_factory import HTMLDocument, PrintService, bt
-from ui_utils import HashMap, RsDoc, BarcodeWorker, get_ip_address, BarcodeAdrWorker
+from ui_utils import HashMap, BarcodeWorker, get_ip_address, BarcodeAdrWorker
 from db_services import DocService, ErrorService, GoodsService, BarcodeService, AdrDocService, TimerService
 from tiny_db_services import ScanningQueueService, ExchangeQueueBuffer
 from hs_services import HsService
 import static_data
 from ru.travelfood.simple_ui import SimpleUtilites as suClass
 
-from http_exchange import post_changes_to_server
 import widgets
 import ui_global
 import base64
@@ -1497,21 +1496,26 @@ class DocsListScreen(Screen):
 
     def _resend_doc(self):
         id_doc = self.get_id_doc()
-        http_params = self.get_http_settings()
-        answer = post_changes_to_server(f"'{id_doc}'", http_params)
-        if answer.get('Error') is not None:
-            ui_global.write_error_on_log(
-                f'Ошибка повторной отправки документа {self.get_doc_number()}: '
-                f'{str(answer.get("Error"))}'
-            )
-            self.put_notification(
-                text=f'Ошибка при отправке документа {self.get_doc_number()}, '
-                     f'подробнее в логе ошибок.')
-            self.toast('Не удалось отправить документ повторно')
+        self.hash_map['debug_id_doc'] = id_doc
+        doc_data = self.service.get_data_to_send_by_doc_id(id_doc)
+
+        if doc_data:
+            http_service = hs_services.HsService(http_params=self.get_http_settings())
+            try:
+                answer = http_service.send_data(doc_data)
+            except Exception as e:
+                self.service.write_error_on_log(f'Ошибка выгрузки документа: {e}')
+                return
+
+            if answer.error:
+                self.service.write_error_on_log(f'Ошибка выгрузки документа: {answer.error_text}')
+            else:
+                self.service.doc_id = id_doc
+                self.service.set_doc_values(verified=1, sent=1)
+                self.toast('Документ отправлен повторно')
         else:
-            self.service.doc_id = id_doc
-            self.service.set_doc_values(verified=1, sent=1)
-            self.toast('Документ отправлен повторно')
+            self.toast('Нет данных для отправки')
+            return
 
     def _get_doc_list_data(self, doc_type, doc_status) -> list:
         results = self.service.get_doc_view_data(doc_type, doc_status)
@@ -2049,6 +2053,7 @@ class DocDetailsScreen(Screen):
         self.service = DocService(self.id_doc)
         self.items_on_page = 20
         self.queue_service = ScanningQueueService()
+        self.doc_rows = None
 
     def on_start(self) -> None:
         pass
@@ -2131,7 +2136,7 @@ class DocDetailsScreen(Screen):
 
     def _item_barcode_scanned(self):
         id_doc = self.hash_map.get('id_doc')
-        doc = RsDoc(id_doc)
+
         self.hash_map.put("SearchString", "")
         if self.hash_map.get("event") == "onResultPositive":
             barcode = self.hash_map.get('fld_barcode')
@@ -2191,6 +2196,12 @@ class DocDetailsScreen(Screen):
             row_filters=row_filters,
             search_string=search_string
         )
+        self.doc_rows = self.service.get_doc_details_rows_count(
+            id_doc=self.id_doc,
+            articles_list=json.loads(finded_articles) if finded_articles else None,
+            row_filters=row_filters,
+            search_string=search_string
+        )
 
         if not last_scanned:
             self._check_next_page(len(data))
@@ -2219,12 +2230,13 @@ class DocDetailsScreen(Screen):
         self.hash_map.put("Show_previous_page", "0")
 
     def _check_next_page(self, elems_count):
-        if elems_count <= self.items_on_page:
-            if not self.hash_map.containsKey('current_first_element_number'):
-                self.hash_map.put('current_first_element_number', '0')
-            self.hash_map.put("Show_next_page", "0")
-        else:
+        if not self.hash_map.containsKey('current_first_element_number'):
+            self.hash_map.put('current_first_element_number', '0')
+        page_elems_sum = int(self.hash_map.get('current_first_element_number')) + self.items_on_page
+        if page_elems_sum < self.doc_rows:
             self.hash_map.put("Show_next_page", "1")
+        else:
+            self.hash_map.put("Show_next_page", "0")
 
         if self.hash_map.get('Show_previous_page') == '0' and self.hash_map.get('Show_next_page') == '0':
             self.hash_map.put("Show_pagination_controls", "-1")
@@ -2984,8 +2996,7 @@ class DocumentsDocDetailScreen(DocDetailsScreen):
 
         elif self._is_result_positive('confirm_verified'):
             id_doc = self.hash_map['id_doc']
-            doc = RsDoc(id_doc)
-            doc.mark_verified(1)
+            self.service.mark_verified()
             self.hash_map.put("SearchString", "")
             self.hash_map.show_screen("Документы")
 
@@ -3494,7 +3505,7 @@ class FlowDocDetailsScreen(DocDetailsScreen):
             self.service.set_doc_status_to_upload(self.id_doc)
 
         elif self._is_result_positive('confirm_verified'):
-            RsDoc(self.id_doc).mark_verified(1)
+            self.service.mark_verified()
             self.hash_map.show_screen("Документы")
 
         elif listener == 'btn_doc_mark_verified':
@@ -6313,13 +6324,11 @@ class SettingsScreen(Screen):
         self.db_service = db_services.DocService()
 
     def on_start(self):
-        # self.hash_map.remove('toast')
         settings_keys = [
             'use_mark',
             'allow_fact_input',
             'add_if_not_in_plan',
             'path',
-            'delete_files',
             'allow_overscan',
             'offline_mode'
         ]
@@ -6948,7 +6957,6 @@ class DebugSettingsScreen(Screen):
             'btn_fill_ratio': self._fill_ratio,
             'btn_copy_base': self._copy_base,
             'btn_unload_log': self._unload_log,
-            'btn_local_files': self._local_files,
             'btn_templates': self.open_templates_screen,
             'ON_BACK_PRESSED': self._on_back_pressed
         }
@@ -7008,22 +7016,6 @@ class DebugSettingsScreen(Screen):
             self.hash_map.toast('Лог успешно выгружен')
         else:
             self.hash_map.toast('Ошибка соединения')
-
-    def _local_files(self):
-        import ui_csv
-
-        path = self.hash_map['path']
-        delete_files = self.hash_map['delete_files']
-
-        if not delete_files:
-            delete_files = '0'
-        if not path:
-            path = '//storage/emulated/0/download/'
-
-        ret_text = ui_csv.list_folder(path, delete_files)
-
-        self.hash_map.toast(ret_text)
-
     def _on_back_pressed(self):
         ip_host = self.hash_map['ip_host']
         self.rs_settings.put('debug_host_ip', ip_host, True)
@@ -7480,7 +7472,6 @@ class MainEvents:
             'use_mark': 'false',
             'add_if_not_in_plan': 'false',
             'path': '',
-            'delete_files': 'false',
             'success_signal': 7,
             'warning_signal': 8,
             'error_signal': 5,
