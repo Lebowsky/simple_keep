@@ -11,7 +11,7 @@ class AdrDocsListScreen(ui_models.DocsListScreen):
     screen_name = 'Документы'
     process_name = 'Адресное хранение'
 
-    def __init__(self, hash_map: HashMap):
+    def __init__(self, hash_map: HashMap, rs_settings=None):
         super().__init__(hash_map)
 
         self.service = db_services.AdrDocService()
@@ -388,6 +388,11 @@ class AdrDocDetailsScreen(ui_models.DocDetailsScreen):
             cell=self.current_cell_id,
             first_elem=0 if last_scanned else first_element,
             items_on_page=1 if last_scanned else self.items_on_page,
+            row_filters=row_filters,
+            search_string=search_string
+        )
+        self.doc_rows = self.service.get_doc_details_rows_count(
+            id_doc=self.id_doc,
             row_filters=row_filters,
             search_string=search_string
         )
