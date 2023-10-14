@@ -21,6 +21,7 @@ class AdrDocsListScreen(ui_models.DocsListScreen):
         self.popup_menu_data = ('Удалить', 'Очистить данные пересчета', 'Отправить повторно')
         self.current_status = 'Все'
         self.current_doc_type = 'Все'
+        self.list_data_key = 'documents_list'
 
     def init_screen(self):
         self.hash_map['doc_adr_type_select'] = ';'.join(self.doc_types)
@@ -31,7 +32,6 @@ class AdrDocsListScreen(ui_models.DocsListScreen):
         self._fill_table_data()
 
     def on_input(self) -> None:
-
         listeners = {
             'CardsClick': self._cards_click,
             'doc_adr_type_click': self._doc_type_select,
@@ -39,12 +39,14 @@ class AdrDocsListScreen(ui_models.DocsListScreen):
         }
         if self.listener in listeners:
             listeners[self.listener]()
-
-        super().on_input()
+        else:
+            super().on_input()
 
     def _cards_click(self):
+        self.hash_map.remove(self.list_data_key)
         id_doc = self.hash_map['selected_card_key']
         AdrDocDetailsScreen(self.hash_map, id_doc=id_doc).show()
+        self.hash_map.no_refresh()
 
     def _doc_type_select(self):
         self.current_doc_type = self.hash_map['doc_adr_type_click']
@@ -78,7 +80,7 @@ class AdrDocsListScreen(ui_models.DocsListScreen):
             prepared_data,
             popup_menu_data=';'.join(self.popup_menu_data)
         )
-        self.hash_map['docAdrCards'] = doc_cards.to_json()
+        self.hash_map[self.list_data_key] = doc_cards.to_json()
 
     def _get_doc_list_data(self, doc_type, doc_status) -> list:
         results = self.service.get_doc_view_data(doc_type, doc_status)
@@ -199,7 +201,7 @@ class AdrDocsListScreen(ui_models.DocsListScreen):
             if docs_count:
                 self.on_start()
             else:
-                self.hash_map.finish_process()
+                self._finish_process()
         else:
             self.hash_map.toast('Ошибка удаления документа')
 
@@ -207,8 +209,7 @@ class AdrDocsListScreen(ui_models.DocsListScreen):
         return self.service.clear_barcode_data(id_doc)
 
     def get_id_doc(self):
-        card_data = self.hash_map.get_json("card_data") or {}
-        id_doc = card_data.get('key') or self.hash_map['selected_card_key']
+        id_doc = self.hash_map['selected_card_key']
         return id_doc
 
 
@@ -227,6 +228,9 @@ class AdrDocDetailsScreen(ui_models.DocDetailsScreen):
         self.doc_type = ''
         self.doc_title = ''
         self.doc_data = {}
+        self.list_data_key = 'doc_goods_table'
+        self.screen_data = {}
+        self.hash_map_keys = []
 
     def init_screen(self):
         self.service = db_services.AdrDocService(id_doc=self.id_doc)
@@ -277,10 +281,13 @@ class AdrDocDetailsScreen(ui_models.DocDetailsScreen):
         if not selected_card_data:
             return
 
+        self.hash_map.remove(self.list_data_key)
         if selected_card_data.get('use_series') == '1':
             self._open_series_screen(selected_card_data['key'])
         else:
             self._open_select_goods_screen(data=selected_card_data)
+
+        self.hash_map.no_refresh()
 
     def _barcode_listener(self, barcode):
         if self._update_current_cell(barcode):

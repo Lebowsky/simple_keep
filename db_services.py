@@ -1557,8 +1557,11 @@ class AdrDocService(DocService):
         self.provider.table_name = 'RS_docs_series'
         self.provider.delete(_filter=_filter)
 
-        query_text = ('Update RS_adr_docs_table Set qtty = 0 Where id_doc=:id_doc',
-                      'Delete From RS_adr_docs_table Where id_doc=:id_doc and is_plan = "False"')
+        query_text = (
+            'UPDATE RS_adr_docs_table set qtty = 0 WHERE id_doc=:id_doc',
+            'DELETE FROM RS_adr_docs_table WHERE id_doc=:id_doc AND is_plan = "False"'
+        )
+
         try:
             for el in query_text:
                 get_query_result(el, ({'id_doc': id_doc}))
