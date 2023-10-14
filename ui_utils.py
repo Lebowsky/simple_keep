@@ -6,9 +6,9 @@ from datetime import datetime, timedelta
 from functools import wraps
 from typing import Callable, Union, List, Dict, Literal, Optional, Tuple
 
-from db_services import DocService, BarcodeService
+from db_services import BarcodeService
 from java import jclass
-from ui_global import Rs_doc, find_barcode_in_barcode_table
+
 
 noClass = jclass("ru.travelfood.simple_ui.NoSQL")
 rs_settings = noClass("rs_settings")
@@ -389,80 +389,6 @@ class HashMap:
     def no_refresh(self):
         self['NoRefresh'] = ''
 
-
-class RsDoc(Rs_doc):
-    def __init__(self, id_doc):
-        self.id_doc = id_doc
-
-    def update_doc_str(self, price=0):
-        pass
-
-    def delete_doc(self):
-        pass
-
-    def clear_barcode_data(self):
-        pass
-
-    def mark_for_upload(self):
-        pass
-
-    def mark_verified(self, key):
-        super().mark_verified(key)
-
-    def find_barcode_in_table(self, search_value, func_compared='=?') -> dict:
-        result = super().find_barcode_in_table(search_value, func_compared)
-        if result:
-            return result[0]
-        else:
-            return {}
-
-    def find_barcode_in_mark_table(self, search_value: str, func_compared='=?'):
-        pass
-
-    def update_doc_table_data(self, elem_for_add: dict, qtty=1, user_tmz=0):
-        pass
-
-    def add_marked_codes_in_doc(self, barcode_info):
-        pass
-
-    def add_new_barcode_in_doc_barcodes_table(self, el, barcode_info):
-        pass
-
-    def process_the_barcode(
-            self,
-            barcode,
-            have_qtty_plan=False,
-            have_zero_plan=False,
-            control=False,
-            have_mark_plan=False,
-            elem=None,
-            use_mark_setting='false',
-            user_tmz=0):
-
-        Rs_doc.id_doc = self.id_doc
-        result = Rs_doc.process_the_barcode(
-            Rs_doc, barcode, have_qtty_plan, have_zero_plan, control, have_mark_plan, elem, use_mark_setting, user_tmz
-        )
-        if not result.get('Error'):
-            service = DocService(self.id_doc)
-            service.set_doc_value('sent', 0)
-
-            res = self.find_barcode_in_table(barcode)
-            if res.get('id'):
-                result['key'] = res['id']
-
-        return result
-
-    def add(self, args):
-        pass
-
-    def get_new_id(self):
-        pass
-
-    def find_barcode_in_barcode_table(self, barcode):
-        return find_barcode_in_barcode_table(barcode)
-
-
 class BarcodeWorker:
     def __init__(self, id_doc, **kwargs):
         self.id_doc = id_doc
@@ -480,6 +406,7 @@ class BarcodeWorker:
         self.mark_update_data = {}
         self.docs_table_update_data = {}
         self.queue_update_data = {}
+        self.group_scan = kwargs.get('group_scan', False)
 
     def process_the_barcode(self, barcode):
         self.process_result.barcode = barcode
@@ -566,7 +493,7 @@ class BarcodeWorker:
             'approved': '1',
             'gtin': self.barcode_info.gtin,
             'series': self.barcode_info.serial,
-            # 'mark_code': self.barcode_data['mark_id']
+            'mark_code': self.barcode_info.barcode
         }
 
         if self.barcode_data['mark_id']:
@@ -588,6 +515,9 @@ class BarcodeWorker:
             'price': self.barcode_data['price'],
             'id_price': self.barcode_data['id_price']
         }
+
+        if not self.group_scan:
+            self.docs_table_update_data['qtty'] = float(qty)
 
         if self.barcode_data['row_key']:
             self.docs_table_update_data['id'] = self.barcode_data['row_key']
@@ -912,7 +842,6 @@ class BarcodeParser:
 
         def dict(self):
             return {k.upper(): str(v) for k, v in asdict(self).items() if v}
-
 
 def get_ip_address():
     s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)

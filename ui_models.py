@@ -11,7 +11,7 @@ import shutil
 import db_services
 import hs_services
 from printing_factory import HTMLDocument, PrintService, bt
-from ui_utils import HashMap, RsDoc, BarcodeWorker, get_ip_address, BarcodeAdrWorker
+from ui_utils import HashMap, BarcodeWorker, get_ip_address, BarcodeAdrWorker
 from db_services import DocService, ErrorService, GoodsService, BarcodeService, AdrDocService, TimerService
 from tiny_db_services import ScanningQueueService, ExchangeQueueBuffer
 from hs_services import HsService
@@ -1705,6 +1705,8 @@ class GroupScanDocsListScreen(DocsListScreen):
         elif self._is_result_positive('Подтвердите действие'):
             id_doc = self.hash_map['id_doc']
             self.service.doc_id = id_doc
+            if self.hash_map.get_json('selected_card_data')['is_group_scan'] == '0':
+                self.service.reset_doc_tables_qtty()
             self.service.set_doc_value('verified', 1)
             self.service.set_doc_value('is_group_scan', '1')
 
@@ -2086,6 +2088,8 @@ class DocDetailsScreen(Screen):
             self.hash_map.put('current_page', '1')
             self._on_start()
             self.hash_map.refresh_screen()
+        elif listener == 'btn_barcodes':
+            self._show_dialog_input_barcode()
 
     def on_post_start(self):
         pass
@@ -2136,7 +2140,7 @@ class DocDetailsScreen(Screen):
 
     def _item_barcode_scanned(self):
         id_doc = self.hash_map.get('id_doc')
-        doc = RsDoc(id_doc)
+
         self.hash_map.put("SearchString", "")
         if self.hash_map.get("event") == "onResultPositive":
             barcode = self.hash_map.get('fld_barcode')
@@ -2464,6 +2468,27 @@ class DocDetailsScreen(Screen):
         screen.parent_screen = self
         screen.show()
 
+    def _show_dialog_input_barcode(self):
+        loyaut = '''{
+            "type": "LinearLayout",
+            "Variable": "",
+            "orientation": "horizontal",
+            "height": "wrap_content",
+            "width": "match_parent",
+            "weight": "0",
+            "Elements": [
+                {
+                    "Value": "@fld_barcode",
+                    "Variable": "fld_barcode",
+                    "height": "wrap_content",
+                    "width": "match_parent",
+                    "weight": "0",
+                    "type": "EditTextNumeric"
+                }
+            ]
+        }'''
+        self.hash_map.show_dialog('modal_dialog_input_barcode', title="Введите штрихкод товара", dialog_layout=loyaut)
+
     class TextView(widgets.TextView):
         def __init__(self, value):
             super().__init__()
@@ -2512,7 +2537,7 @@ class GroupScanDocDetailsScreen(DocDetailsScreen):
             self.hash_map.put("SearchString", "")
             self._run_progress_barcode_scanning()
 
-        elif self._is_result_positive('ВвестиШтрихкод'):
+        elif self._is_result_positive('modal_dialog_input_barcode'):
             self._run_progress_barcode_scanning()
 
         elif self._is_result_positive('RetryConnection'):
@@ -2520,10 +2545,6 @@ class GroupScanDocDetailsScreen(DocDetailsScreen):
 
         elif self._is_result_negative('RetryConnection'):
             self.set_scanner_lock(False)
-
-        elif listener == 'btn_barcodes':
-            self.hash_map.show_dialog('ВвестиШтрихкод')
-
         elif listener in ['ON_BACK_PRESSED', 'BACK_BUTTON']:
             self.hash_map.put("SearchString", "")
             self.hash_map.put("ShowScreen", "Документы")
@@ -2660,7 +2681,7 @@ class GroupScanDocDetailsScreenNew(DocDetailsScreen):
         super().on_input()
         listeners = {
             'barcode': lambda: self._group_barcode_scanned(self.hash_map.get('barcode_camera')),
-            'btn_barcodes': lambda: self.hash_map.show_dialog(listener="ВвестиШтрихкод"),
+            'btn_barcodes': lambda: self._show_dialog_input_barcode(),
             'ON_BACK_PRESSED': self.go_back,
             'sync_doc': self._sync_doc,
             'send_all_scan_lines': self.send_all_scan_lines_call_handler,
@@ -2668,7 +2689,7 @@ class GroupScanDocDetailsScreenNew(DocDetailsScreen):
         }
         if self.listener in listeners:
             listeners[self.listener]()
-        elif self._is_result_positive('ВвестиШтрихкод'):
+        elif self._is_result_positive('modal_dialog_input_barcode'):
             self._group_barcode_scanned(self.hash_map.get('fld_barcode'))
 
     def _group_barcode_scanned(self, barcode):
@@ -2677,7 +2698,8 @@ class GroupScanDocDetailsScreenNew(DocDetailsScreen):
 
         self.barcode_worker = BarcodeWorker(id_doc=self.id_doc,
                                             **self._get_barcode_process_params(),
-                                            use_scanning_queue=True)
+                                            use_scanning_queue=True,
+                                            group_scan=True)
         result = self.barcode_worker.process_the_barcode(barcode)
 
         if result.error:
@@ -2952,6 +2974,7 @@ class DocumentsDocDetailScreen(DocDetailsScreen):
                     f'{selected_card_data["properties_name"]}\n'
                     f'Количество увеличено на 1')
                 return
+            self.hash_map.remove('doc_goods_table')
             if selected_card_data.get('use_series') == '1':
                 self._open_series_screen(selected_card_data['key'])
                 return
@@ -2959,7 +2982,7 @@ class DocumentsDocDetailScreen(DocDetailsScreen):
                 self.hash_map.put('was_clicked', '1')
                 self.hash_map.show_screen("Товар выбор")
 
-        elif listener == 'barcode' or self._is_result_positive('ВвестиШтрихкод'):
+        elif listener == 'barcode' or self._is_result_positive('modal_dialog_input_barcode'):
             self.articles_ocr_ncl.delete('finded_articles')
             res = self._item_barcode_scanned()
             # TODO с результатом обработку
@@ -2980,10 +3003,6 @@ class DocumentsDocDetailScreen(DocDetailsScreen):
             if finded_articles is None:
                 self.hash_map.toast('Артикулы не найдены')
                 return
-
-        elif listener == 'btn_barcodes':
-            self.hash_map.show_dialog('ВвестиШтрихкод')
-
         elif listener in ['ON_BACK_PRESSED', 'BACK_BUTTON']:
             if self.articles_ocr_ncl.get('finded_articles'):
                 self.articles_ocr_ncl.delete('finded_articles')
@@ -2996,8 +3015,7 @@ class DocumentsDocDetailScreen(DocDetailsScreen):
 
         elif self._is_result_positive('confirm_verified'):
             id_doc = self.hash_map['id_doc']
-            doc = RsDoc(id_doc)
-            doc.mark_verified(1)
+            self.service.mark_verified()
             self.hash_map.put("SearchString", "")
             self.hash_map.show_screen("Документы")
 
@@ -3033,7 +3051,6 @@ class DocumentsDocDetailScreen(DocDetailsScreen):
         self.hash_map.put('Show_warehouse', finded_articles)
         self.hash_map.put('Show_countragent', finded_articles)
         self.hash_map.put('Show_finded_by_article', str(-int(finded_articles)))
-
 
 
 class AdrDocDetailsScreen(DocDetailsScreen):
@@ -3207,6 +3224,11 @@ class AdrDocDetailsScreen(DocDetailsScreen):
             cell=self.current_cell_id,
             first_elem=0 if last_scanned else first_element,
             items_on_page=1 if last_scanned else self.items_on_page,
+            row_filters=row_filters,
+            search_string=search_string
+        )
+        self.doc_rows = self.service.get_doc_details_rows_count(
+            id_doc=self.id_doc,
             row_filters=row_filters,
             search_string=search_string
         )
@@ -3492,7 +3514,7 @@ class FlowDocDetailsScreen(DocDetailsScreen):
             self.hash_map.finish_process()
 
         elif listener == 'btn_barcodes':
-            self.hash_map.show_dialog('ВвестиШтрихкод')
+            self._show_dialog_input_barcode()
 
         elif listener == 'barcode':
             barcode = self.hash_map.get('barcode_camera')
@@ -3500,13 +3522,13 @@ class FlowDocDetailsScreen(DocDetailsScreen):
             self.service.set_doc_status_to_upload(self.id_doc)
             self.service.set_barc_flow_status()
 
-        elif self._is_result_positive('ВвестиШтрихкод'):
+        elif self._is_result_positive('modal_dialog_input_barcode'):
             barcode = self.hash_map.get('fld_barcode')
             self.service.add_barcode_to_database(barcode)
             self.service.set_doc_status_to_upload(self.id_doc)
 
         elif self._is_result_positive('confirm_verified'):
-            RsDoc(self.id_doc).mark_verified(1)
+            self.service.mark_verified()
             self.hash_map.show_screen("Документы")
 
         elif listener == 'btn_doc_mark_verified':
@@ -3721,6 +3743,7 @@ class FlowDocDetailsScreen(DocDetailsScreen):
 # ^^^^^^^^^^^^^^^^^^^^^ DocDetails ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 # ==================== Goods select =============================
+
 
 class BaseGoodSelect(Screen):
     def __init__(self, hash_map: HashMap, rs_settings):
@@ -4015,8 +4038,8 @@ class BaseGoodSelect(Screen):
         update_data = {
             'sent': 0,
             'd_qtty': float(data['qtty']),
+            'qtty': float(data['qtty']),
         }
-
         self.service.update_doc_table_row(data=update_data, row_id=row_id)
         self.service.set_doc_status_to_upload(self.hash_map.get('id_doc'))
 
@@ -4326,7 +4349,7 @@ class GroupScanItemScreen(BaseGoodSelect):
         super().on_input()
 
     def _update_doc_table_row(self, data: Dict, row_id):
-        
+
         if not self.hash_map.get('delta'):
             return
 
@@ -4351,6 +4374,7 @@ class BarcodeRegistrationScreen(Screen):
             'property_id': self.hash_map['property_id'] or '',
             'unit_id': self.hash_map['unit_id'] or '',
         }
+        self.title = 'Регистрация штрихкода'
 
     def init_screen(self):
         init_data = self.goods_service.get_item_data_by_condition(**self.screen_values)
@@ -4366,7 +4390,7 @@ class BarcodeRegistrationScreen(Screen):
             self._fill_barcodes_table(self.screen_values['item_id'])
 
     def on_start(self):
-        pass
+        self.hash_map.set_title(self.title)
 
     def on_input(self):
         listeners = {
@@ -4453,28 +4477,70 @@ class BarcodeRegistrationScreen(Screen):
         self.hash_map['barcodes_data'] = self._get_barcodes_table_view(table_data).to_json()
 
     def _prepare_table_data(self, barcodes_data):
-        table_data = [{}]
-
+        table_data = []
+        table_data.append({'_layout': self._get_table_header()}) # шапка
         for row in barcodes_data:
             # row['_layout'] = self._get_doc_table_row_view() проблема производительности
             table_data.append(row)
 
         return table_data
 
+    def _get_table_header(self):
+        return widgets.LinearLayout(
+                self.LinearLayout(
+                    self.TextView('Штрихкод'),
+                    weight=1,
+                ),
+                self.LinearLayout(
+                    self.TextView('Характеристика'),
+                    weight=1,
+                ),
+                self.LinearLayout(
+                    self.TextView('Упаковка'),
+                    weight=1
+                ),
+                orientation='horizontal',
+                height="match_parent",
+                width="match_parent",
+                BackgroundColor='#FFFFFF'
+            )
+
     def _get_barcodes_table_view(self, table_data):
         table_view = widgets.CustomTable(
             widgets.LinearLayout(
-                self.LinearLayout(
-                    self.TextView('@barcode'),
-                    weight=1
+                widgets.LinearLayout(
+                    widgets.TextView(
+                        Value='@barcode', 
+                        TextSize=15, 
+                        width='match_parent',
+                        TextBold = True
+                        ),
+                    weight=1,
+                    width='match_parent',
+                    height='match_parent',
+                    StrokeWidth=1
                 ),
-                self.LinearLayout(
-                    self.TextView('@property'),
-                    weight=1
+                widgets.LinearLayout(
+                    widgets.TextView(
+                        Value='@property',
+                        TextSize=15, 
+                        width='match_parent'
+                        ),
+                    weight=1,
+                    width='match_parent',
+                    height='match_parent',
+                    StrokeWidth=1
                 ),
-                self.LinearLayout(
-                    self.TextView('@unit'),
-                    weight=1
+                widgets.LinearLayout(
+                    widgets.TextView(
+                        Value='@unit',
+                        TextSize=15, 
+                        width='match_parent'
+                        ),
+                    weight=1,
+                    width='match_parent',
+                    height='match_parent',
+                    StrokeWidth=1
                 ),
                 orientation='horizontal',
                 height="match_parent",
@@ -4486,48 +4552,6 @@ class BarcodeRegistrationScreen(Screen):
         )
 
         return table_view
-
-    def _get_doc_table_row_view(self):
-        row_view = widgets.LinearLayout(
-            widgets.LinearLayout(
-                widgets.LinearLayout(
-                    self.TextView('@barcode'),
-                    width='match_parent',
-                ),
-                width='match_parent',
-                height='match_parent',
-                weight=1,
-                StrokeWidth=1
-            ),
-            widgets.LinearLayout(
-                widgets.TextView(
-                    Value='@property',
-                    TextSize=15,
-                    width='match_parent',
-                ),
-                width='match_parent',
-                height='match_parent',
-                weight=1,
-                StrokeWidth=1
-            ),
-            widgets.LinearLayout(
-                widgets.TextView(
-                    Value='@unit',
-                    TextSize=15,
-                    width='match_parent'
-                ),
-                width='match_parent',
-                height='match_parent',
-                weight=1,
-                StrokeWidth=1
-            ),
-            orientation='horizontal',
-            width='match_parent',
-            BackgroundColor='#FFFFFF',
-            StrokeWidth = 1
-        )
-
-        return row_view
 
     class TextView(widgets.TextView):
         def __init__(self, value):
@@ -6324,13 +6348,11 @@ class SettingsScreen(Screen):
         self.db_service = db_services.DocService()
 
     def on_start(self):
-        # self.hash_map.remove('toast')
         settings_keys = [
             'use_mark',
             'allow_fact_input',
             'add_if_not_in_plan',
             'path',
-            'delete_files',
             'allow_overscan',
             'offline_mode'
         ]
@@ -6959,7 +6981,6 @@ class DebugSettingsScreen(Screen):
             'btn_fill_ratio': self._fill_ratio,
             'btn_copy_base': self._copy_base,
             'btn_unload_log': self._unload_log,
-            'btn_local_files': self._local_files,
             'btn_templates': self.open_templates_screen,
             'ON_BACK_PRESSED': self._on_back_pressed
         }
@@ -7019,22 +7040,6 @@ class DebugSettingsScreen(Screen):
             self.hash_map.toast('Лог успешно выгружен')
         else:
             self.hash_map.toast('Ошибка соединения')
-
-    def _local_files(self):
-        import ui_csv
-
-        path = self.hash_map['path']
-        delete_files = self.hash_map['delete_files']
-
-        if not delete_files:
-            delete_files = '0'
-        if not path:
-            path = '//storage/emulated/0/download/'
-
-        ret_text = ui_csv.list_folder(path, delete_files)
-
-        self.hash_map.toast(ret_text)
-
     def _on_back_pressed(self):
         ip_host = self.hash_map['ip_host']
         self.rs_settings.put('debug_host_ip', ip_host, True)
@@ -7421,7 +7426,7 @@ class WebServiceSyncCommand:
 
     def _get_hash_map_size(self):
         import sys
-        process_map = self.hash_map.get_json('process_map')
+        process_map = self.hash_map.get_json('process_map') or {}
 
         headers = [{'key': 'Content-Type', 'value': 'application/json'}]
         self.hash_map.put('WSResponseHeaders', headers, to_json=True)
@@ -7491,7 +7496,6 @@ class MainEvents:
             'use_mark': 'false',
             'add_if_not_in_plan': 'false',
             'path': '',
-            'delete_files': 'false',
             'success_signal': 7,
             'warning_signal': 8,
             'error_signal': 5,

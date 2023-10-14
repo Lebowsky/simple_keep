@@ -789,7 +789,7 @@ class DocService:
                                    row_filters: Optional[str] = None,
                                    search_string: Optional[str] = None
 ):
-        select_query = f"""SELECT COUNT(*) FROM RS_docs_table"""
+        select_query = f"""SELECT COUNT(*) FROM {self.details_table_name}"""
         where = f"""WHERE id_doc = '{str(id_doc)}'"""
         row_filters_condition = """AND qtty != COALESCE(qtty_plan, '0') """ if row_filters else ''
         search_string_condition = f"""AND good_name LIKE '%{search_string}%'""" if search_string else ''
@@ -1038,6 +1038,10 @@ class DocService:
     def mark_verified(self, value=1):
         self.provider.table_name = self.docs_table_name
         self.provider.update({'verified': value}, {'id_doc': self.doc_id})
+
+    def reset_doc_tables_qtty(self):
+        self.provider.table_name = self.details_table_name
+        self.provider.update({'qtty': 0}, {'id_doc': self.doc_id})
 
 
 class SeriesService(DbService):

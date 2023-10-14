@@ -88,15 +88,13 @@ class TestDocService(unittest.TestCase):
 
             self.assertEqual(len(samples_docs_for_tile), docs_count)
 
-    @unittest.skip
-    def test_get_only_barc_flow_stat(self):  # TODO Олег починить тест
+    def test_get_only_barc_flow_stat(self):
         self.data_creator.insert_data('RS_docs', 'RS_docs_table')
 
         result = self.service.get_doc_flow_stat()
         docs = []
         id = '"37c4c709-d22b-11e4-869d-0050568b35ac2"'
         doc = self.data_creator.samples['RS_docs'][1]
-        print(doc['is_group_scan'] == '0' and doc['is_barc_flow'] == '1' or not self.doc_has_lines(id) and doc['doc_type'] == '"Тип2"')
         for tile in result:
             docs_count = tile['count']
             doc_type = tile['docType']
@@ -106,8 +104,7 @@ class TestDocService(unittest.TestCase):
                       and x['doc_type'] == f'"{doc_type}"']
             docs.append(samples_docs_for_tile)
 
-            # self.assertEqual(len(samples_docs_for_tile), docs_count)
-        print(docs)
+            self.assertEqual(len(samples_docs_for_tile), docs_count)
 
     def test_can_get_doc_view_data_if_no_group_scan(self):
         self.data_creator.insert_data('RS_docs', 'RS_docs_table')
@@ -234,13 +231,19 @@ class TestTimerService(unittest.TestCase):
         self.assertIsNotNone((actual[0].get('RS_barc_flow')))
         self.assertTrue(actual[0]['RS_barc_flow'])
 
-        self.assertIsNotNone((actual[1].get('RS_adr_docs_table')))
-        self.assertTrue(actual[1]['RS_adr_docs_table'])
+        first_adr_doc_index = self.get_count_docs_to_send_from_samples(is_adr_doc=False)
 
-    def get_count_docs_to_send_from_samples(self):
-        all_docs_pull = self.data_creator.samples['RS_docs'] + self.data_creator.samples['RS_adr_docs']
+        self.assertIsNotNone((actual[first_adr_doc_index].get('RS_adr_docs_table')))
+        self.assertTrue(actual[first_adr_doc_index]['RS_adr_docs_table'])
+
+    def get_count_docs_to_send_from_samples(self, is_adr_doc=None):
+        if is_adr_doc is True:
+            all_docs_pull = self.data_creator.samples['RS_adr_docs']
+        elif is_adr_doc is False:
+            all_docs_pull = self.data_creator.samples['RS_docs']
+        else:
+            all_docs_pull = self.data_creator.samples['RS_docs'] + self.data_creator.samples['RS_adr_docs']
         result = [x for x in all_docs_pull if x['sent'] == '0' and x['verified'] == '1']
-        print(f"samples to_send: {len(result)}")
         return len(result)
 
 
@@ -470,7 +473,7 @@ class TestBarcodeService(unittest.TestCase):
             'id_price': '',
             'price': 0.0,
             'ratio': 1,
-            'approved': '0',
+            'approved': 0,
             'use_mark': 0,
             'row_key': 1,
             'use_series': 0,
@@ -502,7 +505,7 @@ class TestBarcodeService(unittest.TestCase):
             'id_price': '',
             'price': 0.0,
             'ratio': 1,
-            'approved': '0',
+            'approved': 0,
             'use_mark': 0,
             'row_key': 1,
             'use_series': 0,
@@ -704,7 +707,8 @@ class DataCreator:
                 'barcode_from_scanner': '"07623900408085tEjE+7qAAAAXi6n"',
                 'approved': '0',
                 'GTIN': '"07623900408085"',
-                'Series': '"tEjE+7q"'
+                'Series': '"tEjE+7q"',
+                'mark_code': '""'
             }],
             'RS_barc_flow': [{
                 'id_doc': '"37c4c709-d22b-11e4-869d-0050568b35ac1"',
