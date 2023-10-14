@@ -3703,6 +3703,7 @@ class BarcodeRegistrationScreen(Screen):
             table_name=item_tables[item_type],
             result_listener=f'{item_type}_success'
         )
+        screen.parent_screen = self
         screen.show()
 
     def _select_item_result(self, field_name):
@@ -3853,7 +3854,7 @@ class BarcodeRegistrationScreen(Screen):
             self.StrokeWidth = 1
 
     def _finish_process(self):
-        self.hash_map.finish_process_result()
+        self._finish_process_result()
 
 
 # ^^^^^^^^^^^^^^^^^^^^^ Goods select ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -5093,13 +5094,11 @@ class SeriesSelectScreen(Screen):
             'title': 'Выбор серии',
             'doc_row_id': self.hash_map['doc_row_id'],
         }
-        self.use_adr_docs_tables=self.hash_map.get_bool('use_adr_docs_tables')
-
+        self.use_adr_docs_tables = self.hash_map.get_bool('use_adr_docs_tables')
 
     def init_screen(self):
         if self.use_adr_docs_tables:
             self.service = db_services.AdrSeriesService()
-
         key = self.screen_values['doc_row_id']
         self.screen_data = self.service.get_values_for_screen_by_id(key)
         # # Обработаем числовые ключи в словаре

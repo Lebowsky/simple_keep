@@ -1636,6 +1636,37 @@ class AdrDocService(DocService):
             doc_data = self._get_query_result(q, return_dict=True)
             return doc_data[0] if doc_data else None
 
+    def get_doc_row_data(self, row_id):
+        q = f'''
+            SELECT 
+                t.id_doc AS id_doc,
+                t.id_good AS item_id,
+                t.id_properties as property_id,
+                t.id_unit as unit_id,
+                t.qtty_plan,
+                t.qtty,
+                IFNULL(g.name, '') AS item_name,
+                IFNULL(g.art, '') AS article,
+                IFNULL(p.name, '') AS property,
+                IFNULL(u.name, '') AS unit
+            
+            FROM RS_adr_docs_table AS t
+            
+            LEFT JOIN RS_goods  AS g
+            ON t.id_good= g.id
+            
+            LEFT JOIN RS_properties  AS p
+            ON t.id_properties = p.id
+            
+            LEFT JOIN RS_units  AS u
+            ON t.id_unit = u.id
+            
+            WHERE t.id = "{row_id}"
+        '''
+        res = self._get_query_result(q, return_dict=True)
+
+        return res[0] if res else {}
+
 class FlowDocService(DocService):
 
     def __init__(self, doc_id=''):
