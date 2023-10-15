@@ -153,9 +153,12 @@ class HashMap:
                 value = str(value).lower()
             self.hash_map.put(key, str(value))
 
-    def put_data(self, data: dict):
+    def put_data(self, data: dict, fill_none=False, default=''):
         if data:
             for key, value in data.items():
+                if value is None and fill_none:
+                    value = default
+
                 self[key] = value
 
     def containsKey(self, key):

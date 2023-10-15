@@ -1471,9 +1471,9 @@ class SelectItemService(DbService):
 
 
 class AdrDocService(DocService):
-    def __init__(self, doc_id='', cur_cell='', table_type='in'):
+    def __init__(self, id_doc='', cur_cell='', table_type='in'):
         super().__init__()
-        self.doc_id = doc_id
+        self.doc_id = id_doc
         self.docs_table_name = 'RS_Adr_docs'
         self.details_table_name = 'RS_adr_docs_table'
         self.isAdr = True
@@ -1557,8 +1557,11 @@ class AdrDocService(DocService):
         self.provider.table_name = 'RS_docs_series'
         self.provider.delete(_filter=_filter)
 
-        query_text = ('Update RS_adr_docs_table Set qtty = 0 Where id_doc=:id_doc',
-                      'Delete From RS_adr_docs_table Where id_doc=:id_doc and is_plan = "False"')
+        query_text = (
+            'UPDATE RS_adr_docs_table set qtty = 0 WHERE id_doc=:id_doc',
+            'DELETE FROM RS_adr_docs_table WHERE id_doc=:id_doc AND is_plan = "False"'
+        )
+
         try:
             for el in query_text:
                 get_query_result(el, ({'id_doc': id_doc}))
@@ -1619,6 +1622,103 @@ class AdrDocService(DocService):
 
         if res:
             return res[0]
+
+    def get_doc_data_by_id(self):
+        if self.doc_id:
+            q = f'''
+                SELECT 
+                    d.*, 
+                    w.name AS warehouse 
+                FROM RS_adr_docs as d
+                
+                LEFT JOIN RS_warehouses as w 
+                    ON d.id_warehouse = w.id
+                    
+                WHERE d.id_doc = "{self.doc_id}"
+            '''
+            doc_data = self._get_query_result(q, return_dict=True)
+            return doc_data[0] if doc_data else None
+
+    def get_doc_view_data(
+            self,
+            doc_type='',
+            doc_status: Literal['Выгружен', 'К выгрузке', 'К выполнению'] = ''
+    ) -> list:
+        fields = [
+            'doc.id_doc',
+            'doc.doc_type',
+            'doc.doc_n',
+            'doc.doc_date',
+            'doc.id_warehouse',
+            'doc.add_mark_selection',
+            'IFNULL(doc.verified, 0) AS verified',
+            'IFNULL(doc.sent, 0) AS sent',
+            'IFNULL(RS_warehouses.name, "''") AS warehouse',
+        ]
+
+        query_text = 'SELECT ' + ',\n'.join(fields)
+
+        joins = f'''FROM {self.docs_table_name} AS doc
+            LEFT JOIN RS_warehouses as RS_warehouses
+                ON RS_warehouses.id = doc.id_warehouse
+        '''
+
+        where = ''
+        condition = []
+
+        if doc_status == "Выгружен":
+            condition.append("sent = 1 AND verified = 1")
+        elif doc_status == "К выгрузке":
+            condition.append("IFNULL(verified, 0) = 1 AND IFNULL(sent, 0) = 0")
+        elif doc_status == "К выполнению":
+            condition.append("IFNULL(verified, 0) = 0 AND IFNULL(sent, 0) = 0")
+
+        if doc_type:
+            condition.append(f'doc_type="{doc_type}"')
+
+        if condition:
+            where = 'WHERE ' + ' AND\n'. join(condition)
+
+        query_text = f'''
+            {query_text}
+            {joins}
+            {where}
+            ORDER BY doc.doc_date
+        '''
+        result = self._get_query_result(query_text, return_dict=True)
+        return result
+
+    def get_doc_row_data(self, row_id):
+        q = f'''
+            SELECT 
+                t.id_doc AS id_doc,
+                t.id_good AS item_id,
+                t.id_properties as property_id,
+                t.id_unit as unit_id,
+                t.qtty_plan,
+                t.qtty,
+                IFNULL(g.name, '') AS item_name,
+                IFNULL(g.art, '') AS article,
+                IFNULL(p.name, '') AS property,
+                IFNULL(u.name, '') AS unit
+            
+            FROM RS_adr_docs_table AS t
+            
+            LEFT JOIN RS_goods  AS g
+            ON t.id_good= g.id
+            
+            LEFT JOIN RS_properties  AS p
+            ON t.id_properties = p.id
+            
+            LEFT JOIN RS_units  AS u
+            ON t.id_unit = u.id
+            
+            WHERE t.id = "{row_id}"
+        '''
+        res = self._get_query_result(q, return_dict=True)
+
+        return res[0] if res else {}
+
 
 class FlowDocService(DocService):
 

@@ -1,3 +1,4 @@
+import sm_adr_docs
 from java import jclass
 from printing_factory import PrintService
 from ru.travelfood.simple_ui import SimpleUtilites as suClass
@@ -255,7 +256,7 @@ def after_send_post_lines_data(hash_map: HashMap):
 def adr_docs_on_start(hash_map: HashMap):
     screen = create_screen(
         hash_map=hash_map,
-        screen_class=ui_models.AdrDocsListScreen
+        screen_class=sm_adr_docs.AdrDocsListScreen
     )
     screen.init_screen()
     screen.on_start()
@@ -265,20 +266,20 @@ def adr_docs_on_start(hash_map: HashMap):
 def adr_doc_on_select(hash_map: HashMap):
     screen = create_screen(
         hash_map=hash_map,
-        screen_class=ui_models.AdrDocsListScreen
+        screen_class=sm_adr_docs.AdrDocsListScreen
     )
     screen.on_input()
 
 
 @HashMap()
 def adr_doc_details_on_start(hash_map: HashMap):
-    screen = create_screen(hash_map, ui_models.AdrDocDetailsScreen)
+    screen = create_screen(hash_map, sm_adr_docs.AdrDocDetailsScreen)
     screen.on_start()
 
 
 @HashMap()
 def adr_doc_details_on_input(hash_map: HashMap):
-    screen = create_screen(hash_map, ui_models.AdrDocDetailsScreen)
+    screen = create_screen(hash_map, sm_adr_docs.AdrDocDetailsScreen)
     screen.on_input()
 
 
@@ -302,13 +303,13 @@ def elem_viev_on_click(hash_map):
 
 @HashMap()
 def adr_elem_view_on_start(hash_map):
-    screen = create_screen(hash_map, ui_models.AdrGoodsSelectScreen)
+    screen = create_screen(hash_map, sm_adr_docs.AdrGoodsSelectScreen)
     screen.on_start()
 
 
 @HashMap()
 def adr_elem_view_on_click(hash_map):
-    screen = create_screen(hash_map, ui_models.AdrGoodsSelectScreen)
+    screen = create_screen(hash_map, sm_adr_docs.AdrGoodsSelectScreen)
     screen.on_input()
 
 @HashMap()
