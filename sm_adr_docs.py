@@ -83,8 +83,11 @@ class AdrDocsListScreen(ui_models.DocsListScreen):
         self.hash_map[self.list_data_key] = doc_cards.to_json()
 
     def _get_doc_list_data(self, doc_type, doc_status) -> list:
-        results = self.service.get_doc_view_data(doc_type, doc_status)
-        return results
+        doc_type = '' if doc_type == "Все" else doc_type
+        doc_status = '' if doc_status == 'Все' else doc_status
+
+        docs_data = self.service.get_doc_view_data(doc_type, doc_status)
+        return docs_data
 
     def _prepare_table_data(self, list_data) -> list:
         table_data = []
@@ -234,7 +237,7 @@ class AdrDocDetailsScreen(ui_models.DocDetailsScreen):
 
     def init_screen(self):
         self.service = db_services.AdrDocService(id_doc=self.id_doc)
-        self.doc_data = self.service.get_doc_data()
+        self.doc_data = self.service.get_doc_data_by_id()
 
         self.doc_type = self.doc_data['doc_type']
         self.table_type = self._get_table_type_from_name(self.doc_type)

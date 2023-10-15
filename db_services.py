@@ -1623,7 +1623,7 @@ class AdrDocService(DocService):
         if res:
             return res[0]
 
-    def get_doc_data(self):
+    def get_doc_data_by_id(self):
         if self.doc_id:
             q = f'''
                 SELECT 
@@ -1638,6 +1638,55 @@ class AdrDocService(DocService):
             '''
             doc_data = self._get_query_result(q, return_dict=True)
             return doc_data[0] if doc_data else None
+
+    def get_doc_view_data(
+            self,
+            doc_type='',
+            doc_status: Literal['Выгружен', 'К выгрузке', 'К выполнению'] = ''
+    ) -> list:
+        fields = [
+            'doc.id_doc',
+            'doc.doc_type',
+            'doc.doc_n',
+            'doc.doc_date',
+            'doc.id_warehouse',
+            'doc.add_mark_selection',
+            'IFNULL(doc.verified, 0) AS verified',
+            'IFNULL(doc.sent, 0) AS sent',
+            'IFNULL(RS_warehouses.name, "''") AS warehouse',
+        ]
+
+        query_text = 'SELECT ' + ',\n'.join(fields)
+
+        joins = f'''FROM {self.docs_table_name} AS doc
+            LEFT JOIN RS_warehouses as RS_warehouses
+                ON RS_warehouses.id = doc.id_warehouse
+        '''
+
+        where = ''
+        condition = []
+
+        if doc_status == "Выгружен":
+            condition.append("sent = 1 AND verified = 1")
+        elif doc_status == "К выгрузке":
+            condition.append("IFNULL(verified, 0) = 1 AND IFNULL(sent, 0) = 0")
+        elif doc_status == "К выполнению":
+            condition.append("IFNULL(verified, 0) = 0 AND IFNULL(sent, 0) = 0")
+
+        if doc_type:
+            condition.append(f'doc_type="{doc_type}"')
+
+        if condition:
+            where = 'WHERE ' + ' AND\n'. join(condition)
+
+        query_text = f'''
+            {query_text}
+            {joins}
+            {where}
+            ORDER BY doc.doc_date
+        '''
+        result = self._get_query_result(query_text, return_dict=True)
+        return result
 
     def get_doc_row_data(self, row_id):
         q = f'''
@@ -1669,6 +1718,7 @@ class AdrDocService(DocService):
         res = self._get_query_result(q, return_dict=True)
 
         return res[0] if res else {}
+
 
 class FlowDocService(DocService):
 
