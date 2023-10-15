@@ -2,7 +2,7 @@
     "ClientConfiguration": {
         "ConfigurationName": "Simple Учет",
         "ConfigurationDescription": "Простое решение для работы с штрихкодами товаров. Поставляется в комплекте с расширением для 1С. Подробнее про расширение Вы можете узнать по ссылке: https://www.simple-kit.ru/products/simple-uchet/ ",
-        "ConfigurationVersion": "0.1.0.14.5",
+        "ConfigurationVersion": "0.1.0.14.6",
         "Processes": [
             {
                 "type": "Process",
@@ -1189,45 +1189,6 @@
                     },
                     {
                         "type": "Operation",
-                        "Name": "ВвестиШтрихкод",
-                        "Timer": false,
-                        "hideToolBarScreen": false,
-                        "hideBottomBarScreen": false,
-                        "noScroll": false,
-                        "handleKeyUp": false,
-                        "noConfirmation": false,
-                        "Elements": [
-                            {
-                                "type": "LinearLayout",
-                                "Variable": "",
-                                "orientation": "vertical",
-                                "height": "wrap_content",
-                                "width": "wrap_content",
-                                "weight": "0",
-                                "Elements": [
-                                    {
-                                        "Value": "Введите значение штрихкода",
-                                        "Variable": "",
-                                        "height": "wrap_content",
-                                        "width": "wrap_content",
-                                        "weight": "0",
-                                        "type": "TextView"
-                                    },
-                                    {
-                                        "Value": "@fld_barcode",
-                                        "Variable": "fld_barcode",
-                                        "height": "wrap_content",
-                                        "width": "match_parent",
-                                        "weight": "0",
-                                        "type": "EditTextText"
-                                    }
-                                ]
-                            }
-                        ],
-                        "Handlers": []
-                    },
-                    {
-                        "type": "Operation",
                         "Name": "ПотокШтрихкодовДокумента",
                         "Timer": false,
                         "hideToolBarScreen": false,
@@ -2117,13 +2078,13 @@
                                                                 "orientation": "vertical",
                                                                 "height": "wrap_content",
                                                                 "width": "match_parent",
-                                                                "weight": "2",
+                                                                "weight": "4",
                                                                 "Elements": [
                                                                     {
                                                                         "Value": "",
-                                                                        "Variable": "blank_left",
+                                                                        "Variable": "blank_1",
                                                                         "height": "wrap_content",
-                                                                        "width": "wrap_content",
+                                                                        "width": "match_parent",
                                                                         "weight": "0",
                                                                         "TextBold": false,
                                                                         "TextItalic": false,
@@ -2134,7 +2095,7 @@
                                                             {
                                                                 "type": "LinearLayout",
                                                                 "Variable": "",
-                                                                "orientation": "vertical",
+                                                                "orientation": "horizontal",
                                                                 "height": "wrap_content",
                                                                 "width": "match_parent",
                                                                 "weight": "1",
@@ -2169,11 +2130,11 @@
                                                                 "orientation": "vertical",
                                                                 "height": "wrap_content",
                                                                 "width": "match_parent",
-                                                                "weight": "2",
+                                                                "weight": "4",
                                                                 "Elements": [
                                                                     {
                                                                         "Value": "",
-                                                                        "Variable": "blank_right",
+                                                                        "Variable": "blank_2",
                                                                         "height": "wrap_content",
                                                                         "width": "wrap_content",
                                                                         "weight": "0",
@@ -2271,16 +2232,14 @@
                                                         "type": "Button"
                                                     },
                                                     {
-                                                        "Value": "@delta",
-                                                        "Variable": "delta",
+                                                        "Value": "...",
+                                                        "Variable": "btn_input_qtty",
                                                         "height": "wrap_content",
                                                         "width": "match_parent",
                                                         "weight": "1",
                                                         "TextBold": false,
                                                         "TextItalic": false,
-                                                        "TextSize": "24",
-                                                        "TextColor": "#000000",
-                                                        "type": "ModernEditText"
+                                                        "type": "Button"
                                                     },
                                                     {
                                                         "Value": "+1",
@@ -2443,45 +2402,6 @@
                                 "postExecute": ""
                             }
                         ]
-                    },
-                    {
-                        "type": "Operation",
-                        "Name": "ВвестиШтрихкод",
-                        "Timer": false,
-                        "hideToolBarScreen": false,
-                        "hideBottomBarScreen": false,
-                        "noScroll": false,
-                        "handleKeyUp": false,
-                        "noConfirmation": false,
-                        "Elements": [
-                            {
-                                "type": "LinearLayout",
-                                "Variable": "",
-                                "orientation": "vertical",
-                                "height": "wrap_content",
-                                "width": "wrap_content",
-                                "weight": "0",
-                                "Elements": [
-                                    {
-                                        "Value": "Введите значение штрихкода",
-                                        "Variable": "",
-                                        "height": "wrap_content",
-                                        "width": "wrap_content",
-                                        "weight": "0",
-                                        "type": "TextView"
-                                    },
-                                    {
-                                        "Value": "@fld_barcode",
-                                        "Variable": "fld_barcode",
-                                        "height": "wrap_content",
-                                        "width": "match_parent",
-                                        "weight": "0",
-                                        "type": "EditTextText"
-                                    }
-                                ]
-                            }
-                        ],
-                        "Handlers": []
                     },
                     {
                         "type": "Operation",
@@ -2748,13 +2668,12 @@
                                         "weight": "0",
                                         "Elements": [
                                             {
-                                                "Value": "",
+                                                "Value": "@doc_type",
                                                 "Variable": "",
                                                 "height": "wrap_content",
                                                 "width": "wrap_content",
-                                                "weight": "0",
-                                                "TextBold": false,
-                                                "TextItalic": false,
+                                                "weight": "1",
+                                                "TextSize": "18",
                                                 "type": "TextView"
                                             },
                                             {
