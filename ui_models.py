@@ -3414,6 +3414,7 @@ class BaseGoodSelect(Screen):
         update_data = {
             'sent': 0,
             'd_qtty': float(data['qtty']),
+            'qtty': float(data['qtty']),
         }
 
         self.service.update_doc_table_row(data=update_data, row_id=row_id)
