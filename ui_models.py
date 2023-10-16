@@ -143,6 +143,12 @@ class Screen(ABC):
             set_next_screen(self.parent_screen)
         self.hash_map.finish_process_result()
 
+    def _back_screen(self):
+        if self.parent_screen:
+            self.parent_screen.hash_map = self.hash_map
+            set_next_screen(self.parent_screen)
+        self.hash_map.back_screen()
+
     def _get_selected_card_data(self, remove=True):
         selected_card_data = self.hash_map.get_json('selected_card_data')
         if remove:
@@ -5160,6 +5166,7 @@ class SeriesSelectScreen(Screen):
             'title': 'Серия'
         }
         screen = SeriesItem(self.hash_map, self.rs_settings)
+        screen.parent_screen = self
         screen.show(args)
 
     def _refresh_total_qtty(self):
@@ -5365,18 +5372,16 @@ class SeriesItem(Screen):
     def on_input(self):
         listener = self.listener
         if listener == "btn_save":
-            self.save_data()
-            self.hash_map.back_screen()
+            self._save_data()
+            self._back_screen()
         elif listener == "ON_BACK_PRESSED":
-            self.hash_map.back_screen()
+            self._back_screen()
         elif listener == "btn_cancel":
-            self.hash_map.back_screen()
+            self._back_screen()
 
-        # self.hash_map.toast(self.hash_map['production_date'])
         self.hash_map.refresh_screen()
-        # self.hash_map.no_refresh()
 
-    def save_data(self):
+    def _save_data(self):
         params = {'id': int(self.screen_data['id']),
                   'id_doc': self.screen_data['id_doc'],
                   'id_good':  self.screen_data['id_good'],
