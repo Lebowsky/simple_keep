@@ -6741,7 +6741,10 @@ class MainEvents:
     def app_on_start(self):
 
         # self.hash_map.put('StackAddMode', '')  # Включает режим объединения переменных hash_map в таймерах
-
+        self.hash_map.put("StartTimersBS",'')
+        timer_handlers = [{"action": "run","type": "python","method": "timer_update", "postExecute": ""}]
+        self.hash_map.put("StartTimerBS",json.dumps({"handler":timer_handlers,"period":15000}))
+        
         # TODO Обработчики обновления!
         release = self.rs_settings.get('Release') or ''
         toast = 'Готов к работе'
