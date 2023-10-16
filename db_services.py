@@ -789,8 +789,8 @@ class DocService:
                                    row_filters: Optional[str] = None,
                                    search_string: Optional[str] = None
 ):
-        select_query = f"""SELECT COUNT(*) as rows_qtty FROM {self.details_table_name}
-                           LEFT JOIN RS_goods ON RS_docs_table.id_good = RS_goods.id"""
+        select_query = f"""SELECT COUNT(*) as rows_qtty FROM {self.details_table_name} AS docs_table
+                           LEFT JOIN RS_goods ON docs_table.id_good = RS_goods.id"""
         where = f"""WHERE id_doc = '{str(id_doc)}'"""
         row_filters_condition = """AND qtty != COALESCE(qtty_plan, '0') """ if row_filters else ''
         search_string_condition = f"""AND name LIKE '%{search_string}%'""" if search_string else ''
@@ -1560,6 +1560,7 @@ class AdrDocService(DocService):
 
         query_text = (
             'UPDATE RS_adr_docs_table set qtty = 0 WHERE id_doc=:id_doc',
+            'UPDATE RS_adr_docs set verified = 0, sent = 0 WHERE id_doc=:id_doc',
             'DELETE FROM RS_adr_docs_table WHERE id_doc=:id_doc AND is_plan = "False"'
         )
 
@@ -1567,6 +1568,7 @@ class AdrDocService(DocService):
             for el in query_text:
                 get_query_result(el, ({'id_doc': id_doc}))
         except Exception as e:
+            self.write_error_on_log(e.args[0])
             return {'result': False, 'error': e.args[0]}
 
         return {'result': True, 'error': ''}
@@ -1698,6 +1700,7 @@ class AdrDocService(DocService):
                 t.id_unit as unit_id,
                 t.qtty_plan,
                 t.qtty,
+                t.use_series,
                 IFNULL(g.name, '') AS item_name,
                 IFNULL(g.art, '') AS article,
                 IFNULL(p.name, '') AS property,
