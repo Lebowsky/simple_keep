@@ -1,5 +1,6 @@
+import json
 import os
-from typing import List, Union, Dict
+from typing import List, Union, Dict, Any, Optional, Tuple
 from functools import reduce
 from tinydb import TinyDB, Query, where
 
@@ -131,4 +132,89 @@ class ExchangeQueueBuffer:
     def remove_sent_data(self, data):
         doc_id_list = [x.doc_id for x in data]
         self.provider.remove(doc_ids=doc_id_list)
+
+
+class NoSQLProvider:
+    def __init__(self, name: str):
+        self.nosql = noClass(name)
+        self.nosql_name = name
+
+    def put(
+            self,
+            key: str,
+            value: Union[str, int, bool, List, Dict, Tuple],
+            queue: bool = True,
+            to_json: bool = False
+    ) -> None:
+        """
+        Помещает значение в указанный ключ.
+        str, int, bool - помещаем как есть
+        list, dict, tuple - преобразовываем в строку.
+        """
+        if not isinstance(key, str):
+            raise TypeError('Ключ NoSQL должен быть строкой')
+        if isinstance(value, (str, int, bool)):
+            self.nosql.put(key, value, queue)
+            return
+        if not to_json:
+            raise TypeError('Список допустимых типов NoSQL: str, int, bool')
+        if isinstance(value, (List, Dict, Tuple)):
+            self.nosql.put(key, json.dumps(value), queue)
+        else:
+            raise TypeError(f'NoSQL. Нельзя сериализовать {type(value)}')
+
+    def get(
+            self,
+            key: str,
+            default: Optional[Any] = None,
+            from_json: bool = False
+    ) -> Any:
+        """Получает значение по ключу"""
+        result = self.nosql.get(key)
+        if result is not None:
+            return result if not from_json else json.loads(result)
+        return result if not default else default
+
+    def delete(self, key: str) -> None:
+        """Удаляет ключ"""
+        self.nosql.delete(key)
+
+    def destroy(self) -> None:
+        """Уничтожает все ключи базы"""
+        self.nosql.destroy()
+
+    def get_all_keys(self) -> str:
+        """Получить список всех ключей базы в виде строки формата JSON-массива строк"""
+        return self.nosql.getallkeys()
+
+    def find_json(
+            self,
+            field: str,
+            value: Any,
+            index_name: Optional[str] = None
+    ) -> str:
+        """
+        Медленный поиск среди всех объектов базы которые имеют тип JSON
+        и в поле которых есть значение. Возвращает строку с JSON-массивом
+        найденных объектов.
+        Если в базе много значений - лучше использовтаь поиск с индексом.
+        """
+        if index_name:
+            return self.nosql.findJSON_index(index_name, field, value)
+        return self.nosql.findJSON(field, value)
+
+    def run_index(self, index: str, field: str) -> None:
+        """
+        Создание индекса по JSON-объектам для дальнейшего использования для поиска.
+        Создает, асинхроннно индекс, состоящий из объектов с указанным полем.
+        """
+        self.nosql.run_index(index, field)
+
+    def keys(self) -> List[str]:
+        return json.loads(self.nosql.getallkeys())
+
+    def items(self) -> List[Tuple[str, Optional[str]]]:
+        return [(key, self.nosql.get(key)) for key in self.keys()]
+
+
 
