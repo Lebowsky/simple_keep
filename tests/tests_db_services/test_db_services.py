@@ -3,7 +3,7 @@ import json
 import os
 
 from db_services import DocService, DbCreator, TimerService, DbService, SqlQueryProvider, GoodsService, \
-    get_query_result, BarcodeService, FlowDocService
+    get_query_result, BarcodeService, FlowDocService, AdrDocService
 from ui_utils import BarcodeParser
 
 
@@ -13,7 +13,6 @@ class TestDocService(unittest.TestCase):
         self.data_creator = DataCreator()
         self.http_results_path = './tests_db_services/http_result_data_example'
         self.sqlite_filename = 'rightscan5.db'
-
 
         service = DbCreator()
         service.drop_all_tables()
@@ -82,9 +81,9 @@ class TestDocService(unittest.TestCase):
             docs_count = tile['count']
             doc_type = tile['docType']
             samples_docs_for_tile = [x for x in self.data_creator.samples['RS_docs']
-                      if x['is_group_scan'] == '0'
-                      and x['is_barc_flow'] == '0'
-                      and x['doc_type'] == f'"{doc_type}"']
+                                     if x['is_group_scan'] == '0'
+                                     and x['is_barc_flow'] == '0'
+                                     and x['doc_type'] == f'"{doc_type}"']
 
             self.assertEqual(len(samples_docs_for_tile), docs_count)
 
@@ -99,9 +98,9 @@ class TestDocService(unittest.TestCase):
             docs_count = tile['count']
             doc_type = tile['docType']
             samples_docs_for_tile = [x for x in self.data_creator.samples['RS_docs']
-                      if x['is_group_scan'] == '0'
-                      and (x['is_barc_flow'] == '1' or not self.doc_has_lines(x['id_doc']))
-                      and x['doc_type'] == f'"{doc_type}"']
+                                     if x['is_group_scan'] == '0'
+                                     and (x['is_barc_flow'] == '1' or not self.doc_has_lines(x['id_doc']))
+                                     and x['doc_type'] == f'"{doc_type}"']
             docs.append(samples_docs_for_tile)
 
             self.assertEqual(len(samples_docs_for_tile), docs_count)
@@ -196,6 +195,29 @@ class TestDocService(unittest.TestCase):
     def get_lines_by_field_value(self, field, value):
         result = [x for x in self.data_creator.samples['RS_docs_table'] if x[field] == f'"{value}"']
         return result
+
+
+class TestAdrDocService(unittest.TestCase):
+    def setUp(self) -> None:
+        self.service = AdrDocService()
+        self.data_creator = DataCreator()
+
+        service = DbCreator()
+        service.drop_all_tables()
+        service.create_tables()
+
+    def test_must_get_all_docs(self):
+        self.data_creator.insert_data('RS_adr_docs')
+
+        res = self.service.get_doc_view_data()
+        self.assertTrue(res)
+
+    def test_must_get_only_to_send_docs(self):
+        self.data_creator.insert_data('RS_adr_docs')
+
+        res = self.service.get_doc_view_data(doc_status='К выгрузке')
+        self.assertTrue(res)
+
 
 class TestTimerService(unittest.TestCase):
     def setUp(self) -> None:
@@ -561,11 +583,11 @@ class TestBarcodeService(unittest.TestCase):
         }
 
         expect = {'id': 1, 'id_doc': '37c4c709-d22b-11e4-869d-0050568b35ac1',
-                   'id_good': '37c4c709-d22b-11e4-869d-0050568b35ac1',
-                   'id_properties': '', 'id_series': '', 'id_unit': '',
-                   'qtty': 1.0, 'd_qtty': None, 'qtty_plan': 5.0, 'price': None,
-                   'id_price': None, 'sent': 0,
-                   'is_plan': 'True', 'id_cell': None, 'use_series': 0}
+                  'id_good': '37c4c709-d22b-11e4-869d-0050568b35ac1',
+                  'id_properties': '', 'id_series': '', 'id_unit': '',
+                  'qtty': 1.0, 'd_qtty': None, 'qtty_plan': 5.0, 'price': None,
+                  'id_price': None, 'sent': 0,
+                  'is_plan': 'True', 'id_cell': None, 'use_series': 0}
 
         sut = BarcodeService()
         actual = sut.get_table_line(table_name='RS_docs_table', filters=filters)
@@ -638,7 +660,7 @@ class DataCreator:
                     'sent': '0',
                     'is_group_scan': '0',
                     'is_barc_flow': '0'
-            },
+                },
                 {
                     'id_doc': '"37c4c709-d22b-11e4-869d-0050568b35ac2"',
                     'doc_type': '"Тип2"',
@@ -744,4 +766,3 @@ class DataCreator:
                 ','.join(['({})'.format(value) for value in values])
             )
             get_query_result(q)
-
