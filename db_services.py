@@ -1559,6 +1559,7 @@ class AdrDocService(DocService):
 
         query_text = (
             'UPDATE RS_adr_docs_table set qtty = 0 WHERE id_doc=:id_doc',
+            'UPDATE RS_adr_docs set verified = 0, sent = 0 WHERE id_doc=:id_doc',
             'DELETE FROM RS_adr_docs_table WHERE id_doc=:id_doc AND is_plan = "False"'
         )
 
@@ -1566,6 +1567,7 @@ class AdrDocService(DocService):
             for el in query_text:
                 get_query_result(el, ({'id_doc': id_doc}))
         except Exception as e:
+            self.write_error_on_log(e.args[0])
             return {'result': False, 'error': e.args[0]}
 
         return {'result': True, 'error': ''}
@@ -1697,6 +1699,7 @@ class AdrDocService(DocService):
                 t.id_unit as unit_id,
                 t.qtty_plan,
                 t.qtty,
+                t.use_series,
                 IFNULL(g.name, '') AS item_name,
                 IFNULL(g.art, '') AS article,
                 IFNULL(p.name, '') AS property,

@@ -3135,6 +3135,7 @@ class BaseGoodSelect(Screen):
         }
         self.id_doc = self.hash_map['id_doc']
         self.service = DocService(self.id_doc)
+        self.current_toast_message = ''
 
     def init_screen(self):
         self.id_doc = self.screen_values['id_doc']
@@ -3341,7 +3342,7 @@ class BaseGoodSelect(Screen):
         if res and self._handle_found_barcode(res, id_good, id_property, id_unit):
             return
         self.hash_map.playsound('error')
-        self.hash_map.toast(f'Штрихкод не найден в документе!') # пока тост, модалка очищает дельту
+        self.hash_map.toast(self.current_toast_message or f'Штрихкод не найден в документе!') # пока тост, модалка очищает дельту
         #self.hash_map.show_dialog(listener='barcode_not_found', title='Штрихкод не найден в документе!')
 
     def _set_delta(self, value: int = 0, reset: bool = False):

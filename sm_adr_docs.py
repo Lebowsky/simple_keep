@@ -209,6 +209,7 @@ class AdrDocsListScreen(ui_models.DocsListScreen):
             self.hash_map.toast('Ошибка удаления документа')
 
     def _clear_barcode_data(self, id_doc):
+        id_doc = self.hash_map.get_json('card_data').get('key') if self.hash_map['card_data'] else ''
         return self.service.clear_barcode_data(id_doc)
 
     def get_id_doc(self):
@@ -316,14 +317,22 @@ class AdrDocDetailsScreen(ui_models.DocDetailsScreen):
         current_cell = self.current_cell_id
         doc_cell = self.service.find_cell(barcode)
 
-        if doc_cell:
+        if doc_cell and current_cell != doc_cell:
             self._set_current_cell(doc_cell['name'], doc_cell['id'])
             return True
 
-        if not current_cell and not doc_cell:
+        if not self.current_cell_id:
             self.hash_map.playsound('warning')
             self.hash_map.put('toast', 'Не найдена ячейка')
             return True
+
+    def _process_error_scan_barcode(self, scan_result):
+        if scan_result.error == 'use_series':
+            self._open_series_screen(scan_result.row_key)
+            self.hash_map.playsound('warning')
+        else:
+            self.hash_map.toast(scan_result.description)
+            self.hash_map.playsound('error')
 
     def _doc_mark_verified(self):
         self.service.mark_verified()
@@ -684,3 +693,21 @@ class AdrGoodsSelectScreen(ui_models.BaseGoodSelect):
 
         self.service.update_doc_table_row(data=update_data, row_id=self.doc_row_id)
         self.service.set_doc_status_to_upload(self.screen_data['id_doc'])
+
+    def _handle_found_barcode(self, res, id_good, id_property, id_unit):
+        is_current_position = all((
+            self.screen_data['item_id'] == res['id_good'],
+            self.screen_data['property_id'] == res['id_property'],
+            self.screen_data['unit_id'] == res['id_unit']
+        ))
+
+        if is_current_position:
+            if self.screen_data['use_series'] == "1":
+                self._open_series_screen(self.hash_map['key'])
+            else:
+                self._set_delta(res['ratio'])
+            return True
+
+        self.current_toast_message = 'Штрихкод не соответствует текущей позиции'
+
+        return False
