@@ -102,7 +102,7 @@ class HashMap:
             sound = sound_val
         self.hash_map.put(f'playsound_{sound}', "")
 
-    def _get_event(self, method_name, action=None):
+    def _get_event(self, method_name, action=None) -> List[dict]:
         """
         :param method_name: handlers name
         :param action: run|runasync|runprogress
@@ -391,6 +391,46 @@ class HashMap:
 
     def no_refresh(self):
         self['NoRefresh'] = ''
+
+    def start_timers(self, *handlers, period=None, bs_hash_map: bool=False):
+        """
+        Запускает фоновый сервис для запуска периодического выполнения обработчика
+        :param handlers: обработчики
+        :param period: период запуска в миллисекундах
+        :param bs_hash_map: признак использования hash_map фонового сервиса, иначе используется hash_map процессов
+        :return: None
+        """
+
+        start_command = 'StartTimersBS' if bs_hash_map else 'StartTimers'
+        self.put(start_command)
+        self.add_timers(*handlers, period=period, bs_hash_map=bs_hash_map)
+
+    def add_timers(self, *handlers, period=10000, bs_hash_map: bool=False):
+        """
+        Добавляет обработчики в фоновый сервис
+        :param handlers: обработчики
+        :param period: период запуска в миллисекундах
+        :param bs_hash_map: признак использования hash_map фонового сервиса, иначе используется hash_map процессов
+        :return: None
+        """
+
+        start_command = 'StartTimerBS' if bs_hash_map else 'StartTimer'
+        timers = [self._get_event(handler_name)[0] for handler_name in handlers]
+
+        if timers:
+            self.put(start_command,{"handler": timers, "period": period}, to_json=True)
+
+
+    def stop_timers(self, bs_hash_map: bool=False):
+        """
+        Останавливает выполнение таймеров
+        :param bs_hash_map: признак использования hash_map фонового сервиса, иначе используется hash_map процессов
+        :return:
+        """
+
+        stop_command = 'StopTimersBS' if bs_hash_map else 'StopTimers'
+        self.put(stop_command)
+
 
 class BarcodeWorker:
     def __init__(self, id_doc, **kwargs):

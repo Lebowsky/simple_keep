@@ -1709,6 +1709,7 @@ class GroupScanDocsListScreen(DocsListScreen):
 
     def on_start(self):
         super().on_start()
+        self.hash_map.stop_timers(bs_hash_map=True)
 
     def on_input(self):
         super().on_input()
@@ -1754,6 +1755,10 @@ class GroupScanDocsListScreen(DocsListScreen):
                 self.hash_map.error_log(res.get('error'))
     def can_launch_timer(self):
         return False
+
+    def _back_screen(self):
+        MainEvents.start_timer(self.hash_map)
+        super()._back_screen()
 
 
 class DocumentsDocsListScreen(DocsListScreen):
@@ -6590,8 +6595,8 @@ class Timer:
             'url': self.rs_settings.get("URL"),
             'user': self.rs_settings.get('USER'),
             'pass': self.rs_settings.get('PASS'),
-            'device_model': self.hash_map['DEVICE_MODEL'],
-            'android_id': self.hash_map['ANDROID_ID'],
+            'device_model': self.rs_settings.get('device_model'),
+            'android_id': self.rs_settings.get('android_id'),
             'user_name': self.rs_settings.get('user_name')}
         return http_settings
 
@@ -6740,12 +6745,8 @@ class MainEvents:
         self.rs_settings = _rs_settings
 
     def app_on_start(self):
+        MainEvents.start_timer(self.hash_map)
 
-        # self.hash_map.put('StackAddMode', '')  # Включает режим объединения переменных hash_map в таймерах
-        self.hash_map.put("StartTimersBS",'')
-        timer_handlers = [{"action": "run","type": "python","method": "timer_update", "postExecute": ""}]
-        self.hash_map.put("StartTimerBS",json.dumps({"handler":timer_handlers,"period":15000}))
-        
         # TODO Обработчики обновления!
         release = self.rs_settings.get('Release') or ''
         toast = 'Готов к работе'
@@ -6798,7 +6799,7 @@ class MainEvents:
             'timer_is_disabled': False,
             'allow_fact_input': False,
             'offline_mode': False,
-            'delete_old_docs': False
+            'delete_old_docs': False,
         }
 
         if os.path.exists('//data/data/ru.travelfood.simple_ui/databases/'):
@@ -6809,6 +6810,9 @@ class MainEvents:
         for k, v in rs_default_settings.items():
             if self.rs_settings.get(k) is None:
                 self.rs_settings.put(k, v, True)
+
+        self.rs_settings.put('device_model', self.hash_map['DEVICE_MODEL'], True)
+        self.rs_settings.put('android_id', self.hash_map['ANDROID_ID'], True)
 
         self.hash_map["SQLConnectDatabase"] = "SimpleKeep"
         self.hash_map.toast(toast)
@@ -6827,6 +6831,10 @@ class MainEvents:
         days = int(self.rs_settings.get('doc_delete_settings_days'))
         service = db_services.DocService()
         return service.delete_old_docs(days)
+
+    @staticmethod
+    def start_timer(hash_map: HashMap):
+        hash_map.start_timers('timer_update', 'timer_update2', period=15000, bs_hash_map=True)
 
 
 # ^^^^^^^^^^^^^^^^^^^^^ Main events ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
