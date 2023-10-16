@@ -789,10 +789,11 @@ class DocService:
                                    row_filters: Optional[str] = None,
                                    search_string: Optional[str] = None
 ):
-        select_query = f"""SELECT COUNT(*) FROM {self.details_table_name}"""
+        select_query = f"""SELECT COUNT(*) as rows_qtty FROM {self.details_table_name}
+                           LEFT JOIN RS_goods ON RS_docs_table.id_good = RS_goods.id"""
         where = f"""WHERE id_doc = '{str(id_doc)}'"""
         row_filters_condition = """AND qtty != COALESCE(qtty_plan, '0') """ if row_filters else ''
-        search_string_condition = f"""AND good_name LIKE '%{search_string}%'""" if search_string else ''
+        search_string_condition = f"""AND name LIKE '%{search_string}%'""" if search_string else ''
 
         where_query = f"""
                 {where}
@@ -805,7 +806,7 @@ class DocService:
             args += tuple(articles_list)
         query = f"{select_query} {where_query}"
         res = self._get_query_result(query, args, return_dict=True)
-        return res[0]['COUNT(*)']
+        return res[0]['rows_qtty']
 
 
     def parse_barcode(self, val):
