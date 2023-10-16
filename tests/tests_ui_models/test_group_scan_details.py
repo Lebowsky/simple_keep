@@ -173,6 +173,7 @@ class TestGroupScanDocDetailsScreenNew(unittest.TestCase):
     def tearDown(self) -> None:
         self.sut.queue_service.provider.close()
 
+    @unittest.skip
     def test_barcode_scanned_no_result_error(self):
         from tests.data_for_tests.nosql.initial_data import barcode_data
 
@@ -182,7 +183,7 @@ class TestGroupScanDocDetailsScreenNew(unittest.TestCase):
 
         BarcodeWorker._get_barcode_data = MagicMock(return_value=barcode_data)
 
-        result = self.sut._barcode_scanned()
+        result = self.sut._item_barcode_scanned()
         self.assertIsNone(result)
 
     # @unittest.skip

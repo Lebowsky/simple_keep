@@ -4,11 +4,11 @@ import socket
 from dataclasses import dataclass, asdict
 from datetime import datetime, timedelta
 from functools import wraps
-from typing import Callable, Union, List, Dict, Literal, Optional
+from typing import Callable, Union, List, Dict, Literal, Optional, Tuple
 
-from db_services import DocService, BarcodeService
+from db_services import BarcodeService
 from java import jclass
-from ui_global import Rs_doc, find_barcode_in_barcode_table
+
 
 noClass = jclass("ru.travelfood.simple_ui.NoSQL")
 rs_settings = noClass("rs_settings")
@@ -49,13 +49,6 @@ class HashMap:
     @listener.setter
     def listener(self, v):
         pass
-
-    def show_process_result(self, process, screen, data: dict = None):
-        if process and screen:
-            self.hash_map.put('ShowProcessResult', f'{process}|{screen}')
-
-            if data:
-                self.put_data(data)
 
     def set_result_listener(self, listener):
         if listener and isinstance(listener, str):
@@ -160,24 +153,57 @@ class HashMap:
                 value = str(value).lower()
             self.hash_map.put(key, str(value))
 
-    def put_data(self, data: dict):
-        for key, value in data.items():
-            self[key] = value
+    def put_data(self, data: dict, fill_none=False, default=''):
+        if data:
+            for key, value in data.items():
+                if value is None and fill_none:
+                    value = default
+
+                self[key] = value
 
     def containsKey(self, key):
         return self.hash_map.containsKey(key)
+
+    def key_set(self) -> str:
+        return self.hash_map.keySet()
+
+    def keys(self) -> List[str]:
+        keys = str(self.key_set())
+        return keys[1:len(keys)-1].split(', ')
+
+    def items(self) -> List[Tuple[str, Optional[str]]]:
+        return [(key, self[key]) for key in self.keys()]
+
+    def show_items(
+            self,
+            only: Optional[List[str]] = None,
+            exclude: Optional[List[str]] = None,
+            is_value_exists: bool = False,
+    ) -> None:
+        text = 'Список элементов HashMap: \n'
+        if is_value_exists:
+            text += 'True если есть любое значение \n'
+        hashmap_keys = self.keys()
+        items = self.items()
+        if only:
+            items = [item for item in items if item[0] in only]
+            for key in only:
+                if key not in hashmap_keys:
+                    items.append((key, 'Нет ключа'))
+        if exclude:
+            items = [item for item in items if item[0] not in exclude]
+
+        for key, value in items:
+            value = value if not is_value_exists else value is not None
+            text += f'{key}: {value}\n'
+        self.toast(text)
+
 
     def remove(self, key):
         self.hash_map.remove(key)
 
     def delete(self, key):
         self.hash_map.remove(key)
-
-    def export(self) -> list:
-        return self.hash_map.export()
-
-    def to_json(self):
-        return json.dumps(self.export(), indent=4, ensure_ascii=False).encode('utf8').decode()
 
     def add_to_cv_list(
             self,
@@ -242,8 +268,8 @@ class HashMap:
             min_length: int = 1,
             max_length: int = 20,
             result_var: str = 'ocr_result',
-            mesure_qty: int = 0,
-            min_freq: int = 0,
+            mesure_qty: int = 1,
+            min_freq: int = 1,
             query: str = '',
             control_field: str = '',
             cursor: Optional[list] = None,
@@ -294,8 +320,22 @@ class HashMap:
         if data:
             self.put_data(data)
 
-    def show_dialog(self, listener, title='', buttons=None):
+    def show_process_result(self, process, screen, data: dict = None):
+        if process and screen:
+            self.hash_map.put('ShowProcessResult', f'{process}|{screen}')
+
+            if data:
+                self.put_data(data)
+
+    def switch_process_screen(self, process: str, screen: Optional[str] = None):
+        process_screen = f'{process}|{screen}' if screen else process
+        self.hash_map.put('SwitchProcessScreen', process_screen)
+
+    def show_dialog(self, listener, title='', buttons=None, dialog_layout=None):
         self.put("ShowDialog", listener)
+        
+        if dialog_layout:
+            self.put('ShowDialogLayout', dialog_layout)
 
         if title or buttons:
             dialog_style = {
@@ -310,8 +350,10 @@ class HashMap:
             self.put('ShowDialogStyle', dialog_style)
 
     def get_current_screen(self):
-
         return self['current_screen_name'] if self.containsKey('current_screen_name') else ''
+
+    def get_parent_screen(self):
+        return self['parent_screen'] if self.containsKey('parent_screen') else ''
 
     def get_current_process(self):
         return self['current_process_name']
@@ -350,80 +392,6 @@ class HashMap:
     def no_refresh(self):
         self['NoRefresh'] = ''
 
-
-class RsDoc(Rs_doc):
-    def __init__(self, id_doc):
-        self.id_doc = id_doc
-
-    def update_doc_str(self, price=0):
-        pass
-
-    def delete_doc(self):
-        pass
-
-    def clear_barcode_data(self):
-        pass
-
-    def mark_for_upload(self):
-        pass
-
-    def mark_verified(self, key):
-        super().mark_verified(key)
-
-    def find_barcode_in_table(self, search_value, func_compared='=?') -> dict:
-        result = super().find_barcode_in_table(search_value, func_compared)
-        if result:
-            return result[0]
-        else:
-            return {}
-
-    def find_barcode_in_mark_table(self, search_value: str, func_compared='=?'):
-        pass
-
-    def update_doc_table_data(self, elem_for_add: dict, qtty=1, user_tmz=0):
-        pass
-
-    def add_marked_codes_in_doc(self, barcode_info):
-        pass
-
-    def add_new_barcode_in_doc_barcodes_table(self, el, barcode_info):
-        pass
-
-    def process_the_barcode(
-            self,
-            barcode,
-            have_qtty_plan=False,
-            have_zero_plan=False,
-            control=False,
-            have_mark_plan=False,
-            elem=None,
-            use_mark_setting='false',
-            user_tmz=0):
-
-        Rs_doc.id_doc = self.id_doc
-        result = Rs_doc.process_the_barcode(
-            Rs_doc, barcode, have_qtty_plan, have_zero_plan, control, have_mark_plan, elem, use_mark_setting, user_tmz
-        )
-        if not result.get('Error'):
-            service = DocService(self.id_doc)
-            service.set_doc_value('sent', 0)
-
-            res = self.find_barcode_in_table(barcode)
-            if res.get('id'):
-                result['key'] = res['id']
-
-        return result
-
-    def add(self, args):
-        pass
-
-    def get_new_id(self):
-        pass
-
-    def find_barcode_in_barcode_table(self, barcode):
-        return find_barcode_in_barcode_table(barcode)
-
-
 class BarcodeWorker:
     def __init__(self, id_doc, **kwargs):
         self.id_doc = id_doc
@@ -441,7 +409,7 @@ class BarcodeWorker:
         self.mark_update_data = {}
         self.docs_table_update_data = {}
         self.queue_update_data = {}
-
+        self.group_scan = kwargs.get('group_scan', False)
 
     def process_the_barcode(self, barcode):
         self.process_result.barcode = barcode
@@ -454,12 +422,17 @@ class BarcodeWorker:
         self.barcode_data = self._get_barcode_data()
 
         if self.barcode_data:
+            self._check_use_series()
             self.check_barcode()
             self.update_document_barcode_data()
         else:
             self._set_process_result_info('not_found')
 
         return self.process_result
+
+    def _check_use_series(self):
+        if int(self.barcode_data.get('use_series', 0)):
+            self._set_process_result_info('use_series')
 
     def _get_barcode_data(self):
         barcode_data = self.db_service.get_barcode_data(
@@ -471,10 +444,8 @@ class BarcodeWorker:
     def check_barcode(self):
         if self.process_result.error:
             return
-
         if self._use_mark():
             self._check_mark_in_document()
-
         self._check_barcode_in_document()
 
     def _check_mark_in_document(self):
@@ -524,7 +495,8 @@ class BarcodeWorker:
             'barcode_from_scanner': self.barcode_info.barcode,
             'approved': '1',
             'gtin': self.barcode_info.gtin,
-            'series': self.barcode_info.serial
+            'series': self.barcode_info.serial,
+            'mark_code': self.barcode_info.barcode
         }
 
         if self.barcode_data['mark_id']:
@@ -546,6 +518,9 @@ class BarcodeWorker:
             'price': self.barcode_data['price'],
             'id_price': self.barcode_data['id_price']
         }
+
+        if not self.group_scan:
+            self.docs_table_update_data['qtty'] = float(qty)
 
         if self.barcode_data['row_key']:
             self.docs_table_update_data['id'] = self.barcode_data['row_key']
@@ -625,6 +600,10 @@ class BarcodeWorker:
             'success_mark': {
                 'error': '',
                 'description': 'Марка добавлена в документ'
+            },
+            'use_series': {
+                'error': 'use_series',
+                'description': 'Для товара необходимо отсканировать серии',
             }
         }
 
@@ -632,6 +611,7 @@ class BarcodeWorker:
             self.process_result.error = info_data[info_key]['error']
             self.process_result.description = info_data[info_key]['description']
             self.process_result.row_key = self.barcode_data.get('row_key', 0)
+            self.process_result.barcode_data = self.barcode_data
 
     def parse(self, barcode: str):
         return BarcodeParser(barcode).parse()
@@ -642,6 +622,7 @@ class BarcodeWorker:
         description: str = ''
         barcode: str = ''
         row_key: str = ''
+        barcode_data = None
 
 class BarcodeAdrWorker(BarcodeWorker):
     def __init__(self, id_doc, **kwargs):
@@ -864,7 +845,6 @@ class BarcodeParser:
 
         def dict(self):
             return {k.upper(): str(v) for k, v in asdict(self).items() if v}
-
 
 def get_ip_address():
     s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)

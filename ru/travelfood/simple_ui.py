@@ -1,4 +1,5 @@
 import json
+from typing import Union
 
 from ui_global import get_query_result, bulk_query
 
@@ -14,6 +15,34 @@ class SimpleUtilites:
         pass
 
     def urovo_stop_decode(self):
+        pass
+
+    @staticmethod
+    def get_temp_dir():
+        return './'
+
+    @staticmethod
+    def get_temp_file(extension: str) -> str:
+        """Генерирует файл с указанным расширением и возвращает путь к файлу."""
+        pass
+
+    @staticmethod
+    def deleteCache():
+        pass
+
+    @staticmethod
+    def write_socket(
+            ip: str,
+            port: int,
+            data: Union[str, bytes],
+            handlers: str
+    ) -> bool:
+        """Отправка данных на принтер WiFi. Возвращает True при успешной отправке.
+        ip - IP-адрес принтера
+        port - порт принтера.
+        data: строка(UTF-8) или байт-массив данных.
+        handlers - строка-массив обработчиков в случае неудачи
+         """
         pass
 
 
@@ -64,3 +93,39 @@ class SimpleSQLProvider:
             return json.dumps(get_query_result(q, tuple(params.split(',')), return_dict=True))
         else:
             return json.dumps(get_query_result(q, return_dict=True))
+
+
+class SimpleBluetooth:
+    def __init__(self):
+        pass
+
+    def get_device(self, mac: str):
+        """Получение устройства по mac адресу.
+         Возвращает android.bluetooth.BluetoothDevice."""
+        pass
+
+    def write_data(self, data: Union[str, int, bytes], handlers: str):
+        """Отправка данных.
+        data – данные в виде строки, целого числа или массива байтов.
+        handlers – строка с обработчиками в случае неудачи."""
+        pass
+
+    def connect_to_client(self, device, handlers: str) -> bool:
+        """Подключение к устройству.
+         device - android.bluetooth.BluetoothDevice.
+         handlers - строка с обработчиками в случае неудачи."""
+        pass
+
+    def close_socket(self):
+        """Отключение от устройства."""
+        pass
+
+    def begin_listen_for_data(self, handlers: str):
+        """Подключает массив обработчиков на события устройства.
+         Обработчики должны быть обязательно pythonbytes."""
+        pass
+
+    def stop_listen(self):
+        """Отключение подписки на события устройства."""
+        pass
+
