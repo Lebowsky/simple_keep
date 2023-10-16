@@ -26,6 +26,7 @@ class SimpleUtilites:
         """Генерирует файл с указанным расширением и возвращает путь к файлу."""
         pass
 
+
     @staticmethod
     def deleteCache():
         pass
@@ -45,7 +46,9 @@ class SimpleUtilites:
          """
         pass
 
-
+    @staticmethod
+    def download_file(file):
+        return file
 class ImportUtils:
     def __init__(self):
         self.views = {'btn_barcodes': self.get_btn_barcodes}

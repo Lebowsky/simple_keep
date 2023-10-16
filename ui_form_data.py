@@ -1174,24 +1174,32 @@ def get_markcode_query():
 def get_barcode_query() -> str:
     return '''
     With barc as (
-SELECT 
-barcode,
-id_good,
-RS_goods.type_good,
-id_property,
-id_series,
-id_unit,
-ratio
- FROM RS_barcodes 
- Left Join RS_goods
- ON RS_barcodes.id_good = RS_goods.id
-WHERE barcode = ?)
-
-Select * From barc
-Left JOIN RS_types_goods
-ON RS_types_goods.id = barc.type_good
-
-'''
+    SELECT 
+    barcode,
+    id_good,
+    RS_goods.type_good,
+    id_property,
+    id_series,
+    id_unit,
+    ratio
+     FROM RS_barcodes 
+     Left Join RS_goods
+     ON RS_barcodes.id_good = RS_goods.id
+    WHERE barcode = ?)
+    
+    Select barcode,
+    id_good,
+    type_good,
+    id_property,
+    id_series,
+    id_unit,
+    ratio,
+    RS_types_goods.use_mark
+    From barc
+    Left JOIN RS_types_goods
+    ON RS_types_goods.id = barc.type_good
+    
+    '''
 
 
 def get_mark_qtty_conformity():

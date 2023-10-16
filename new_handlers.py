@@ -699,7 +699,30 @@ def debug_on_start(hash_map: HashMap):
 
 @HashMap()
 def debug_listener(hash_map, _files=None, _data=None):
-    screen: ui_models.DebugSettingsScreen = create_screen(hash_map)
+    screen: ui_models.DebugSettingsScreen = ui_models.DebugSettingsScreen(hash_map, rs_settings)
     screen.on_input()
 
 # ^^^^^^^^^^^^^^^^^ Debug ^^^^^^^^^^^^^^^^^
+
+# =============== CSS =================
+@HashMap()
+def csv_file_browser_on_start(hash_map, _files=None, _data=None):
+    screen: ui_models.CSVFileBrowser = ui_models.CSVFileBrowser(hash_map, rs_settings)
+    screen.on_start()
+
+@HashMap()
+def csv_file_browser_on_input(hash_map, _files=None, _data=None):
+    screen: ui_models.CSVFileBrowser = ui_models.CSVFileBrowser(hash_map, rs_settings)
+    screen.on_input()
+
+@HashMap()
+def csv_on_start(hash_map, _files=None, _data=None):
+    screen: ui_models.CSV = ui_models.CSV(hash_map, rs_settings)
+    screen.on_start()
+
+@HashMap()
+def csv_on_input(hash_map, _files=None, _data=None):
+    screen: ui_models.CSV = ui_models.CSV(hash_map, rs_settings)
+    screen.on_input()
+
+# ^^^^^^^^^^^^^^^^^ CSS ^^^^^^^^^^^^^^^^^

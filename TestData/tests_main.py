@@ -187,9 +187,43 @@ def adr_series_item_on_input(hash_map):
 def test_barcode_on_start(hash_map):
     main.test_barcode_on_start(hash_map)
 
+def csv_on_start(hash_map):
+    main.csv_on_start(hash_map)
+
+
+def csv_on_input(hash_map):
+    main.csv_on_input(hash_map)
+
+
+def csv_open_file(hash_map):
+    main.csv_open_file(hash_map)
+
 
 def test_barcode_listener(hash_map):
     main.test_barcode_listener(hash_map)
+
+
+def csv_file_browser_on_start(hash_map):
+    main.csv_file_browser_on_start(hash_map)
+
+
+def csv_file_browser_on_input(hash_map):
+    main.csv_file_browser_on_input(hash_map)
+
+def read_file(hash_map, image):
+    main.read_file(hash_map, image)
+
+def new_doc_on_start(hash_map):
+    main.new_doc_on_start(hash_map)
+
+
+def new_doc_on_select(hash_map):
+    main.new_doc_on_select(hash_map)
+
+
+
+def elem_viev_on_start(hash_map):
+    main.elem_viev_on_start(hash_map)
 
 class hashMap:
     d = {}
@@ -218,6 +252,7 @@ class hashMap:
         for key in self.d.keys():
             ex_hashMap.append({"key": key, "value": hashMap.d[key]})
         return ex_hashMap
+
 
 @app.route('/')
 def hello_world():

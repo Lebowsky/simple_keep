@@ -10,6 +10,7 @@ from typing import Dict, List, Optional, Tuple, Callable
 import shutil
 import db_services
 import hs_services
+import ui_csv
 from printing_factory import HTMLDocument, PrintService, bt
 from ui_utils import HashMap, RsDoc, BarcodeWorker, get_ip_address, BarcodeAdrWorker
 from db_services import DocService, ErrorService, GoodsService, BarcodeService, AdrDocService, TimerService
@@ -953,9 +954,9 @@ class SimpleFileBrowser(Screen):
             self.hash_map.finish_process()
 
         elif self.listener == 'btn_get_up':
-            if not os.access(current_directory.parent, os.R_OK):
-                self.hash_map.toast('Доступ запрещён')
-                return
+            # if not os.access(current_directory.parent, os.R_OK):
+            #     self.hash_map.toast('Доступ запрещён')
+            #     return
             self.hash_map['current_dir'] = current_directory.parent
 
         elif self.listener == 'CardsClick':
@@ -1081,6 +1082,210 @@ class SimpleFileBrowser(Screen):
             else:
                 self.hash_map.toast('Ошибка соединения')
 
+class CSV(Screen):
+    screen_name = 'Выбор режима'
+    process_name = 'Обмен данными'
+    def __init__(self, hash_map: HashMap, rs_settings):
+        super().__init__(hash_map, rs_settings)
+
+    def on_start(self):
+        pass
+
+    def on_input(self):
+
+        listeners = {
+            'btn_save': self.save_changes,
+            'btn_load': self.open_load_screen,
+            'btn_use_mark': self.print_use_mark,
+            'btn_get_path': self.get_download_patch,
+            'ON_BACK_PRESSED': self._on_back_pressed,
+            'FileOpen': self.set_patch,
+        }
+        if self.listener in listeners:
+            listeners[self.listener]()
+
+
+    def on_post_start(self):
+        super().on_post_start()
+
+    def save_changes(self):
+        path = suClass.get_temp_dir()
+        AndroidID = self.hash_map['Android_ID']
+        IP = '192.168.1.1'
+        res = ui_csv.export_csv(path, IP, AndroidID)
+        for file in res:
+            suClass.download_file(file)
+        self.hash_map.toast(f'Записано {str(len(res))} файлов')
+
+
+    def open_load_screen(self):
+        self.hash_map.put('OpenExternalFile', '')
+
+
+
+    def _on_back_pressed(self):
+        self.hash_map.finish_process()
+
+    def get_download_patch(self):
+        self.hash_map.put('OpenExternalFile','')
+
+
+    def set_patch(self):
+        pass
+
+    def on_load_file(self, imageBytes):
+
+        filename = suClass.get_temp_dir() + os.sep + "test_file.FILE"
+        self.hash_map.toast(filename)
+        self.hash_map.put("beep", "")
+        with open(filename, 'wb') as f:
+            f.write(imageBytes)
+
+        res = ui_csv.load_from_csv(filename, 'test_file.FILE')
+
+        if res == 200:
+            self.hash_map.toast('Данные файла успешно загружены.')
+        else:
+            self.hash_map.toast('Ошибка! Неверный файл загрузки.')
+
+    def print_use_mark(self):
+       self.hash_map.toast(self.rs_settings.get('use_mark'))
+
+class CSVFileBrowser(SimpleFileBrowser):
+    screen_name = 'Проводник файлов'
+    process_name = 'Обмен данными'
+
+    def __init__(self, hash_map: HashMap, rs_settings):
+        super().__init__(hash_map, rs_settings)
+
+    def on_start(self):
+
+        if not self.hash_map.get('current_dir'):
+            downloads_dir = os.environ['DIRECTORY_DOWNLOADS']
+            self.hash_map.toast(downloads_dir)
+            self.hash_map['current_dir'] = downloads_dir #suClass.get_temp_dir()
+        target_dir = self.hash_map.get('current_dir')
+        list_data = self.get_all_files_from_patch(target_dir, 'csv')
+
+        doc_cards = self._get_doc_cards_view(list_data)
+        self.hash_map['templates_cards'] = doc_cards.to_json()
+
+
+    def on_input(self):
+        current_directory = Path(self.hash_map.get('current_dir'))
+        if self.listener == 'ON_BACK_PRESSED':
+            self.hash_map.show_screen(CSV.screen_name)
+
+        elif self.listener == 'btn_get_up':
+            if current_directory == os.path.join(os.environ['EXTERNAL_STORAGE'], 'Download'):
+                self.hash_map.toast('Папки выше недоступны')
+                return
+            current_directory = current_directory.parent
+            self.hash_map['current_dir'] = current_directory
+            self.on_start()
+            self.hash_map.refresh_screen()
+        elif self.listener == 'CardsClick':
+            current_str = self.hash_map.get("selected_card_position")
+            jlist = self.hash_map.get_json("templates_cards")
+            current_elem = jlist['customcards']['cardsdata'][int(current_str)]
+            if current_elem['item_type'] == 'Folder':
+                self.hash_map['current_dir'] = current_directory / current_elem['file_name']
+                self.hash_map.refresh_screen()
+
+
+        elif self.listener == 'LayoutAction':
+            self._layout_action()
+
+    def on_post_start(self):
+        pass
+
+    def show(self):
+        pass
+
+    def _get_doc_cards_view(self, table_data):
+
+        card_title_text_size = self.rs_settings.get('CardTitleTextSize')
+        card_date_text_size = self.rs_settings.get('CardDateTextSize')
+
+        doc_cards = widgets.CustomCards(
+            widgets.LinearLayout(
+
+                widgets.LinearLayout(
+                    widgets.TextView(
+                        Value='@picture',
+                        TextBold=False,
+                        TextSize=card_title_text_size,
+                        weight=1
+                    ),
+                    widgets.TextView(
+                        Value='@file_name',
+                        TextBold=True,
+                        TextSize=card_title_text_size,
+                        weight=3
+                    ),
+                    widgets.PopupMenuButton(
+                        Value='Передать на ББ;Загрузить',
+                        Variable="sent",
+                        gravity_horizontal='right',
+                        weight=1
+                    ),
+
+                    orientation="horizontal"
+                ),
+                widgets.LinearLayout(
+                    widgets.TextView(
+                        Value='@file_size',
+                        TextSize=card_date_text_size
+                    ),
+                    widgets.TextView(
+                        Value='@creation_time',
+                        TextSize=card_date_text_size
+                    )
+                ),
+
+                width="match_parent"
+            ),
+            options=widgets.Options().options,
+            cardsdata=table_data
+        )
+
+        return doc_cards
+
+    def _layout_action(self):
+        selected_card = json.loads(self.hash_map.get('card_data'))
+        if self.hash_map.get('layout_listener') == 'Передать на ББ':
+            if selected_card and isinstance(selected_card, dict):
+                file = Path(selected_card['full_path'])
+                if file.is_file():
+                    self._copy_file(file)
+        elif self.hash_map.get('layout_listener') == 'Загрузить':
+            if selected_card and isinstance(selected_card, dict):
+                file = Path(selected_card['full_path'])
+                if file.is_file():
+                    self.load_csv_file(file)
+                else:
+                    self.hash_map.toast('Вы пытаетесь загрузить папку')
+
+
+    def _copy_file(self, file):
+        ip_host = self.hash_map.get('ip_host')  # '192.168.1.77'
+
+        with open(file, 'rb') as f:
+            # send_service = self.hs_service(ip_host)
+            res = self.hs_service.export_file(file.name, f)
+
+            if res['status_code'] == 200:
+                self.hash_map.toast(f'Файл {file.name} успешно выгружен')
+            else:
+                self.hash_map.toast('Ошибка соединения')
+
+    def load_csv_file(self, file):
+
+        res = ui_csv.load_from_csv(file, Path(file).name)
+        if res == 200:
+            self.hash_map.toast('Файл успешно загружен')
+        else:
+            self.hash_map.toast('Ошибка при загрузке файла')
 
 # ==================== Tiles =============================
 
@@ -1708,6 +1913,9 @@ class DocumentsDocsListScreen(DocsListScreen):
                 self.service.set_doc_value('sent', 1)
                 self.toast('Документ отправлен повторно')
 
+        elif self.listener == "add_doc":
+            self.hash_map.show_screen('Новый документ')
+
     def get_id_doc(self):
         card_data = self.hash_map.get_json("card_data") or {}
         id_doc = card_data.get('key') or self.hash_map['selected_card_key']
@@ -1717,6 +1925,17 @@ class DocumentsDocsListScreen(DocsListScreen):
         card_data = self.hash_map.get_json("card_data") or {}
         doc_number = card_data.get('number')
         return doc_number
+
+
+    def get_new_doc_id(self):
+        max_id_doc = self.rs_settings.get('max_id_doc')
+        if max_id_doc:
+            self.rs_settings.put('max_id_doc', max_id_doc + 1, True)
+            return str(max_id_doc+1)
+
+        else:
+            self.rs_settings.put('max_id_doc', 1, True)
+            return 1
 
 
 class AdrDocsListScreen(DocsListScreen):
@@ -2909,54 +3128,6 @@ class DocumentsDocDetailScreen(DocDetailsScreen):
         elif listener == 'btn_doc_mark_verified':
             self.hash_map.show_dialog('confirm_verified', 'Завершить документ?', ['Да', 'Нет'])
 
-    def _get_barcode_card(self):
-        # TODO Переделать через виджеты
-
-        ls = {"customcards": {
-            "options": {
-                "search_enabled": False,
-                "save_position": True
-            },
-            "layout": {
-                "type": "LinearLayout",
-                "orientation": "vertical",
-                "height": "match_parent",
-                "width": "match_parent",
-                "weight": "0",
-                "Elements": [
-                    {
-                        "type": "LinearLayout",
-                        "orientation": "horizontal",
-                        "height": "match_parent",
-                        "width": "match_parent",
-                        "weight": "0",
-                        "Elements": [
-                            {"type": "TextView",
-                             "height": "wrap_content",
-                             "width": "match_parent",
-                             "weight": "1",
-                             "Value": "@barcode",
-                             "TextSize": self.rs_settings.get('goodsTextSize'),
-                             "Variable": ""
-                             },
-                            {
-                                "type": "TextView",
-                                "show_by_condition": "",
-                                "Value": "@picture",
-                                "TextColor": "#DB7093",
-                                "BackgroundColor": "#FFFFFF",
-                                "Variable": "btn_tst1",
-                                "NoRefresh": False,
-                                "document_type": "",
-                                "cardCornerRadius": "15dp",
-                                "weight": "1",
-                                "mask": ""
-                            }]
-                    }
-                ]
-            }}
-        }
-        return ls
 
     def _get_doc_barcode_data(self, args):
         return self.service.get_doc_barcode_data(args)
@@ -4138,6 +4309,33 @@ class GoodsSelectScreen(BaseGoodSelect):
                 self._goods_selector('index', index=doc_position)
             self.hash_map.remove('was_clicked')
 
+            # Формируем таблицу QR кодов------------------
+
+            args = {
+                'id_doc': self.id_doc,
+                'id_good': current_elem['id_good'],
+                'id_property': current_elem['id_properties'],
+                'id_series': current_elem['id_series'],
+                'id_unit': current_elem['id_unit'],
+            }
+            res = self._get_doc_barcode_data(args)
+
+
+            cards = self._get_barcode_card()
+
+            # Формируем список карточек баркодов
+            cards['customcards']['cardsdata'] = []
+            for el in res:
+                picture = '#f00c' if el['approved'] in ['True', 'true', '1'] else ''
+                row = {
+                    'barcode': el['mark_code'],
+                    'picture': picture
+                }
+                cards['customcards']['cardsdata'].append(row)
+
+            self.hash_map.put('barcode_cards', cards, to_json=True)
+
+
     def on_input(self):
         super().on_input()
 
@@ -4165,7 +4363,7 @@ class GoodsSelectScreen(BaseGoodSelect):
         return current_elem
 
     def _goods_selector(self, action, index = None):
-        
+
         global_position = index if index else int(self.hash_map.get('selected_card_position'))
 
         doc_rows = int(self.hash_map.get('doc_rows'))
@@ -4244,7 +4442,62 @@ class GoodsSelectScreen(BaseGoodSelect):
                 return True
 
         return False
-    
+
+
+    def _get_doc_barcode_data(self, args):
+        return self.service.get_doc_barcode_data(args)
+
+
+    def _get_barcode_card(self):
+        # TODO Переделать через виджеты
+
+        ls = {"customcards": {
+            "options": {
+                "search_enabled": False,
+                "save_position": True
+            },
+            "layout": {
+                "type": "LinearLayout",
+                "orientation": "vertical",
+                "height": "match_parent",
+                "width": "match_parent",
+                "weight": "0",
+                "Elements": [
+                    {
+                        "type": "LinearLayout",
+                        "orientation": "horizontal",
+                        "height": "match_parent",
+                        "width": "match_parent",
+                        "weight": "0",
+                        "Elements": [
+                            {"type": "TextView",
+                             "height": "wrap_content",
+                             "width": "match_parent",
+                             "weight": "1",
+                             "Value": "@barcode",
+                             "TextSize": self.rs_settings.get('goodsTextSize'),
+                             "Variable": ""
+                             },
+                            {
+                                "type": "TextView",
+                                "show_by_condition": "",
+                                "Value": "@picture",
+                                "TextColor": "#DB7093",
+                                "BackgroundColor": "#FFFFFF",
+                                "Variable": "btn_tst1",
+                                "NoRefresh": False,
+                                "document_type": "",
+                                "cardCornerRadius": "15dp",
+                                "weight": "1",
+                                "mask": ""
+                            }]
+                    }
+                ]
+            }}
+        }
+        return ls
+
+
 class AdrGoodsSelectScreen(BaseGoodSelect):
     screen_name = 'Товар выбор'
     process_name = 'Адресное хранение'
