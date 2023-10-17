@@ -5156,6 +5156,11 @@ class SeriesSelectScreen(Screen):
             ocr_nosql.put('show_process_result', True, True)
             self.hash_map.show_process_result('OcrTextRecognition',
                                               'SerialNumberOCRSettings')
+        elif listener == 'btn_print':
+            self._print_ticket()
+        elif listener == 'btn_series_add_barcode':
+            self._btn_add_barcode()
+            
         self.hash_map.no_refresh()
 
     def show(self, args=None):
@@ -5337,6 +5342,27 @@ class SeriesSelectScreen(Screen):
             serial_ocr_settings = json.loads(serial_ocr_settings)
             self.hash_map.set_vision_settings(**serial_ocr_settings)
             ocr_nosql.put('from_screen', 'SeriesSelectScreen', True)
+
+    def _print_ticket(self):
+        # Получим первый баркод документа
+        barcode = db_services.BarcodeService().get_barcode_from_doc_table(self.screen_values['doc_row_id'])
+        self.toast(barcode)
+        data = {'Дата_док': 'Doc_data', 'Номенклатура': 'Good',
+                'Артикул': 'good_art', 'Серийный номер': 'good_sn',
+                'Характеристика': 'good_property', 'Цена': 'good_price',
+                'ЕдИзм': 'good_unit', 'Ключ': 'key', 'Валюта': 'price_type'}
+        for key in data:
+            data[key] = self.hash_map.get(data[key])
+        data['barcode'] = barcode if barcode else '0000000000000'
+        PrintService.print(self.hash_map, data)
+
+    def _btn_add_barcode(self):
+        init_data = {
+            'item_id':  self.screen_data.get('id_good', ''),
+            'property_id':  self.screen_data.get('id_properties', ''),
+            'unit_id':  self.screen_data.get('id_unit', '')
+        }
+        BarcodeRegistrationScreen(self.hash_map, self.rs_settings).show_process_result(init_data)
 
 class SeriesItem(Screen):
     process_name = 'SeriesProcess'
