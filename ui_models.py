@@ -5133,7 +5133,10 @@ class SeriesSelectScreen(Screen):
 
     def on_input(self):
         listener = self.listener
-        if listener == "CardsClick":
+        if listener =="CardsClick":
+            self._cards_click_handler()
+        elif listener =="btn_add_series":
+            self.hash_map.put("selected_card_key", '')
             self._cards_click_handler()
         elif listener == "ON_BACK_PRESSED":
             self._back_screen()
@@ -5205,6 +5208,8 @@ class SeriesSelectScreen(Screen):
         list_data = [self._handle_num_keys(item) for item in list_data]
         list_data = [self._add_text_in_values(item) for item in list_data]
         doc_cards = self._get_doc_cards_view(list_data)
+        # Добавим надпись если нет серий в списке
+        self.hash_map.put('empty_series', ("","Отсканируйте серии")[len(list_data)==0]) 
         self.hash_map['series_cards'] = doc_cards.to_json()
 
     def _handle_num_keys(self, values: dict) -> dict:
@@ -5354,12 +5359,12 @@ class SeriesItem(Screen):
         self.screen_data = self.service.get_series_table_str(series_id)
 
         put_data = {
-            'good_name': self.screen_data['good_name'],
-            'name': self.screen_data['name'],
-            'number': self.screen_data['number'],
-            'production_date': self.screen_data['production_date'],
-            'best_before': self.screen_data['best_before'],
-            'FillingSeriesScreen_qtty' : self.screen_data['qtty']
+            'good_name': self.screen_data.get('good_name') or self.hash_map.get('good_name'),
+            'name': self.screen_data.get('name',''),
+            'number': self.screen_data.get('number',''),
+            'production_date': self.screen_data.get('production_date',''),
+            'best_before': self.screen_data.get('best_before',''),
+            'FillingSeriesScreen_qtty' : self.screen_data.get('qtty','')
         }
 
         self._handle_num_keys(put_data)
@@ -5373,29 +5378,21 @@ class SeriesItem(Screen):
     def on_input(self):
         listener = self.listener
         if listener == "btn_save":
-            self._save_data()
-            self._back_screen()
+            self._btn_save_handler()
         elif listener == "ON_BACK_PRESSED":
             self._back_screen()
         elif listener == "btn_cancel":
             self._back_screen()
+        elif self._is_result_positive('confirm_update_series'):
+            params = self._get_params()
+            params.update(self._check_series_number())
+            self.service.save_table_str(params) 
+            self._back_screen()   
 
         self.hash_map.refresh_screen()
 
     def _save_data(self):
-        params = {'id': int(self.screen_data['id']),
-                  'id_doc': self.screen_data['id_doc'],
-                  'id_good':  self.screen_data['id_good'],
-                  'id_properties':self.hash_map['id_properties'],
-                  'id_series': self.hash_map['id_series'],
-                  'id_warehouse': self.hash_map['id_warehouse'],
-                  'qtty': self.hash_map['FillingSeriesScreen_qtty'],
-                  'name': self.hash_map['name'],
-                  'best_before': self.hash_map['best_before'] if self._is_valid_date_format(self.hash_map['best_before']) else None,
-                  'number': self.hash_map['number'],
-                  'production_date': self.hash_map['production_date'] if self._is_valid_date_format(self.hash_map['production_date']) else None,
-                  'cell': self.hash_map['id_cell']
-                  }
+        params = self._get_params()
         self.service.save_table_str(params)
 
     def _is_valid_date_format(self, date_str):
@@ -5417,6 +5414,60 @@ class SeriesItem(Screen):
         else:
             return qtty
 
+    def _btn_save_handler(self):
+        if self.screen_data.get('id'): 
+            self._save_data()
+            self._back_screen()
+        else:
+            if self._check_series_number():
+                self.hash_map.show_dialog('confirm_update_series', 'Серия с данным номером уже существует. Обновить данные?')
+            else:
+                params = self._get_params()
+                self._add_new_series(params)
+                self._back_screen()
+
+    def _get_params(self):
+        common_params = {
+            'id_doc': self.hash_map.get('id_doc'),
+            'id_good': self.hash_map.get('id_good'),
+            'id_properties': self.hash_map.get('id_properties'),
+            'id_warehouse': self.hash_map.get('id_warehouse'),
+            'qtty': self.hash_map.get('FillingSeriesScreen_qtty'),
+            'name': self.hash_map.get('name'),
+            'best_before': self.hash_map.get('best_before') if self._is_valid_date_format(self.hash_map.get('best_before')) else None,
+            'number': self.hash_map.get('number'),
+            'production_date': self.hash_map.get('production_date') if self._is_valid_date_format(self.hash_map.get('production_date')) else None,
+            'id_cell': self.hash_map.get('id_cell'),
+            'cell': self.hash_map.get('id_cell')
+        }
+
+        if self.screen_data:
+            params = {
+                'id': int(self.screen_data.get('id', 0)), 
+                'id_series': self.hash_map['id_series'], 
+                **common_params
+            }
+            params['cell'] = common_params['id_cell']  
+        else:
+            params = {
+                'barcode': self.hash_map.get('number'),
+                **common_params
+            }
+
+        return params
+
+    def _check_series_number(self) -> dict:
+        number = self.hash_map.get('number')
+        self.service.params = self._get_params()
+        if number:
+            values = self.service.get_series_by_barcode(number, {})
+            if values:
+                return {'id': values[0]['id'], 'id_series': values[0]['id_series']}
+        return None
+
+    def _add_new_series(self, params: dict):
+        number = params.get('number')
+        self.service.add_new_series_in_doc_series_table(number)               
 
 # ^^^^^^^^^^^^^^^^^^^^^ Series ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
