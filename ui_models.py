@@ -1774,11 +1774,6 @@ class DocumentsDocsListScreen(DocsListScreen):
 
     def on_start(self):
         super().on_start()
-        self.service.write_error_on_log(
-            error_type="HS_service",
-            error_text="answer.error_text",
-            error_info='Ошибка выгрузки документа'
-        )
 
     def on_input(self):
         super().on_input()
