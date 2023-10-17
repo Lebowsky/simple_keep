@@ -196,7 +196,12 @@ class TestDocService(unittest.TestCase):
         result = [x for x in self.data_creator.samples['RS_docs_table'] if x[field] == f'"{value}"']
         return result
 
-
+    def test_write_error_on_log(self):
+        self.service.write_error_on_log(
+            error_type="HS_service",
+            error_text="",
+            error_info='Ошибка соединения при отправке'
+        )
 class TestAdrDocService(unittest.TestCase):
     def setUp(self) -> None:
         self.service = AdrDocService()
