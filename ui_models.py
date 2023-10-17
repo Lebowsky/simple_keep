@@ -3456,23 +3456,6 @@ class BaseGoodSelect(Screen):
         self.service.update_doc_table_row(data=update_data, row_id=row_id)
         self.service.set_doc_status_to_upload(self.hash_map.get('id_doc'))
 
-        insert_to_queue = {
-            "id_doc": self.hash_map.get('id_doc'),
-            "id_good": self.hash_map.get("id_good"),
-            "id_properties": self.hash_map.get("id_property"),
-            "id_series": self.hash_map.get("id_series"),
-            "id_unit": self.hash_map.get("id_unit"),
-            "id_cell": "",
-            "d_qtty": float(self.hash_map.get('delta')),
-            "sent": False,
-            "price": self.hash_map.get("good_price"),
-            "id_price": ""
-        }
-
-        barcode_worker = BarcodeWorker(self.hash_map.get("id_doc"))
-        barcode_worker.queue_update_data = insert_to_queue
-        barcode_worker.update_document_barcode_data()
-
     def _show_dialog_qtty(self):
         loyaut = '''{
             "type": "LinearLayout",
@@ -3679,6 +3662,23 @@ class GroupScanItemScreen(BaseGoodSelect):
         }
         self.service.update_doc_table_row(data=update_data, row_id=row_id)
         self.service.set_doc_status_to_upload(self.hash_map.get('id_doc'))
+
+        insert_to_queue = {
+            "id_doc": self.hash_map.get('id_doc'),
+            "id_good": self.hash_map.get("id_good"),
+            "id_properties": self.hash_map.get("id_property"),
+            "id_series": self.hash_map.get("id_series"),
+            "id_unit": self.hash_map.get("id_unit"),
+            "id_cell": "",
+            "d_qtty": float(self.hash_map.get('delta')),
+            "sent": False,
+            "price": self.hash_map.get("good_price"),
+            "id_price": ""
+        }
+
+        barcode_worker = BarcodeWorker(self.hash_map.get("id_doc"))
+        barcode_worker.queue_update_data = insert_to_queue
+        barcode_worker.update_document_barcode_data()
 
 
 class BarcodeRegistrationScreen(Screen):
