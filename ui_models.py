@@ -1636,8 +1636,12 @@ class DocsListScreen(Screen):
         put_data['doc_date'] = card_data['data']
         put_data['warehouse'] = card_data['warehouse']
         put_data['countragent'] = card_data['countragent']
+        put_data['doc_title'] = self._get_doc_title(**put_data)
 
         return put_data
+
+    def _get_doc_title(self, **kwargs):
+        return '{doc_type} № {doc_n} от {doc_date}'.format(**kwargs)
 
     def _set_doc_verified(self, id_doc, value=True):
         # service = DocService(id_doc)
@@ -3163,7 +3167,7 @@ class BaseGoodSelect(Screen):
         self.service = DocService(self.id_doc)
         self.allow_fact_input = self.rs_settings.get('allow_fact_input') or False
         self.current_toast_message = ''
-        self.hash_map_keys = ['doc_title', 'item_name', 'article', 'property', 'price', 'unit', 'qtty_plan', 'qtty']
+        self.hash_map_keys = ['item_name', 'article', 'property', 'price', 'unit', 'qtty_plan', 'qtty']
         self.screen_data = {}
 
     def init_screen(self):
@@ -3303,7 +3307,7 @@ class BaseGoodSelect(Screen):
         self.hash_map.show_screen("Документ товары")
 
     def print_ticket(self):
-        barcode = db_services.BarcodeService().get_barcode_from_doc_table(self.doc_row_id)
+        barcode = db_services.BarcodeService().get_barcode_from_doc_table(str(self.doc_row_id))
 
         data = {'Номенклатура': 'item_name',
                 'Артикул': 'article',
@@ -3312,6 +3316,7 @@ class BaseGoodSelect(Screen):
                 'ЕдИзм': 'unit',
                 'Ключ': 'key',
                 'Валюта': 'price_type'}
+
         for key in data:
             data[key] = self.hash_map.get(data[key])
         data['barcode'] = barcode if barcode else '0000000000000'
@@ -3332,9 +3337,9 @@ class BaseGoodSelect(Screen):
 
     def _open_register_barcode_screen(self):
         init_data = {
-            'item_id': self.screen_data.get('id_good', ''),
-            'property_id': self.screen_data.get('id_properties', ''),
-            'unit_id': self.screen_data.get('id_unit', '')
+            'item_id': self.screen_data.get('item_id', ''),
+            'property_id': self.screen_data.get('property_id', ''),
+            'unit_id': self.screen_data.get('unit_id', '')
         }
         screen = BarcodeRegistrationScreen(self.hash_map, self.rs_settings)
         screen.parent_screen = self
