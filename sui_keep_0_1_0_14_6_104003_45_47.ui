@@ -450,11 +450,13 @@
                                                         "weight": "6",
                                                         "Elements": [
                                                             {
-                                                                "Value": "@good_str",
+                                                                "Value": "@item_position",
                                                                 "Variable": "",
                                                                 "height": "wrap_content",
                                                                 "width": "wrap_content",
                                                                 "weight": "0",
+                                                                "TextBold": false,
+                                                                "TextItalic": false,
                                                                 "TextColor": "#000000",
                                                                 "type": "TextView"
                                                             }
@@ -640,7 +642,7 @@
                                             },
                                             {
                                                 "type": "LinearLayout",
-                                                "Variable": "fact_qtty_input",
+                                                "Variable": "",
                                                 "orientation": "vertical",
                                                 "height": "wrap_content",
                                                 "width": "match_parent",
@@ -846,7 +848,7 @@
                                             },
                                             {
                                                 "type": "LinearLayout",
-                                                "Variable": "fact_qtty_input",
+                                                "Variable": "",
                                                 "orientation": "horizontal",
                                                 "height": "wrap_content",
                                                 "width": "match_parent",
@@ -928,6 +930,16 @@
                                                 ]
                                             }
                                         ]
+                                    },
+                                    {
+                                        "Value": "Перейти к сериям >>",
+                                        "Variable": "btn_to_series",
+                                        "height": "wrap_content",
+                                        "width": "match_parent",
+                                        "weight": 0,
+                                        "TextBold": false,
+                                        "TextItalic": false,
+                                        "type": "Button"
                                     }
                                 ]
                             },

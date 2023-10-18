@@ -166,7 +166,7 @@ class Screen(ABC):
         if float(qtty) % 1 == 0:
             return int(float(qtty))
         else:
-            return qtty
+            return round(qtty, 3)
 
     @staticmethod
     def _format_date(date_str: str):
@@ -2792,15 +2792,9 @@ class DocumentsDocDetailScreen(DocDetailsScreen):
                 return
 
             self.hash_map.remove('doc_goods_table')
-
-            if selected_card_data.get('use_series') == '1':
-                self._open_series_screen(selected_card_data['key'])
-                return
-            else:
-                self.hash_map.put('was_clicked', '1')
-                self._open_goods_select_screen(
-                    int(self.hash_map['selected_card_key'])
-                )
+            self._open_goods_select_screen(
+                int(self.hash_map['selected_card_key'])
+            )
 
         elif listener == 'barcode' or self._is_result_positive('modal_dialog_input_barcode'):
             self.articles_ocr_ncl.delete('finded_articles')
@@ -3169,6 +3163,8 @@ class BaseGoodSelect(Screen):
         self.current_toast_message = ''
         self.hash_map_keys = ['item_name', 'article', 'property', 'price', 'unit', 'qtty_plan', 'qtty']
         self.screen_data = {}
+        self.delta = 0.0
+        self.new_qty = 0.0
 
     def init_screen(self):
         self._set_visibility()
@@ -3176,7 +3172,6 @@ class BaseGoodSelect(Screen):
 
     def on_start(self):
         pass
-
 
     def on_input(self):
         listeners = {
@@ -3186,6 +3181,7 @@ class BaseGoodSelect(Screen):
             'btn_series_show': self._open_series_screen,
             'btn_input_qtty': self._show_dialog_qtty,
             'btn_marks_show': self._open_marks_screen,
+            'btn_to_series': self._open_series_screen,
         }
         if self.listener in listeners:
             listeners[self.listener]()
@@ -3200,31 +3196,29 @@ class BaseGoodSelect(Screen):
         if int(self.screen_data.get('use_series', 0)):
             self._open_series_screen()
         else:
-            set_value = int(self.listener[4:])
+            set_value = float(self.listener[4:])
             self._set_delta(set_value)
 
     def _handle_btn_ok(self):
-        new_qtty = float(self.hash_map['new_qtty'] or 0)
-        qtty_plan = float(self.hash_map.get('qtty_plan') or 0)
-        qtty = float(self.screen_data.get('d_qtty') or 0)
+        qtty_plan = float(self.screen_data.get('qtty_plan') or 0)
+        qtty = float(self.screen_data.get('qtty') or 0)
 
-        if new_qtty < 0:
+        if self.new_qty < 0:
             self.hash_map.toast('Итоговое количество меньше 0')
             self.hash_map.playsound('error')
             self._set_delta(reset=True)
             return
 
         control = self.hash_map.get_bool('control')
-        if control and (max(new_qtty, qtty) > qtty_plan):
+        if control and (max(self.new_qty, qtty) > qtty_plan):
             self.toast('Количество план в документе превышено')
             self.hash_map.playsound('error')
             self._set_delta(reset=True)
             return
 
-        qtty = new_qtty
+        qtty = self.new_qty
         self._handle_choice(qtty)
         self._set_delta(reset=True)
-        self.hash_map.put('new_qtty', '')
 
     def _handle_choice(self, qtty):
         update_data = {
@@ -3239,9 +3233,7 @@ class BaseGoodSelect(Screen):
         self._listener_not_implemented()
 
     def _save_new_delta(self):
-        new_qtty = self._get_float_value(self.hash_map.get('new_qtty'))
-
-        if new_qtty < 0:
+        if self.new_qty < 0:
             self.hash_map.toast('Итоговое количество меньше 0')
             self.hash_map.playsound('error')
             self._set_delta(reset=True)
@@ -3249,13 +3241,13 @@ class BaseGoodSelect(Screen):
 
         control = self.hash_map.get_bool('control')
         if control:
-            if new_qtty > self._get_float_value(self.hash_map.get('qtty_plan')):
+            if self.new_qty > self.screen_data.get('qtty_plan'):
                 self.toast('Количество план в документе превышено')
                 self.hash_map.playsound('error')
                 self._set_delta(reset=True)
                 return
 
-        qtty = new_qtty
+        qtty = self.new_qty
         old_qtty = float(self.screen_data.get('qtty') or 0)
         if self.hash_map.get('parent_screen') == 'ВыборТовараАртикул':
             self._listener_not_implemented()
@@ -3280,23 +3272,22 @@ class BaseGoodSelect(Screen):
             self.hash_map.put('new_qtty', str(round(qtty, 3)))
             self.hash_map.put('qtty', str(qtty))
 
-    def _get_float_value(self, value):
-        if value and re.match("^\d+\.?\d*$", value):
+    def _get_float_value(self, value) -> float:
+        if value and re.match("(^\d*\.?\d*$)", value):
             return float(value)
         else:
             return 0.0
 
-    def _set_delta(self, value: int = 0, reset: bool = False):
-        """Создаем (обнуляем) поле ввода"""
+    def _set_delta(self, value: float = 0.0, reset: bool = False):
         if reset:
-            delta = ''
+            self.delta = 0
+            self.new_qty = self.screen_data['qtty']
             self.hash_map.put('new_qtty', self.hash_map.get('qtty'))
         else:
-            delta = float(self.hash_map.get('delta') or 0) + value if self.hash_map.get('delta') else value
-            delta = self._format_quantity(delta)
-            self._set_result_qtty(delta)
+            self.delta = value
+            self.new_qty += self.delta
+            self.hash_map['new_qtty'] = self._format_quantity(self.new_qty)
 
-        self.hash_map.put('delta', delta)
 
     def _set_result_qtty(self, delta):
         new_qtty = float(self.hash_map.get('qtty') or 0) + delta
@@ -3364,9 +3355,6 @@ class BaseGoodSelect(Screen):
         return self.service.get_marks_data(self.id_doc, doc_row_id)
 
     def _update_doc_table_row(self, data: Dict, row_id):
-        if not self.hash_map.get('delta'):
-            return
-
         update_data = {
             'sent': 0,
             'd_qtty': float(data['qtty']),
@@ -3376,28 +3364,13 @@ class BaseGoodSelect(Screen):
         self.service.update_doc_table_row(data=update_data, row_id=row_id)
         self.service.set_doc_status_to_upload(self.hash_map.get('id_doc'))
 
-        insert_to_queue = {
-            "id_doc": self.id_doc,
-            "id_good": self.hash_map.get("id_good"),
-            "id_properties": self.hash_map.get("id_property"),
-            "id_series": self.hash_map.get("id_series"),
-            "id_unit": self.hash_map.get("id_unit"),
-            "id_cell": "",
-            "d_qtty": float(self.hash_map.get('delta')),
-            "sent": False,
-            "price": self.hash_map.get("price"),
-            "id_price": ""
-        }
-
-        barcode_worker = BarcodeWorker(self.hash_map.get("id_doc"))
-        barcode_worker.queue_update_data = insert_to_queue
-        barcode_worker.update_document_barcode_data()
-
     def _show_dialog_qtty(self):
         if self.hash_map.get('use_series') == "1":
             self._open_series_screen()
             return
 
+        self.hash_map['delta'] = 0.0
+        self.hash_map['FocusField'] = 'delta'
         layout = '''{
             "type": "LinearLayout",
             "Variable": "",
@@ -3413,14 +3386,21 @@ class BaseGoodSelect(Screen):
                     "width": "match_parent",
                     "weight": "0",
                     "type": "EditTextNumeric"
+                    
                 }
             ]
         }'''
-        self.hash_map.show_dialog('modal_dialog_input_qtty', title="Ввод количества товара", dialog_layout=layout)
+        self.hash_map.show_dialog(
+            'modal_dialog_input_qtty',
+            title=f"Ввести итоговое количество:",
+            dialog_layout=layout
+        )
 
     def _set_qty_result(self):
         if self._validate_delta_input():
-            self._set_delta(0)
+            self.new_qty = self._get_float_value(self.hash_map['delta'])
+            self.hash_map['new_qtty'] = self.hash_map['delta']
+            # self._set_delta())
 
     def _validate_delta_input(self):
         try:
@@ -3432,10 +3412,11 @@ class BaseGoodSelect(Screen):
             self._set_delta(reset=True)
 
     def _set_visibility(self):
-        allow_fact_input = self.rs_settings.get('allow_fact_input') or False
+        allow_fact_input = self.allow_fact_input and not int(self.screen_data['use_series'])
         self.hash_map.put("Show_fact_qtty_input", '1' if allow_fact_input else '-1')
         self.hash_map.put("Show_fact_qtty_note", '-1' if allow_fact_input else '1')
 
+        self.hash_map['Show_btn_to_series'] = int(self.screen_data['use_series'])
 
 class GoodsSelectScreen(BaseGoodSelect):
     screen_name = 'Товар выбор'
@@ -3493,11 +3474,13 @@ class GoodsSelectScreen(BaseGoodSelect):
             new_index = self.current_index+1 if (self.current_index+1 < len(self.table_index_data)) else 0
             self.current_index = new_index
         elif action == 'previous':
-            self.current_index -= 1
+            new_index = len(self.table_index_data)-1 if (self.current_index-1 < 0) else self.current_index-1
+            self.current_index = new_index
         elif action == 'index' and not index is None:
             self.current_index = index
 
         self._update_hash_map_keys()
+        self._set_visibility()
         self._set_delta(reset=True)
 
     def _process_the_barcode(self):
@@ -3509,7 +3492,12 @@ class GoodsSelectScreen(BaseGoodSelect):
         res = self.service.get_doc_row_by_barcode(barcode)
         if res:
             index = self.table_index_data.index(res['id'])
-            self._goods_selector(action='index', index=index)
+            if self.current_index != index:
+                self._goods_selector(action='index', index=index)
+
+            if not int(self.screen_data['use_series']):
+                self._set_delta(1)
+            self._set_visibility()
         else:
             self.hash_map.playsound('error')
             self.hash_map.toast(self.current_toast_message or f'Штрихкод не найден в документе!')
@@ -5014,7 +5002,7 @@ class SeriesSelectScreen(Screen):
             self.hash_map.put('doc_title', title)
 
         self.hash_map.put_data(self.screen_data)
-        self._refresh_total_qtty()
+        # self._refresh_total_qtty() избыточное сохранение флага use_series
 
     def on_start(self):
         self.hash_map.set_title(self.screen_values['title'])

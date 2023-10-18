@@ -292,7 +292,6 @@ class DocService:
         self.is_group_scan = is_group_scan
         self.is_barc_flow = is_barc_flow
         self.provider = SqlQueryProvider(self.docs_table_name, sql_class=sqlClass())
-        self.d_qty_field = 'd_qtty'
 
     def get_last_edited_goods(self, to_json=False):
         query_docs = f'SELECT * FROM {self.docs_table_name} WHERE id_doc = ? and verified = 1'
@@ -1082,8 +1081,9 @@ class DocService:
                 t.id_unit as unit_id,
                 t.qtty_plan,
                 t.qtty,
-                t.{self.d_qty_field} AS d_qtty,
+                t.d_qtty AS d_qtty,
                 t.use_series,
+                t.price,
                 IFNULL(g.name, '') AS item_name,
                 IFNULL(g.art, '') AS article,
                 IFNULL(p.name, '') AS property,
@@ -1558,8 +1558,6 @@ class AdrDocService(DocService):
         self.table_type = table_type
         self.provider = SqlQueryProvider(self.docs_table_name, sql_class=sqlClass())
         self.is_group_scan = False
-        self.is_barc_flow = False
-        self.d_qty_field = 'qtty'
 
     def get_doc_details_data(
             self,
@@ -1767,6 +1765,39 @@ class AdrDocService(DocService):
         result = self._get_query_result(query_text, return_dict=True)
         return result
 
+    def get_doc_row_data(self, row_id):
+
+        q = f'''
+            SELECT 
+                t.id_doc AS id_doc,
+                t.id_good AS item_id,
+                t.id_properties as property_id,
+                t.id_unit as unit_id,
+                t.qtty_plan,
+                t.qtty,
+                t.qtty AS d_qtty,
+                t.use_series,
+                IFNULL(g.name, '') AS item_name,
+                IFNULL(g.art, '') AS article,
+                IFNULL(p.name, '') AS property,
+                IFNULL(u.name, '') AS unit
+
+            FROM {self.details_table_name} AS t
+
+            LEFT JOIN RS_goods  AS g
+            ON t.id_good= g.id
+
+            LEFT JOIN RS_properties  AS p
+            ON t.id_properties = p.id
+
+            LEFT JOIN RS_units  AS u
+            ON t.id_unit = u.id
+
+            WHERE t.id = "{row_id}"
+        '''
+        res = self._get_query_result(q, return_dict=True)
+
+        return res[0] if res else {}
 
 class FlowDocService(DocService):
 
