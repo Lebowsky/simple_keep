@@ -877,8 +877,8 @@ class DocService:
         res = get_query_result(query_text)
         return res
 
-    def write_error_on_log(self, **kwargs):
-        self.logger_service.write_to_log(**kwargs)
+    def write_error_on_log(self, error_text, **kwargs):
+        self.logger_service.write_to_log(error_text, **kwargs)
 
     def get_docs_and_goods_for_upload(self):
 

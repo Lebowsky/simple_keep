@@ -11,7 +11,8 @@ import shutil
 import db_services
 import hs_services
 from printing_factory import HTMLDocument, PrintService, bt
-from ui_utils import HashMap, BarcodeWorker, get_ip_address
+from ui_utils import HashMap, get_ip_address
+from barcode_workers import BarcodeWorker
 from db_services import DocService, GoodsService, BarcodeService, TimerService
 from tiny_db_services import ScanningQueueService, ExchangeQueueBuffer, LoggerService, DateFormat
 from hs_services import HsService
@@ -1527,17 +1528,13 @@ class DocsListScreen(Screen):
             try:
                 answer = http_service.send_data(doc_data)
             except Exception as e:
-                self.service.write_error_on_log(
-                    error_type="HS_service",
-                    error_text=e,
-                    error_info= 'Ошибка выгрузки документа')
+                http_service.write_error_to_log(error_text=e,
+                                                error_info='Ошибка выгрузки документа')
                 return
 
             if answer.error:
-                self.service.write_error_on_log(
-                    error_type="HS_service",
-                    error_text=answer.error_text,
-                    error_info='Ошибка выгрузки документа')
+                http_service.write_error_to_log(error_text=answer.error_text,
+                                                error_info='Ошибка выгрузки документа')
             else:
                 self.service.doc_id = id_doc
                 self.service.set_doc_values(verified=1, sent=1)
@@ -2394,7 +2391,7 @@ class GroupScanDocDetailsScreen(DocDetailsScreen):
                 self.service.update_data_from_json(docs_data)
             except Exception as e:
                 self.service.write_error_on_log(
-                    error_type="update_document_data",
+                    error_type="GroupScan",
                     error_text=e,
                     error_info='Ошибка записи документа')
 
@@ -2409,11 +2406,8 @@ class GroupScanDocDetailsScreen(DocDetailsScreen):
                 self.hash_map.notification(answer.error_text, title='Ошибка обмена')
                 self.hash_map.toast(answer.error_text)
             elif answer.error:
-                self.service.write_error_on_log(
-                    error_type="HS_service",
-                    error_text=answer.error_text,
-                    error_info='Ошибка загрузки документа'
-                    )
+                self.hs_service.write_error_to_log(error_text=answer.error_text,
+                                                   error_info='Ошибка загрузки документа')
             else:
                 return answer.data
         except:
@@ -2425,12 +2419,8 @@ class GroupScanDocDetailsScreen(DocDetailsScreen):
             try:
                 answer = self._post_goods_to_server()
             except Exception as e:
-                self.service.write_error_on_log(
-                    error_type="HS_service",
-                    error_text=e.args[0],
-                    error_info='Ошибка отправки данных документа'
-                    )
-
+                self.hs_service.write_error_to_log(error_text=e.args[0],
+                                                   error_info='Ошибка отправки данных документа')
             if answer and answer.get('Error') is not None:
                 self.hash_map.error_log(answer.get('Error'))
 
@@ -2447,20 +2437,14 @@ class GroupScanDocDetailsScreen(DocDetailsScreen):
             hs_service.send_documents(res)
             answer = hs_service.http_answer
             if answer.error:
-                self.service.write_error_on_log(
-                    error_type="HS_service",
-                    error_text=answer.error_text,
-                    error_info='Ошибка отправки данных документа'
-                    )
+                self.hs_service.write_error_to_log(error_text=answer.error_text,
+                                                   error_info='Ошибка отправки данных документа')
             else:
                 try:
                     self.service.update_sent_data(res)
                 except Exception as e:
-                    self.service.write_error_on_log(
-                        error_type="HS_service",
-                        error_text=e.args[0],
-                        error_info='Ошибка отправки данных документа'
-                        )
+                    self.hs_service.write_error_to_log(error_text=e.args[0],
+                                                       error_info='Ошибка отправки данных документа')
 
         # пока что отключил дополнительный get-запрос, проверяем производительность
 
@@ -2566,12 +2550,10 @@ class GroupScanDocDetailsScreenNew(DocDetailsScreen):
             http_result = self.hs_service.send_all_document_lines(self.id_doc, validated_send_data, timeout=8)
 
         if http_result.status_code != 200:
-            self.db_service.write_error_on_log(
-                error_type="HS_service",
-                error_text="",
-                error_info='Ошибка соединения при отправке'
-                           "данных группового сканирования товара"
-            )
+            self.hs_service.write_error_to_log(
+                error_text="response status code != 200",
+                error_info='Ошибка соединения при отправке данных группового '
+                    'сканирования товара')
             return
         if not http_result.data.get('data'):
             return
@@ -6165,10 +6147,10 @@ class ErrorLogScreen(Screen):
         super().__init__(hash_map, rs_settings)
         self.service = LoggerService()
         self.screen_values = {}
+        self.desc_sort = True
 
     def on_start(self) -> None:
-        date_sort = self.hash_map['selected_date_sort']
-        errors_table_data = self.service.get_all_errors(date_sort)
+        errors_table_data = self.service.get_all_errors(self.desc_sort)
         table_raws = self._get_errors_table_rows(errors_table_data)
         table_view = self._get_errors_table_view(table_raws)
         self.hash_map.put("error_log_table", table_view.to_json())
@@ -6183,7 +6165,7 @@ class ErrorLogScreen(Screen):
             self.hash_map.put("ShowScreen", "Настройки и обмен")
 
         elif self.listener == "date_sort_click":
-            self.hash_map['selected_date_sort'] = self.hash_map["date_sort_click"]
+            self.desc_sort = not self.desc_sort
 
     def on_post_start(self):
         pass
@@ -6645,11 +6627,8 @@ class Timer:
                 self._put_notification(text=notify_text, title="Загружены документы:")
 
         except Exception as e:
-            self.db_service.write_error_on_log(
-                error_type="HS_service",
-                error_text=e.args[0],
-                error_info='Ошибка загрузки документов'
-                )
+            self.hs_service.write_error_to_log(error_text=e.args[0],
+                                               error_info='Ошибка загрузки документов')
 
     def upload_data(self):
         if not self._check_http_settings():
@@ -6664,19 +6643,13 @@ class Timer:
         try:
             answer = self.http_service.send_data(data)
         except Exception as e:
-            self.db_service.write_error_on_log(
-                error_type="HS_service",
-                error_text=e,
-                error_info='Ошибка выгрузки документов'
-                )
+            self.hs_service.write_error_to_log(error_text=e,
+                                               error_info='Ошибка выгрузки документов')
             return
 
         if answer.error:
-            self.db_service.write_error_on_log(
-                error_type="HS_service",
-                error_text=answer.error_text,
-                error_info='Ошибка выгрузки документов'
-                )
+            self.hs_service.write_error_to_log(error_text=answer.error_text,
+                                               error_info='Ошибка выгрузки документов')
         else:
             docs_list_string = ', '.join([f"'{d['id_doc']}'" for d in data])
             self.db_service.update_uploaded_docs_status(docs_list_string)

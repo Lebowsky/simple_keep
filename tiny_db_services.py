@@ -4,6 +4,7 @@ import os
 from typing import List, Union, Dict, Any, Optional, Tuple
 from functools import reduce
 from tinydb import TinyDB, Query, where
+from ui_utils import DateFormat
 
 from java import jclass
 
@@ -218,44 +219,24 @@ class NoSQLProvider:
         return [(key, self.nosql.get(key)) for key in self.keys()]
 
 
-
-
 class LoggerService:
     def __init__(self, provider=None):
         self.table_name = "ErrorLog"
         self.provider = provider or TinyNoSQLProvider(table_name=self.table_name,
                                                       base_name='SimpleLogger')
 
-    def write_to_log(self, **kwargs):
+    def write_to_log(self, error_text, **kwargs):
 
         data = {"timestamp": DateFormat.get_now_nosql_format(),
                 "error_type": kwargs.get('error_type') or '',
-                "error_text": kwargs.get('error_text') or '',
+                "error_text": error_text,
                 "error_info": kwargs.get('error_info') or ''}
 
         self.provider.insert(data)
 
-    def get_all_errors(self, date_sort=None):
-        desc = True if not date_sort or date_sort == "Новые" else False
-        all_errors = sorted(self.provider.get_all(), key=lambda k: k['timestamp'], reverse=desc)
+    def get_all_errors(self, desc_sort):
+        all_errors = sorted(self.provider.get_all(), key=lambda k: k['timestamp'], reverse=desc_sort)
         return all_errors
 
     def clear(self):
-        ids_list = [x.doc_id for x in self.get_all_errors()]
-        if ids_list:
-            self.provider.remove(ids_list)
-
-
-class DateFormat:
-
-    @staticmethod
-    def get_now_nosql_format() -> str:
-        utc_date = datetime.datetime.utcnow()
-        return utc_date.strftime("%Y-%m-%d %H:%M:%S")
-
-    @staticmethod
-    def get_table_view_format(date: str, user_tmz_offset=None) -> str:
-        user_tmz_offset = user_tmz_offset or rs_settings.get('user_tmz_offset')
-        timezone_offset = datetime.timedelta(hours=int(user_tmz_offset))
-        dt_date = datetime.datetime.strptime(date, "%Y-%m-%d %H:%M:%S")
-        return str(dt_date + timezone_offset)
+        self.provider.db.table(self.provider.table_name).truncate()

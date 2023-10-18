@@ -3,9 +3,9 @@ import json
 import time
 import unittest
 from tinydb import TinyDB
-from tiny_db_services import TinyNoSQLProvider, ScanningQueueService, LoggerService, DateFormat
+from tiny_db_services import TinyNoSQLProvider, ScanningQueueService, LoggerService
 from tests.data_for_tests.nosql.initial_data import initial_data
-from main import noClass, rs_settings
+from ui_utils import DateFormat
 
 
 class TestTinyNoSQLProvider(unittest.TestCase):
@@ -216,41 +216,35 @@ class TestScanningQueueService(unittest.TestCase):
 class TestLoggerService(unittest.TestCase):
     def setUp(self) -> None:
         self.provider = TinyNoSQLProvider(table_name='test_logger_table', base_name='TestLogger', db_path='./')
-        # self.provider.drop_table('test_logger_table')
+        self.provider.drop_table('test_logger_table')
 
     def tearDown(self) -> None:
         self.provider.close()
 
     def test_write_to_log(self):
         sut = LoggerService(provider=self.provider)
-        sut.write_to_log(
-            error_type="SQL",
-            error_text="Exception text",
-            error_info="Комментарий к ошибке"
-        )
-        time.sleep(1)
-        sut.write_to_log(
-            error_type="SQL",
-            error_text="Exception text",
-            error_info="Second error"
-        )
-        self.assertEqual(sut.provider.count(error_info="Second error"), 1)
+        sut.write_to_log(error_text="", error_type="SQL",
+                         error_info="Комментарий к ошибке")
+        self.assertEqual(sut.provider.count(error_type="SQL"), 1)
 
-    def test_get_all_errors(self, called=False):
+    def test_get_all_errors(self):
         sut = LoggerService(provider=self.provider)
-        result = sut.get_all_errors()
-        if not called:
-            self.assertGreater(len(result), 0)
+        sut.write_to_log(error_text="", error_type="SQL",
+                         error_info="Комментарий к ошибке")
+        result = sut.get_all_errors(desc_sort=True)
 
-        return result
+        self.assertEqual(len(result), 1)
 
     def test_clear(self):
         sut = LoggerService(provider=self.provider)
+        sut.write_to_log(error_text="", error_type="SQL",
+                         error_info="Комментарий к ошибке")
         sut.clear()
+        expect = 0
 
-        result = self.test_get_all_errors(called=True)
+        result = sut.get_all_errors(desc_sort=True)
 
-        self.assertEqual(len(result), 0)
+        self.assertEqual(expect, len(result))
 
 
 class TestDateFormat(unittest.TestCase):
