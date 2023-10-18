@@ -5160,7 +5160,7 @@ class SeriesSelectScreen(Screen):
             self._print_ticket()
         elif listener == 'btn_series_add_barcode':
             self._btn_add_barcode()
-            
+
         self.hash_map.no_refresh()
 
     def show(self, args=None):
@@ -5346,7 +5346,6 @@ class SeriesSelectScreen(Screen):
     def _print_ticket(self):
         # Получим первый баркод документа
         barcode = db_services.BarcodeService().get_barcode_from_doc_table(self.screen_values['doc_row_id'])
-        self.toast(barcode)
         data = {'Дата_док': 'Doc_data', 'Номенклатура': 'Good',
                 'Артикул': 'good_art', 'Серийный номер': 'good_sn',
                 'Характеристика': 'good_property', 'Цена': 'good_price',
@@ -5483,17 +5482,17 @@ class SeriesItem(Screen):
         return params
 
     def _check_series_number(self) -> dict:
-        number = self.hash_map.get('number')
+        series_number = self.hash_map.get('number')
         self.service.params = self._get_params()
-        if number:
-            values = self.service.get_series_by_barcode(number, {})
+        if series_number:
+            values = self.service.get_series_by_barcode(series_number, {})
             if values:
                 return {'id': values[0]['id'], 'id_series': values[0]['id_series']}
         return None
 
     def _add_new_series(self, params: dict):
-        number = params.get('number')
-        self.service.add_new_series_in_doc_series_table(number)               
+        series_number = params.get('number')
+        self.service.add_new_series_in_doc_series_table(series_number)               
 
 # ^^^^^^^^^^^^^^^^^^^^^ Series ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -6819,10 +6818,7 @@ class MainEvents:
     def app_on_start(self):
 
         # self.hash_map.put('StackAddMode', '')  # Включает режим объединения переменных hash_map в таймерах
-        self.hash_map.put("StartTimersBS",'')
-        timer_handlers = [{"action": "run","type": "python","method": "timer_update", "postExecute": ""}]
-        self.hash_map.put("StartTimerBS",json.dumps({"handler":timer_handlers,"period":15000}))
-        
+                
         # TODO Обработчики обновления!
         release = self.rs_settings.get('Release') or ''
         toast = 'Готов к работе'
