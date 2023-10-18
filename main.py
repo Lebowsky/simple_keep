@@ -377,6 +377,21 @@ def show_items_screen_on_input(hash_map: HashMap):
     screen = create_screen(hash_map, ui_models.ShowItemsScreen)
     screen.on_input()
 
+@HashMap()
+def show_marks_screen_on_start(hash_map: HashMap):
+    screen = create_screen(hash_map, ui_models.ShowMarksScreen)
+    screen.on_start()
+
+def show_marks_screen_on_input(hash_map: HashMap):
+    screen = create_screen(hash_map, ui_models.ShowMarksScreen)
+    screen.on_input()
+
+@HashMap()
+def btn_show_marks_on_input(hash_map: HashMap):
+    screen = create_screen(hash_map, ui_models.TestScreen)
+    screen.on_input()
+
+
 
 # =============== Goods =================
 
