@@ -1716,6 +1716,7 @@ class GroupScanDocsListScreen(DocsListScreen):
 
     def on_start(self):
         super().on_start()
+        self.hash_map.stop_timers(bs_hash_map=True)
 
     def on_input(self):
         super().on_input()
@@ -1761,6 +1762,10 @@ class GroupScanDocsListScreen(DocsListScreen):
                 self.hash_map.error_log(res.get('error'))
     def can_launch_timer(self):
         return False
+
+    def _back_screen(self):
+        MainEvents.start_timer(self.hash_map)
+        super()._back_screen()
 
 
 class DocumentsDocsListScreen(DocsListScreen):
@@ -5121,7 +5126,7 @@ class SeriesSelectScreen(Screen):
         list_data = [self._add_text_in_values(item) for item in list_data]
         doc_cards = self._get_doc_cards_view(list_data)
         # Добавим надпись если нет серий в списке
-        self.hash_map.put('empty_series', ("","Отсканируйте серии")[len(list_data)==0]) 
+        self.hash_map.put('empty_series', ("","Отсканируйте серии")[len(list_data)==0])
         self.hash_map['series_cards'] = doc_cards.to_json()
 
     def _handle_num_keys(self, values: dict) -> dict:
@@ -5318,8 +5323,8 @@ class SeriesItem(Screen):
         elif self._is_result_positive('confirm_update_series'):
             params = self._get_params()
             params.update(self._check_series_number())
-            self.service.save_table_str(params) 
-            self._back_screen()   
+            self.service.save_table_str(params)
+            self._back_screen()
 
         self.hash_map.refresh_screen()
 
@@ -5347,7 +5352,7 @@ class SeriesItem(Screen):
             return qtty
 
     def _btn_save_handler(self):
-        if self.screen_data.get('id'): 
+        if self.screen_data.get('id'):
             self._save_data()
             self._back_screen()
         else:
@@ -5375,11 +5380,11 @@ class SeriesItem(Screen):
 
         if self.screen_data:
             params = {
-                'id': int(self.screen_data.get('id', 0)), 
-                'id_series': self.hash_map['id_series'], 
+                'id': int(self.screen_data.get('id', 0)),
+                'id_series': self.hash_map['id_series'],
                 **common_params
             }
-            params['cell'] = common_params['id_cell']  
+            params['cell'] = common_params['id_cell']
         else:
             params = {
                 'barcode': self.hash_map.get('number'),
@@ -5399,7 +5404,7 @@ class SeriesItem(Screen):
 
     def _add_new_series(self, params: dict):
         series_number = params.get('number')
-        self.service.add_new_series_in_doc_series_table(series_number)               
+        self.service.add_new_series_in_doc_series_table(series_number)
 
 # ^^^^^^^^^^^^^^^^^^^^^ Series ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -5606,11 +5611,11 @@ class ShowItemsScreen(Screen):
 
 class ShowMarksScreen(ShowItemsScreen):
     process_name = 'SelectItemProcess'
-    screen_name = 'ShowMarksScreen' 
+    screen_name = 'ShowMarksScreen'
 
     def __init__(self, hash_map: HashMap, table_name, **kwargs):
         super().__init__(hash_map, table_name, **kwargs)
-    
+
     def on_start(self):
         super().on_start()
 
@@ -5688,7 +5693,7 @@ class ShowMarksScreen(ShowItemsScreen):
             height='match_parent',
             weight=1,
             StrokeWidth=1,
-        )   
+        )
 
     def _get_column_view(self, value, text_size=20, weight=1, text_bold=False):
         return widgets.LinearLayout(
@@ -5703,8 +5708,8 @@ class ShowMarksScreen(ShowItemsScreen):
             height='match_parent',
             weight=weight,
             StrokeWidth=1,
-        )    
-    
+        )
+
 # ^^^^^^^^^^^^^^^^^^^^^ SelectItemScreen ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 
@@ -6674,8 +6679,8 @@ class Timer:
             'url': self.rs_settings.get("URL"),
             'user': self.rs_settings.get('USER'),
             'pass': self.rs_settings.get('PASS'),
-            'device_model': self.hash_map['DEVICE_MODEL'],
-            'android_id': self.hash_map['ANDROID_ID'],
+            'device_model': self.rs_settings.get('device_model'),
+            'android_id': self.rs_settings.get('android_id'),
             'user_name': self.rs_settings.get('user_name')}
         return http_settings
 
@@ -6838,9 +6843,8 @@ class MainEvents:
         self.rs_settings = _rs_settings
 
     def app_on_start(self):
+        MainEvents.start_timer(self.hash_map)
 
-        # self.hash_map.put('StackAddMode', '')  # Включает режим объединения переменных hash_map в таймерах
-                
         # TODO Обработчики обновления!
         release = self.rs_settings.get('Release') or ''
         toast = 'Готов к работе'
@@ -6906,6 +6910,9 @@ class MainEvents:
             if self.rs_settings.get(k) is None:
                 self.rs_settings.put(k, v, True)
 
+        self.rs_settings.put('device_model', self.hash_map['DEVICE_MODEL'], True)
+        self.rs_settings.put('android_id', self.hash_map['ANDROID_ID'], True)
+
         self._create_tables()
 
         self.hash_map["SQLConnectDatabase"] = "SimpleKeep"
@@ -6929,6 +6936,10 @@ class MainEvents:
         days = int(self.rs_settings.get('doc_delete_settings_days'))
         service = db_services.DocService()
         return service.delete_old_docs(days)
+
+    @staticmethod
+    def start_timer(hash_map: HashMap):
+        hash_map.start_timers('timer_update', period=15000, bs_hash_map=True)
 
 
 # ^^^^^^^^^^^^^^^^^^^^^ Main events ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
