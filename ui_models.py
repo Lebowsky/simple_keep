@@ -5699,7 +5699,7 @@ class ShowItemsScreen(Screen):
 
 class ShowMarksScreen(ShowItemsScreen):
     process_name = 'SelectItemProcess'
-    screen_name = 'ShowMarksScreen' # Есть баг, не работает кнопка назад
+    screen_name = 'ShowMarksScreen' 
 
     def __init__(self, hash_map: HashMap, table_name, **kwargs):
         super().__init__(hash_map, table_name, **kwargs)
@@ -5763,7 +5763,7 @@ class ShowMarksScreen(ShowItemsScreen):
                 *[self._get_column_view(value=field, text_size=text_size, weight=weight, text_bold=text_bold) for field in self.fields],
                 width='match_parent',
                 orientation='horizontal',
-                weight=8
+                weight=7
             )
         )
 
@@ -5779,7 +5779,7 @@ class ShowMarksScreen(ShowItemsScreen):
             ),
             width='match_parent',
             height='match_parent',
-            weight=weight,
+            weight=1,
             StrokeWidth=1,
         )   
 
@@ -5797,50 +5797,6 @@ class ShowMarksScreen(ShowItemsScreen):
             weight=weight,
             StrokeWidth=1,
         )    
-
-class TestScreen(Screen):
-    process_name = 'TestProcess'
-    screen_name = 'TestScreen'
-
-    def __init__(self, hash_map: HashMap, rs_settings):
-        super().__init__(hash_map, rs_settings)
-    
-    def on_start(self):
-        pass
-
-    def on_input(self):
-        listener = self.listener
-        if listener == 'btn_show_marks':
-            table_data = [
-                {
-                    "mark_code": "sdfskjdfhskjdfhksjdfhsdjfh",
-                    "approved": "1"
-                 },
-                {
-                    "mark_code": "sdfskjdfhskjdfhksjdfhsdjfh",
-                    "approved": "0"
-                },
-                {
-                    "mark_code": "sdfskjdfhskjdfhksjdfhsdjfh",
-                    "approved": "1"
-                },
-                {
-                    "mark_code": "sdfskjdfhskjdfhksjdfhsdjfh",
-                    "approved": "1"
-                },
-                {
-                    "mark_code": "sdfskjdfhskjdfhksjdfhsdjfh",
-                    "approved": "0"
-                },
-            ]
-
-            screen_args = {
-                'title': 'Марки товара',
-                'table_data': json.dumps(table_data),
-                'table_header': json.dumps({'mark_code': 'Марка'}),
-                'enumerate': True
-            }
-            ShowMarksScreen(self.hash_map, self.rs_settings).show_process_result(screen_args)
     
 # ^^^^^^^^^^^^^^^^^^^^^ SelectItemScreen ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
