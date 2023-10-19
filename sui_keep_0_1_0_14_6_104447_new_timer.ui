@@ -384,7 +384,7 @@
                                 "weight": "0",
                                 "Elements": [
                                     {
-                                        "Value": "@Doc_data",
+                                        "Value": "@doc_title",
                                         "Variable": "",
                                         "height": "wrap_content",
                                         "width": "match_parent",
@@ -429,7 +429,7 @@
                                                                 "type": "TextView"
                                                             },
                                                             {
-                                                                "Value": "@good_art",
+                                                                "Value": "@article",
                                                                 "Variable": "",
                                                                 "height": "wrap_content",
                                                                 "width": "wrap_content",
@@ -448,7 +448,7 @@
                                                         "weight": "6",
                                                         "Elements": [
                                                             {
-                                                                "Value": "@good_str",
+                                                                "Value": "@item_position",
                                                                 "Variable": "",
                                                                 "height": "wrap_content",
                                                                 "width": "wrap_content",
@@ -457,35 +457,6 @@
                                                                 "type": "TextView"
                                                             }
                                                         ]
-                                                    }
-                                                ]
-                                            },
-                                            {
-                                                "type": "LinearLayout",
-                                                "Variable": "",
-                                                "orientation": "horizontal",
-                                                "height": "wrap_content",
-                                                "width": "wrap_content",
-                                                "weight": "0",
-                                                "Elements": [
-                                                    {
-                                                        "Value": "Серия:",
-                                                        "Variable": "",
-                                                        "height": "wrap_content",
-                                                        "width": "wrap_content",
-                                                        "weight": "0",
-                                                        "TextBold": true,
-                                                        "TextColor": "#000000",
-                                                        "type": "TextView"
-                                                    },
-                                                    {
-                                                        "Value": "@good_sn",
-                                                        "Variable": "",
-                                                        "height": "wrap_content",
-                                                        "width": "wrap_content",
-                                                        "weight": "0",
-                                                        "TextColor": "#000000",
-                                                        "type": "TextView"
                                                     }
                                                 ]
                                             },
@@ -508,7 +479,7 @@
                                                         "type": "TextView"
                                                     },
                                                     {
-                                                        "Value": "@good_property",
+                                                        "Value": "@property",
                                                         "Variable": "",
                                                         "height": "wrap_content",
                                                         "width": "wrap_content",
@@ -537,7 +508,7 @@
                                                         "type": "TextView"
                                                     },
                                                     {
-                                                        "Value": "@good_price",
+                                                        "Value": "@price",
                                                         "Variable": "",
                                                         "height": "wrap_content",
                                                         "width": "wrap_content",
@@ -566,7 +537,7 @@
                                                         "type": "TextView"
                                                     },
                                                     {
-                                                        "Value": "@good_unit",
+                                                        "Value": "@unit",
                                                         "Variable": "",
                                                         "height": "wrap_content",
                                                         "width": "wrap_content",
@@ -598,7 +569,7 @@
                                                 "type": "Button"
                                             },
                                             {
-                                                "Value": "@Good",
+                                                "Value": "@item_name",
                                                 "Variable": "",
                                                 "height": "wrap_content",
                                                 "width": "match_parent",
@@ -661,7 +632,7 @@
                                             },
                                             {
                                                 "type": "LinearLayout",
-                                                "Variable": "fact_qtty_input",
+                                                "Variable": "",
                                                 "orientation": "vertical",
                                                 "height": "wrap_content",
                                                 "width": "match_parent",
@@ -867,7 +838,7 @@
                                             },
                                             {
                                                 "type": "LinearLayout",
-                                                "Variable": "fact_qtty_input",
+                                                "Variable": "",
                                                 "orientation": "horizontal",
                                                 "height": "wrap_content",
                                                 "width": "match_parent",
@@ -951,12 +922,14 @@
                                         ]
                                     },
                                     {
-                                        "Value": "@barcode_cards",
-                                        "Variable": "barcode_cards",
+                                        "Value": "Перейти к сериям >>",
+                                        "Variable": "btn_to_series",
                                         "height": "wrap_content",
                                         "width": "match_parent",
                                         "weight": "0",
-                                        "type": "CardsLayout"
+                                        "TextBold": false,
+                                        "TextItalic": false,
+                                        "type": "Button"
                                     }
                                 ]
                             },
@@ -1660,7 +1633,7 @@
                             },
                             {
                                 "type": "MenuItem",
-                                "Value": "Отправить все сканы на 1С",
+                                "Value": "Отправить все сканы в 1С",
                                 "Variable": "send_all_scan_lines"
                             }
                         ],
@@ -7219,6 +7192,17 @@
                                         ]
                                     },
                                     {
+                                        "Value": "Добавить",
+                                        "Variable": "btn_add_series",
+                                        "height": "wrap_content",
+                                        "width": "match_parent",
+                                        "weight": "0",
+                                        "TextBold": false,
+                                        "TextItalic": false,
+                                        "TextSize": "18",
+                                        "type": "Button"
+                                    },
+                                    {
                                         "Value": "@series_cards",
                                         "Variable": "series_cards",
                                         "height": "wrap_content",
@@ -7227,6 +7211,17 @@
                                         "TextBold": false,
                                         "TextItalic": false,
                                         "type": "CardsLayout"
+                                    },
+                                    {
+                                        "Value": "@empty_series",
+                                        "Variable": "",
+                                        "height": "wrap_content",
+                                        "width": "match_parent",
+                                        "weight": "0",
+                                        "TextBold": true,
+                                        "TextItalic": false,
+                                        "TextSize": "24",
+                                        "type": "TextView"
                                     }
                                 ]
                             },
@@ -7244,6 +7239,16 @@
                                 "type": "MenuItem",
                                 "Value": "Настройки шаблона",
                                 "Variable": "btn_ocr_serial_template_settings"
+                            },
+                            {
+                                "type": "MenuItem",
+                                "Value": "Печать",
+                                "Variable": "btn_print"
+                            },
+                            {
+                                "type": "MenuItem",
+                                "Value": "Добавить штрихкод",
+                                "Variable": "btn_series_add_barcode"
                             }
                         ],
                         "Handlers": [
@@ -8091,6 +8096,10 @@
             },
             {
                 "PyFileKey": "sm_adr_docs",
+                "PyFileData": ""
+            },
+            {
+                "PyFileKey": "barcode_workers",
                 "PyFileData": ""
             }
         ],
