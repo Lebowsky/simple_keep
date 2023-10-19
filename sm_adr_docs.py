@@ -4,7 +4,8 @@ import db_services
 import widgets
 import ui_models
 from printing_factory import PrintService
-from ui_utils import HashMap, BarcodeAdrWorker
+from ui_utils import HashMap
+from barcode_workers import BarcodeAdrWorker
 
 
 class AdrDocsListScreen(ui_models.DocsListScreen):

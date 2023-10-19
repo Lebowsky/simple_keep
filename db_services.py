@@ -4,7 +4,7 @@ from typing import List, Literal, Optional
 
 from ru.travelfood.simple_ui import SimpleSQLProvider as sqlClass
 from ui_global import get_query_result, bulk_query
-from tiny_db_services import TinyNoSQLProvider, ScanningQueueService
+from tiny_db_services import ScanningQueueService, LoggerService
 
 
 class DbService:
@@ -13,13 +13,15 @@ class DbService:
         self.sql_params = None
         self.debug = False
         self.provider = SqlQueryProvider(sql_class=sqlClass())
+        self.logger_service = LoggerService()
 
     def _write_error_on_log(self, error_text: str):
         if error_text:
-            self.provider.table_name = 'Error_log'
-            self.provider.create({'log': error_text})
-            self.sql_text = self.provider.sql_text
-            self.sql_params = self.provider.sql_params
+            self.logger_service.write_to_log(
+                error_type="SQL",
+                error_text=error_text,
+                error_info="DBService"
+            )
 
     def _sql_exec(self, q, params, table_name=''):
         if table_name:
@@ -274,11 +276,6 @@ class BarcodeService(DbService):
         provider = SqlQueryProvider(table_name='RS_docs_table')
         provider.update(data=table_line)
 
-    def log_error(self, error_msg):
-        error_text = f"""Работа с штрихкодами:
-            {error_msg}"""
-        super()._write_error_on_log(error_text)
-
 
 class DocService:
     def __init__(self, doc_id='', is_group_scan=False, is_barc_flow=False):
@@ -292,6 +289,7 @@ class DocService:
         self.is_group_scan = is_group_scan
         self.is_barc_flow = is_barc_flow
         self.provider = SqlQueryProvider(self.docs_table_name, sql_class=sqlClass())
+        self.logger_service = LoggerService()
 
     def get_last_edited_goods(self, to_json=False):
         query_docs = f'SELECT * FROM {self.docs_table_name} WHERE id_doc = ? and verified = 1'
@@ -879,11 +877,8 @@ class DocService:
         res = get_query_result(query_text)
         return res
 
-    @staticmethod
-    def write_error_on_log(Err_value):
-        if Err_value:
-            qtext = 'Insert into Error_log(log) Values(?)'
-            get_query_result(qtext, (Err_value,))
+    def write_error_on_log(self, error_text, **kwargs):
+        self.logger_service.write_to_log(error_text, **kwargs)
 
     def get_docs_and_goods_for_upload(self):
 
@@ -2026,16 +2021,6 @@ class DbCreator(DbService):
 
         return [table['name'] for table in tables]
 
-
-class ErrorService:
-    @staticmethod
-    def get_all_errors(date_sort):
-        sort = "DESC" if not date_sort or date_sort == "Новые" else "ASC"
-        return get_query_result(f"SELECT * FROM Error_log ORDER BY timestamp {sort}")
-
-    @staticmethod
-    def clear():
-        return get_query_result("DELETE FROM Error_log")
 
 class UniversalCardsService(DbService):
     def __init__(self):
