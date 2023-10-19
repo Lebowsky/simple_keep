@@ -14,7 +14,7 @@ from printing_factory import HTMLDocument, PrintService, bt
 from ui_utils import HashMap, get_ip_address
 from barcode_workers import BarcodeWorker
 from db_services import DocService, GoodsService, BarcodeService, TimerService
-from tiny_db_services import ScanningQueueService, ExchangeQueueBuffer, LoggerService, DateFormat
+from tiny_db_services import ScanningQueueService, ExchangeQueueBuffer, LoggerService, DateFormat, NoSQLProvider
 from hs_services import HsService
 import static_data
 from ru.travelfood.simple_ui import SimpleUtilites as suClass
@@ -6678,6 +6678,7 @@ class WebServiceSyncCommand:
             'barcodes': self._get_barcodes_data,
             'hash_map': self._get_hash_map,
             'hash_map_size': self._get_hash_map_size,
+            'rs_settings': self._get_rs_settings
         }
         if self.listener in listeners:
             listeners[self.listener]()
@@ -6714,6 +6715,16 @@ class WebServiceSyncCommand:
 
         self.hash_map.put('WSResponse', resp_sorted, to_json=True)
 
+    def _get_rs_settings(self):
+
+        provider = NoSQLProvider('rs_settings')
+
+        response = json.dumps({item[0]: item[1] for item in provider.items()})
+
+        headers = [{'key': 'Content-Type', 'value': 'application/json'}]
+        self.hash_map.put('WSResponseHeaders', headers, to_json=True)
+        self.hash_map.put('WSResponse', response)
+
 
 # ^^^^^^^^^^^^^^^^^^^^^ Services ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -6736,7 +6747,7 @@ class MainEvents:
 
         current_release = self.hash_map['_configurationVersion']
 
-        self._create_tables()
+
 
         if current_release is None:
             toast = 'Не удалось определить версию конфигурации'
@@ -6794,6 +6805,8 @@ class MainEvents:
         for k, v in rs_default_settings.items():
             if self.rs_settings.get(k) is None:
                 self.rs_settings.put(k, v, True)
+
+        self._create_tables()
 
         self.hash_map["SQLConnectDatabase"] = "SimpleKeep"
         self.hash_map.toast(toast)
