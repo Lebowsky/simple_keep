@@ -7,7 +7,7 @@ from ui_utils import HashMap
 from main import noClass
 from hs_services import HsService
 from db_services import DocService
-from ui_utils import BarcodeWorker
+from barcode_workers import BarcodeWorker
 
 from data_for_tests.utils_for_tests import hashMap
 
@@ -134,7 +134,6 @@ class TestGroupScanDocDetailsScreen(unittest.TestCase):
         )
 
     def test_method_must_call_write_error_log(self):
-        expect = 'Ошибка загрузки документа:  error'
 
         answer = HsService.HttpAnswer(
             error=True,
@@ -148,12 +147,13 @@ class TestGroupScanDocDetailsScreen(unittest.TestCase):
 
         HsService.get_data = MagicMock()
         self.sut.hs_service.http_answer = answer
-        DocService.write_error_on_log = MagicMock()
+        HsService.write_error_to_log = MagicMock()
 
         res = self.sut._get_update_current_doc_data()
 
         HsService.get_data.assert_called_once()
-        DocService.write_error_on_log.assert_called_once_with(expect)
+        HsService.write_error_to_log.assert_called_once_with(error_text='error',
+                                                             error_info='Ошибка загрузки документа')
         self.assertIsNone(res)
 
     def get_test_data(self, file_name):

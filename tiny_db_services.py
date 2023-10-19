@@ -1,8 +1,10 @@
+import datetime
 import json
 import os
 from typing import List, Union, Dict, Any, Optional, Tuple
 from functools import reduce
 from tinydb import TinyDB, Query, where
+from ui_utils import DateFormat
 
 from java import jclass
 
@@ -217,4 +219,24 @@ class NoSQLProvider:
         return [(key, self.nosql.get(key)) for key in self.keys()]
 
 
+class LoggerService:
+    def __init__(self, provider=None):
+        self.table_name = "ErrorLog"
+        self.provider = provider or TinyNoSQLProvider(table_name=self.table_name,
+                                                      base_name='SimpleLogger')
 
+    def write_to_log(self, error_text, **kwargs):
+
+        data = {"timestamp": DateFormat.get_now_nosql_format(),
+                "error_type": kwargs.get('error_type') or '',
+                "error_text": error_text,
+                "error_info": kwargs.get('error_info') or ''}
+
+        self.provider.insert(data)
+
+    def get_all_errors(self, desc_sort):
+        all_errors = sorted(self.provider.get_all(), key=lambda k: k['timestamp'], reverse=desc_sort)
+        return all_errors
+
+    def clear(self):
+        self.provider.db.table(self.provider.table_name).truncate()

@@ -291,13 +291,13 @@ def docs_offline_on_start(hash_map: HashMap):
 
 @HashMap()
 def elem_viev_on_start(hash_map):
-    screen = ui_models.GoodsSelectScreen(hash_map, rs_settings)
+    screen = create_screen(hash_map, ui_models.GoodsSelectScreen)
     screen.on_start()
 
 
 @HashMap()
 def elem_viev_on_click(hash_map):
-    screen = ui_models.GoodsSelectScreen(hash_map, rs_settings)
+    screen = create_screen(hash_map, ui_models.GoodsSelectScreen)
     screen.on_input()
 
 
