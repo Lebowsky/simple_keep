@@ -5604,7 +5604,107 @@ class ShowItemsScreen(Screen):
     def _back_screen(self):
         self._finish_process()
 
+class ShowMarksScreen(ShowItemsScreen):
+    process_name = 'SelectItemProcess'
+    screen_name = 'ShowMarksScreen' 
 
+    def __init__(self, hash_map: HashMap, table_name, **kwargs):
+        super().__init__(hash_map, table_name, **kwargs)
+    
+    def on_start(self):
+        super().on_start()
+
+    def on_input(self):
+        super().on_input()
+
+    def _prepare_table_data(self):
+        self.fields = list(self.table_header.keys())
+        table_header_layout = {'_layout': self._get_table_header_view()}
+
+        if self.enumerate:
+            table_data = [dict(**{'pos': 'N'}, **{'img': None}, **self.table_header, **table_header_layout)]
+            table_data += [dict(**{'pos': pos}, **{'img': self._get_image_for_row(row)}, **row) for pos, row in enumerate(self.table_data, start=1)]
+            return table_data
+        else:
+            table_data = [dict(**self.table_header, **table_header_layout)] + self.table_data
+        return table_data
+
+    def _get_image_for_row(self, row_data):
+        if row_data.get("approved") == "1":
+            return static_data.mark_green
+        elif row_data.get("approved") == "0":
+            return static_data.mark_pink
+        return None
+
+    def _get_fields_layout(self, is_header=False, background_color='#FFFFFF', weight=1):
+        if is_header:
+            background_color = '#FFFFFF'
+            text_size = self.header_text_size
+            text_bold = True
+        else:
+            text_size = self.text_size
+            text_bold = False
+
+        text_size = self.text_size
+
+        fields_layout = widgets.LinearLayout(
+            orientation='horizontal',
+            width='match_parent',
+            BackgroundColor=background_color,
+        )
+
+        if self.enumerate:
+            pos_layout = self._get_column_view(value='pos', text_size=text_size, weight=weight, text_bold=text_bold)
+            fields_layout.append(pos_layout)
+
+        # Вставляем изображение после колонки 'pos' и перед остальными колонками
+        if not is_header:
+            img = '@img'
+        else:
+            img = None
+        img_layout = self._get_image_column_view(value=img, width=16, height=12, weight=1)
+        fields_layout.append(img_layout)
+
+        fields_layout.append(
+            widgets.LinearLayout(
+                *[self._get_column_view(value=field, text_size=text_size, weight=weight, text_bold=text_bold) for field in self.fields],
+                width='match_parent',
+                orientation='horizontal',
+                weight=7
+            )
+        )
+
+        return fields_layout
+
+    def _get_image_column_view(self, value, width, height, weight):
+        return widgets.LinearLayout(
+            widgets.Picture(
+                Value=value,
+                width=width,
+                height=height,
+                weight=weight
+            ),
+            width='match_parent',
+            height='match_parent',
+            weight=1,
+            StrokeWidth=1,
+        )   
+
+    def _get_column_view(self, value, text_size=20, weight=1, text_bold=False):
+        return widgets.LinearLayout(
+            widgets.TextView(
+                Value=f'@{value}',
+                gravity_horizontal='center',
+                TextSize=text_size,
+                width='match_parent',
+                TextBold=text_bold
+            ),
+            width='match_parent',
+            height='match_parent',
+            weight=weight,
+            StrokeWidth=1,
+        )    
+    
 # ^^^^^^^^^^^^^^^^^^^^^ SelectItemScreen ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 
