@@ -608,8 +608,6 @@ class AdrGoodsSelectScreen(ui_models.BaseGoodSelect):
         super().__init__(hash_map)
         self.service = db_services.AdrDocService()
         self.doc_row_id = doc_row_id
-        self.screen_data = {}
-        self.hash_map_keys = ['item_name', 'article', 'property', 'unit', 'qtty_plan', 'qtty']
 
     def init_screen(self):
         self.screen_data = self.service.get_doc_row_data(self.doc_row_id)
@@ -635,11 +633,6 @@ class AdrGoodsSelectScreen(ui_models.BaseGoodSelect):
             listeners[self.listener]()
         else:
             super().on_input()
-
-    def _set_visibility(self):
-        allow_fact_input = self.rs_settings.get('allow_fact_input') or False
-        self.hash_map.put("Show_fact_qtty_input", '1' if allow_fact_input else '-1')
-        self.hash_map.put("Show_fact_qtty_note", '-1' if allow_fact_input else '1')
 
     def _back_screen(self):
         screen = AdrDocDetailsScreen(self.hash_map, self.screen_data['id_doc'])

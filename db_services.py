@@ -1019,7 +1019,7 @@ class DocService:
                 
         return result  
 
-    def get_barcode(self, barcode) -> dict:
+    def get_barcode_data(self, barcode) -> dict:
         result = {}  
 
         if barcode:  
@@ -1039,6 +1039,81 @@ class DocService:
         self.provider.table_name = self.details_table_name
         self.provider.update({'qtty': 0}, {'id_doc': self.doc_id})
 
+    def get_table_index_data(self, id_doc, first_element_page, first_element_list):
+        q = f'''
+        SELECT id AS row_id FROM
+        
+            (SELECT id, 0 AS ordering 
+            FROM RS_docs_table 
+            WHERE id < "{first_element_list}" AND id <> "{first_element_page}" AND id_doc = "{id_doc}"
+            
+            UNION
+            
+            SELECT id, 1 
+            FROM RS_docs_table 
+            WHERE id = "{first_element_page}" AND id_doc = "{id_doc}"
+            
+            UNION
+            
+            SELECT id, 2 
+            FROM RS_docs_table 
+            WHERE id >= "{first_element_list}" AND id <> "{first_element_page}" AND id_doc = "{id_doc}")
+            
+        GROUP BY (id)
+        ORDER BY MAX(ordering)
+        '''
+
+        res = self._get_query_result(q)
+        return list(*zip(*res))
+
+    def get_doc_row_data(self, row_id):
+
+        q = f'''
+            SELECT 
+                t.id_doc AS id_doc,
+                t.id_good AS item_id,
+                t.id_properties as property_id,
+                t.id_unit as unit_id,
+                t.qtty_plan,
+                t.qtty,
+                t.d_qtty AS d_qtty,
+                t.use_series,
+                t.price,
+                IFNULL(g.name, '') AS item_name,
+                IFNULL(g.art, '') AS article,
+                IFNULL(p.name, '') AS property,
+                IFNULL(u.name, '') AS unit
+
+            FROM {self.details_table_name} AS t
+
+            LEFT JOIN RS_goods  AS g
+            ON t.id_good= g.id
+
+            LEFT JOIN RS_properties  AS p
+            ON t.id_properties = p.id
+
+            LEFT JOIN RS_units  AS u
+            ON t.id_unit = u.id
+
+            WHERE t.id = "{row_id}"
+        '''
+        res = self._get_query_result(q, return_dict=True)
+
+        return res[0] if res else {}
+
+    def get_doc_row_by_barcode(self, barcode):
+        q = f'''
+            SELECT t.id, b.ratio 
+            FROM RS_barcodes as b 
+            JOIN {self.details_table_name} as t
+                ON b.id_good = t.id_good
+                AND b.id_property = t.id_properties
+        
+            WHERE barcode = '{barcode}'
+            LIMIT 1
+        '''
+        res = self._get_query_result(q, return_dict=True)
+        return res[0] if res else None
 
 class SeriesService(DbService):
     doc_basic_table_name = 'RS_docs_table'
@@ -1478,7 +1553,6 @@ class AdrDocService(DocService):
         self.table_type = table_type
         self.provider = SqlQueryProvider(self.docs_table_name, sql_class=sqlClass())
         self.is_group_scan = False
-        self.is_barc_flow = False
 
     def get_doc_details_data(
             self,
@@ -1687,6 +1761,7 @@ class AdrDocService(DocService):
         return result
 
     def get_doc_row_data(self, row_id):
+
         q = f'''
             SELECT 
                 t.id_doc AS id_doc,
@@ -1695,29 +1770,29 @@ class AdrDocService(DocService):
                 t.id_unit as unit_id,
                 t.qtty_plan,
                 t.qtty,
+                t.qtty AS d_qtty,
                 t.use_series,
                 IFNULL(g.name, '') AS item_name,
                 IFNULL(g.art, '') AS article,
                 IFNULL(p.name, '') AS property,
                 IFNULL(u.name, '') AS unit
-            
-            FROM RS_adr_docs_table AS t
-            
+
+            FROM {self.details_table_name} AS t
+
             LEFT JOIN RS_goods  AS g
             ON t.id_good= g.id
-            
+
             LEFT JOIN RS_properties  AS p
             ON t.id_properties = p.id
-            
+
             LEFT JOIN RS_units  AS u
             ON t.id_unit = u.id
-            
+
             WHERE t.id = "{row_id}"
         '''
         res = self._get_query_result(q, return_dict=True)
 
         return res[0] if res else {}
-
 
 class FlowDocService(DocService):
 
