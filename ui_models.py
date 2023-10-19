@@ -2732,39 +2732,28 @@ class GroupScanDocDetailsScreenNew(DocDetailsScreen):
         self.send_post_lines_data(sent=False)
 
     def _cards_click(self):
-        if not self.rs_settings.get('allow_fact_input'):
-            self.hash_map.refresh_screen()
-            return self.hash_map
-
         current_elem = json.loads(self.hash_map.get('selected_card_data'))
-        # при клике по шапке таблицы прилетает пустой словарь
-        if not current_elem:
+        self.hash_map.put('id_good', current_elem['id_good'])
+        if len(self.table_data) == 2:
+            first_element_page = self.table_data[1]['key']
+            first_element_list = first_element_page
+        elif len(self.table_data) > 2:
+            first_element_page = self.table_data[1]['key']
+            first_element_list = self.table_data[2]['key']
+        else:
             return
 
-        current_str = self.hash_map["selected_card_position"]
-        table_lines_qtty = self.hash_map['table_lines_qtty']
-        title = '{} № {} от {}'.format(self.hash_map['doc_type'], self.hash_map['doc_n'], self.hash_map['doc_date'])
-        put_data_dict = {
-            'Doc_data': title,
-            'Good': current_elem['good_name'],
-            'id_good': current_elem['id_good'],
-            'id_unit': current_elem['id_unit'],
-            'id_property': current_elem['id_properties'],
-            'good_art': current_elem['art'],
-            'good_sn': current_elem['series_name'],
-            'good_property': current_elem['properties_name'],
-            'good_price': current_elem['price'],
-            'good_unit': current_elem['units_name'],
-            'good_str': f'{current_str} / {table_lines_qtty}',
-            'qtty_plan': current_elem['qtty_plan'],
-            'good_plan': current_elem['qtty_plan'],
-            'key': current_elem['key'],
-            'price': current_elem['price'],
-            'price_type': current_elem['price_name'],
-            'qtty': self._format_quantity(current_elem['d_qtty']),
-        }
-        screen = GroupScanItemScreen(self.hash_map, self.rs_settings)
-        screen.show(args=put_data_dict)
+        table_index_data = self.service.get_table_index_data(
+            self.id_doc, first_element_page, first_element_list
+        )
+        screen = GroupScanItemScreen(
+            self.hash_map,
+            id_doc=self.id_doc,
+            table_index_data=table_index_data,
+            doc_row_id=int(self.hash_map['selected_card_key'])
+        )
+        screen.parent_screen = self
+        screen.show()
 
 
 class DocumentsDocDetailScreen(DocDetailsScreen):
@@ -2889,6 +2878,7 @@ class DocumentsDocDetailScreen(DocDetailsScreen):
             table_index_data=table_index_data,
             doc_row_id=doc_row_id
         )
+        screen.parent_screen = self
         screen.show()
 
     def _set_visibility_on_start(self):
@@ -3429,6 +3419,7 @@ class BaseGoodSelect(Screen):
 
         self.hash_map['Show_btn_to_series'] = int(self.screen_data['use_series'])
 
+
 class GoodsSelectScreen(BaseGoodSelect):
     screen_name = 'Товар выбор'
     process_name = 'Документы'
@@ -3514,25 +3505,44 @@ class GoodsSelectScreen(BaseGoodSelect):
             self.hash_map.toast(self.current_toast_message or f'Штрихкод не найден в документе!')
 
 
-
-class GroupScanItemScreen(BaseGoodSelect):
+class GroupScanItemScreen(GoodsSelectScreen):
     screen_name = 'Товар выбор'
     process_name = 'Групповая обработка'
 
-    def __init__(self, hash_map: HashMap, rs_settings):
-        super().__init__(hash_map, rs_settings)
-
-    def on_start(self):
-        super().on_start()
-
     def on_input(self):
-        self.hash_map.put('stop_sync_doc', '')
-        super().on_input()
+        listeners = {
+            'btn_next_good': lambda: self._goods_selector('next'),
+            'btn_previous_good': lambda: self._goods_selector("previous"),
+        }
+        if self.listener in listeners:
+            listeners[self.listener]()
+        else:
+            super().on_input()
+
+    def _update_hash_map_keys(self):
+        self.doc_row_id = self.table_index_data[self.current_index]
+        self.screen_data = self.db_service.get_doc_row_data(self.doc_row_id)
+        self.hash_map.put_data({
+            key: self._format_quantity(self.screen_data.get(key, 0))
+            if key in ['qtty_plan', 'qtty'] else self.screen_data.get(key, '')
+            for key in self.hash_map_keys
+        })
+
+        self.hash_map.put('qtty', self._format_quantity(self.screen_data.get('d_qtty')))
+        self.hash_map['item_position'] = f'{self.current_index+1} / {len(self.table_index_data)}'
+        self.new_qty = self.screen_data['qtty']
+
+    def _set_delta(self, value: float = 0.0, reset: bool = False):
+        if reset:
+            self.delta = 0
+            self.new_qty = self.screen_data['d_qtty']
+            self.hash_map.put('new_qtty', self.screen_data['d_qtty'])
+        else:
+            self.delta = value
+            self.new_qty += self.delta
+            self.hash_map['new_qtty'] = self._format_quantity(self.new_qty)
 
     def _update_doc_table_row(self, data: Dict, row_id):
-
-        if not self.hash_map.get('delta'):
-            return
 
         update_data = {
             'sent': 0,
@@ -3548,7 +3558,7 @@ class GroupScanItemScreen(BaseGoodSelect):
             "id_series": self.hash_map.get("id_series"),
             "id_unit": self.hash_map.get("id_unit"),
             "id_cell": "",
-            "d_qtty": float(self.hash_map.get('delta')),
+            "d_qtty": float(self.delta),
             "sent": False,
             "price": self.hash_map.get("good_price"),
             "id_price": ""
@@ -6736,8 +6746,6 @@ class MainEvents:
 
         current_release = self.hash_map['_configurationVersion']
 
-        self._create_tables()
-
         if current_release is None:
             toast = 'Не удалось определить версию конфигурации'
 
@@ -6794,6 +6802,8 @@ class MainEvents:
         for k, v in rs_default_settings.items():
             if self.rs_settings.get(k) is None:
                 self.rs_settings.put(k, v, True)
+
+        self._create_tables()
 
         self.hash_map["SQLConnectDatabase"] = "SimpleKeep"
         self.hash_map.toast(toast)
