@@ -5933,6 +5933,7 @@ class HttpSettingsScreen(Screen):
     def __init__(self, hash_map: HashMap, rs_settings):
         super().__init__(hash_map, rs_settings)
         self.hs_service = None
+        self.input_cache = {}
 
     def on_start(self) -> None:
         self.hash_map['btn_test_connection'] = 'Тест соединения'
@@ -5948,6 +5949,11 @@ class HttpSettingsScreen(Screen):
         self.hash_map.put_data(put_data)
 
     def on_input(self) -> None:
+        self.input_cache['url'] = self.hash_map.get('url', '')
+        self.input_cache['user'] = self.hash_map.get('user', '')
+        self.input_cache['pass'] = self.hash_map.get('pass', '')
+        self.input_cache['user_name'] = self.hash_map.get('user_name', '')
+
         listeners = {
             'btn_test_connection': self._test_connection,
             'btn_save': self._save_settings,
@@ -6023,14 +6029,14 @@ class HttpSettingsScreen(Screen):
         return all([http.get('url'), http.get('user'), http.get('pass')])
 
     def _get_http_settings(self):
-        http_settings = {
-            'url': self.rs_settings.get("URL"),
-            'user': self.rs_settings.get('USER'),
-            'pass': self.rs_settings.get('PASS'),
+        return {
+            'url': self.input_cache.get('url', self.rs_settings.get("URL")),
+            'user': self.input_cache.get('user', self.rs_settings.get('USER')),
+            'pass': self.input_cache.get('pass', self.rs_settings.get('PASS')),
             'device_model': self.hash_map['DEVICE_MODEL'],
             'android_id': self.hash_map['ANDROID_ID'],
-            'user_name': self.rs_settings.get('user_name')}
-        return http_settings
+            'user_name': self.input_cache.get('user_name', self.rs_settings.get('user_name'))
+    }
 
 
 class SoundSettings(Screen):

@@ -5,6 +5,7 @@ from tiny_db_services import LoggerService
 import requests
 import json
 from requests.auth import HTTPBasicAuth
+from base64 import b64encode
 
 
 class HsService:
@@ -18,8 +19,15 @@ class HsService:
         self.params = {'user_name': self.user_name, 'device_model': self.device_model}
         self._hs = ''
         self._method = requests.get
-        self.auth = HTTPBasicAuth(self.username, self.password)
-        self.headers = {'Content-Type': 'application/x-www-form-urlencoded; charset=utf-8'}
+
+        # Кодирование credentials для базовой аутентификации
+        user_pass = f"{self.username}:{self.password}".encode("utf-8")
+        encoded_credentials = b64encode(user_pass).decode("utf-8")
+        self.headers = {
+            'Authorization': f'Basic {encoded_credentials}',
+            'Content-Type': 'application/x-www-form-urlencoded; charset=utf-8'
+        }
+
         self.http_answer: Optional[HsService.HttpAnswer] = None
         self.logger_service = LoggerService()
 
@@ -217,10 +225,9 @@ class HsService:
         answer = {'empty': True}
         try:
             r = self._method(f'{self.url}/simple_accounting/{self._hs}?android_id={self.android_id}',
-                             auth=self.auth,
-                             headers=self.headers,
-                             params=self.params,
-                             **kwargs)
+                            headers=self.headers,
+                            params=self.params,
+                            **kwargs)
 
             answer['status_code'] = r.status_code
             answer['url'] = r.url
@@ -239,7 +246,6 @@ class HsService:
                 answer['reason'] = r.reason
         except Exception as e:
             raise e
-            # answer['Error'] = e.args[0]
 
         return answer
 
