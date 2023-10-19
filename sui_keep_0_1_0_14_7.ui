@@ -926,7 +926,7 @@
                                         "Variable": "btn_to_series",
                                         "height": "wrap_content",
                                         "width": "match_parent",
-                                        "weight": 0,
+                                        "weight": "0",
                                         "TextBold": false,
                                         "TextItalic": false,
                                         "type": "Button"
@@ -8103,6 +8103,10 @@
             },
             {
                 "PyFileKey": "sm_adr_docs",
+                "PyFileData": ""
+            },
+            {
+                "PyFileKey": "barcode_workers",
                 "PyFileData": ""
             }
         ],
