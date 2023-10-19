@@ -6826,7 +6826,7 @@ class MainEvents:
 
     @staticmethod
     def start_timer(hash_map: HashMap):
-        hash_map.start_timers('timer_update', 'timer_update2', period=15000, bs_hash_map=True)
+        hash_map.start_timers('timer_update', period=15000, bs_hash_map=True)
 
 
 # ^^^^^^^^^^^^^^^^^^^^^ Main events ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
