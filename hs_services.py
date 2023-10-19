@@ -1,5 +1,6 @@
 from typing import Optional, Callable, Union
 from dataclasses import dataclass
+from tiny_db_services import LoggerService
 
 import requests
 import json
@@ -20,6 +21,7 @@ class HsService:
         self.auth = HTTPBasicAuth(self.username, self.password)
         self.headers = {'Content-Type': 'application/x-www-form-urlencoded; charset=utf-8'}
         self.http_answer: Optional[HsService.HttpAnswer] = None
+        self.logger_service = LoggerService()
 
     def get_templates(self, **kwargs):
         self._hs = 'label_templates'
@@ -276,6 +278,11 @@ class HsService:
         }
 
         return methods.get(path)
+
+    def write_error_to_log(self, error_text, **kwargs):
+        self.logger_service.write_to_log(error_text=error_text,
+                                         error_type="HS_service",
+                                         **kwargs)
 
     @dataclass
     class HttpAnswer:

@@ -11,9 +11,10 @@ import shutil
 import db_services
 import hs_services
 from printing_factory import HTMLDocument, PrintService, bt
-from ui_utils import HashMap, BarcodeWorker, get_ip_address
-from db_services import DocService, ErrorService, GoodsService, BarcodeService, TimerService
-from tiny_db_services import ScanningQueueService, ExchangeQueueBuffer
+from ui_utils import HashMap, get_ip_address
+from barcode_workers import BarcodeWorker
+from db_services import DocService, GoodsService, BarcodeService, TimerService
+from tiny_db_services import ScanningQueueService, ExchangeQueueBuffer, LoggerService, DateFormat
 from hs_services import HsService
 import static_data
 from ru.travelfood.simple_ui import SimpleUtilites as suClass
@@ -1527,11 +1528,13 @@ class DocsListScreen(Screen):
             try:
                 answer = http_service.send_data(doc_data)
             except Exception as e:
-                self.service.write_error_on_log(f'Ошибка выгрузки документа: {e}')
+                http_service.write_error_to_log(error_text=e,
+                                                error_info='Ошибка выгрузки документа')
                 return
 
             if answer.error:
-                self.service.write_error_on_log(f'Ошибка выгрузки документа: {answer.error_text}')
+                http_service.write_error_to_log(error_text=answer.error_text,
+                                                error_info='Ошибка выгрузки документа')
             else:
                 self.service.doc_id = id_doc
                 self.service.set_doc_values(verified=1, sent=1)
@@ -2393,7 +2396,10 @@ class GroupScanDocDetailsScreen(DocDetailsScreen):
             try:
                 self.service.update_data_from_json(docs_data)
             except Exception as e:
-                self.service.write_error_on_log(f'Ошибка записи документа:  {e}')
+                self.service.write_error_on_log(
+                    error_type="GroupScan",
+                    error_text=e,
+                    error_info='Ошибка записи документа')
 
     def _get_update_current_doc_data(self):
         try:
@@ -2406,7 +2412,8 @@ class GroupScanDocDetailsScreen(DocDetailsScreen):
                 self.hash_map.notification(answer.error_text, title='Ошибка обмена')
                 self.hash_map.toast(answer.error_text)
             elif answer.error:
-                self.service.write_error_on_log(f'Ошибка загрузки документа:  {answer.error_text}')
+                self.hs_service.write_error_to_log(error_text=answer.error_text,
+                                                   error_info='Ошибка загрузки документа')
             else:
                 return answer.data
         except:
@@ -2418,8 +2425,8 @@ class GroupScanDocDetailsScreen(DocDetailsScreen):
             try:
                 answer = self._post_goods_to_server()
             except Exception as e:
-                self.service.write_error_on_log(e.args[0])
-
+                self.hs_service.write_error_to_log(error_text=e.args[0],
+                                                   error_info='Ошибка отправки данных документа')
             if answer and answer.get('Error') is not None:
                 self.hash_map.error_log(answer.get('Error'))
 
@@ -2436,12 +2443,14 @@ class GroupScanDocDetailsScreen(DocDetailsScreen):
             hs_service.send_documents(res)
             answer = hs_service.http_answer
             if answer.error:
-                self.service.write_error_on_log(answer.error_text)
+                self.hs_service.write_error_to_log(error_text=answer.error_text,
+                                                   error_info='Ошибка отправки данных документа')
             else:
                 try:
                     self.service.update_sent_data(res)
                 except Exception as e:
-                    self.service.write_error_on_log(e.args[0])
+                    self.hs_service.write_error_to_log(error_text=e.args[0],
+                                                       error_info='Ошибка отправки данных документа')
 
         # пока что отключил дополнительный get-запрос, проверяем производительность
 
@@ -2547,8 +2556,10 @@ class GroupScanDocDetailsScreenNew(DocDetailsScreen):
             http_result = self.hs_service.send_all_document_lines(self.id_doc, validated_send_data, timeout=8)
 
         if http_result.status_code != 200:
-            self.db_service.log_error("Ошибка соединения при отправке "
-                                      "данных группового сканирования товара.")
+            self.hs_service.write_error_to_log(
+                error_text="response status code != 200",
+                error_info='Ошибка соединения при отправке данных группового '
+                    'сканирования товара')
             return
         if not http_result.data.get('data'):
             return
@@ -3529,6 +3540,23 @@ class GroupScanItemScreen(BaseGoodSelect):
         }
         self.service.update_doc_table_row(data=update_data, row_id=row_id)
         self.service.set_doc_status_to_upload(self.hash_map.get('id_doc'))
+
+        insert_to_queue = {
+            "id_doc": self.hash_map.get('id_doc'),
+            "id_good": self.hash_map.get("id_good"),
+            "id_properties": self.hash_map.get("id_property"),
+            "id_series": self.hash_map.get("id_series"),
+            "id_unit": self.hash_map.get("id_unit"),
+            "id_cell": "",
+            "d_qtty": float(self.hash_map.get('delta')),
+            "sent": False,
+            "price": self.hash_map.get("good_price"),
+            "id_price": ""
+        }
+
+        barcode_worker = BarcodeWorker(self.hash_map.get("id_doc"))
+        barcode_worker.queue_update_data = insert_to_queue
+        barcode_worker.update_document_barcode_data()
 
 
 class BarcodeRegistrationScreen(Screen):
@@ -5012,7 +5040,10 @@ class SeriesSelectScreen(Screen):
 
     def on_input(self):
         listener = self.listener
-        if listener == "CardsClick":
+        if listener =="CardsClick":
+            self._cards_click_handler()
+        elif listener =="btn_add_series":
+            self.hash_map.put("selected_card_key", '')
             self._cards_click_handler()
         elif listener == "ON_BACK_PRESSED":
             self._back_screen()
@@ -5032,6 +5063,11 @@ class SeriesSelectScreen(Screen):
             ocr_nosql.put('show_process_result', True, True)
             self.hash_map.show_process_result('OcrTextRecognition',
                                               'SerialNumberOCRSettings')
+        elif listener == 'btn_print':
+            self._print_ticket()
+        elif listener == 'btn_series_add_barcode':
+            self._btn_add_barcode()
+
         self.hash_map.no_refresh()
 
     def show(self, args=None):
@@ -5084,6 +5120,8 @@ class SeriesSelectScreen(Screen):
         list_data = [self._handle_num_keys(item) for item in list_data]
         list_data = [self._add_text_in_values(item) for item in list_data]
         doc_cards = self._get_doc_cards_view(list_data)
+        # Добавим надпись если нет серий в списке
+        self.hash_map.put('empty_series', ("","Отсканируйте серии")[len(list_data)==0]) 
         self.hash_map['series_cards'] = doc_cards.to_json()
 
     def _handle_num_keys(self, values: dict) -> dict:
@@ -5212,6 +5250,26 @@ class SeriesSelectScreen(Screen):
             self.hash_map.set_vision_settings(**serial_ocr_settings)
             ocr_nosql.put('from_screen', 'SeriesSelectScreen', True)
 
+    def _print_ticket(self):
+        # Получим первый баркод документа
+        barcode = db_services.BarcodeService().get_barcode_from_doc_table(self.screen_values['doc_row_id'])
+        data = {'Дата_док': 'Doc_data', 'Номенклатура': 'Good',
+                'Артикул': 'good_art', 'Серийный номер': 'good_sn',
+                'Характеристика': 'good_property', 'Цена': 'good_price',
+                'ЕдИзм': 'good_unit', 'Ключ': 'key', 'Валюта': 'price_type'}
+        for key in data:
+            data[key] = self.hash_map.get(data[key])
+        data['barcode'] = barcode if barcode else '0000000000000'
+        PrintService.print(self.hash_map, data)
+
+    def _btn_add_barcode(self):
+        init_data = {
+            'item_id':  self.screen_data.get('id_good', ''),
+            'property_id':  self.screen_data.get('id_properties', ''),
+            'unit_id':  self.screen_data.get('id_unit', '')
+        }
+        BarcodeRegistrationScreen(self.hash_map, self.rs_settings).show_process_result(init_data)
+
 class SeriesItem(Screen):
     process_name = 'SeriesProcess'
     screen_name = 'FillingSeriesScreen'
@@ -5233,12 +5291,12 @@ class SeriesItem(Screen):
         self.screen_data = self.service.get_series_table_str(series_id)
 
         put_data = {
-            'good_name': self.screen_data['good_name'],
-            'name': self.screen_data['name'],
-            'number': self.screen_data['number'],
-            'production_date': self.screen_data['production_date'],
-            'best_before': self.screen_data['best_before'],
-            'FillingSeriesScreen_qtty' : self.screen_data['qtty']
+            'good_name': self.screen_data.get('good_name') or self.hash_map.get('good_name'),
+            'name': self.screen_data.get('name',''),
+            'number': self.screen_data.get('number',''),
+            'production_date': self.screen_data.get('production_date',''),
+            'best_before': self.screen_data.get('best_before',''),
+            'FillingSeriesScreen_qtty' : self.screen_data.get('qtty','')
         }
 
         self._handle_num_keys(put_data)
@@ -5252,29 +5310,21 @@ class SeriesItem(Screen):
     def on_input(self):
         listener = self.listener
         if listener == "btn_save":
-            self._save_data()
-            self._back_screen()
+            self._btn_save_handler()
         elif listener == "ON_BACK_PRESSED":
             self._back_screen()
         elif listener == "btn_cancel":
             self._back_screen()
+        elif self._is_result_positive('confirm_update_series'):
+            params = self._get_params()
+            params.update(self._check_series_number())
+            self.service.save_table_str(params) 
+            self._back_screen()   
 
         self.hash_map.refresh_screen()
 
     def _save_data(self):
-        params = {'id': int(self.screen_data['id']),
-                  'id_doc': self.screen_data['id_doc'],
-                  'id_good':  self.screen_data['id_good'],
-                  'id_properties':self.hash_map['id_properties'],
-                  'id_series': self.hash_map['id_series'],
-                  'id_warehouse': self.hash_map['id_warehouse'],
-                  'qtty': self.hash_map['FillingSeriesScreen_qtty'],
-                  'name': self.hash_map['name'],
-                  'best_before': self.hash_map['best_before'] if self._is_valid_date_format(self.hash_map['best_before']) else None,
-                  'number': self.hash_map['number'],
-                  'production_date': self.hash_map['production_date'] if self._is_valid_date_format(self.hash_map['production_date']) else None,
-                  'cell': self.hash_map['id_cell']
-                  }
+        params = self._get_params()
         self.service.save_table_str(params)
 
     def _is_valid_date_format(self, date_str):
@@ -5296,6 +5346,60 @@ class SeriesItem(Screen):
         else:
             return qtty
 
+    def _btn_save_handler(self):
+        if self.screen_data.get('id'): 
+            self._save_data()
+            self._back_screen()
+        else:
+            if self._check_series_number():
+                self.hash_map.show_dialog('confirm_update_series', 'Серия с данным номером уже существует. Обновить данные?')
+            else:
+                params = self._get_params()
+                self._add_new_series(params)
+                self._back_screen()
+
+    def _get_params(self):
+        common_params = {
+            'id_doc': self.hash_map.get('id_doc'),
+            'id_good': self.hash_map.get('id_good'),
+            'id_properties': self.hash_map.get('id_properties'),
+            'id_warehouse': self.hash_map.get('id_warehouse'),
+            'qtty': self.hash_map.get('FillingSeriesScreen_qtty'),
+            'name': self.hash_map.get('name'),
+            'best_before': self.hash_map.get('best_before') if self._is_valid_date_format(self.hash_map.get('best_before')) else None,
+            'number': self.hash_map.get('number'),
+            'production_date': self.hash_map.get('production_date') if self._is_valid_date_format(self.hash_map.get('production_date')) else None,
+            'id_cell': self.hash_map.get('id_cell'),
+            'cell': self.hash_map.get('id_cell')
+        }
+
+        if self.screen_data:
+            params = {
+                'id': int(self.screen_data.get('id', 0)), 
+                'id_series': self.hash_map['id_series'], 
+                **common_params
+            }
+            params['cell'] = common_params['id_cell']  
+        else:
+            params = {
+                'barcode': self.hash_map.get('number'),
+                **common_params
+            }
+
+        return params
+
+    def _check_series_number(self) -> dict:
+        series_number = self.hash_map.get('number')
+        self.service.params = self._get_params()
+        if series_number:
+            values = self.service.get_series_by_barcode(series_number, {})
+            if values:
+                return {'id': values[0]['id'], 'id_series': values[0]['id_series']}
+        return None
+
+    def _add_new_series(self, params: dict):
+        series_number = params.get('number')
+        self.service.add_new_series_in_doc_series_table(series_number)               
 
 # ^^^^^^^^^^^^^^^^^^^^^ Series ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -6013,12 +6117,12 @@ class ErrorLogScreen(Screen):
 
     def __init__(self, hash_map: HashMap, rs_settings):
         super().__init__(hash_map, rs_settings)
-        self.service = ErrorService()
+        self.service = LoggerService()
         self.screen_values = {}
+        self.desc_sort = True
 
     def on_start(self) -> None:
-        date_sort = self.hash_map['selected_date_sort']
-        errors_table_data = self.service.get_all_errors(date_sort)
+        errors_table_data = self.service.get_all_errors(self.desc_sort)
         table_raws = self._get_errors_table_rows(errors_table_data)
         table_view = self._get_errors_table_view(table_raws)
         self.hash_map.put("error_log_table", table_view.to_json())
@@ -6033,7 +6137,7 @@ class ErrorLogScreen(Screen):
             self.hash_map.put("ShowScreen", "Настройки и обмен")
 
         elif self.listener == "date_sort_click":
-            self.hash_map['selected_date_sort'] = self.hash_map["date_sort_click"]
+            self.desc_sort = not self.desc_sort
 
     def on_post_start(self):
         pass
@@ -6046,7 +6150,8 @@ class ErrorLogScreen(Screen):
         table_data = [{}]
         i = 1
         for record in errors_table_data:
-            error_row = {"key": i, "message": record[0], "time": record[1],
+            error_row = {"key": i, "message": record['error_text'],
+                         "time": DateFormat().get_table_view_format(record['timestamp']),
                          '_layout': self._get_errors_table_row_layout()}
             table_data.append(error_row)
             i += 1
@@ -6085,7 +6190,7 @@ class ErrorLogScreen(Screen):
                 width='match_parent',
                 height='wrap_content',
                 weight=1,
-                StrokeWidth=0
+                StrokeWidth=1
             ),
             widgets.LinearLayout(
                 widgets.TextView(
@@ -6494,7 +6599,8 @@ class Timer:
                 self._put_notification(text=notify_text, title="Загружены документы:")
 
         except Exception as e:
-            self.db_service.write_error_on_log(f'Ошибка загрузки документов: {e}')
+            self.hs_service.write_error_to_log(error_text=e.args[0],
+                                               error_info='Ошибка загрузки документов')
 
     def upload_data(self):
         if not self._check_http_settings():
@@ -6509,11 +6615,13 @@ class Timer:
         try:
             answer = self.http_service.send_data(data)
         except Exception as e:
-            self.db_service.write_error_on_log(f'Ошибка выгрузки документов: {e}')
+            self.hs_service.write_error_to_log(error_text=e,
+                                               error_info='Ошибка выгрузки документов')
             return
 
         if answer.error:
-            self.db_service.write_error_on_log(f'Ошибка выгрузки документов: {answer.error_text}')
+            self.hs_service.write_error_to_log(error_text=answer.error_text,
+                                               error_info='Ошибка выгрузки документов')
         else:
             docs_list_string = ', '.join([f"'{d['id_doc']}'" for d in data])
             self.db_service.update_uploaded_docs_status(docs_list_string)
@@ -6621,7 +6729,7 @@ class MainEvents:
     def app_on_start(self):
 
         # self.hash_map.put('StackAddMode', '')  # Включает режим объединения переменных hash_map в таймерах
-
+                
         # TODO Обработчики обновления!
         release = self.rs_settings.get('Release') or ''
         toast = 'Готов к работе'
@@ -6674,7 +6782,8 @@ class MainEvents:
             'timer_is_disabled': False,
             'allow_fact_input': False,
             'offline_mode': False,
-            'delete_old_docs': False
+            'delete_old_docs': False,
+            'user_tmz_offset': self.hash_map.get("TMZ")
         }
 
         if os.path.exists('//data/data/ru.travelfood.simple_ui/databases/'):
@@ -6693,7 +6802,11 @@ class MainEvents:
         sql_error = self.hash_map['SQLError']
         if sql_error:
             service = db_services.DocService()
-            service.write_error_on_log(f'SQL_Error: {sql_error}')
+            service.write_error_on_log(
+                error_type="SQL_Error",
+                error_text=sql_error,
+                error_info=''
+                )
 
     def _create_tables(self):
         service = db_services.DbCreator()
