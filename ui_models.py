@@ -3293,7 +3293,6 @@ class BaseGoodSelect(Screen):
             self.new_qty += self.delta
             self.hash_map['new_qtty'] = self._format_quantity(self.new_qty)
 
-
     def _set_result_qtty(self, delta):
         new_qtty = float(self.hash_map.get('qtty') or 0) + delta
         new_qtty = str(self._format_quantity(new_qtty))
@@ -3664,7 +3663,6 @@ class BarcodeRegistrationScreen(Screen):
         return True
 
     def _fill_barcodes_table(self, item_id):
-        # barcodes_data = self.service.get_barcodes_by_goods_id(self.screen_values['item_id'])
         barcodes_data = self.service.get_barcodes_by_goods_id(item_id)
         table_data = self._prepare_table_data(barcodes_data)
         self.hash_map['barcodes_data'] = self._get_barcodes_table_view(table_data).to_json()
