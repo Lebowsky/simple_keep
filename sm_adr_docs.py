@@ -287,11 +287,7 @@ class AdrDocDetailsScreen(ui_models.DocDetailsScreen):
             return
 
         self.hash_map.remove(self.list_data_key)
-        if selected_card_data.get('use_series') == '1':
-            self._open_series_screen(selected_card_data['key'])
-        else:
-            self._open_select_goods_screen(data=selected_card_data)
-
+        self._open_select_goods_screen(data=selected_card_data)
         self.hash_map.no_refresh()
 
     def _barcode_listener(self, barcode):
@@ -608,16 +604,13 @@ class AdrGoodsSelectScreen(ui_models.BaseGoodSelect):
         super().__init__(hash_map)
         self.service = db_services.AdrDocService()
         self.doc_row_id = doc_row_id
+        self.barcodes_data = {}
 
     def init_screen(self):
         self.screen_data = self.service.get_doc_row_data(self.doc_row_id)
-
-        self.hash_map.put_data({
-            key: self._format_quantity(self.screen_data.get(key, 0))
-            if key in ['qtty_plan', 'qtty'] else self.screen_data.get(key, '')
-            for key in self.hash_map_keys
-        })
-        self._set_visibility()
+        self.fill_barcodes_data()
+        self._update_hash_map_keys()
+        super().init_screen()
 
     def on_start(self):
         super().on_start()
@@ -633,6 +626,29 @@ class AdrGoodsSelectScreen(ui_models.BaseGoodSelect):
             listeners[self.listener]()
         else:
             super().on_input()
+
+    def _update_hash_map_keys(self):
+        self.hash_map.put_data({
+            key: self._format_quantity(self.screen_data.get(key, 0))
+            if key in ['qtty_plan', 'qtty'] else self.screen_data.get(key, '')
+            for key in self.hash_map_keys
+        })
+
+    def _process_the_barcode(self):
+        barcode = self.hash_map.get('barcode_good_select')
+
+        if not barcode:
+            return
+
+        if int(self.screen_data['use_series']):
+            self.toast('Для изменения количества используйте экран серий')
+            return
+
+        if self.barcodes_data.get(barcode):
+            self._set_delta(self.barcodes_data[barcode]['ratio'])
+        else:
+            self.hash_map.playsound('error')
+            self.hash_map.toast('Штрихкод не соответствует текущей позиции')
 
     def _back_screen(self):
         screen = AdrDocDetailsScreen(self.hash_map, self.screen_data['id_doc'])
@@ -661,7 +677,7 @@ class AdrGoodsSelectScreen(ui_models.BaseGoodSelect):
         screen.show_process_result()
 
     def _print_ticket(self):
-        barcode = db_services.BarcodeService().get_barcode_from_doc_table(self.hash_map.get('key'))
+        barcode = db_services.BarcodeService().get_barcode_from_doc_table(str(self.doc_row_id))
 
         data = {
             'Номенклатура': 'item_name',
@@ -676,10 +692,17 @@ class AdrGoodsSelectScreen(ui_models.BaseGoodSelect):
         data['barcode'] = barcode if barcode else '0000000000000'
         PrintService.print(self.hash_map, data)
 
-    def _update_doc_table_row(self, data: Dict, row_id=''):
-        if not self.hash_map.get('delta'):
-            return
+    def fill_barcodes_data(self):
+        """
+        Заполнение данных по штрихкодам товара для быстрого поиска
+        barcodes_data: dict - {barcode: {barcode: barcode_value, ratio: ratio_value}})
+        """
 
+        item_data = {key: self.screen_data.get(key, '') for key in ['item_id', 'property_id', 'unit_id']}
+        service = db_services.BarcodeService()
+        self.barcodes_data = {data['barcode']: data for data in service.get_barcodes_by_data(item_data)}
+
+    def _update_doc_table_row(self, data: Dict, row_id=''):
         update_data = {
             'sent': 0,
             'qtty': float(data['qtty']),
@@ -687,21 +710,3 @@ class AdrGoodsSelectScreen(ui_models.BaseGoodSelect):
 
         self.service.update_doc_table_row(data=update_data, row_id=self.doc_row_id)
         self.service.set_doc_status_to_upload(self.screen_data['id_doc'])
-
-    def _handle_found_barcode(self, res, id_good, id_property, id_unit):
-        is_current_position = all((
-            self.screen_data['item_id'] == res['id_good'],
-            self.screen_data['property_id'] == res['id_property'],
-            self.screen_data['unit_id'] == res['id_unit']
-        ))
-
-        if is_current_position:
-            if self.screen_data['use_series'] == "1":
-                self._open_series_screen(self.hash_map['key'])
-            else:
-                self._set_delta(res['ratio'])
-            return True
-
-        self.current_toast_message = 'Штрихкод не соответствует текущей позиции'
-
-        return False
