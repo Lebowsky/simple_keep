@@ -7656,6 +7656,56 @@
                                 "postExecute": ""
                             }
                         ]
+                    },
+                    {
+                        "type": "Operation",
+                        "Name": "ShowMarksScreen",
+                        "Timer": false,
+                        "hideToolBarScreen": false,
+                        "hideBottomBarScreen": true,
+                        "noScroll": true,
+                        "handleKeyUp": false,
+                        "noConfirmation": true,
+                        "Elements": [
+                            {
+                                "type": "LinearLayout",
+                                "Variable": "",
+                                "orientation": "vertical",
+                                "height": "match_parent",
+                                "width": "match_parent",
+                                "weight": "0",
+                                "Elements": [
+                                    {
+                                        "Value": "@items_table",
+                                        "Variable": "",
+                                        "height": "wrap_content",
+                                        "width": "wrap_content",
+                                        "weight": "0",
+                                        "TextBold": false,
+                                        "TextItalic": false,
+                                        "type": "TableLayout"
+                                    }
+                                ]
+                            }
+                        ],
+                        "Handlers": [
+                            {
+                                "event": "onStart",
+                                "listener": "",
+                                "action": "run",
+                                "type": "python",
+                                "method": "show_marks_screen_on_start",
+                                "postExecute": ""
+                            },
+                            {
+                                "event": "onInput",
+                                "listener": "",
+                                "action": "run",
+                                "type": "python",
+                                "method": "show_marks_screen_on_input",
+                                "postExecute": ""
+                            }
+                        ]
                     }
                 ]
             },
@@ -8048,14 +8098,7 @@
         ],
         "Mediafile": [],
         "PyHandlers": "",
-        "PyTimerTask": [
-            {
-                "PyTimerTaskKey": "timer_update",
-                "PyTimerTaskDef": "timer_update",
-                "PyTimerTaskPeriod": "15000",
-                "PyTimerTaskBuilIn": false
-            }
-        ],
+        "PyTimerTask": [],
         "PyFiles": [
             {
                 "PyFileKey": "database_init_queryes",
@@ -8146,14 +8189,6 @@
                 "type": "set",
                 "method": "beep",
                 "postExecute": ""
-            },
-            {
-                "listener": "",
-                "action": "run",
-                "type": "python",
-                "method": "timer_update",
-                "postExecute": "",
-                "alias": "timer_update"
             }
         ]
     }

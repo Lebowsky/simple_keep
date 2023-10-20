@@ -14,7 +14,7 @@ from printing_factory import HTMLDocument, PrintService, bt
 from ui_utils import HashMap, get_ip_address
 from barcode_workers import BarcodeWorker
 from db_services import DocService, GoodsService, BarcodeService, TimerService
-from tiny_db_services import ScanningQueueService, ExchangeQueueBuffer, LoggerService, DateFormat
+from tiny_db_services import ScanningQueueService, ExchangeQueueBuffer, LoggerService, DateFormat, NoSQLProvider
 from hs_services import HsService
 import static_data
 from ru.travelfood.simple_ui import SimpleUtilites as suClass
@@ -1716,6 +1716,7 @@ class GroupScanDocsListScreen(DocsListScreen):
 
     def on_start(self):
         super().on_start()
+        self.hash_map.stop_timers(bs_hash_map=True)
 
     def on_input(self):
         super().on_input()
@@ -1761,6 +1762,10 @@ class GroupScanDocsListScreen(DocsListScreen):
                 self.hash_map.error_log(res.get('error'))
     def can_launch_timer(self):
         return False
+
+    def _back_screen(self):
+        MainEvents.start_timer(self.hash_map)
+        super()._back_screen()
 
 
 class DocumentsDocsListScreen(DocsListScreen):
@@ -3509,6 +3514,12 @@ class GroupScanItemScreen(GoodsSelectScreen):
     screen_name = 'Товар выбор'
     process_name = 'Групповая обработка'
 
+    def __init__(self, hash_map: HashMap, rs_settings):
+        super().__init__(hash_map, rs_settings)
+
+    def on_start(self):
+        super().on_start()
+
     def on_input(self):
         listeners = {
             'btn_next_good': lambda: self._goods_selector('next'),
@@ -5131,7 +5142,7 @@ class SeriesSelectScreen(Screen):
         list_data = [self._add_text_in_values(item) for item in list_data]
         doc_cards = self._get_doc_cards_view(list_data)
         # Добавим надпись если нет серий в списке
-        self.hash_map.put('empty_series', ("","Отсканируйте серии")[len(list_data)==0]) 
+        self.hash_map.put('empty_series', ("","Отсканируйте серии")[len(list_data)==0])
         self.hash_map['series_cards'] = doc_cards.to_json()
 
     def _handle_num_keys(self, values: dict) -> dict:
@@ -5328,8 +5339,8 @@ class SeriesItem(Screen):
         elif self._is_result_positive('confirm_update_series'):
             params = self._get_params()
             params.update(self._check_series_number())
-            self.service.save_table_str(params) 
-            self._back_screen()   
+            self.service.save_table_str(params)
+            self._back_screen()
 
         self.hash_map.refresh_screen()
 
@@ -5357,7 +5368,7 @@ class SeriesItem(Screen):
             return qtty
 
     def _btn_save_handler(self):
-        if self.screen_data.get('id'): 
+        if self.screen_data.get('id'):
             self._save_data()
             self._back_screen()
         else:
@@ -5385,11 +5396,11 @@ class SeriesItem(Screen):
 
         if self.screen_data:
             params = {
-                'id': int(self.screen_data.get('id', 0)), 
-                'id_series': self.hash_map['id_series'], 
+                'id': int(self.screen_data.get('id', 0)),
+                'id_series': self.hash_map['id_series'],
                 **common_params
             }
-            params['cell'] = common_params['id_cell']  
+            params['cell'] = common_params['id_cell']
         else:
             params = {
                 'barcode': self.hash_map.get('number'),
@@ -5409,7 +5420,7 @@ class SeriesItem(Screen):
 
     def _add_new_series(self, params: dict):
         series_number = params.get('number')
-        self.service.add_new_series_in_doc_series_table(series_number)               
+        self.service.add_new_series_in_doc_series_table(series_number)
 
 # ^^^^^^^^^^^^^^^^^^^^^ Series ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -5614,6 +5625,106 @@ class ShowItemsScreen(Screen):
     def _back_screen(self):
         self._finish_process()
 
+class ShowMarksScreen(ShowItemsScreen):
+    process_name = 'SelectItemProcess'
+    screen_name = 'ShowMarksScreen'
+
+    def __init__(self, hash_map: HashMap, table_name, **kwargs):
+        super().__init__(hash_map, table_name, **kwargs)
+
+    def on_start(self):
+        super().on_start()
+
+    def on_input(self):
+        super().on_input()
+
+    def _prepare_table_data(self):
+        self.fields = list(self.table_header.keys())
+        table_header_layout = {'_layout': self._get_table_header_view()}
+
+        if self.enumerate:
+            table_data = [dict(**{'pos': 'N'}, **{'img': None}, **self.table_header, **table_header_layout)]
+            table_data += [dict(**{'pos': pos}, **{'img': self._get_image_for_row(row)}, **row) for pos, row in enumerate(self.table_data, start=1)]
+            return table_data
+        else:
+            table_data = [dict(**self.table_header, **table_header_layout)] + self.table_data
+        return table_data
+
+    def _get_image_for_row(self, row_data):
+        if row_data.get("approved") == "1":
+            return static_data.mark_green
+        elif row_data.get("approved") == "0":
+            return static_data.mark_pink
+        return None
+
+    def _get_fields_layout(self, is_header=False, background_color='#FFFFFF', weight=1):
+        if is_header:
+            background_color = '#FFFFFF'
+            text_size = self.header_text_size
+            text_bold = True
+        else:
+            text_size = self.text_size
+            text_bold = False
+
+        text_size = self.text_size
+
+        fields_layout = widgets.LinearLayout(
+            orientation='horizontal',
+            width='match_parent',
+            BackgroundColor=background_color,
+        )
+
+        if self.enumerate:
+            pos_layout = self._get_column_view(value='pos', text_size=text_size, weight=weight, text_bold=text_bold)
+            fields_layout.append(pos_layout)
+
+        # Вставляем изображение после колонки 'pos' и перед остальными колонками
+        if not is_header:
+            img = '@img'
+        else:
+            img = None
+        img_layout = self._get_image_column_view(value=img, width=16, height=12, weight=1)
+        fields_layout.append(img_layout)
+
+        fields_layout.append(
+            widgets.LinearLayout(
+                *[self._get_column_view(value=field, text_size=text_size, weight=weight, text_bold=text_bold) for field in self.fields],
+                width='match_parent',
+                orientation='horizontal',
+                weight=7
+            )
+        )
+
+        return fields_layout
+
+    def _get_image_column_view(self, value, width, height, weight):
+        return widgets.LinearLayout(
+            widgets.Picture(
+                Value=value,
+                width=width,
+                height=height,
+                weight=weight
+            ),
+            width='match_parent',
+            height='match_parent',
+            weight=1,
+            StrokeWidth=1,
+        )
+
+    def _get_column_view(self, value, text_size=20, weight=1, text_bold=False):
+        return widgets.LinearLayout(
+            widgets.TextView(
+                Value=f'@{value}',
+                gravity_horizontal='center',
+                TextSize=text_size,
+                width='match_parent',
+                TextBold=text_bold
+            ),
+            width='match_parent',
+            height='match_parent',
+            weight=weight,
+            StrokeWidth=1,
+        )
 
 # ^^^^^^^^^^^^^^^^^^^^^ SelectItemScreen ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -6584,8 +6695,8 @@ class Timer:
             'url': self.rs_settings.get("URL"),
             'user': self.rs_settings.get('USER'),
             'pass': self.rs_settings.get('PASS'),
-            'device_model': self.hash_map['DEVICE_MODEL'],
-            'android_id': self.hash_map['ANDROID_ID'],
+            'device_model': self.rs_settings.get('device_model'),
+            'android_id': self.rs_settings.get('android_id'),
             'user_name': self.rs_settings.get('user_name')}
         return http_settings
 
@@ -6688,6 +6799,7 @@ class WebServiceSyncCommand:
             'barcodes': self._get_barcodes_data,
             'hash_map': self._get_hash_map,
             'hash_map_size': self._get_hash_map_size,
+            'rs_settings': self._get_rs_settings
         }
         if self.listener in listeners:
             listeners[self.listener]()
@@ -6724,6 +6836,16 @@ class WebServiceSyncCommand:
 
         self.hash_map.put('WSResponse', resp_sorted, to_json=True)
 
+    def _get_rs_settings(self):
+
+        provider = NoSQLProvider('rs_settings')
+
+        response = json.dumps({item[0]: item[1] for item in provider.items()})
+
+        headers = [{'key': 'Content-Type', 'value': 'application/json'}]
+        self.hash_map.put('WSResponseHeaders', headers, to_json=True)
+        self.hash_map.put('WSResponse', response)
+
 
 # ^^^^^^^^^^^^^^^^^^^^^ Services ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -6737,14 +6859,15 @@ class MainEvents:
         self.rs_settings = _rs_settings
 
     def app_on_start(self):
+        MainEvents.start_timer(self.hash_map)
 
-        # self.hash_map.put('StackAddMode', '')  # Включает режим объединения переменных hash_map в таймерах
-                
         # TODO Обработчики обновления!
         release = self.rs_settings.get('Release') or ''
         toast = 'Готов к работе'
 
         current_release = self.hash_map['_configurationVersion']
+
+
 
         if current_release is None:
             toast = 'Не удалось определить версию конфигурации'
@@ -6803,6 +6926,9 @@ class MainEvents:
             if self.rs_settings.get(k) is None:
                 self.rs_settings.put(k, v, True)
 
+        self.rs_settings.put('device_model', self.hash_map['DEVICE_MODEL'], True)
+        self.rs_settings.put('android_id', self.hash_map['ANDROID_ID'], True)
+
         self._create_tables()
 
         self.hash_map["SQLConnectDatabase"] = "SimpleKeep"
@@ -6826,6 +6952,10 @@ class MainEvents:
         days = int(self.rs_settings.get('doc_delete_settings_days'))
         service = db_services.DocService()
         return service.delete_old_docs(days)
+
+    @staticmethod
+    def start_timer(hash_map: HashMap):
+        hash_map.start_timers('timer_update', period=15000, bs_hash_map=True)
 
 
 # ^^^^^^^^^^^^^^^^^^^^^ Main events ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
