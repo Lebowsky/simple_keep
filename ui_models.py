@@ -3364,16 +3364,6 @@ class GroupScanItemScreen(GoodsSelectScreen):
     def on_start(self):
         super().on_start()
 
-    def on_input(self):
-        listeners = {
-            'btn_next_good': lambda: self._goods_selector('next'),
-            'btn_previous_good': lambda: self._goods_selector("previous"),
-        }
-        if self.listener in listeners:
-            listeners[self.listener]()
-        else:
-            super().on_input()
-
     def _update_hash_map_keys(self):
         self.doc_row_id = self.table_index_data[self.current_index]
         self.screen_data = self.db_service.get_doc_row_data(self.doc_row_id)
@@ -3439,6 +3429,9 @@ class GroupScanItemScreen(GoodsSelectScreen):
         barcode_worker.queue_update_data = insert_to_queue
         barcode_worker.update_document_barcode_data()
 
+    def handle_series(self, series_qty, old_qty):
+        self.delta = series_qty - old_qty
+        self._set_delta()
 
 class BarcodeRegistrationScreen(Screen):
     screen_name = 'BarcodeRegistration'
@@ -4891,8 +4884,12 @@ class SeriesSelectScreen(Screen):
             'doc_row_id': self.hash_map['doc_row_id'],
         }
         self.use_adr_docs_tables = self.hash_map.get_bool('use_adr_docs_tables')
+        self.initial_series_qty = None
 
     def init_screen(self):
+        if not self.initial_series_qty:
+            self.initial_series_qty = self.service.get_total_qtty()
+
         if self.use_adr_docs_tables:
             self.service = db_services.AdrSeriesService()
         key = self.screen_values['doc_row_id']
@@ -4901,6 +4898,7 @@ class SeriesSelectScreen(Screen):
         self._handle_num_keys(self.screen_data)
         self.service.params = self.screen_data
         self._refresh_series_cards()
+
 
         if not self.hash_map.get('doc_title'):
             title = '{} № {} от {}'.format(
@@ -4911,7 +4909,8 @@ class SeriesSelectScreen(Screen):
             self.hash_map.put('doc_title', title)
 
         self.hash_map.put_data(self.screen_data)
-        # self._refresh_total_qtty() избыточное сохранение флага use_series
+        # self.toast(self.screen_data)
+        self._refresh_total_qtty() # избыточное сохранение флага use_series
 
     def on_start(self):
         self.hash_map.set_title(self.screen_values['title'])
@@ -4967,12 +4966,16 @@ class SeriesSelectScreen(Screen):
         screen.show(args)
 
     def _refresh_total_qtty(self):
-        real_qtty = self.service.get_total_qtty()
+        current_series_qtty = self.service.get_total_qtty() or 0
         old_qty = float(self.hash_map['qtty'] or 0)
+        qty_without_series = old_qty - self.initial_series_qty
+        self.toast(f"{current_series_qtty} {self.initial_series_qty} {qty_without_series}")
 
-        if old_qty != float(real_qtty or 0):
-            self.service.update_total_qty(qty=real_qtty, row_id=self.screen_values['doc_row_id'])
-            self.hash_map['qtty'] = self._format_quantity(real_qtty)
+        if self.initial_series_qty != float(current_series_qtty):
+            total_table_qty = qty_without_series + current_series_qtty
+            self.service.update_total_qty(qty=total_table_qty, row_id=self.screen_values['doc_row_id'])
+            self.hash_map['qtty'] = self._format_quantity(total_table_qty)
+            self.parent_screen.handle_series(current_series_qtty, old_qty)
 
     def _barcode_listener(self):
         self._identify_add_barcode_series()
