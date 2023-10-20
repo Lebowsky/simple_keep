@@ -243,7 +243,7 @@ class HsService:
                 answer['empty'] = False
             else:
                 answer['Error'] = r.reason
-                LoggerService().write_to_log(f"Received non-200 status code {r.status_code}. Reason: {r.reason}", error_type='HTTP Error')
+                self.logger_service.write_to_log(f"Received non-200 status code {r.status_code}. Reason: {r.reason}", error_type='HTTP Error')
 
         except Exception as e:
             answer['Error'] = str(e)
