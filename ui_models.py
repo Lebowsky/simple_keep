@@ -5982,7 +5982,7 @@ class HttpSettingsScreen(Screen):
             elif result.forbidden:
                 self.toast('Запрос на авторизацию принят')
             elif result.error:
-                self.toast('Не удалось установить соединение')
+                self.toast('Ошибка соединения. Подробнее в логе ошибок')
                 self.hash_map.playsound('error')
             else:
                 self.toast('Соединение установлено')

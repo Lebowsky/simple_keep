@@ -220,7 +220,7 @@ class HsService:
         answer = self._send_request(kwargs)
         self.http_answer = self._create_http_answer(answer)
         return self.http_answer
-
+   
     def _send_request(self, kwargs) -> dict:
         answer = {'empty': True}
         try:
@@ -228,7 +228,7 @@ class HsService:
                             headers=self.headers,
                             params=self.params,
                             **kwargs)
-
+            
             answer['status_code'] = r.status_code
             answer['url'] = r.url
             answer['reason'] = r.reason
@@ -243,9 +243,12 @@ class HsService:
                 answer['empty'] = False
             else:
                 answer['Error'] = r.reason
-                answer['reason'] = r.reason
+                LoggerService().write_to_log(f"Received non-200 status code {r.status_code}. Reason: {r.reason}", error_type='HTTP Error')
+
         except Exception as e:
-            raise e
+            answer['Error'] = str(e)
+            LoggerService().write_to_log(f"Request to {self.url} failed with error: {str(e)}", error_type='Connection Error')
+            raise e  
 
         return answer
 
