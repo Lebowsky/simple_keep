@@ -173,6 +173,30 @@ class Screen(ABC):
     def _format_date(date_str: str):
         return datetime.fromisoformat(date_str).strftime('%m-%d-%Y %H:%M:%S')
 
+    @staticmethod
+    def _is_isoformat(date_str: str) -> bool:
+        try:
+            datetime.fromisoformat(date_str)
+            return True
+        except ValueError:
+            return False
+
+    def _get_doc_title(self, **kwargs) -> str:
+        doc_date = kwargs.get('doc_date', '')
+        
+        # Check if the date is in ISO format
+        if self._is_isoformat(doc_date):
+            formatted_date = self._format_date(doc_date)
+        else:
+            formatted_date = doc_date  # or any other formatting logic you want to apply
+
+        doc_title = '{} № {} от {}'.format(
+                kwargs.get('doc_type', ''),
+                kwargs.get('doc_n', ''),
+                formatted_date if doc_date else ''
+            )
+        return doc_title    
+
     class TextView(widgets.TextView):
         def __init__(self, value, rs_settings):
             super().__init__()
@@ -1559,8 +1583,11 @@ class DocsListScreen(Screen):
             elif not (record['verified'] and record['sent']):
                 doc_status = 'К выполнению'
 
-            doc_title = '{} № {} от {}'.format(
-                self.hash_map['doc_type'], self.hash_map['doc_n'], self.hash_map['doc_date'])
+            doc_title = self._get_doc_title(
+                doc_type=self.hash_map.get('doc_type',''),
+                doc_n=self.hash_map.get('doc_n',''),
+                doc_date=self.hash_map.get('doc_date','')
+            )
 
             table_data.append({
                 'key': record['id_doc'],
@@ -1643,8 +1670,8 @@ class DocsListScreen(Screen):
 
         return put_data
 
-    def _get_doc_title(self, **kwargs):
-        return '{doc_type} № {doc_n} от {doc_date}'.format(**kwargs)
+    #def _get_doc_title(self, **kwargs):
+    #    return '{doc_type} № {doc_n} от {doc_date}'.format(**kwargs)
 
     def _set_doc_verified(self, id_doc, value=True):
         # service = DocService(id_doc)
@@ -5027,11 +5054,7 @@ class SeriesSelectScreen(Screen):
         self._refresh_series_cards()
 
         if not self.hash_map.get('doc_title'):
-            title = '{} № {} от {}'.format(
-                self.screen_data['doc_type'],
-                self.screen_data['doc_n'],
-                self.screen_data['doc_date']
-            )
+            title = self._get_doc_title(self.screen_data)
             self.hash_map.put('doc_title', title)
 
         self.hash_map.put_data(self.screen_data)
