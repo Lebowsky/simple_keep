@@ -2330,164 +2330,6 @@ class DocDetailsScreen(Screen):
             self.StrokeWidth = 1
 
 
-class GroupScanDocDetailsScreen(DocDetailsScreen):
-    screen_name = 'Документ товары'
-    process_name = 'Групповая обработка'
-
-    def __init__(self, hash_map, rs_settings):
-        super().__init__(hash_map, rs_settings)
-        self.hs_service = hs_services.HsService(self.get_http_settings())
-        self.screen_values = {
-            'id_doc': hash_map['id_doc'],
-            'doc_type': hash_map['doc_type'],
-            'doc_n': hash_map['doc_n'],
-            'doc_date': hash_map['doc_date'],
-            'warehouse': hash_map['warehouse'],
-            'countragent': hash_map['countragent'],
-        }
-
-    def on_start(self) -> None:
-        super()._on_start()
-        self.hash_map.put('stop_timer_update', 'true')
-
-    def on_input(self) -> None:
-        super().on_input()
-        listener = self.hash_map['listener']
-
-        if listener == "CardsClick":
-            pass
-
-        elif listener == 'barcode':
-            self.hash_map.put("SearchString", "")
-            self._run_progress_barcode_scanning()
-
-        elif self._is_result_positive('modal_dialog_input_barcode'):
-            self._run_progress_barcode_scanning()
-
-        elif self._is_result_positive('RetryConnection'):
-            self._run_progress_barcode_scanning()
-
-        elif self._is_result_negative('RetryConnection'):
-            self.set_scanner_lock(False)
-        elif listener in ['ON_BACK_PRESSED', 'BACK_BUTTON']:
-            self.hash_map.put("SearchString", "")
-            self.hash_map.put("ShowScreen", "Документы")
-            self.hash_map.put('stop_timer_update', 'false')
-
-    def _run_progress_barcode_scanning(self):
-        self.hash_map.run_event_progress('doc_details_before_process_barcode')
-
-    def before_process_barcode(self):
-        self.set_scanner_lock(True)
-        if self._check_connection():
-            self._update_document_data()
-            scan_result = self._barcode_scanned()
-
-            if scan_result.get('Error'):
-                self.hash_map.run_event('doc_scan_error_sound')
-            else:
-                self.hash_map.run_event_async('doc_run_post_barcode_scanned',
-                                              post_execute_method='doc_scan_error_sound')
-            self.set_scanner_lock(False)
-
-        else:
-            self.hash_map.beep('70')
-            self.hash_map.show_dialog(listener="RetryConnection", title='Отсутствует соединение с сервером',
-                                      buttons=["Повторить", "Отмена"])
-
-    def _update_document_data(self):
-        docs_data = self._get_update_current_doc_data()
-        if docs_data:
-            try:
-                self.service.update_data_from_json(docs_data)
-            except Exception as e:
-                self.service.write_error_on_log(
-                    error_type="GroupScan",
-                    error_text=e,
-                    error_info='Ошибка записи документа')
-
-    def _get_update_current_doc_data(self):
-        try:
-            self.hs_service.get_data()
-            answer = self.hs_service.http_answer
-
-            if answer.unauthorized:
-                self.hash_map.toast('Ошибка авторизации сервера 1С')
-            elif answer.forbidden:
-                self.hash_map.notification(answer.error_text, title='Ошибка обмена')
-                self.hash_map.toast(answer.error_text)
-            elif answer.error:
-                self.hs_service.write_error_to_log(error_text=answer.error_text,
-                                                   error_info='Ошибка загрузки документа')
-            else:
-                return answer.data
-        except:
-            self.set_scanner_lock(False)
-
-    def post_barcode_scanned(self):
-        if self.hash_map.get_bool('barcode_scanned'):
-            answer = None
-            try:
-                answer = self._post_goods_to_server()
-            except Exception as e:
-                self.hs_service.write_error_to_log(error_text=e.args[0],
-                                                   error_info='Ошибка отправки данных документа')
-            if answer and answer.get('Error') is not None:
-                self.hash_map.error_log(answer.get('Error'))
-
-            self.on_start()
-
-    def _post_goods_to_server(self):
-        res = self.service.get_last_edited_goods(to_json=False)
-        hs_service = HsService(self.get_http_settings())
-
-        if isinstance(res, dict) and res.get('Error'):
-            answer = {'empty': True, 'Error': res.get('Error')}
-            return answer
-        elif res:
-            hs_service.send_documents(res)
-            answer = hs_service.http_answer
-            if answer.error:
-                self.hs_service.write_error_to_log(error_text=answer.error_text,
-                                                   error_info='Ошибка отправки данных документа')
-            else:
-                try:
-                    self.service.update_sent_data(res)
-                except Exception as e:
-                    self.hs_service.write_error_to_log(error_text=e.args[0],
-                                                       error_info='Ошибка отправки данных документа')
-
-        # пока что отключил дополнительный get-запрос, проверяем производительность
-
-        # docs_data = hs_service.get_data()
-        #
-        # if docs_data.get('data'):
-        #     try:
-        #         self.service.update_data_from_json(docs_data['data'])
-        #     except Exception as e:
-        #         self.service.write_error_on_log(e.args[0])
-
-    def _check_connection(self):
-        try:
-            self.hs_service.communication_test(timeout=1)
-            answer = self.hs_service.http_answer
-        except Exception as e:
-            answer = self.hs_service.HttpAnswer(
-                error=True,
-                error_text=str(e.args[0]),
-                status_code=404,
-                url=self.hs_service.url)
-
-        return not answer.error
-
-    def set_scanner_lock(self, value: bool):
-        if 'urovo' in self.hash_map.get('DEVICE_MODEL').lower():
-            suClass.urovo_set_lock_trigger(value)
-
-    def can_launch_timer(self):
-        return False
-
-
 class GroupScanDocDetailsScreenNew(DocDetailsScreen):
     screen_name = 'Документ товары'
     process_name = 'Групповая обработка'
@@ -2502,9 +2344,12 @@ class GroupScanDocDetailsScreenNew(DocDetailsScreen):
     def on_start(self):
         super()._on_start()
         self.hash_map.put('stop_timer_update', 'true')
-        if not self.hash_map.get('stop_sync_doc') and \
-                not self.rs_settings.get('offline_mode'):
+        if (
+            not self.hash_map.get('stop_sync_doc') and
+            not self.rs_settings.get('offline_mode')
+        ):
             self._sync_doc()
+
         self.hash_map.put('stop_sync_doc', 'true')
 
     def on_input(self) -> None:
@@ -2549,9 +2394,11 @@ class GroupScanDocDetailsScreenNew(DocDetailsScreen):
 
     def send_post_lines_data(self, sent=None):
         send_data = self.queue_service.get_document_lines(self.id_doc, sent=sent)
-        validated_send_data = list((dict((key, value) for key, value in d.items()
-                                         if key not in ['row_key', 'sent'])
-                                    for d in send_data))
+        validated_send_data = list(
+            (dict((key, value) for key, value in d.items()
+                if key not in ['row_key', 'sent'])
+                for d in send_data)
+        )
         if not validated_send_data:
             validated_send_data = [{}]
 
@@ -3398,7 +3245,7 @@ class BaseGoodSelect(Screen):
         }'''
         self.hash_map.show_dialog(
             'modal_dialog_input_qtty',
-            title=f"На сколько изменить количество:",
+            title=f"Введите количество для изменения:",
             dialog_layout=layout
         )
 
@@ -3503,7 +3350,7 @@ class GoodsSelectScreen(BaseGoodSelect):
                 self._goods_selector(action='index', index=index)
 
             if not int(self.screen_data['use_series']):
-                self._set_delta(1)
+                self._set_delta(res['ratio'])
             self._set_visibility()
         else:
             self.hash_map.playsound('error')
@@ -3513,9 +3360,6 @@ class GoodsSelectScreen(BaseGoodSelect):
 class GroupScanItemScreen(GoodsSelectScreen):
     screen_name = 'Товар выбор'
     process_name = 'Групповая обработка'
-
-    def __init__(self, hash_map: HashMap, rs_settings):
-        super().__init__(hash_map, rs_settings)
 
     def on_start(self):
         super().on_start()
@@ -3543,6 +3387,9 @@ class GroupScanItemScreen(GoodsSelectScreen):
         self.hash_map['item_position'] = f'{self.current_index+1} / {len(self.table_index_data)}'
         self.new_qty = self.screen_data['qtty']
 
+    def _process_the_barcode(self):
+        super()._process_the_barcode()
+
     def _set_delta(self, value: float = 0.0, reset: bool = False):
         if reset:
             self.delta = 0
@@ -3553,8 +3400,9 @@ class GroupScanItemScreen(GoodsSelectScreen):
             self.new_qty += self.delta
             self.hash_map['new_qtty'] = self._format_quantity(self.new_qty)
 
-    def _update_doc_table_row(self, data: Dict, row_id):
+            self._add_new_qty_to_queue()
 
+    def _update_doc_table_row(self, data: Dict, row_id):
         update_data = {
             'sent': 0,
             'd_qtty': data['qtty'],
@@ -3562,16 +3410,28 @@ class GroupScanItemScreen(GoodsSelectScreen):
         self.service.update_doc_table_row(data=update_data, row_id=row_id)
         self.service.set_doc_status_to_upload(self.hash_map.get('id_doc'))
 
+    def _handle_btn_ok(self):
+        super()._handle_btn_ok()
+        self.hash_map.remove('stop_sync_doc')
+
+    def _set_qty_result(self):
+        if self._validate_delta_input():
+            self.new_qty = (self._get_float_value(self.hash_map['delta']) +
+                            self._get_float_value(self.hash_map['qtty']))
+            self.hash_map['new_qtty'] = self.new_qty
+            self._add_new_qty_to_queue()
+
+    def _add_new_qty_to_queue(self):
         insert_to_queue = {
-            "id_doc": self.hash_map.get('id_doc'),
-            "id_good": self.hash_map.get("id_good"),
-            "id_properties": self.hash_map.get("id_property"),
-            "id_series": self.hash_map.get("id_series"),
-            "id_unit": self.hash_map.get("id_unit"),
+            "id_doc": self.screen_data.get('id_doc'),
+            "id_good": self.screen_data.get("item_id"),
+            "id_properties": self.screen_data.get("property_id"),
+            "id_series": '',
+            "id_unit": self.screen_data.get("unit_id"),
             "id_cell": "",
             "d_qtty": float(self.delta),
             "sent": False,
-            "price": self.hash_map.get("good_price"),
+            "price": self.screen_data.get("price"),
             "id_price": ""
         }
 
@@ -6799,7 +6659,8 @@ class WebServiceSyncCommand:
             'barcodes': self._get_barcodes_data,
             'hash_map': self._get_hash_map,
             'hash_map_size': self._get_hash_map_size,
-            'rs_settings': self._get_rs_settings
+            'rs_settings': self._get_rs_settings,
+            'scanning_queue': self._get_scanning_queue
         }
         if self.listener in listeners:
             listeners[self.listener]()
@@ -6846,6 +6707,15 @@ class WebServiceSyncCommand:
         self.hash_map.put('WSResponseHeaders', headers, to_json=True)
         self.hash_map.put('WSResponse', response)
 
+    def _get_scanning_queue(self):
+        service = ScanningQueueService()
+        queue = service.provider.get_all()
+
+        response = json.dumps(queue)
+
+        headers = [{'key': 'Content-Type', 'value': 'application/json'}]
+        self.hash_map.put('WSResponseHeaders', headers, to_json=True)
+        self.hash_map.put('WSResponse', response)
 
 # ^^^^^^^^^^^^^^^^^^^^^ Services ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -6973,7 +6843,6 @@ class ScreensFactory:
         GroupScanDocsListScreen,
         DocumentsDocsListScreen,
         GroupScanDocDetailsScreenNew,
-        GroupScanDocDetailsScreen,
         DocumentsDocDetailScreen,
         ErrorLogScreen,
         DebugSettingsScreen,

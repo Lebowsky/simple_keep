@@ -200,31 +200,6 @@ def doc_details_listener(hash_map: HashMap):
 
 
 @HashMap()
-def doc_details_before_process_barcode(hash_map):
-    """ Обработчик для синхронного запроса и обновления данных после сканирования и перед обработкой ШК"""
-
-    screen = ui_models.GroupScanDocDetailsScreen(hash_map, rs_settings)
-    screen.before_process_barcode()
-
-
-@HashMap()
-def doc_run_post_barcode_scanned(hash_map):
-    """ Отправка данных после обработки ШК"""
-
-    screen = ui_models.GroupScanDocDetailsScreen(hash_map, rs_settings)
-    screen.hash_map.remove('toast')
-    screen.post_barcode_scanned()
-
-
-@HashMap()
-def doc_scan_error_sound(hash_map):
-    """ Звуковые сигналы ошибок сканирования"""
-
-    screen = ui_models.GroupScanDocDetailsScreen(hash_map, rs_settings)
-    screen.scan_error_sound()
-
-
-@HashMap()
 def highlight_scanned_item(hash_map: HashMap):
     """ Обработчик для отмены раскраски отсканированного товара """
     screen = ui_models.DocDetailsScreen(hash_map, rs_settings)
