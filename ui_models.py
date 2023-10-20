@@ -120,9 +120,6 @@ class Screen(ABC):
     def put_notification(self, text, title=None):
         self.hash_map.notification(text, title)
 
-    def can_launch_timer(self):
-        return True
-
     def _listener_not_implemented(self):
         raise NotImplementedError (f'listener {self.listener} not implemented')
 
@@ -1760,8 +1757,6 @@ class GroupScanDocsListScreen(DocsListScreen):
             else:
                 self.toast('При очистке данных пересчета возникла ошибка.')
                 self.hash_map.error_log(res.get('error'))
-    def can_launch_timer(self):
-        return False
 
     def _back_screen(self):
         MainEvents.start_timer(self.hash_map)
@@ -2330,6 +2325,160 @@ class DocDetailsScreen(Screen):
             self.StrokeWidth = 1
 
 
+class GroupScanDocDetailsScreen(DocDetailsScreen):
+    screen_name = 'Документ товары'
+    process_name = 'Групповая обработка'
+
+    def __init__(self, hash_map, rs_settings):
+        super().__init__(hash_map, rs_settings)
+        self.hs_service = hs_services.HsService(self.get_http_settings())
+        self.screen_values = {
+            'id_doc': hash_map['id_doc'],
+            'doc_type': hash_map['doc_type'],
+            'doc_n': hash_map['doc_n'],
+            'doc_date': hash_map['doc_date'],
+            'warehouse': hash_map['warehouse'],
+            'countragent': hash_map['countragent'],
+        }
+
+    def on_start(self) -> None:
+        super()._on_start()
+
+    def on_input(self) -> None:
+        super().on_input()
+        listener = self.hash_map['listener']
+
+        if listener == "CardsClick":
+            pass
+
+        elif listener == 'barcode':
+            self.hash_map.put("SearchString", "")
+            self._run_progress_barcode_scanning()
+
+        elif self._is_result_positive('modal_dialog_input_barcode'):
+            self._run_progress_barcode_scanning()
+
+        elif self._is_result_positive('RetryConnection'):
+            self._run_progress_barcode_scanning()
+
+        elif self._is_result_negative('RetryConnection'):
+            self.set_scanner_lock(False)
+        elif listener in ['ON_BACK_PRESSED', 'BACK_BUTTON']:
+            self.hash_map.put("SearchString", "")
+            self.hash_map.put("ShowScreen", "Документы")
+
+    def _run_progress_barcode_scanning(self):
+        self.hash_map.run_event_progress('doc_details_before_process_barcode')
+
+    def before_process_barcode(self):
+        self.set_scanner_lock(True)
+        if self._check_connection():
+            self._update_document_data()
+            scan_result = self._barcode_scanned()
+
+            if scan_result.get('Error'):
+                self.hash_map.run_event('doc_scan_error_sound')
+            else:
+                self.hash_map.run_event_async('doc_run_post_barcode_scanned',
+                                              post_execute_method='doc_scan_error_sound')
+            self.set_scanner_lock(False)
+
+        else:
+            self.hash_map.beep('70')
+            self.hash_map.show_dialog(listener="RetryConnection", title='Отсутствует соединение с сервером',
+                                      buttons=["Повторить", "Отмена"])
+
+    def _update_document_data(self):
+        docs_data = self._get_update_current_doc_data()
+        if docs_data:
+            try:
+                self.service.update_data_from_json(docs_data)
+            except Exception as e:
+                self.service.write_error_on_log(
+                    error_type="GroupScan",
+                    error_text=e,
+                    error_info='Ошибка записи документа')
+
+    def _get_update_current_doc_data(self):
+        try:
+            self.hs_service.get_data()
+            answer = self.hs_service.http_answer
+
+            if answer.unauthorized:
+                self.hash_map.toast('Ошибка авторизации сервера 1С')
+            elif answer.forbidden:
+                self.hash_map.notification(answer.error_text, title='Ошибка обмена')
+                self.hash_map.toast(answer.error_text)
+            elif answer.error:
+                self.hs_service.write_error_to_log(error_text=answer.error_text,
+                                                   error_info='Ошибка загрузки документа')
+            else:
+                return answer.data
+        except:
+            self.set_scanner_lock(False)
+
+    def post_barcode_scanned(self):
+        if self.hash_map.get_bool('barcode_scanned'):
+            answer = None
+            try:
+                answer = self._post_goods_to_server()
+            except Exception as e:
+                self.hs_service.write_error_to_log(error_text=e.args[0],
+                                                   error_info='Ошибка отправки данных документа')
+            if answer and answer.get('Error') is not None:
+                self.hash_map.error_log(answer.get('Error'))
+
+            self.on_start()
+
+    def _post_goods_to_server(self):
+        res = self.service.get_last_edited_goods(to_json=False)
+        hs_service = HsService(self.get_http_settings())
+
+        if isinstance(res, dict) and res.get('Error'):
+            answer = {'empty': True, 'Error': res.get('Error')}
+            return answer
+        elif res:
+            hs_service.send_documents(res)
+            answer = hs_service.http_answer
+            if answer.error:
+                self.hs_service.write_error_to_log(error_text=answer.error_text,
+                                                   error_info='Ошибка отправки данных документа')
+            else:
+                try:
+                    self.service.update_sent_data(res)
+                except Exception as e:
+                    self.hs_service.write_error_to_log(error_text=e.args[0],
+                                                       error_info='Ошибка отправки данных документа')
+
+        # пока что отключил дополнительный get-запрос, проверяем производительность
+
+        # docs_data = hs_service.get_data()
+        #
+        # if docs_data.get('data'):
+        #     try:
+        #         self.service.update_data_from_json(docs_data['data'])
+        #     except Exception as e:
+        #         self.service.write_error_on_log(e.args[0])
+
+    def _check_connection(self):
+        try:
+            self.hs_service.communication_test(timeout=1)
+            answer = self.hs_service.http_answer
+        except Exception as e:
+            answer = self.hs_service.HttpAnswer(
+                error=True,
+                error_text=str(e.args[0]),
+                status_code=404,
+                url=self.hs_service.url)
+
+        return not answer.error
+
+    def set_scanner_lock(self, value: bool):
+        if 'urovo' in self.hash_map.get('DEVICE_MODEL').lower():
+            suClass.urovo_set_lock_trigger(value)
+
+
+
 class GroupScanDocDetailsScreenNew(DocDetailsScreen):
     screen_name = 'Документ товары'
     process_name = 'Групповая обработка'
@@ -2343,13 +2492,9 @@ class GroupScanDocDetailsScreenNew(DocDetailsScreen):
 
     def on_start(self):
         super()._on_start()
-        self.hash_map.put('stop_timer_update', 'true')
-        if (
-            not self.hash_map.get('stop_sync_doc') and
-            not self.rs_settings.get('offline_mode')
-        ):
+        if not self.hash_map.get('stop_sync_doc') and \
+                not self.rs_settings.get('offline_mode'):
             self._sync_doc()
-
         self.hash_map.put('stop_sync_doc', 'true')
 
     def on_input(self) -> None:
@@ -2389,16 +2534,13 @@ class GroupScanDocDetailsScreenNew(DocDetailsScreen):
 
     def go_back(self):
         self.hash_map.remove('stop_sync_doc')
-        self.hash_map.put('stop_timer_update', 'false')
         self.hash_map.show_screen('Документы')
 
     def send_post_lines_data(self, sent=None):
         send_data = self.queue_service.get_document_lines(self.id_doc, sent=sent)
-        validated_send_data = list(
-            (dict((key, value) for key, value in d.items()
-                if key not in ['row_key', 'sent'])
-                for d in send_data)
-        )
+        validated_send_data = list((dict((key, value) for key, value in d.items()
+                                         if key not in ['row_key', 'sent'])
+                                    for d in send_data))
         if not validated_send_data:
             validated_send_data = [{}]
 
@@ -2584,28 +2726,39 @@ class GroupScanDocDetailsScreenNew(DocDetailsScreen):
         self.send_post_lines_data(sent=False)
 
     def _cards_click(self):
+        if not self.rs_settings.get('allow_fact_input'):
+            self.hash_map.refresh_screen()
+            return self.hash_map
+
         current_elem = json.loads(self.hash_map.get('selected_card_data'))
-        self.hash_map.put('id_good', current_elem['id_good'])
-        if len(self.table_data) == 2:
-            first_element_page = self.table_data[1]['key']
-            first_element_list = first_element_page
-        elif len(self.table_data) > 2:
-            first_element_page = self.table_data[1]['key']
-            first_element_list = self.table_data[2]['key']
-        else:
+        # при клике по шапке таблицы прилетает пустой словарь
+        if not current_elem:
             return
 
-        table_index_data = self.service.get_table_index_data(
-            self.id_doc, first_element_page, first_element_list
-        )
-        screen = GroupScanItemScreen(
-            self.hash_map,
-            id_doc=self.id_doc,
-            table_index_data=table_index_data,
-            doc_row_id=int(self.hash_map['selected_card_key'])
-        )
-        screen.parent_screen = self
-        screen.show()
+        current_str = self.hash_map["selected_card_position"]
+        table_lines_qtty = self.hash_map['table_lines_qtty']
+        title = '{} № {} от {}'.format(self.hash_map['doc_type'], self.hash_map['doc_n'], self.hash_map['doc_date'])
+        put_data_dict = {
+            'Doc_data': title,
+            'Good': current_elem['good_name'],
+            'id_good': current_elem['id_good'],
+            'id_unit': current_elem['id_unit'],
+            'id_property': current_elem['id_properties'],
+            'good_art': current_elem['art'],
+            'good_sn': current_elem['series_name'],
+            'good_property': current_elem['properties_name'],
+            'good_price': current_elem['price'],
+            'good_unit': current_elem['units_name'],
+            'good_str': f'{current_str} / {table_lines_qtty}',
+            'qtty_plan': current_elem['qtty_plan'],
+            'good_plan': current_elem['qtty_plan'],
+            'key': current_elem['key'],
+            'price': current_elem['price'],
+            'price_type': current_elem['price_name'],
+            'qtty': self._format_quantity(current_elem['d_qtty']),
+        }
+        screen = GroupScanItemScreen(self.hash_map, self.rs_settings)
+        screen.show(args=put_data_dict)
 
 
 class DocumentsDocDetailScreen(DocDetailsScreen):
@@ -2730,7 +2883,6 @@ class DocumentsDocDetailScreen(DocDetailsScreen):
             table_index_data=table_index_data,
             doc_row_id=doc_row_id
         )
-        screen.parent_screen = self
         screen.show()
 
     def _set_visibility_on_start(self):
@@ -3245,15 +3397,15 @@ class BaseGoodSelect(Screen):
         }'''
         self.hash_map.show_dialog(
             'modal_dialog_input_qtty',
-            title=f"Введите количество для изменения:",
+            title=f"Ввести итоговое количество:",
             dialog_layout=layout
         )
 
     def _set_qty_result(self):
         if self._validate_delta_input():
-            self.new_qty = (self._get_float_value(self.hash_map['delta']) +
-                            self._get_float_value(self.hash_map['qtty']))
-            self.hash_map['new_qtty'] = self.new_qty
+            self.new_qty = self._get_float_value(self.hash_map['delta'])
+            self.hash_map['new_qtty'] = self.hash_map['delta']
+            # self._set_delta())
 
     def _validate_delta_input(self):
         try:
@@ -3270,7 +3422,6 @@ class BaseGoodSelect(Screen):
         self.hash_map.put("Show_fact_qtty_note", '-1' if allow_fact_input else '1')
 
         self.hash_map['Show_btn_to_series'] = int(self.screen_data['use_series'])
-
 
 class GoodsSelectScreen(BaseGoodSelect):
     screen_name = 'Товар выбор'
@@ -3350,59 +3501,33 @@ class GoodsSelectScreen(BaseGoodSelect):
                 self._goods_selector(action='index', index=index)
 
             if not int(self.screen_data['use_series']):
-                self._set_delta(res['ratio'])
+                self._set_delta(1)
             self._set_visibility()
         else:
             self.hash_map.playsound('error')
             self.hash_map.toast(self.current_toast_message or f'Штрихкод не найден в документе!')
 
 
-class GroupScanItemScreen(GoodsSelectScreen):
+
+class GroupScanItemScreen(BaseGoodSelect):
     screen_name = 'Товар выбор'
     process_name = 'Групповая обработка'
+
+    def __init__(self, hash_map: HashMap, rs_settings):
+        super().__init__(hash_map, rs_settings)
 
     def on_start(self):
         super().on_start()
 
     def on_input(self):
-        listeners = {
-            'btn_next_good': lambda: self._goods_selector('next'),
-            'btn_previous_good': lambda: self._goods_selector("previous"),
-        }
-        if self.listener in listeners:
-            listeners[self.listener]()
-        else:
-            super().on_input()
-
-    def _update_hash_map_keys(self):
-        self.doc_row_id = self.table_index_data[self.current_index]
-        self.screen_data = self.db_service.get_doc_row_data(self.doc_row_id)
-        self.hash_map.put_data({
-            key: self._format_quantity(self.screen_data.get(key, 0))
-            if key in ['qtty_plan', 'qtty'] else self.screen_data.get(key, '')
-            for key in self.hash_map_keys
-        })
-
-        self.hash_map.put('qtty', self.screen_data.get('d_qtty') or '0')
-        self.hash_map['item_position'] = f'{self.current_index+1} / {len(self.table_index_data)}'
-        self.new_qty = self.screen_data['qtty']
-
-    def _process_the_barcode(self):
-        super()._process_the_barcode()
-
-    def _set_delta(self, value: float = 0.0, reset: bool = False):
-        if reset:
-            self.delta = 0
-            self.new_qty = self.screen_data['d_qtty'] or 0
-            self.hash_map.put('new_qtty', self.screen_data['d_qtty'] or '0')
-        else:
-            self.delta = value
-            self.new_qty += self.delta
-            self.hash_map['new_qtty'] = self._format_quantity(self.new_qty)
-
-            self._add_new_qty_to_queue()
+        self.hash_map.put('stop_sync_doc', '')
+        super().on_input()
 
     def _update_doc_table_row(self, data: Dict, row_id):
+
+        if not self.hash_map.get('delta'):
+            return
+
         update_data = {
             'sent': 0,
             'd_qtty': data['qtty'],
@@ -3410,28 +3535,16 @@ class GroupScanItemScreen(GoodsSelectScreen):
         self.service.update_doc_table_row(data=update_data, row_id=row_id)
         self.service.set_doc_status_to_upload(self.hash_map.get('id_doc'))
 
-    def _handle_btn_ok(self):
-        super()._handle_btn_ok()
-        self.hash_map.remove('stop_sync_doc')
-
-    def _set_qty_result(self):
-        if self._validate_delta_input():
-            self.new_qty = (self._get_float_value(self.hash_map['delta']) +
-                            self._get_float_value(self.hash_map['qtty']))
-            self.hash_map['new_qtty'] = self.new_qty
-            self._add_new_qty_to_queue()
-
-    def _add_new_qty_to_queue(self):
         insert_to_queue = {
-            "id_doc": self.screen_data.get('id_doc'),
-            "id_good": self.screen_data.get("item_id"),
-            "id_properties": self.screen_data.get("property_id"),
-            "id_series": '',
-            "id_unit": self.screen_data.get("unit_id"),
+            "id_doc": self.hash_map.get('id_doc'),
+            "id_good": self.hash_map.get("id_good"),
+            "id_properties": self.hash_map.get("id_property"),
+            "id_series": self.hash_map.get("id_series"),
+            "id_unit": self.hash_map.get("id_unit"),
             "id_cell": "",
-            "d_qtty": float(self.delta),
+            "d_qtty": float(self.hash_map.get('delta')),
             "sent": False,
-            "price": self.screen_data.get("price"),
+            "price": self.hash_map.get("good_price"),
             "id_price": ""
         }
 
@@ -6537,9 +6650,6 @@ class Timer:
         self.http_service = HsService(self.http_settings)
 
     def timer_on_start(self):
-        if self.hash_map.get_bool('stop_timer_update'):
-            return
-
         if not self._check_connection():
             return
 
@@ -6580,7 +6690,7 @@ class Timer:
                 self._put_notification(text=notify_text, title="Загружены документы:")
 
         except Exception as e:
-            self.hs_service.write_error_to_log(error_text=e.args[0],
+            self.http_service.write_error_to_log(error_text=e.args[0],
                                                error_info='Ошибка загрузки документов')
 
     def upload_data(self):
@@ -6596,12 +6706,14 @@ class Timer:
         try:
             answer = self.http_service.send_data(data)
         except Exception as e:
-            self.hs_service.write_error_to_log(error_text=e,
-                                               error_info='Ошибка выгрузки документов')
+            self.http_service.write_error_to_log(
+                error_text=e,
+                error_info='Ошибка выгрузки документов'
+            )
             return
 
         if answer.error:
-            self.hs_service.write_error_to_log(error_text=answer.error_text,
+            self.http_service.write_error_to_log(error_text=answer.error_text,
                                                error_info='Ошибка выгрузки документов')
         else:
             docs_list_string = ', '.join([f"'{d['id_doc']}'" for d in data])
@@ -6659,8 +6771,7 @@ class WebServiceSyncCommand:
             'barcodes': self._get_barcodes_data,
             'hash_map': self._get_hash_map,
             'hash_map_size': self._get_hash_map_size,
-            'rs_settings': self._get_rs_settings,
-            'scanning_queue': self._get_scanning_queue
+            'rs_settings': self._get_rs_settings
         }
         if self.listener in listeners:
             listeners[self.listener]()
@@ -6707,15 +6818,6 @@ class WebServiceSyncCommand:
         self.hash_map.put('WSResponseHeaders', headers, to_json=True)
         self.hash_map.put('WSResponse', response)
 
-    def _get_scanning_queue(self):
-        service = ScanningQueueService()
-        queue = service.provider.get_all()
-
-        response = json.dumps(queue)
-
-        headers = [{'key': 'Content-Type', 'value': 'application/json'}]
-        self.hash_map.put('WSResponseHeaders', headers, to_json=True)
-        self.hash_map.put('WSResponse', response)
 
 # ^^^^^^^^^^^^^^^^^^^^^ Services ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -6780,7 +6882,6 @@ class MainEvents:
             "path_to_databases": "./",
             'sqlite_name': 'SimpleKeep',
             'log_name': 'log.json',
-            'timer_is_disabled': False,
             'allow_fact_input': False,
             'offline_mode': False,
             'delete_old_docs': False,
@@ -6843,6 +6944,7 @@ class ScreensFactory:
         GroupScanDocsListScreen,
         DocumentsDocsListScreen,
         GroupScanDocDetailsScreenNew,
+        GroupScanDocDetailsScreen,
         DocumentsDocDetailScreen,
         ErrorLogScreen,
         DebugSettingsScreen,
