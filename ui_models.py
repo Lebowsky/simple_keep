@@ -3393,15 +3393,15 @@ class BaseGoodSelect(Screen):
         }'''
         self.hash_map.show_dialog(
             'modal_dialog_input_qtty',
-            title=f"Ввести итоговое количество:",
+            title=f"На сколько изменить количество:",
             dialog_layout=layout
         )
 
     def _set_qty_result(self):
         if self._validate_delta_input():
-            self.new_qty = self._get_float_value(self.hash_map['delta'])
-            self.hash_map['new_qtty'] = self.hash_map['delta']
-            # self._set_delta())
+            self.new_qty = (self._get_float_value(self.hash_map['delta']) +
+                            self._get_float_value(self.hash_map['qtty']))
+            self.hash_map['new_qtty'] = self.new_qty
 
     def _validate_delta_input(self):
         try:
@@ -3528,15 +3528,15 @@ class GroupScanItemScreen(GoodsSelectScreen):
             for key in self.hash_map_keys
         })
 
-        self.hash_map.put('qtty', self._format_quantity(self.screen_data.get('d_qtty')))
+        self.hash_map.put('qtty', self.screen_data.get('d_qtty') or '0')
         self.hash_map['item_position'] = f'{self.current_index+1} / {len(self.table_index_data)}'
         self.new_qty = self.screen_data['qtty']
 
     def _set_delta(self, value: float = 0.0, reset: bool = False):
         if reset:
             self.delta = 0
-            self.new_qty = self.screen_data['d_qtty']
-            self.hash_map.put('new_qtty', self.screen_data['d_qtty'])
+            self.new_qty = self.screen_data['d_qtty'] or 0
+            self.hash_map.put('new_qtty', self.screen_data['d_qtty'] or '0')
         else:
             self.delta = value
             self.new_qty += self.delta
