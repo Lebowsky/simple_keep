@@ -120,9 +120,6 @@ class Screen(ABC):
     def put_notification(self, text, title=None):
         self.hash_map.notification(text, title)
 
-    def can_launch_timer(self):
-        return True
-
     def _listener_not_implemented(self):
         raise NotImplementedError (f'listener {self.listener} not implemented')
 
@@ -1760,8 +1757,6 @@ class GroupScanDocsListScreen(DocsListScreen):
             else:
                 self.toast('При очистке данных пересчета возникла ошибка.')
                 self.hash_map.error_log(res.get('error'))
-    def can_launch_timer(self):
-        return False
 
     def _back_screen(self):
         MainEvents.start_timer(self.hash_map)
@@ -2348,7 +2343,6 @@ class GroupScanDocDetailsScreen(DocDetailsScreen):
 
     def on_start(self) -> None:
         super()._on_start()
-        self.hash_map.put('stop_timer_update', 'true')
 
     def on_input(self) -> None:
         super().on_input()
@@ -2372,7 +2366,6 @@ class GroupScanDocDetailsScreen(DocDetailsScreen):
         elif listener in ['ON_BACK_PRESSED', 'BACK_BUTTON']:
             self.hash_map.put("SearchString", "")
             self.hash_map.put("ShowScreen", "Документы")
-            self.hash_map.put('stop_timer_update', 'false')
 
     def _run_progress_barcode_scanning(self):
         self.hash_map.run_event_progress('doc_details_before_process_barcode')
@@ -2484,8 +2477,6 @@ class GroupScanDocDetailsScreen(DocDetailsScreen):
         if 'urovo' in self.hash_map.get('DEVICE_MODEL').lower():
             suClass.urovo_set_lock_trigger(value)
 
-    def can_launch_timer(self):
-        return False
 
 
 class GroupScanDocDetailsScreenNew(DocDetailsScreen):
@@ -2501,7 +2492,6 @@ class GroupScanDocDetailsScreenNew(DocDetailsScreen):
 
     def on_start(self):
         super()._on_start()
-        self.hash_map.put('stop_timer_update', 'true')
         if not self.hash_map.get('stop_sync_doc') and \
                 not self.rs_settings.get('offline_mode'):
             self._sync_doc()
@@ -2544,7 +2534,6 @@ class GroupScanDocDetailsScreenNew(DocDetailsScreen):
 
     def go_back(self):
         self.hash_map.remove('stop_sync_doc')
-        self.hash_map.put('stop_timer_update', 'false')
         self.hash_map.show_screen('Документы')
 
     def send_post_lines_data(self, sent=None):
@@ -6661,9 +6650,6 @@ class Timer:
         self.http_service = HsService(self.http_settings)
 
     def timer_on_start(self):
-        if self.hash_map.get_bool('stop_timer_update'):
-            return
-
         if not self._check_connection():
             return
 
@@ -6704,7 +6690,7 @@ class Timer:
                 self._put_notification(text=notify_text, title="Загружены документы:")
 
         except Exception as e:
-            self.hs_service.write_error_to_log(error_text=e.args[0],
+            self.http_service.write_error_to_log(error_text=e.args[0],
                                                error_info='Ошибка загрузки документов')
 
     def upload_data(self):
@@ -6720,12 +6706,14 @@ class Timer:
         try:
             answer = self.http_service.send_data(data)
         except Exception as e:
-            self.hs_service.write_error_to_log(error_text=e,
-                                               error_info='Ошибка выгрузки документов')
+            self.http_service.write_error_to_log(
+                error_text=e,
+                error_info='Ошибка выгрузки документов'
+            )
             return
 
         if answer.error:
-            self.hs_service.write_error_to_log(error_text=answer.error_text,
+            self.http_service.write_error_to_log(error_text=answer.error_text,
                                                error_info='Ошибка выгрузки документов')
         else:
             docs_list_string = ', '.join([f"'{d['id_doc']}'" for d in data])
@@ -6894,7 +6882,6 @@ class MainEvents:
             "path_to_databases": "./",
             'sqlite_name': 'SimpleKeep',
             'log_name': 'log.json',
-            'timer_is_disabled': False,
             'allow_fact_input': False,
             'offline_mode': False,
             'delete_old_docs': False,
