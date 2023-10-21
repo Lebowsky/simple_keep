@@ -6,7 +6,7 @@ import os
 from pathlib import Path
 import time
 from datetime import datetime
-from typing import Dict, List, Tuple, Callable
+from typing import Dict, List, Tuple, Callable, Union
 import shutil
 import db_services
 import hs_services
@@ -42,6 +42,8 @@ class Screen(ABC):
         self.parent_screen = None
         self.on_start_handlers: List[Callable]=[]
         self.init_params = {}
+        self.result_handler: Union[Callable, None] = None
+        self.result_process = None
 
     @abstractmethod
     def on_start(self):
@@ -62,8 +64,10 @@ class Screen(ABC):
         self.init_screen()
         self.hash_map.show_screen(self.screen_name)
 
-    def show_process_result(self, args=None):
+    def show_process_result(self, result_handler=None, args=None):
         set_next_screen(self)
+        if self.parent_screen:
+            self.parent_screen.result_handler = result_handler
         self.hash_map.put_data(args)
         self._init_screen_values()
         self._validate_screen_values()
@@ -79,6 +83,9 @@ class Screen(ABC):
 
     @property
     def listener(self):
+        if self.hash_map['event'] == 'onResult' and self.result_handler:
+            self.result_handler(self.result_process)
+
         return self.hash_map.listener
 
     @listener.setter
@@ -134,10 +141,12 @@ class Screen(ABC):
         self.is_finish_process = True
         self.hash_map.finish_process()
 
-    def _finish_process_result(self):
+    def _finish_process_result(self, result=None):
         self.is_finish_process = True
+
         if self.parent_screen:
             self.parent_screen.hash_map = self.hash_map
+            self.parent_screen.result_process = result
             set_next_screen(self.parent_screen)
         self.hash_map.finish_process_result()
 
