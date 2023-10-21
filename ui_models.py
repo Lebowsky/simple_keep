@@ -33,13 +33,13 @@ class Screen(ABC):
     screen_name: str
     process_name: str
 
-    def __init__(self, hash_map: HashMap, rs_settings=_rs_settings):
+    def __init__(self, hash_map: HashMap, rs_settings=_rs_settings, **kwargs):
         self.hash_map: HashMap = hash_map
         self.screen_values = {}
         self.rs_settings = rs_settings
         self.event: str = self.hash_map['event']
         self.is_finish_process = False
-        self.parent_screen = None
+        self.parent_screen = kwargs.get('parent')
         self.on_start_handlers: List[Callable]=[]
         self.init_params = {}
         self.result_handler: Union[Callable, None] = None
@@ -3575,19 +3575,26 @@ class BarcodeRegistrationScreen(Screen):
             'unit_id': self.hash_map['unit_id'] or '',
         }
         self.title = 'Регистрация штрихкода'
+        self.db_tables_matching = {
+            'property_select': 'RS_properties',
+            'unit_select': 'RS_units',
+            'RS_properties': 'property_id',
+            'RS_units': 'unit_id',
+        }
+        self.screen_data = {}
+        self.hash_map_keys = ['scanned_barcode', 'property_select', 'unit_select', 'barcodes_data']
 
     def init_screen(self):
         init_data = self.goods_service.get_item_data_by_condition(**self.screen_values)
+        self.screen_data = self.screen_values
+
         if init_data:
             self.hash_map['scanned_barcode'] = ''
-            self.hash_map['good_name_barcode'] = init_data['name']
+            self.hash_map['item_name'] = init_data['name']
             self.hash_map['property_select'] = init_data['property']
             self.hash_map['unit_select'] = init_data['unit']
 
-            self.hash_map['property_select_id'] = self.screen_values['property_id']
-            self.hash_map['unit_select_id'] = self.screen_values['unit_id']
-
-            self._fill_barcodes_table(self.screen_values['item_id'])
+            self._fill_barcodes_table()
 
     def on_start(self):
         self.hash_map.set_title(self.title)
@@ -3596,8 +3603,6 @@ class BarcodeRegistrationScreen(Screen):
         listeners = {
             'property_select': self._select_item,
             'unit_select': self._select_item,
-            'property_select_success': lambda : self._select_item_result('property_select'),
-            'unit_select_success': lambda : self._select_item_result('unit_select'),
             'barcode': self._barcode_scanned,
             'btn_ok': self._handle_ok,
             'ON_BACK_PRESSED': self._finish_process,
@@ -3609,27 +3614,31 @@ class BarcodeRegistrationScreen(Screen):
         self.hash_map.no_refresh()
 
     def _select_item(self):
-        item_tables = {
-            'property_select': 'RS_properties',
-            'unit_select': 'RS_units',
-        }
+        hash_map_key = self.listener
+        table_name = self.db_tables_matching[hash_map_key]
+        screen_data_key = self.db_tables_matching[table_name]
 
-        item_type = self.listener
         screen = SelectItemScreen(
             self.hash_map,
-            table_name=item_tables[item_type],
-            result_listener=f'{item_type}_success'
+            table_name=table_name,
+            parent=self
         )
-        screen.parent_screen = self
-        screen.show()
+        screen.show(
+            result_handler=lambda result: self._select_item_result(
+                result=result,
+                hash_map_key=hash_map_key,
+                screen_data_key=screen_data_key
+            )
+        )
 
-    def _select_item_result(self, field_name):
-        selected_card = self.hash_map.get_json('selected_card')
-        if selected_card:
-            self.hash_map[field_name] = selected_card.get('name')
-            self.hash_map[f'{field_name}_id'] = selected_card.get('id')
-        else:
-            self.hash_map[field_name] = ''
+    def _select_item_result(self, result, hash_map_key, screen_data_key):
+        self.hash_map[hash_map_key] = result.get('name', '-')
+
+        self.hash_map[f'{hash_map_key}_id'] = result.get('id', '')
+        self.screen_data[screen_data_key] = result.get('id', '')
+
+        self._fill_barcodes_table()
+        self.hash_map.refresh_screen()
 
     def _barcode_scanned(self):
         scanned_barcode = self.hash_map.get("barcode")
@@ -3640,16 +3649,16 @@ class BarcodeRegistrationScreen(Screen):
         if not scanned_barcode:
             self.hash_map.toast("Штрихкод не отсканирован")
         elif self._check_barcode(scanned_barcode):
-            item_id = self.hash_map.get("item_id")
+
             barcode_data = {
-                "id_good": item_id,
+                "id_good": self.screen_data['item_id'],
                 "barcode": scanned_barcode,
-                "id_property": self.hash_map.get("property_select_id") or '',
-                "id_unit": self.hash_map.get("unit_select_id") or '',
+                "id_property": self.screen_data.get("property_id", ''),
+                "id_unit": self.screen_data.get("unit_id", ''),
             }
 
             self._save_barcode(barcode_data)
-            self._fill_barcodes_table(item_id)
+            self._fill_barcodes_table()
             self.hash_map.refresh_screen()
 
     def _save_barcode(self, barcode_data):
@@ -3671,16 +3680,14 @@ class BarcodeRegistrationScreen(Screen):
 
         return True
 
-    def _fill_barcodes_table(self, item_id):
-        barcodes_data = self.service.get_barcodes_by_goods_id(item_id)
+    def _fill_barcodes_table(self):
+        barcodes_data = self.service.get_barcodes_by_data(self.screen_data)
         table_data = self._prepare_table_data(barcodes_data)
         self.hash_map['barcodes_data'] = self._get_barcodes_table_view(table_data).to_json()
 
     def _prepare_table_data(self, barcodes_data):
-        table_data = []
-        table_data.append({'_layout': self._get_table_header()}) # шапка
+        table_data = [{'_layout': self._get_table_header()}]
         for row in barcodes_data:
-            # row['_layout'] = self._get_doc_table_row_view() проблема производительности
             table_data.append(row)
 
         return table_data
@@ -3770,6 +3777,8 @@ class BarcodeRegistrationScreen(Screen):
             self.StrokeWidth = 1
 
     def _finish_process(self):
+        for key in self.hash_map_keys:
+            self.hash_map.remove(key)
         self._finish_process_result()
 
 
@@ -5411,14 +5420,14 @@ class SelectItemScreen(Screen):
     screen_name = 'SelectItemScreen'
 
     def __init__(self, hash_map: HashMap, table_name, **kwargs):
-        super().__init__(hash_map)
+        super().__init__(hash_map, **kwargs)
 
         self.table_name = table_name
         self.fields: List[str] = kwargs.get('fields', ['name'])
         self.result_listener = kwargs.get('result_listener', 'select_success')
         self.return_value_key = kwargs.get('return_value_key', 'selected_card')
         self.title = kwargs.get('title', 'Выбор значения')
-
+        self.selected_card_data = {}
         self.db_service = db_services.SelectItemService(self.table_name)
 
     def on_start(self):
@@ -5442,9 +5451,9 @@ class SelectItemScreen(Screen):
         self.hash_map['SelectItemScreen_items_cards'] = cards.to_json()
         self.hash_map.put('return_selected_data')
 
-    def show(self, args=None):
+    def show(self, result_handler=None, args=None):
         self.hash_map['SetResultListener'] = self.result_listener
-        self.show_process_result()
+        self.show_process_result(result_handler=result_handler)
 
     def _get_cards(self, cards_data):
         card_title_text_size = self.rs_settings.get('CardTitleTextSize')
@@ -5477,7 +5486,8 @@ class SelectItemScreen(Screen):
         return cards
 
     def _cards_click(self):
-        self.hash_map.put(self.return_value_key, self._get_selected_card_data(), to_json=True)
+        self.selected_card_data = self._get_selected_card_data()
+        self.hash_map.put(self.return_value_key, self.selected_card_data, to_json=True)
         self._finish_process()
 
     def _back_screen(self):
@@ -5486,7 +5496,7 @@ class SelectItemScreen(Screen):
 
     def _finish_process(self):
         self.hash_map.remove('SelectItemScreen_items_cards')
-        self._finish_process_result()
+        self._finish_process_result(result=dict({'table_name': self.table_name}, **self.selected_card_data or {}))
 
 
 class ShowItemsScreen(Screen):
