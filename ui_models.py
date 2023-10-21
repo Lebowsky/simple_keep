@@ -3633,10 +3633,7 @@ class BarcodeRegistrationScreen(Screen):
 
     def _select_item_result(self, result, hash_map_key, screen_data_key):
         self.hash_map[hash_map_key] = result.get('name', '-')
-
-        self.hash_map[f'{hash_map_key}_id'] = result.get('id', '')
         self.screen_data[screen_data_key] = result.get('id', '')
-
         self._fill_barcodes_table()
         self.hash_map.refresh_screen()
 
@@ -3686,10 +3683,7 @@ class BarcodeRegistrationScreen(Screen):
         self.hash_map['barcodes_data'] = self._get_barcodes_table_view(table_data).to_json()
 
     def _prepare_table_data(self, barcodes_data):
-        table_data = [{'_layout': self._get_table_header()}]
-        for row in barcodes_data:
-            table_data.append(row)
-
+        table_data = [{'_layout': self._get_table_header()}, *barcodes_data]
         return table_data
 
     def _get_table_header(self):
@@ -3712,7 +3706,8 @@ class BarcodeRegistrationScreen(Screen):
                 BackgroundColor='#FFFFFF'
             )
 
-    def _get_barcodes_table_view(self, table_data):
+    @staticmethod
+    def _get_barcodes_table_view(table_data):
         table_view = widgets.CustomTable(
             widgets.LinearLayout(
                 widgets.LinearLayout(
