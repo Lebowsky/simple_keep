@@ -1,4 +1,5 @@
 import sm_adr_docs
+import sm_barc_flow
 from java import jclass
 from printing_factory import PrintService
 from ru.travelfood.simple_ui import SimpleUtilites as suClass
@@ -57,43 +58,39 @@ def on_close_app(hash_map):
 # =============== Documents =================
 @HashMap()
 def flow_docs_on_start(hash_map: HashMap):
-    """Отдельные обработчики плиток для определения процесса hash_map'ом"""
-    screen = ui_models.FlowDocScreen(hash_map, rs_settings)
+    screen = sm_barc_flow.FlowDocScreen(hash_map, rs_settings)
     screen.on_start()
 
 
 @HashMap()
 def flow_docs_on_select(hash_map: HashMap):
-    """Отдельные обработчики плиток для определения процесса hash_map'ом"""
-    screen = ui_models.FlowDocScreen(hash_map, rs_settings)
+    screen = sm_barc_flow.FlowDocScreen(hash_map, rs_settings)
     screen.on_input()
 
 
 @HashMap()
 def flow_tiles_on_start(hash_map: HashMap):
-    """Отдельные обработчики плиток для определения процесса hash_map'ом"""
-    screen = ui_models.FlowTilesScreen(hash_map, rs_settings)
+    screen = sm_barc_flow.FlowTilesScreen(hash_map, rs_settings)
     screen.on_start()
 
 
 @HashMap()
 def flow_tiles_on_select(hash_map: HashMap):
-    """Отдельные обработчики плиток для определения процесса hash_map'ом"""
-    screen = ui_models.FlowTilesScreen(hash_map, rs_settings)
+    screen = sm_barc_flow.FlowTilesScreen(hash_map, rs_settings)
     screen.on_input()
 
 
 @HashMap()
 def barcode_flow_on_start(hash_map: HashMap):
     """Процесс: Сбор ШК. Экран: ПотокШтрихкодовДокумента"""
-    screen = ui_models.FlowDocDetailsScreen(hash_map, rs_settings)
+    screen = sm_barc_flow.FlowDocDetailsScreen(hash_map, rs_settings)
     screen.on_start()
 
 
 @HashMap()
 def barcode_flow_listener(hash_map: HashMap):
     """Процесс: Сбор ШК. Экран: ПотокШтрихкодовДокумента"""
-    screen = ui_models.FlowDocDetailsScreen(hash_map, rs_settings)
+    screen = sm_barc_flow.FlowDocDetailsScreen(hash_map, rs_settings)
     screen.on_input()
 
 
