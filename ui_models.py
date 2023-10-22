@@ -40,7 +40,7 @@ class Screen(ABC):
         self.event: str = self.hash_map['event']
         self.is_finish_process = False
         self.parent_screen = kwargs.get('parent')
-        self.on_start_handlers: List[Callable]=[]
+        self.on_start_handlers: List[Callable] = []
         self.init_params = {}
         self.result_handler: Union[Callable, None] = None
         self.result_process = None
@@ -2332,160 +2332,6 @@ class DocDetailsScreen(Screen):
             self.height = "match_parent"
             self.width = "match_parent"
             self.StrokeWidth = 1
-
-
-class GroupScanDocDetailsScreen(DocDetailsScreen):
-    screen_name = 'Документ товары'
-    process_name = 'Групповая обработка'
-
-    def __init__(self, hash_map, rs_settings):
-        super().__init__(hash_map, rs_settings)
-        self.hs_service = hs_services.HsService(self.get_http_settings())
-        self.screen_values = {
-            'id_doc': hash_map['id_doc'],
-            'doc_type': hash_map['doc_type'],
-            'doc_n': hash_map['doc_n'],
-            'doc_date': hash_map['doc_date'],
-            'warehouse': hash_map['warehouse'],
-            'countragent': hash_map['countragent'],
-        }
-
-    def on_start(self) -> None:
-        super()._on_start()
-
-    def on_input(self) -> None:
-        super().on_input()
-        listener = self.hash_map['listener']
-
-        if listener == "CardsClick":
-            pass
-
-        elif listener == 'barcode':
-            self.hash_map.put("SearchString", "")
-            self._run_progress_barcode_scanning()
-
-        elif self._is_result_positive('modal_dialog_input_barcode'):
-            self._run_progress_barcode_scanning()
-
-        elif self._is_result_positive('RetryConnection'):
-            self._run_progress_barcode_scanning()
-
-        elif self._is_result_negative('RetryConnection'):
-            self.set_scanner_lock(False)
-        elif listener in ['ON_BACK_PRESSED', 'BACK_BUTTON']:
-            self.hash_map.put("SearchString", "")
-            self.hash_map.put("ShowScreen", "Документы")
-
-    def _run_progress_barcode_scanning(self):
-        self.hash_map.run_event_progress('doc_details_before_process_barcode')
-
-    def before_process_barcode(self):
-        self.set_scanner_lock(True)
-        if self._check_connection():
-            self._update_document_data()
-            scan_result = self._barcode_scanned()
-
-            if scan_result.get('Error'):
-                self.hash_map.run_event('doc_scan_error_sound')
-            else:
-                self.hash_map.run_event_async('doc_run_post_barcode_scanned',
-                                              post_execute_method='doc_scan_error_sound')
-            self.set_scanner_lock(False)
-
-        else:
-            self.hash_map.beep('70')
-            self.hash_map.show_dialog(listener="RetryConnection", title='Отсутствует соединение с сервером',
-                                      buttons=["Повторить", "Отмена"])
-
-    def _update_document_data(self):
-        docs_data = self._get_update_current_doc_data()
-        if docs_data:
-            try:
-                self.service.update_data_from_json(docs_data)
-            except Exception as e:
-                self.service.write_error_on_log(
-                    error_type="GroupScan",
-                    error_text=e,
-                    error_info='Ошибка записи документа')
-
-    def _get_update_current_doc_data(self):
-        try:
-            self.hs_service.get_data()
-            answer = self.hs_service.http_answer
-
-            if answer.unauthorized:
-                self.hash_map.toast('Ошибка авторизации сервера 1С')
-            elif answer.forbidden:
-                self.hash_map.notification(answer.error_text, title='Ошибка обмена')
-                self.hash_map.toast(answer.error_text)
-            elif answer.error:
-                self.hs_service.write_error_to_log(error_text=answer.error_text,
-                                                   error_info='Ошибка загрузки документа')
-            else:
-                return answer.data
-        except:
-            self.set_scanner_lock(False)
-
-    def post_barcode_scanned(self):
-        if self.hash_map.get_bool('barcode_scanned'):
-            answer = None
-            try:
-                answer = self._post_goods_to_server()
-            except Exception as e:
-                self.hs_service.write_error_to_log(error_text=e.args[0],
-                                                   error_info='Ошибка отправки данных документа')
-            if answer and answer.get('Error') is not None:
-                self.hash_map.error_log(answer.get('Error'))
-
-            self.on_start()
-
-    def _post_goods_to_server(self):
-        res = self.service.get_last_edited_goods(to_json=False)
-        hs_service = HsService(self.get_http_settings())
-
-        if isinstance(res, dict) and res.get('Error'):
-            answer = {'empty': True, 'Error': res.get('Error')}
-            return answer
-        elif res:
-            hs_service.send_documents(res)
-            answer = hs_service.http_answer
-            if answer.error:
-                self.hs_service.write_error_to_log(error_text=answer.error_text,
-                                                   error_info='Ошибка отправки данных документа')
-            else:
-                try:
-                    self.service.update_sent_data(res)
-                except Exception as e:
-                    self.hs_service.write_error_to_log(error_text=e.args[0],
-                                                       error_info='Ошибка отправки данных документа')
-
-        # пока что отключил дополнительный get-запрос, проверяем производительность
-
-        # docs_data = hs_service.get_data()
-        #
-        # if docs_data.get('data'):
-        #     try:
-        #         self.service.update_data_from_json(docs_data['data'])
-        #     except Exception as e:
-        #         self.service.write_error_on_log(e.args[0])
-
-    def _check_connection(self):
-        try:
-            self.hs_service.communication_test(timeout=1)
-            answer = self.hs_service.http_answer
-        except Exception as e:
-            answer = self.hs_service.HttpAnswer(
-                error=True,
-                error_text=str(e.args[0]),
-                status_code=404,
-                url=self.hs_service.url)
-
-        return not answer.error
-
-    def set_scanner_lock(self, value: bool):
-        if 'urovo' in self.hash_map.get('DEVICE_MODEL').lower():
-            suClass.urovo_set_lock_trigger(value)
-
 
 
 class GroupScanDocDetailsScreenNew(DocDetailsScreen):
@@ -5023,6 +4869,7 @@ class SelectUnit(GoodsPricesItemCard):
 
 # ==================== Series =============================
 
+
 class SeriesSelectScreen(Screen):
     process_name = 'SeriesProcess'
     screen_name = 'SeriesSelectScreen'
@@ -5038,12 +4885,9 @@ class SeriesSelectScreen(Screen):
             'doc_row_id': self.hash_map['doc_row_id'],
         }
         self.use_adr_docs_tables = self.hash_map.get_bool('use_adr_docs_tables')
-        self.initial_series_qty = None
+        self.qty_without_series = None
 
     def init_screen(self):
-        if not self.initial_series_qty:
-            self.initial_series_qty = self.service.get_total_qtty()
-
         if self.use_adr_docs_tables:
             self.service = db_services.AdrSeriesService()
         key = self.screen_values['doc_row_id']
@@ -5051,6 +4895,9 @@ class SeriesSelectScreen(Screen):
         # # Обработаем числовые ключи в словаре
         self._handle_num_keys(self.screen_data)
         self.service.params = self.screen_data
+        if self.qty_without_series is None:
+            self.qty_without_series = (int(self.screen_data['d_qtty'])
+                                       - self.service.get_total_qtty())
         self._refresh_series_cards()
 
         if not self.hash_map.get('doc_title'):
@@ -5119,15 +4966,9 @@ class SeriesSelectScreen(Screen):
 
     def _refresh_total_qtty(self):
         current_series_qtty = self.service.get_total_qtty() or 0
-        old_qty = float(self.hash_map['qtty'] or 0)
-        qty_without_series = old_qty - self.initial_series_qty
-        self.toast(f"{current_series_qtty} {self.initial_series_qty} {qty_without_series}")
-
-        if self.initial_series_qty != float(current_series_qtty):
-            total_table_qty = qty_without_series + current_series_qtty
-            self.service.update_total_qty(qty=total_table_qty, row_id=self.screen_values['doc_row_id'])
-            self.hash_map['qtty'] = self._format_quantity(total_table_qty)
-            self.parent_screen.handle_series(current_series_qtty, old_qty)
+        total_table_qty = self.qty_without_series + current_series_qtty
+        self.service.update_total_qty(qty=total_table_qty, row_id=self.screen_values['doc_row_id'])
+        self.hash_map['qtty'] = self._format_quantity(total_table_qty)
 
     def _barcode_listener(self):
         self._identify_add_barcode_series()

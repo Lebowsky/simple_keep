@@ -1429,6 +1429,7 @@ class SeriesService(DbService):
             RS_docs_table.id_properties,
             RS_docs_table.id_unit,
             RS_docs_table.qtty,
+            RS_docs_table.d_qtty,
             RS_docs_table.qtty_plan,
             RS_docs_table.price,
             RS_docs_table.use_series,
