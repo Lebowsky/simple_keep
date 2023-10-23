@@ -1168,28 +1168,6 @@ class SeriesService(DbService):
             AND (name = ? OR number = ?)'''
         return get_query_result(q, params, True)
 
-    def get_adr_series_by_barcode(self, barcode):
-        params = [self.params.get('id_doc'), self.params.get('id_good'), self.params.get('cell'),
-                  barcode,  barcode]  # self.params.get('id_warehouse'),
-        q = '''
-        SELECT id,
-           id_doc,
-           id_good,
-           id_properties,
-           id_series,
-           id_warehouse,
-           qtty,
-           name,
-           best_before,
-           number,
-           production_date,
-           cell
-        FROM RS_docs_series
-        WHERE RS_docs_series.id_doc = ? AND 
-            RS_docs_series.id_good = ? AND RS_docs_series.cell = ?
-            AND (name = ? OR number = ?)'''
-        return get_query_result(q, params, True)
-
     def get_series_by_doc_and_goods(self):
         params = (self.params.get('id_doc'), self.params.get('id_good'))  # , self.params.get('id_warehouse')
 
@@ -1315,7 +1293,6 @@ class SeriesService(DbService):
         q = 'DELETE FROM RS_docs_series  WHERE id = ?'
         return get_query_result(q, (id,))
 
-
     def get_series_prop_by_id(self, id):
         table_name = self.doc_basic_table_name
         is_adr = False if table_name == 'RS_docs_table' else True
@@ -1368,29 +1345,16 @@ class SeriesService(DbService):
         else:
             return {}
 
-
     @staticmethod
     def get_series_table_str(id):
         q = '''
-       SELECT 
-        RS_docs_series.id,
-        RS_docs_series.id_doc,
-        RS_docs_series.id_good,
-        RS_docs_series.id_series,
-        RS_docs_series.id_warehouse,
-        RS_docs_series.qtty,
-        IFNULL(RS_docs_series.name, '') AS name,
-        IFNULL(RS_docs_series.best_before, '') AS best_before,
-        RS_docs_series.number,
-        IFNULL(RS_docs_series.production_date, '') AS production_date,
-        RS_docs_series.cell,
-        RS_goods.name as good_name, 
-        RS_cells.name as cell_name
+        SELECT 
+            IFNULL(RS_docs_series.name, '') AS name,
+            IFNULL(RS_docs_series.best_before, '') AS best_before,
+            IFNULL(RS_docs_series.number, '') AS number,
+            IFNULL(RS_docs_series.production_date, '') AS production_date,
+            IFNULL(RS_docs_series.qtty, 0) as qtty
         FROM RS_docs_series
-        LEFT JOIN RS_goods
-        ON RS_goods.id = RS_docs_series.id_good
-        LEFT JOIN RS_cells
-        ON RS_cells.id = RS_docs_series.cell
         WHERE RS_docs_series.id = ?
         '''
         res = get_query_result(q, (id,),True)
@@ -1398,7 +1362,6 @@ class SeriesService(DbService):
             return res[0]
         else:
             return {}
-
 
     def get_doc_prop_by_id(self, id_doc):
         table_name = self.doc_basic_handler_name
@@ -1421,7 +1384,7 @@ class SeriesService(DbService):
         else:
             return {}
 
-    def get_values_for_screen_by_id(self, id) -> dict:
+    def get_screen_data(self, id) -> dict:
 
         q = f'''
         SELECT RS_docs_table.id_doc,
@@ -1457,6 +1420,25 @@ class SeriesService(DbService):
             return res[0]
         else:
             return {}
+
+    def get_series_data(self, doc_row_id):
+        q = f'''
+            SELECT 
+                series.id AS key,
+                series.qtty,
+                series.name,
+                series.best_before,
+                series.number,
+                series.production_date
+                
+            FROM RS_docs_series AS series
+            JOIN RS_docs_table AS doc_table
+                ON series.id_good = doc_table.id_good 
+                AND series.id_properties = doc_table.id_properties
+            WHERE doc_table.id = '{doc_row_id}'
+        '''
+
+        return get_query_result(q, return_dict=True)
 
     def save_table_str(self, params):
         q = '''
@@ -1498,7 +1480,7 @@ class SeriesService(DbService):
 
 
 class AdrSeriesService(SeriesService):
-    def get_values_for_screen_by_id(self, _id) -> dict:
+    def get_screen_data(self, _id) -> dict:
 
         q = f'''
         SELECT RS_docs_table.id_doc,
