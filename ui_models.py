@@ -181,13 +181,13 @@ class Screen(ABC):
         doc_n = kwargs.get('doc_n', '')
         doc_title = '{} № {} от {}'.format(
                 kwargs.get('doc_type', ''),
-                self._prepare_number(doc_n) if doc_n else '',
+                self._format_doc_number(doc_n) if doc_n else '',
                 self._format_date(doc_date) if doc_date else ''
             )
         return doc_title    
     
     @staticmethod
-    def _prepare_number(num: str) -> str:
+    def _format_doc_number(num: str) -> str:
         prefix, number = num.split('-')
         modified_number = str(int(number))
         return f"{prefix}-{modified_number}"
@@ -1578,9 +1578,9 @@ class DocsListScreen(Screen):
                 doc_status = 'К выполнению'
 
             doc_title = self._get_doc_title(
-                doc_type=self.hash_map.get('doc_type',''),
-                doc_n=self.hash_map.get('doc_n',''),
-                doc_date=self.hash_map.get('doc_date','')
+                doc_type=self.hash_map.get('doc_type') or '',
+                doc_n=self.hash_map.get('doc_n') or '',
+                doc_date=self.hash_map.get('doc_date') or ''
             )
 
             table_data.append({
@@ -2764,9 +2764,9 @@ class GroupScanDocDetailsScreenNew(DocDetailsScreen):
         current_str = self.hash_map["selected_card_position"]
         table_lines_qtty = self.hash_map['table_lines_qtty']
         doc_title = self._get_doc_title(
-            doc_type=self.hash_map.get('doc_type',''),
-            doc_n=self.hash_map.get('doc_n',''),
-            doc_date=self.hash_map.get('doc_date','')
+            doc_type=self.hash_map.get('doc_type') or '',
+            doc_n=self.hash_map.get('doc_n') or '',
+            doc_date=self.hash_map.get('doc_date') or ''
         )
         put_data_dict = {
             'doc_title': doc_title,
@@ -2998,9 +2998,9 @@ class FlowDocDetailsScreen(DocDetailsScreen):
 
     def _barcode_flow_on_start(self):
         doc_title = self._get_doc_title(
-            doc_type=self.hash_map.get('doc_type',''),
-            doc_n=self.hash_map.get('doc_n',''),
-            doc_date=self.hash_map.get('doc_date','')
+            doc_type=self.hash_map.get('doc_type') or '',
+            doc_n=self.hash_map.get('doc_n') or '',
+            doc_date=self.hash_map.get('doc_date') or ''
         ) 
         self.hash_map.put('doc_title', doc_title)
 
