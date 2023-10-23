@@ -2995,7 +2995,7 @@
                                             },
                                             {
                                                 "type": "LinearLayout",
-                                                "Variable": "fact_qtty_input",
+                                                "Variable": "",
                                                 "orientation": "vertical",
                                                 "height": "wrap_content",
                                                 "width": "match_parent",
@@ -3176,36 +3176,6 @@
                                                         "Padding": "center"
                                                     }
                                                 ]
-                                            },
-                                            {
-                                                "type": "LinearLayout",
-                                                "Variable": "fact_qtty_note",
-                                                "orientation": "vertical",
-                                                "height": "wrap_content",
-                                                "width": "match_parent",
-                                                "weight": "1",
-                                                "Elements": [
-                                                    {
-                                                        "Value": "Факт",
-                                                        "Variable": "",
-                                                        "height": "wrap_content",
-                                                        "width": "match_parent",
-                                                        "weight": "0",
-                                                        "type": "TextView"
-                                                    },
-                                                    {
-                                                        "Value": "@qtty",
-                                                        "Variable": "qtty",
-                                                        "height": "wrap_content",
-                                                        "width": "match_parent",
-                                                        "weight": "0",
-                                                        "TextBold": false,
-                                                        "TextItalic": false,
-                                                        "TextSize": "24",
-                                                        "TextColor": "#000000",
-                                                        "type": "TextView"
-                                                    }
-                                                ]
                                             }
                                         ]
                                     },
@@ -3231,7 +3201,7 @@
                                             },
                                             {
                                                 "type": "LinearLayout",
-                                                "Variable": "fact_qtty_input",
+                                                "Variable": "",
                                                 "orientation": "horizontal",
                                                 "height": "wrap_content",
                                                 "width": "match_parent",
@@ -3313,6 +3283,16 @@
                                                 ]
                                             }
                                         ]
+                                    },
+                                    {
+                                        "Value": "Перейти к сериям >>",
+                                        "Variable": "btn_to_series",
+                                        "height": "wrap_content",
+                                        "width": "match_parent",
+                                        "weight": "0",
+                                        "TextBold": false,
+                                        "TextItalic": false,
+                                        "type": "Button"
                                     }
                                 ]
                             },
