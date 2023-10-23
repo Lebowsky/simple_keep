@@ -392,6 +392,7 @@
                                         "TextBold": false,
                                         "TextItalic": false,
                                         "TextSize": "16",
+                                        "TextColor": "#7A005C",
                                         "type": "TextView"
                                     },
                                     {
@@ -1676,6 +1677,7 @@
                                         "TextBold": false,
                                         "TextItalic": false,
                                         "TextSize": "16",
+                                        "TextColor": "#7A005C",
                                         "type": "TextView"
                                     },
                                     {
@@ -2794,6 +2796,7 @@
                                         "TextBold": false,
                                         "TextItalic": false,
                                         "TextSize": "16",
+                                        "TextColor": "#7A005C",
                                         "type": "TextView"
                                     },
                                     {
@@ -3564,43 +3567,16 @@
                                 "weight": "0",
                                 "Elements": [
                                     {
-                                        "Value": "@doc_type",
+                                        "Value": "@doc_title",
                                         "Variable": "",
                                         "height": "wrap_content",
-                                        "width": "wrap_content",
+                                        "width": "match_parent",
                                         "weight": "0",
-                                        "TextBold": true,
-                                        "TextSize": "18",
+                                        "TextBold": false,
+                                        "TextItalic": false,
+                                        "TextSize": "16",
+                                        "TextColor": "#7A005C",
                                         "type": "TextView"
-                                    },
-                                    {
-                                        "type": "LinearLayout",
-                                        "Variable": "",
-                                        "orientation": "horizontal",
-                                        "height": "wrap_content",
-                                        "width": "wrap_content",
-                                        "weight": "0",
-                                        "Elements": [
-                                            {
-                                                "Value": "@doc_n",
-                                                "Variable": "",
-                                                "height": "wrap_content",
-                                                "width": "wrap_content",
-                                                "weight": "0",
-                                                "TextBold": true,
-                                                "TextSize": "24",
-                                                "TextColor": "#7A005C",
-                                                "type": "TextView"
-                                            },
-                                            {
-                                                "Value": "@doc_date",
-                                                "Variable": "",
-                                                "height": "wrap_content",
-                                                "width": "wrap_content",
-                                                "weight": "0",
-                                                "type": "TextView"
-                                            }
-                                        ]
                                     },
                                     {
                                         "Value": "@warehouse",
