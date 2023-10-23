@@ -6,7 +6,7 @@ import os
 from pathlib import Path
 import time
 from datetime import datetime
-from typing import Dict, List, Tuple, Callable
+from typing import Dict, List, Tuple, Callable, Union
 import shutil
 import db_services
 import hs_services
@@ -33,15 +33,17 @@ class Screen(ABC):
     screen_name: str
     process_name: str
 
-    def __init__(self, hash_map: HashMap, rs_settings=_rs_settings):
+    def __init__(self, hash_map: HashMap, rs_settings=_rs_settings, **kwargs):
         self.hash_map: HashMap = hash_map
         self.screen_values = {}
         self.rs_settings = rs_settings
         self.event: str = self.hash_map['event']
         self.is_finish_process = False
-        self.parent_screen = None
-        self.on_start_handlers: List[Callable]=[]
+        self.parent_screen = kwargs.get('parent')
+        self.on_start_handlers: List[Callable] = []
         self.init_params = {}
+        self.result_handler: Union[Callable, None] = None
+        self.result_process = None
 
     @abstractmethod
     def on_start(self):
@@ -62,8 +64,10 @@ class Screen(ABC):
         self.init_screen()
         self.hash_map.show_screen(self.screen_name)
 
-    def show_process_result(self, args=None):
+    def show_process_result(self, result_handler=None, args=None):
         set_next_screen(self)
+        if self.parent_screen:
+            self.parent_screen.result_handler = result_handler
         self.hash_map.put_data(args)
         self._init_screen_values()
         self._validate_screen_values()
@@ -79,6 +83,9 @@ class Screen(ABC):
 
     @property
     def listener(self):
+        if self.hash_map['event'] == 'onResult' and self.result_handler:
+            self.result_handler(self.result_process)
+
         return self.hash_map.listener
 
     @listener.setter
@@ -120,9 +127,6 @@ class Screen(ABC):
     def put_notification(self, text, title=None):
         self.hash_map.notification(text, title)
 
-    def can_launch_timer(self):
-        return True
-
     def _listener_not_implemented(self):
         raise NotImplementedError (f'listener {self.listener} not implemented')
 
@@ -137,10 +141,12 @@ class Screen(ABC):
         self.is_finish_process = True
         self.hash_map.finish_process()
 
-    def _finish_process_result(self):
+    def _finish_process_result(self, result=None):
         self.is_finish_process = True
+
         if self.parent_screen:
             self.parent_screen.hash_map = self.hash_map
+            self.parent_screen.result_process = result
             set_next_screen(self.parent_screen)
         self.hash_map.finish_process_result()
 
@@ -1742,13 +1748,34 @@ class GroupScanDocsListScreen(DocsListScreen):
                    f"в {current_mode.upper()} режиме.")
             if self.hash_map.get_json('selected_card_data')['is_group_scan'] == '0':
                 msg += warning_msg
-            self.hash_map.put('group_scan_message', msg)
+            self.hash_map.put('msg', msg)
 
-            self.hash_map.show_dialog('Подтвердите действие')
+            layout = '''{
+                                    "type": "LinearLayout",
+                                    "Variable": "",
+                                    "orientation": "horizontal",
+                                    "height": "wrap_content",
+                                    "width": "match_parent",
+                                    "weight": "0",
+                                    "Elements": [
+                                        {
+                                            "Value": "@msg",
+                                            "Variable": "msg",
+                                            "height": "wrap_content",
+                                            "width": "match_parent",
+                                            "weight": "0",
+                                            "type": "TextView"
+                                        }
+                                    ]
+                                }'''
+
+            self.hash_map.show_dialog('open_doc_confirmation',
+                                      title="Подтвердите действие", dialog_layout=layout)
+
             selected_card_key = self.hash_map['selected_card_key']
             self.hash_map['id_doc'] = selected_card_key
 
-        elif self._is_result_positive('Подтвердите действие'):
+        elif self._is_result_positive('open_doc_confirmation'):
             id_doc = self.hash_map['id_doc']
             self.service.doc_id = id_doc
             if self.hash_map.get_json('selected_card_data')['is_group_scan'] == '0':
@@ -1775,8 +1802,6 @@ class GroupScanDocsListScreen(DocsListScreen):
             else:
                 self.toast('При очистке данных пересчета возникла ошибка.')
                 self.hash_map.error_log(res.get('error'))
-    def can_launch_timer(self):
-        return False
 
     def _back_screen(self):
         MainEvents.start_timer(self.hash_map)
@@ -2308,7 +2333,7 @@ class DocDetailsScreen(Screen):
         screen.show()
 
     def _show_dialog_input_barcode(self):
-        loyaut = '''{
+        layout = '''{
             "type": "LinearLayout",
             "Variable": "",
             "orientation": "horizontal",
@@ -2326,7 +2351,9 @@ class DocDetailsScreen(Screen):
                 }
             ]
         }'''
-        self.hash_map.show_dialog('modal_dialog_input_barcode', title="Введите штрихкод товара", dialog_layout=loyaut)
+        self.hash_map.show_dialog('modal_dialog_input_barcode',
+                                  title="Введите штрихкод товара",
+                                  dialog_layout=layout)
 
     class TextView(widgets.TextView):
         def __init__(self, value):
@@ -2352,171 +2379,12 @@ class GroupScanDocDetailsScreen(DocDetailsScreen):
     def __init__(self, hash_map, rs_settings):
         super().__init__(hash_map, rs_settings)
         self.hs_service = hs_services.HsService(self.get_http_settings())
-        self.screen_values = {
-            'id_doc': hash_map['id_doc'],
-            'doc_type': hash_map['doc_type'],
-            'doc_n': hash_map['doc_n'],
-            'doc_date': hash_map['doc_date'],
-            'warehouse': hash_map['warehouse'],
-            'countragent': hash_map['countragent'],
-        }
-
-    def on_start(self) -> None:
-        super()._on_start()
-        self.hash_map.put('stop_timer_update', 'true')
-
-    def on_input(self) -> None:
-        super().on_input()
-        listener = self.hash_map['listener']
-
-        if listener == "CardsClick":
-            pass
-
-        elif listener == 'barcode':
-            self.hash_map.put("SearchString", "")
-            self._run_progress_barcode_scanning()
-
-        elif self._is_result_positive('modal_dialog_input_barcode'):
-            self._run_progress_barcode_scanning()
-
-        elif self._is_result_positive('RetryConnection'):
-            self._run_progress_barcode_scanning()
-
-        elif self._is_result_negative('RetryConnection'):
-            self.set_scanner_lock(False)
-        elif listener in ['ON_BACK_PRESSED', 'BACK_BUTTON']:
-            self.hash_map.put("SearchString", "")
-            self.hash_map.put("ShowScreen", "Документы")
-            self.hash_map.put('stop_timer_update', 'false')
-
-    def _run_progress_barcode_scanning(self):
-        self.hash_map.run_event_progress('doc_details_before_process_barcode')
-
-    def before_process_barcode(self):
-        self.set_scanner_lock(True)
-        if self._check_connection():
-            self._update_document_data()
-            scan_result = self._barcode_scanned()
-
-            if scan_result.get('Error'):
-                self.hash_map.run_event('doc_scan_error_sound')
-            else:
-                self.hash_map.run_event_async('doc_run_post_barcode_scanned',
-                                              post_execute_method='doc_scan_error_sound')
-            self.set_scanner_lock(False)
-
-        else:
-            self.hash_map.beep('70')
-            self.hash_map.show_dialog(listener="RetryConnection", title='Отсутствует соединение с сервером',
-                                      buttons=["Повторить", "Отмена"])
-
-    def _update_document_data(self):
-        docs_data = self._get_update_current_doc_data()
-        if docs_data:
-            try:
-                self.service.update_data_from_json(docs_data)
-            except Exception as e:
-                self.service.write_error_on_log(
-                    error_type="GroupScan",
-                    error_text=e,
-                    error_info='Ошибка записи документа')
-
-    def _get_update_current_doc_data(self):
-        try:
-            self.hs_service.get_data()
-            answer = self.hs_service.http_answer
-
-            if answer.unauthorized:
-                self.hash_map.toast('Ошибка авторизации сервера 1С')
-            elif answer.forbidden:
-                self.hash_map.notification(answer.error_text, title='Ошибка обмена')
-                self.hash_map.toast(answer.error_text)
-            elif answer.error:
-                self.hs_service.write_error_to_log(error_text=answer.error_text,
-                                                   error_info='Ошибка загрузки документа')
-            else:
-                return answer.data
-        except:
-            self.set_scanner_lock(False)
-
-    def post_barcode_scanned(self):
-        if self.hash_map.get_bool('barcode_scanned'):
-            answer = None
-            try:
-                answer = self._post_goods_to_server()
-            except Exception as e:
-                self.hs_service.write_error_to_log(error_text=e.args[0],
-                                                   error_info='Ошибка отправки данных документа')
-            if answer and answer.get('Error') is not None:
-                self.hash_map.error_log(answer.get('Error'))
-
-            self.on_start()
-
-    def _post_goods_to_server(self):
-        res = self.service.get_last_edited_goods(to_json=False)
-        hs_service = HsService(self.get_http_settings())
-
-        if isinstance(res, dict) and res.get('Error'):
-            answer = {'empty': True, 'Error': res.get('Error')}
-            return answer
-        elif res:
-            hs_service.send_documents(res)
-            answer = hs_service.http_answer
-            if answer.error:
-                self.hs_service.write_error_to_log(error_text=answer.error_text,
-                                                   error_info='Ошибка отправки данных документа')
-            else:
-                try:
-                    self.service.update_sent_data(res)
-                except Exception as e:
-                    self.hs_service.write_error_to_log(error_text=e.args[0],
-                                                       error_info='Ошибка отправки данных документа')
-
-        # пока что отключил дополнительный get-запрос, проверяем производительность
-
-        # docs_data = hs_service.get_data()
-        #
-        # if docs_data.get('data'):
-        #     try:
-        #         self.service.update_data_from_json(docs_data['data'])
-        #     except Exception as e:
-        #         self.service.write_error_on_log(e.args[0])
-
-    def _check_connection(self):
-        try:
-            self.hs_service.communication_test(timeout=1)
-            answer = self.hs_service.http_answer
-        except Exception as e:
-            answer = self.hs_service.HttpAnswer(
-                error=True,
-                error_text=str(e.args[0]),
-                status_code=404,
-                url=self.hs_service.url)
-
-        return not answer.error
-
-    def set_scanner_lock(self, value: bool):
-        if 'urovo' in self.hash_map.get('DEVICE_MODEL').lower():
-            suClass.urovo_set_lock_trigger(value)
-
-    def can_launch_timer(self):
-        return False
-
-
-class GroupScanDocDetailsScreenNew(DocDetailsScreen):
-    screen_name = 'Документ товары'
-    process_name = 'Групповая обработка'
-
-    def __init__(self, hash_map, rs_settings):
-        super().__init__(hash_map, rs_settings)
-        self.hs_service = hs_services.HsService(self.get_http_settings())
         self.db_service = db_services.BarcodeService()
         self.queue_service = ScanningQueueService()
         self.screen_values = {}
 
     def on_start(self):
         super()._on_start()
-        self.hash_map.put('stop_timer_update', 'true')
         if not self.hash_map.get('stop_sync_doc') and \
                 not self.rs_settings.get('offline_mode'):
             self._sync_doc()
@@ -2559,14 +2427,15 @@ class GroupScanDocDetailsScreenNew(DocDetailsScreen):
 
     def go_back(self):
         self.hash_map.remove('stop_sync_doc')
-        self.hash_map.put('stop_timer_update', 'false')
         self.hash_map.show_screen('Документы')
 
     def send_post_lines_data(self, sent=None):
         send_data = self.queue_service.get_document_lines(self.id_doc, sent=sent)
-        validated_send_data = list((dict((key, value) for key, value in d.items()
-                                         if key not in ['row_key', 'sent'])
-                                    for d in send_data))
+        validated_send_data = list(
+            (dict((key, value) for key, value in d.items()
+                if key not in ['row_key', 'sent'])
+                for d in send_data)
+        )
         if not validated_send_data:
             validated_send_data = [{}]
 
@@ -2752,43 +2621,28 @@ class GroupScanDocDetailsScreenNew(DocDetailsScreen):
         self.send_post_lines_data(sent=False)
 
     def _cards_click(self):
-        if not self.rs_settings.get('allow_fact_input'):
-            self.hash_map.refresh_screen()
-            return self.hash_map
-
         current_elem = json.loads(self.hash_map.get('selected_card_data'))
-        # при клике по шапке таблицы прилетает пустой словарь
-        if not current_elem:
+        self.hash_map.put('id_good', current_elem['id_good'])
+        if len(self.table_data) == 2:
+            first_element_page = self.table_data[1]['key']
+            first_element_list = first_element_page
+        elif len(self.table_data) > 2:
+            first_element_page = self.table_data[1]['key']
+            first_element_list = self.table_data[2]['key']
+        else:
             return
 
-        current_str = self.hash_map["selected_card_position"]
-        table_lines_qtty = self.hash_map['table_lines_qtty']
-        doc_title = self._get_doc_title(
-            doc_type=self.hash_map.get('doc_type') or '',
-            doc_n=self.hash_map.get('doc_n') or '',
-            doc_date=self.hash_map.get('doc_date') or ''
+        table_index_data = self.service.get_table_index_data(
+            self.id_doc, first_element_page, first_element_list
         )
-        put_data_dict = {
-            'doc_title': doc_title,
-            'Good': current_elem['good_name'],
-            'id_good': current_elem['id_good'],
-            'id_unit': current_elem['id_unit'],
-            'id_property': current_elem['id_properties'],
-            'good_art': current_elem['art'],
-            'good_sn': current_elem['series_name'],
-            'good_property': current_elem['properties_name'],
-            'good_price': current_elem['price'],
-            'good_unit': current_elem['units_name'],
-            'good_str': f'{current_str} / {table_lines_qtty}',
-            'qtty_plan': current_elem['qtty_plan'],
-            'good_plan': current_elem['qtty_plan'],
-            'key': current_elem['key'],
-            'price': current_elem['price'],
-            'price_type': current_elem['price_name'],
-            'qtty': self._format_quantity(current_elem['d_qtty']),
-        }
-        screen = GroupScanItemScreen(self.hash_map, self.rs_settings)
-        screen.show(args=put_data_dict)
+        screen = GroupScanItemScreen(
+            self.hash_map,
+            id_doc=self.id_doc,
+            table_index_data=table_index_data,
+            doc_row_id=int(self.hash_map['selected_card_key'])
+        )
+        screen.parent_screen = self
+        screen.show()
 
 
 class DocumentsDocDetailScreen(DocDetailsScreen):
@@ -3329,7 +3183,6 @@ class BaseGoodSelect(Screen):
             self.new_qty += self.delta
             self.hash_map['new_qtty'] = self._format_quantity(self.new_qty)
 
-
     def _set_result_qtty(self, delta):
         new_qtty = float(self.hash_map.get('qtty') or 0) + delta
         new_qtty = str(self._format_quantity(new_qtty))
@@ -3433,15 +3286,15 @@ class BaseGoodSelect(Screen):
         }'''
         self.hash_map.show_dialog(
             'modal_dialog_input_qtty',
-            title=f"Ввести итоговое количество:",
+            title=f"Введите количество для изменения:",
             dialog_layout=layout
         )
 
     def _set_qty_result(self):
         if self._validate_delta_input():
-            self.new_qty = self._get_float_value(self.hash_map['delta'])
-            self.hash_map['new_qtty'] = self.hash_map['delta']
-            # self._set_delta())
+            self.new_qty = (self._get_float_value(self.hash_map['delta']) +
+                            self._get_float_value(self.hash_map['qtty']))
+            self.hash_map['new_qtty'] = self.new_qty
 
     def _validate_delta_input(self):
         try:
@@ -3458,6 +3311,7 @@ class BaseGoodSelect(Screen):
         self.hash_map.put("Show_fact_qtty_note", '-1' if allow_fact_input else '1')
 
         self.hash_map['Show_btn_to_series'] = int(self.screen_data['use_series'])
+
 
 class GoodsSelectScreen(BaseGoodSelect):
     screen_name = 'Товар выбор'
@@ -3537,33 +3391,49 @@ class GoodsSelectScreen(BaseGoodSelect):
                 self._goods_selector(action='index', index=index)
 
             if not int(self.screen_data['use_series']):
-                self._set_delta(1)
+                self._set_delta(res['ratio'])
             self._set_visibility()
         else:
             self.hash_map.playsound('error')
             self.hash_map.toast(self.current_toast_message or f'Штрихкод не найден в документе!')
 
 
-
-class GroupScanItemScreen(BaseGoodSelect):
+class GroupScanItemScreen(GoodsSelectScreen):
     screen_name = 'Товар выбор'
     process_name = 'Групповая обработка'
-
-    def __init__(self, hash_map: HashMap, rs_settings):
-        super().__init__(hash_map, rs_settings)
 
     def on_start(self):
         super().on_start()
 
-    def on_input(self):
-        self.hash_map.put('stop_sync_doc', '')
-        super().on_input()
+    def _update_hash_map_keys(self):
+        self.doc_row_id = self.table_index_data[self.current_index]
+        self.screen_data = self.db_service.get_doc_row_data(self.doc_row_id)
+        self.hash_map.put_data({
+            key: self._format_quantity(self.screen_data.get(key, 0))
+            if key in ['qtty_plan', 'qtty'] else self.screen_data.get(key, '')
+            for key in self.hash_map_keys
+        })
+
+        self.hash_map.put('qtty', self.screen_data.get('d_qtty') or '0')
+        self.hash_map['item_position'] = f'{self.current_index+1} / {len(self.table_index_data)}'
+        self.new_qty = self.screen_data['qtty']
+
+    def _process_the_barcode(self):
+        super()._process_the_barcode()
+
+    def _set_delta(self, value: float = 0.0, reset: bool = False):
+        if reset:
+            self.delta = 0
+            self.new_qty = self.screen_data['d_qtty'] or 0
+            self.hash_map.put('new_qtty', self.screen_data['d_qtty'] or '0')
+        else:
+            self.delta = value
+            self.new_qty += self.delta
+            self.hash_map['new_qtty'] = self._format_quantity(self.new_qty)
+
+            self._add_new_qty_to_queue()
 
     def _update_doc_table_row(self, data: Dict, row_id):
-
-        if not self.hash_map.get('delta'):
-            return
-
         update_data = {
             'sent': 0,
             'd_qtty': data['qtty'],
@@ -3571,16 +3441,28 @@ class GroupScanItemScreen(BaseGoodSelect):
         self.service.update_doc_table_row(data=update_data, row_id=row_id)
         self.service.set_doc_status_to_upload(self.hash_map.get('id_doc'))
 
+    def _handle_btn_ok(self):
+        super()._handle_btn_ok()
+        self.hash_map.remove('stop_sync_doc')
+
+    def _set_qty_result(self):
+        if self._validate_delta_input():
+            self.new_qty = (self._get_float_value(self.hash_map['delta']) +
+                            self._get_float_value(self.hash_map['qtty']))
+            self.hash_map['new_qtty'] = self.new_qty
+            self._add_new_qty_to_queue()
+
+    def _add_new_qty_to_queue(self):
         insert_to_queue = {
-            "id_doc": self.hash_map.get('id_doc'),
-            "id_good": self.hash_map.get("id_good"),
-            "id_properties": self.hash_map.get("id_property"),
-            "id_series": self.hash_map.get("id_series"),
-            "id_unit": self.hash_map.get("id_unit"),
+            "id_doc": self.screen_data.get('id_doc'),
+            "id_good": self.screen_data.get("item_id"),
+            "id_properties": self.screen_data.get("property_id"),
+            "id_series": '',
+            "id_unit": self.screen_data.get("unit_id"),
             "id_cell": "",
-            "d_qtty": float(self.hash_map.get('delta')),
+            "d_qtty": float(self.delta),
             "sent": False,
-            "price": self.hash_map.get("good_price"),
+            "price": self.screen_data.get("price"),
             "id_price": ""
         }
 
@@ -3588,6 +3470,9 @@ class GroupScanItemScreen(BaseGoodSelect):
         barcode_worker.queue_update_data = insert_to_queue
         barcode_worker.update_document_barcode_data()
 
+    def handle_series(self, series_qty, old_qty):
+        self.delta = series_qty - old_qty
+        self._set_delta()
 
 class BarcodeRegistrationScreen(Screen):
     screen_name = 'BarcodeRegistration'
@@ -3603,19 +3488,26 @@ class BarcodeRegistrationScreen(Screen):
             'unit_id': self.hash_map['unit_id'] or '',
         }
         self.title = 'Регистрация штрихкода'
+        self.db_tables_matching = {
+            'property_select': 'RS_properties',
+            'unit_select': 'RS_units',
+            'RS_properties': 'property_id',
+            'RS_units': 'unit_id',
+        }
+        self.screen_data = {}
+        self.hash_map_keys = ['scanned_barcode', 'property_select', 'unit_select', 'barcodes_data']
 
     def init_screen(self):
         init_data = self.goods_service.get_item_data_by_condition(**self.screen_values)
+        self.screen_data = self.screen_values
+
         if init_data:
             self.hash_map['scanned_barcode'] = ''
-            self.hash_map['good_name_barcode'] = init_data['name']
+            self.hash_map['item_name'] = init_data['name']
             self.hash_map['property_select'] = init_data['property']
             self.hash_map['unit_select'] = init_data['unit']
 
-            self.hash_map['property_select_id'] = self.screen_values['property_id']
-            self.hash_map['unit_select_id'] = self.screen_values['unit_id']
-
-            self._fill_barcodes_table(self.screen_values['item_id'])
+            self._fill_barcodes_table()
 
     def on_start(self):
         self.hash_map.set_title(self.title)
@@ -3624,8 +3516,6 @@ class BarcodeRegistrationScreen(Screen):
         listeners = {
             'property_select': self._select_item,
             'unit_select': self._select_item,
-            'property_select_success': lambda : self._select_item_result('property_select'),
-            'unit_select_success': lambda : self._select_item_result('unit_select'),
             'barcode': self._barcode_scanned,
             'btn_ok': self._handle_ok,
             'ON_BACK_PRESSED': self._finish_process,
@@ -3637,27 +3527,28 @@ class BarcodeRegistrationScreen(Screen):
         self.hash_map.no_refresh()
 
     def _select_item(self):
-        item_tables = {
-            'property_select': 'RS_properties',
-            'unit_select': 'RS_units',
-        }
+        hash_map_key = self.listener
+        table_name = self.db_tables_matching[hash_map_key]
+        screen_data_key = self.db_tables_matching[table_name]
 
-        item_type = self.listener
         screen = SelectItemScreen(
             self.hash_map,
-            table_name=item_tables[item_type],
-            result_listener=f'{item_type}_success'
+            table_name=table_name,
+            parent=self
         )
-        screen.parent_screen = self
-        screen.show()
+        screen.show(
+            result_handler=lambda result: self._select_item_result(
+                result=result,
+                hash_map_key=hash_map_key,
+                screen_data_key=screen_data_key
+            )
+        )
 
-    def _select_item_result(self, field_name):
-        selected_card = self.hash_map.get_json('selected_card')
-        if selected_card:
-            self.hash_map[field_name] = selected_card.get('name')
-            self.hash_map[f'{field_name}_id'] = selected_card.get('id')
-        else:
-            self.hash_map[field_name] = ''
+    def _select_item_result(self, result, hash_map_key, screen_data_key):
+        self.hash_map[hash_map_key] = result.get('name', '-')
+        self.screen_data[screen_data_key] = result.get('id', '')
+        self._fill_barcodes_table()
+        self.hash_map.refresh_screen()
 
     def _barcode_scanned(self):
         scanned_barcode = self.hash_map.get("barcode")
@@ -3668,16 +3559,16 @@ class BarcodeRegistrationScreen(Screen):
         if not scanned_barcode:
             self.hash_map.toast("Штрихкод не отсканирован")
         elif self._check_barcode(scanned_barcode):
-            item_id = self.hash_map.get("item_id")
+
             barcode_data = {
-                "id_good": item_id,
+                "id_good": self.screen_data['item_id'],
                 "barcode": scanned_barcode,
-                "id_property": self.hash_map.get("property_select_id") or '',
-                "id_unit": self.hash_map.get("unit_select_id") or '',
+                "id_property": self.screen_data.get("property_id", ''),
+                "id_unit": self.screen_data.get("unit_id", ''),
             }
 
             self._save_barcode(barcode_data)
-            self._fill_barcodes_table(item_id)
+            self._fill_barcodes_table()
             self.hash_map.refresh_screen()
 
     def _save_barcode(self, barcode_data):
@@ -3699,19 +3590,13 @@ class BarcodeRegistrationScreen(Screen):
 
         return True
 
-    def _fill_barcodes_table(self, item_id):
-        # barcodes_data = self.service.get_barcodes_by_goods_id(self.screen_values['item_id'])
-        barcodes_data = self.service.get_barcodes_by_goods_id(item_id)
+    def _fill_barcodes_table(self):
+        barcodes_data = self.service.get_barcodes_by_data(self.screen_data)
         table_data = self._prepare_table_data(barcodes_data)
         self.hash_map['barcodes_data'] = self._get_barcodes_table_view(table_data).to_json()
 
     def _prepare_table_data(self, barcodes_data):
-        table_data = []
-        table_data.append({'_layout': self._get_table_header()}) # шапка
-        for row in barcodes_data:
-            # row['_layout'] = self._get_doc_table_row_view() проблема производительности
-            table_data.append(row)
-
+        table_data = [{'_layout': self._get_table_header()}, *barcodes_data]
         return table_data
 
     def _get_table_header(self):
@@ -3734,7 +3619,8 @@ class BarcodeRegistrationScreen(Screen):
                 BackgroundColor='#FFFFFF'
             )
 
-    def _get_barcodes_table_view(self, table_data):
+    @staticmethod
+    def _get_barcodes_table_view(table_data):
         table_view = widgets.CustomTable(
             widgets.LinearLayout(
                 widgets.LinearLayout(
@@ -3799,6 +3685,8 @@ class BarcodeRegistrationScreen(Screen):
             self.StrokeWidth = 1
 
     def _finish_process(self):
+        for key in self.hash_map_keys:
+            self.hash_map.remove(key)
         self._finish_process_result()
 
 
@@ -5025,6 +4913,7 @@ class SelectUnit(GoodsPricesItemCard):
 
 # ==================== Series =============================
 
+
 class SeriesSelectScreen(Screen):
     process_name = 'SeriesProcess'
     screen_name = 'SeriesSelectScreen'
@@ -5040,6 +4929,7 @@ class SeriesSelectScreen(Screen):
             'doc_row_id': self.hash_map['doc_row_id'],
         }
         self.use_adr_docs_tables = self.hash_map.get_bool('use_adr_docs_tables')
+        self.qty_without_series = None
 
     def init_screen(self):
         if self.use_adr_docs_tables:
@@ -5049,6 +4939,9 @@ class SeriesSelectScreen(Screen):
         # # Обработаем числовые ключи в словаре
         self._handle_num_keys(self.screen_data)
         self.service.params = self.screen_data
+        if self.qty_without_series is None:
+            self.qty_without_series = (int(self.screen_data['d_qtty'])
+                                       - self.service.get_total_qtty())
         self._refresh_series_cards()
 
         if not self.hash_map.get('doc_title'):
@@ -5056,7 +4949,7 @@ class SeriesSelectScreen(Screen):
             self.hash_map.put('doc_title', title)
 
         self.hash_map.put_data(self.screen_data)
-        # self._refresh_total_qtty() избыточное сохранение флага use_series
+        self._refresh_total_qtty() # избыточное сохранение флага use_series
 
     def on_start(self):
         self.hash_map.set_title(self.screen_values['title'])
@@ -5112,12 +5005,10 @@ class SeriesSelectScreen(Screen):
         screen.show(args)
 
     def _refresh_total_qtty(self):
-        real_qtty = self.service.get_total_qtty()
-        old_qty = float(self.hash_map['qtty'] or 0)
-
-        if old_qty != float(real_qtty or 0):
-            self.service.update_total_qty(qty=real_qtty, row_id=self.screen_values['doc_row_id'])
-            self.hash_map['qtty'] = self._format_quantity(real_qtty)
+        current_series_qtty = self.service.get_total_qtty() or 0
+        total_table_qty = self.qty_without_series + current_series_qtty
+        self.service.update_total_qty(qty=total_table_qty, row_id=self.screen_values['doc_row_id'])
+        self.hash_map['qtty'] = self._format_quantity(total_table_qty)
 
     def _barcode_listener(self):
         self._identify_add_barcode_series()
@@ -5436,14 +5327,14 @@ class SelectItemScreen(Screen):
     screen_name = 'SelectItemScreen'
 
     def __init__(self, hash_map: HashMap, table_name, **kwargs):
-        super().__init__(hash_map)
+        super().__init__(hash_map, **kwargs)
 
         self.table_name = table_name
         self.fields: List[str] = kwargs.get('fields', ['name'])
         self.result_listener = kwargs.get('result_listener', 'select_success')
         self.return_value_key = kwargs.get('return_value_key', 'selected_card')
         self.title = kwargs.get('title', 'Выбор значения')
-
+        self.selected_card_data = {}
         self.db_service = db_services.SelectItemService(self.table_name)
 
     def on_start(self):
@@ -5467,9 +5358,9 @@ class SelectItemScreen(Screen):
         self.hash_map['SelectItemScreen_items_cards'] = cards.to_json()
         self.hash_map.put('return_selected_data')
 
-    def show(self, args=None):
+    def show(self, result_handler=None, args=None):
         self.hash_map['SetResultListener'] = self.result_listener
-        self.show_process_result()
+        self.show_process_result(result_handler=result_handler)
 
     def _get_cards(self, cards_data):
         card_title_text_size = self.rs_settings.get('CardTitleTextSize')
@@ -5502,7 +5393,8 @@ class SelectItemScreen(Screen):
         return cards
 
     def _cards_click(self):
-        self.hash_map.put(self.return_value_key, self._get_selected_card_data(), to_json=True)
+        self.selected_card_data = self._get_selected_card_data()
+        self.hash_map.put(self.return_value_key, self.selected_card_data, to_json=True)
         self._finish_process()
 
     def _back_screen(self):
@@ -5511,7 +5403,7 @@ class SelectItemScreen(Screen):
 
     def _finish_process(self):
         self.hash_map.remove('SelectItemScreen_items_cards')
-        self._finish_process_result()
+        self._finish_process_result(result=dict({'table_name': self.table_name}, **self.selected_card_data or {}))
 
 
 class ShowItemsScreen(Screen):
@@ -5954,6 +5846,7 @@ class HttpSettingsScreen(Screen):
     def __init__(self, hash_map: HashMap, rs_settings):
         super().__init__(hash_map, rs_settings)
         self.hs_service = None
+        self.input_cache = {}
 
     def on_start(self) -> None:
         self.hash_map['btn_test_connection'] = 'Тест соединения'
@@ -5969,6 +5862,11 @@ class HttpSettingsScreen(Screen):
         self.hash_map.put_data(put_data)
 
     def on_input(self) -> None:
+        self.input_cache['url'] = self.hash_map.get('url', '')
+        self.input_cache['user'] = self.hash_map.get('user', '')
+        self.input_cache['pass'] = self.hash_map.get('pass', '')
+        self.input_cache['user_name'] = self.hash_map.get('user_name', '')
+
         listeners = {
             'btn_test_connection': self._test_connection,
             'btn_save': self._save_settings,
@@ -5997,7 +5895,7 @@ class HttpSettingsScreen(Screen):
             elif result.forbidden:
                 self.toast('Запрос на авторизацию принят')
             elif result.error:
-                self.toast('Не удалось установить соединение')
+                self.toast('Ошибка соединения. Подробнее в логе ошибок')
                 self.hash_map.playsound('error')
             else:
                 self.toast('Соединение установлено')
@@ -6044,14 +5942,14 @@ class HttpSettingsScreen(Screen):
         return all([http.get('url'), http.get('user'), http.get('pass')])
 
     def _get_http_settings(self):
-        http_settings = {
-            'url': self.rs_settings.get("URL"),
-            'user': self.rs_settings.get('USER'),
-            'pass': self.rs_settings.get('PASS'),
+        return {
+            'url': self.input_cache.get('url', self.rs_settings.get("URL")),
+            'user': self.input_cache.get('user', self.rs_settings.get('USER')),
+            'pass': self.input_cache.get('pass', self.rs_settings.get('PASS')),
             'device_model': self.hash_map['DEVICE_MODEL'],
             'android_id': self.hash_map['ANDROID_ID'],
-            'user_name': self.rs_settings.get('user_name')}
-        return http_settings
+            'user_name': self.input_cache.get('user_name', self.rs_settings.get('user_name'))
+    }
 
 
 class SoundSettings(Screen):
@@ -6682,9 +6580,6 @@ class Timer:
         self.http_service = HsService(self.http_settings)
 
     def timer_on_start(self):
-        if self.hash_map.get_bool('stop_timer_update'):
-            return
-
         if not self._check_connection():
             return
 
@@ -6725,7 +6620,7 @@ class Timer:
                 self._put_notification(text=notify_text, title="Загружены документы:")
 
         except Exception as e:
-            self.hs_service.write_error_to_log(error_text=e.args[0],
+            self.http_service.write_error_to_log(error_text=e.args[0],
                                                error_info='Ошибка загрузки документов')
 
     def upload_data(self):
@@ -6741,12 +6636,14 @@ class Timer:
         try:
             answer = self.http_service.send_data(data)
         except Exception as e:
-            self.hs_service.write_error_to_log(error_text=e,
-                                               error_info='Ошибка выгрузки документов')
+            self.http_service.write_error_to_log(
+                error_text=e,
+                error_info='Ошибка выгрузки документов'
+            )
             return
 
         if answer.error:
-            self.hs_service.write_error_to_log(error_text=answer.error_text,
+            self.http_service.write_error_to_log(error_text=answer.error_text,
                                                error_info='Ошибка выгрузки документов')
         else:
             docs_list_string = ', '.join([f"'{d['id_doc']}'" for d in data])
@@ -6804,7 +6701,8 @@ class WebServiceSyncCommand:
             'barcodes': self._get_barcodes_data,
             'hash_map': self._get_hash_map,
             'hash_map_size': self._get_hash_map_size,
-            'rs_settings': self._get_rs_settings
+            'rs_settings': self._get_rs_settings,
+            'scanning_queue': self._get_scanning_queue
         }
         if self.listener in listeners:
             listeners[self.listener]()
@@ -6851,6 +6749,15 @@ class WebServiceSyncCommand:
         self.hash_map.put('WSResponseHeaders', headers, to_json=True)
         self.hash_map.put('WSResponse', response)
 
+    def _get_scanning_queue(self):
+        service = ScanningQueueService()
+        queue = service.provider.get_all()
+
+        response = json.dumps(queue)
+
+        headers = [{'key': 'Content-Type', 'value': 'application/json'}]
+        self.hash_map.put('WSResponseHeaders', headers, to_json=True)
+        self.hash_map.put('WSResponse', response)
 
 # ^^^^^^^^^^^^^^^^^^^^^ Services ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -6915,7 +6822,6 @@ class MainEvents:
             "path_to_databases": "./",
             'sqlite_name': 'SimpleKeep',
             'log_name': 'log.json',
-            'timer_is_disabled': False,
             'allow_fact_input': False,
             'offline_mode': False,
             'delete_old_docs': False,
@@ -6968,31 +6874,30 @@ class MainEvents:
 
 class ScreensFactory:
     screens = [GoodsSelectScreen,
-        HtmlView,
-        TemplatesList,
-        FlowTilesScreen,
-        FlowDocScreen,
-        FlowDocDetailsScreen,
-        GroupScanTiles,
-        DocumentsTiles,
-        GroupScanDocsListScreen,
-        DocumentsDocsListScreen,
-        GroupScanDocDetailsScreenNew,
-        GroupScanDocDetailsScreen,
-        DocumentsDocDetailScreen,
-        ErrorLogScreen,
-        DebugSettingsScreen,
-        HttpSettingsScreen,
-        SettingsScreen,
-        GoodsListScreen,
-        SelectGoodsType,
-        ItemCard,
-        FontSizeSettingsScreen,
-        BarcodeTestScreen,
-        SoundSettings,
-        GoodsBalancesItemCard,
-        GoodsPricesItemCard,
-    ]
+               HtmlView,
+               TemplatesList,
+               FlowTilesScreen,
+               FlowDocScreen,
+               FlowDocDetailsScreen,
+               GroupScanTiles,
+               DocumentsTiles,
+               GroupScanDocsListScreen,
+               DocumentsDocsListScreen,
+               GroupScanDocDetailsScreen,
+               DocumentsDocDetailScreen,
+               ErrorLogScreen,
+               DebugSettingsScreen,
+               HttpSettingsScreen,
+               SettingsScreen,
+               GoodsListScreen,
+               SelectGoodsType,
+               ItemCard,
+               FontSizeSettingsScreen,
+               BarcodeTestScreen,
+               SoundSettings,
+               GoodsBalancesItemCard,
+               GoodsPricesItemCard,
+               ]
 
     @staticmethod
     def get_screen_class(screen_name=None, process=None, **kwargs):

@@ -228,7 +228,6 @@ class BarcodeService(DbService):
         else:
             return '0000000000011'
 
-
     def replace_or_create_table(self, table_name, docs_table_update_data):
         self.provider.table_name = table_name
         self.provider.replace(docs_table_update_data)
@@ -248,6 +247,17 @@ class BarcodeService(DbService):
                 
                 WHERE barcodes.id_good = '{goods_id}'
         '''
+
+        return self._sql_query(q)
+
+    def get_barcodes_by_data(self, data):
+        q = '''
+            SELECT barcode, ratio
+            FROM RS_barcodes
+            WHERE id_good='{item_id}'
+                AND id_property = '{property_id}'
+                AND id_unit = '{unit_id}'
+        '''.format(**data)
 
         return self._sql_query(q)
 
@@ -1103,11 +1113,15 @@ class DocService:
 
     def get_doc_row_by_barcode(self, barcode):
         q = f'''
-            SELECT t.id, b.ratio 
+            SELECT 
+                t.id, 
+                IFNULL(b.ratio, 0) AS ratio
+                 
             FROM RS_barcodes as b 
             JOIN {self.details_table_name} as t
                 ON b.id_good = t.id_good
                 AND b.id_property = t.id_properties
+                AND b.id_unit = t.id_unit
         
             WHERE barcode = '{barcode}'
             LIMIT 1
@@ -1415,6 +1429,7 @@ class SeriesService(DbService):
             RS_docs_table.id_properties,
             RS_docs_table.id_unit,
             RS_docs_table.qtty,
+            RS_docs_table.d_qtty,
             RS_docs_table.qtty_plan,
             RS_docs_table.price,
             RS_docs_table.use_series,
