@@ -5791,52 +5791,111 @@ class FontSizeSettingsScreen(Screen):
 class BarcodeTestScreen(Screen):
     screen_name = 'Тест сканера'
     process_name = 'Параметры'
+    # Hardcode, need place to store it
+    scanner_list = {'не выбран': {'IntentScanner': 'false', 'IntentScannerMessage': "", 'IntentScannerVariable': "",
+                                  'IntentScannerLength': ""},
+                    'Ручной ввод': {'IntentScanner': 'false', 'IntentScannerMessage': "", 'IntentScannerVariable': "",
+                                    'IntentScannerLength': ""},
+                    'Urovo': {'IntentScanner': 'true', 'IntentScannerMessage': "android.intent.ACTION_DECODE_DATA",
+                              'IntentScannerVariable': "barcode_string", 'IntentScannerLength': ""},
+                    'Atol': {'IntentScanner': 'true',
+                             'IntentScannerMessage': "com.xcheng.scanner.action.BARCODE_DECODING_BROADCAST",
+                             'IntentScannerVariable': "EXTRA_BARCODE_DECODING_DATA", 'IntentScannerLength': "EXTRA_BARCODE_DECODING_SYMBOLE"},
+                    'Meferi': {'IntentScanner': 'true',
+                             'IntentScannerMessage': "android.intent.action.MEF_ACTION",
+                             'IntentScannerVariable': "android.intent.extra.MEF_DATA1", 'IntentScannerLength': "android.intent.extra.MEF_DATA2"}         
+                             }
 
     def __init__(self, hash_map: HashMap, rs_settings):
         super().__init__(hash_map, rs_settings)
 
     def on_start(self):
-        pass
+        hardware_scanner = self.rs_settings.get('hardware_scanner') or 'не выбран'
+        self._prepare_screen_load_settings(hardware_scanner)
+        self._switch_scanner_settings_visibility()
+        self._switch_scanner_edit_view(hardware_scanner)
 
     def on_input(self):
         listeners = {
             'barcode': self._barcode_scanned,
             'ON_BACK_PRESSED': self._back_screen,
             'BACK_BUTTON': self._back_screen,
+            'device_value': self._fill_scan_settings,
+            'use_hardware_scanner': self._switch_scanner_settings_visibility,
+            'btn_save_handmade_settings': self.save_scan_settings
         }
-
         if self.listener in listeners:
             listeners[self.listener]()
 
-    def on_post_start(self):
-        pass
-
-    def show(self, args=None):
-        pass
-
     def _back_screen(self):
         self.hash_map.put('BackScreen', '')
+
+    def _prepare_screen_load_settings(self, hardware_scanner):
+        keys = list(self.scanner_list.keys())
+        self.hash_map['device_list'] = ';'.join(keys)
+        use_hardware_scanner = self.rs_settings.get('use_hardware_scanner') or False
+        self.hash_map['use_hardware_scanner'] = str(use_hardware_scanner).lower()
+        self.hash_map['device_value'] = hardware_scanner
+        if hardware_scanner == 'Ручной ввод':
+            handmade_settings = self.rs_settings.get('handmade_hardware_scanner_options')
+            if handmade_settings:
+                self.scanner_list['Ручной ввод'] = json.loads(handmade_settings)
 
     def _barcode_scanned(self):
         barcode = self.hash_map.get('barcode_camera')
         if not barcode:
             return
-
         barcode_parser = BarcodeWorker(id_doc='')
         result = barcode_parser.parse(barcode)
         fields_count = 7
-
         keys_list = ['ERROR', 'GTIN', 'SERIAL', 'FullCode', 'BARCODE', 'SCHEME', 'EXPIRY', 'BATCH', 'NHRN', 'CHECK',
                      'WEIGHT', 'PPN']
-
         values = [f'{key}: {result[key]}' for key in keys_list if result.get(key) is not None]
-
         put_data = {
             f'fld_{i + 1}': values[i] if len(values) > i else ''
             for i in range(0, fields_count)
         }
-
         self.hash_map.put_data(put_data)
+
+    def _fill_scan_settings(self, use_hardware_scan: bool = True):
+        if use_hardware_scan:
+            current_model = self.scanner_list.get(self.hash_map['device_value'])
+        else:
+            current_model = self.scanner_list.get('не выбран')
+        # Закидываем в настройки
+        self.hash_map.put('SetSettingsJSON', json.dumps(current_model))
+        self.rs_settings.put('hardware_scanner', self.hash_map['device_value'], True)
+        self.rs_settings.put('use_hardware_scanner', str(use_hardware_scan).lower(), True)
+        # Записываем значения в переменные экрана
+        for i in current_model.keys():
+            self.hash_map[i] = current_model[i]
+
+    def _switch_scanner_settings_visibility(self):
+        if self.hash_map['use_hardware_scanner'] in ('True', 'true'):
+            self.hash_map['Show_scan_layout'] = '1'
+            self._fill_scan_settings(True)
+        else:
+            self.hash_map['Show_scan_layout'] = '-1'
+            self._fill_scan_settings(False)
+
+    def _switch_scanner_edit_view(self, model):
+        switcher = -1 if model == 'Ручной ввод' else 1
+        self.hash_map['Show_scan_layout_view'] = str(switcher)
+        self.hash_map['Show_scan_layout_edit'] = str(switcher * -1)
+
+    def _form_scan_parameters(self):
+        if self.hash_map['device_value'] == 'Ручной ввод':
+            params = {'IntentScanner': 'true', 
+                      'IntentScannerMessage': self.hash_map['IntentScannerMessage'],
+                      'IntentScannerVariable': self.hash_map['IntentScannerVariable'],
+                      'IntentScannerLength': self.hash_map['IntentScannerLength']
+                      }
+        else:
+            params = self.scanner_list.get(self.hash_map['device_value'])
+        return params
+
+    def save_scan_settings(self):
+        self.rs_settings.put('handmade_hardware_scanner_options', json.dumps(self._form_scan_parameters()), True)
 
 
 class HttpSettingsScreen(Screen):

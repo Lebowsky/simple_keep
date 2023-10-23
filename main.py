@@ -509,6 +509,11 @@ def test_barcode_listener(hash_map: HashMap):
     screen: ui_models.BarcodeTestScreen = create_screen(hash_map)
     screen.on_input()
 
+@HashMap()
+def test_barcode_on_start(hash_map: HashMap):
+    screen: ui_models.BarcodeTestScreen = create_screen(hash_map)
+    screen.on_start()  
+
 
 @HashMap()
 def settings_errors_on_start(hash_map: HashMap):
