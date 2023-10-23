@@ -177,24 +177,26 @@ class Screen(ABC):
 
     @staticmethod
     def _format_date(date_str: str):
-        return datetime.fromisoformat(date_str).strftime('%m-%d-%Y %H:%M:%S')
+        try:
+            return datetime.fromisoformat(date_str).strftime('%m-%d-%Y %H:%M:%S')
+        except ValueError:
+            return date_str
 
-    class TextView(widgets.TextView):
-        def __init__(self, value, rs_settings):
-            super().__init__()
-            self.TextSize = rs_settings.get('DocTypeCardTextSize')
-            self.TextColor = '#333333'
-            self.BackgroundColor = 'FFCC99'
-            self.weight = 0
-            self.Value = value
-
-    class LinearLayout(widgets.LinearLayout):
-        def __init__(self, *args, **kwargs):
-            super().__init__(*args, **kwargs)
-            self.orientation = 'horizontal'
-            self.height = "match_parent"
-            self.width = "match_parent"
-            self.StrokeWidth = 1
+    def _get_doc_title(self, **kwargs) -> str:
+        doc_date = kwargs.get('doc_date', '')
+        doc_n = kwargs.get('doc_n', '')
+        doc_title = '{} № {} от {}'.format(
+                kwargs.get('doc_type', ''),
+                self._format_doc_number(doc_n) if doc_n else '',
+                self._format_date(doc_date) if doc_date else ''
+            )
+        return doc_title    
+    
+    @staticmethod
+    def _format_doc_number(num: str) -> str:
+        prefix, number = num.split('-')
+        modified_number = str(int(number))
+        return f"{prefix}-{modified_number}"
 
 # ==================== Printing screens =============================
 
@@ -420,6 +422,22 @@ class HtmlView(Screen):
 
         return row_view
 
+    class TextView(widgets.TextView):
+        def __init__(self, value, rs_settings):
+            super().__init__()
+            self.TextSize = rs_settings.get('DocTypeCardTextSize')
+            self.TextColor = '#333333'
+            self.BackgroundColor = 'FFCC99'
+            self.weight = 0
+            self.Value = value
+
+    class LinearLayout(widgets.LinearLayout):
+        def __init__(self, *args, **kwargs):
+            super().__init__(*args, **kwargs)
+            self.orientation = 'horizontal'
+            self.height = "match_parent"
+            self.width = "match_parent"
+            self.StrokeWidth = 1
 
 class TemplatesList(Screen):
     screen_name = 'Список шаблонов'
@@ -1565,8 +1583,11 @@ class DocsListScreen(Screen):
             elif not (record['verified'] and record['sent']):
                 doc_status = 'К выполнению'
 
-            doc_title = '{} № {} от {}'.format(
-                self.hash_map['doc_type'], self.hash_map['doc_n'], self.hash_map['doc_date'])
+            doc_title = self._get_doc_title(
+                doc_type=self.hash_map.get('doc_type') or '',
+                doc_n=self.hash_map.get('doc_n') or '',
+                doc_date=self.hash_map.get('doc_date') or ''
+            )
 
             table_data.append({
                 'key': record['id_doc'],
@@ -1649,9 +1670,6 @@ class DocsListScreen(Screen):
 
         return put_data
 
-    def _get_doc_title(self, **kwargs):
-        return '{doc_type} № {doc_n} от {doc_date}'.format(**kwargs)
-
     def _set_doc_verified(self, id_doc, value=True):
         # service = DocService(id_doc)
         value = str(int(value))
@@ -1695,9 +1713,6 @@ class DocsListScreen(Screen):
                 self.hash_map.show_screen('Плитки')
         else:
             self.hash_map.toast('Ошибка удаления документа')
-
-    def _format_date(self, date_str: str):
-        return datetime.fromisoformat(date_str).strftime('%m-%d-%Y %H:%M:%S')
 
     def get_id_doc(self):
         card_data = self.hash_map.get_json("card_data") or {}
@@ -2836,6 +2851,12 @@ class FlowDocDetailsScreen(DocDetailsScreen):
             self.hash_map.show_process_result('OcrTextRecognition', 'SerialNumberOCRSettings')
 
     def _barcode_flow_on_start(self):
+        doc_title = self._get_doc_title(
+            doc_type=self.hash_map.get('doc_type') or '',
+            doc_n=self.hash_map.get('doc_n') or '',
+            doc_date=self.hash_map.get('doc_date') or ''
+        ) 
+        self.hash_map.put('doc_title', doc_title)
 
         id_doc = self.hash_map.get('id_doc')
         falseValueList = (0, '0', 'false', 'False', None)
@@ -4924,11 +4945,7 @@ class SeriesSelectScreen(Screen):
         self._refresh_series_cards()
 
         if not self.hash_map.get('doc_title'):
-            title = '{} № {} от {}'.format(
-                self.screen_data['doc_type'],
-                self.screen_data['doc_n'],
-                self.screen_data['doc_date']
-            )
+            title = self._get_doc_title(self.screen_data)
             self.hash_map.put('doc_title', title)
 
         self.hash_map.put_data(self.screen_data)
