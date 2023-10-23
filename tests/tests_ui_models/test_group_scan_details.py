@@ -2,7 +2,7 @@ import json
 import unittest
 from unittest.mock import MagicMock
 
-from ui_models import GroupScanDocDetailsScreenNew
+from ui_models import GroupScanDocDetailsScreen
 from ui_utils import HashMap
 from main import noClass
 from hs_services import HsService
@@ -16,7 +16,7 @@ class TestGroupScanDocDetailsScreen(unittest.TestCase):
     def setUp(self) -> None:
         self.hash_map = HashMap(hash_map=hashMap())
         self.rs_settings = noClass('rs_settings')
-        self.sut = GroupScanDocDetailsScreenNew(self.hash_map, self.rs_settings)
+        self.sut = GroupScanDocDetailsScreen(self.hash_map, self.rs_settings)
         self.path_to_test_data = './data_for_tests/http_requests'
 
     def tearDown(self) -> None:
@@ -166,7 +166,7 @@ class TestGroupScanDocDetailsScreenNew(unittest.TestCase):
         self.hash_map = HashMap(hash_map=hashMap())
         self.rs_settings = noClass('rs_settings_local')
         self.rs_settings.put("path_to_databases", "./", True)
-        self.sut = GroupScanDocDetailsScreenNew(self.hash_map, self.rs_settings)
+        self.sut = GroupScanDocDetailsScreen(self.hash_map, self.rs_settings)
         self.path_to_test_data = './data_for_tests/http_requests'
         self.barcode_worker: BarcodeWorker
 

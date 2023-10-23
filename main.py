@@ -181,21 +181,25 @@ def group_docs_on_select(hash_map: HashMap):
     screen.on_input()
 
 
-
-# @HashMap()
-# def doc_details_on_start(hash_map: HashMap):
-#     screen: ui_models.GroupScanDocDetailsScreen = create_screen(hash_map)
-#     screen.on_start()
-
 @HashMap()
 def doc_details_on_start(hash_map: HashMap):
-    screen: ui_models.GroupScanDocDetailsScreenNew = create_screen(hash_map)
+    screen = create_screen(hash_map, ui_models.DocumentsDocDetailScreen)
     screen.on_start()
 
 
 @HashMap()
 def doc_details_listener(hash_map: HashMap):
-    screen = create_screen(hash_map)
+    screen = create_screen(hash_map, ui_models.DocumentsDocDetailScreen)
+    screen.on_input()
+
+@HashMap()
+def group_doc_details_on_start(hash_map: HashMap):
+    screen = create_screen(hash_map, ui_models.GroupScanDocDetailsScreen )
+    screen.on_start()
+
+@HashMap()
+def group_doc_details_listener(hash_map: HashMap):
+    screen = create_screen(hash_map, ui_models.GroupScanDocDetailsScreen)
     screen.on_input()
 
 
@@ -209,21 +213,21 @@ def highlight_scanned_item(hash_map: HashMap):
 @HashMap()
 def send_post_lines_data(hash_map: HashMap):
     """ Отправка на 1С выбранных в nosql строк post-запросом """
-    screen = ui_models.GroupScanDocDetailsScreenNew(hash_map, rs_settings)
+    screen = ui_models.GroupScanDocDetailsScreen(hash_map, rs_settings)
     screen.send_unsent_lines_run()
 
 
 @HashMap()
 def send_all_scan_lines(hash_map: HashMap):
     """ Отправка на 1С всех nosql строк товара post-запросом """
-    screen = ui_models.GroupScanDocDetailsScreenNew(hash_map, rs_settings)
+    screen = ui_models.GroupScanDocDetailsScreen(hash_map, rs_settings)
     screen.send_all_scan_lines_run()
 
 
 @HashMap()
 def after_send_post_lines_data(hash_map: HashMap):
     """ После отправки-обработки post-запроса """
-    screen = ui_models.GroupScanDocDetailsScreenNew(hash_map, rs_settings)
+    screen = ui_models.GroupScanDocDetailsScreen(hash_map, rs_settings)
     screen.after_send_data()
 
 

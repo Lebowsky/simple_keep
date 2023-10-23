@@ -2357,7 +2357,7 @@ class DocDetailsScreen(Screen):
             self.StrokeWidth = 1
 
 
-class GroupScanDocDetailsScreenNew(DocDetailsScreen):
+class GroupScanDocDetailsScreen(DocDetailsScreen):
     screen_name = 'Документ товары'
     process_name = 'Групповая обработка'
 
@@ -6857,30 +6857,30 @@ class MainEvents:
 
 class ScreensFactory:
     screens = [GoodsSelectScreen,
-        HtmlView,
-        TemplatesList,
-        FlowTilesScreen,
-        FlowDocScreen,
-        FlowDocDetailsScreen,
-        GroupScanTiles,
-        DocumentsTiles,
-        GroupScanDocsListScreen,
-        DocumentsDocsListScreen,
-        GroupScanDocDetailsScreenNew,
-        DocumentsDocDetailScreen,
-        ErrorLogScreen,
-        DebugSettingsScreen,
-        HttpSettingsScreen,
-        SettingsScreen,
-        GoodsListScreen,
-        SelectGoodsType,
-        ItemCard,
-        FontSizeSettingsScreen,
-        BarcodeTestScreen,
-        SoundSettings,
-        GoodsBalancesItemCard,
-        GoodsPricesItemCard,
-    ]
+               HtmlView,
+               TemplatesList,
+               FlowTilesScreen,
+               FlowDocScreen,
+               FlowDocDetailsScreen,
+               GroupScanTiles,
+               DocumentsTiles,
+               GroupScanDocsListScreen,
+               DocumentsDocsListScreen,
+               GroupScanDocDetailsScreen,
+               DocumentsDocDetailScreen,
+               ErrorLogScreen,
+               DebugSettingsScreen,
+               HttpSettingsScreen,
+               SettingsScreen,
+               GoodsListScreen,
+               SelectGoodsType,
+               ItemCard,
+               FontSizeSettingsScreen,
+               BarcodeTestScreen,
+               SoundSettings,
+               GoodsBalancesItemCard,
+               GoodsPricesItemCard,
+               ]
 
     @staticmethod
     def get_screen_class(screen_name=None, process=None, **kwargs):
