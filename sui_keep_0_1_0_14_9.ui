@@ -7796,8 +7796,8 @@
                                         "type": "TextView"
                                     },
                                     {
-                                        "Value": "@good_name_barcode",
-                                        "Variable": "good_name_barcode",
+                                        "Value": "@item_name",
+                                        "Variable": "",
                                         "height": "wrap_content",
                                         "width": "match_parent",
                                         "weight": "0",
@@ -7936,7 +7936,7 @@
                                 "Elements": [
                                     {
                                         "Value": "@barcodes_data",
-                                        "Variable": "barcodes_data",
+                                        "Variable": "",
                                         "height": "wrap_content",
                                         "width": "match_parent",
                                         "weight": "0",
