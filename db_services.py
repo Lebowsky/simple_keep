@@ -1077,7 +1077,7 @@ class DocService:
         return list(*zip(*res))
 
     def get_doc_row_data(self, row_id):
-
+        qtty_filed = 'd_qtty' if self.is_group_scan else 'qtty'
         q = f'''
             SELECT 
                 t.id_doc AS id_doc,
@@ -1085,8 +1085,7 @@ class DocService:
                 t.id_properties as property_id,
                 t.id_unit as unit_id,
                 t.qtty_plan,
-                t.qtty,
-                t.d_qtty AS d_qtty,
+                t.{qtty_filed} as qtty,
                 t.use_series,
                 t.price,
                 IFNULL(g.name, '') AS item_name,

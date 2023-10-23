@@ -2639,7 +2639,8 @@ class GroupScanDocDetailsScreen(DocDetailsScreen):
             self.hash_map,
             id_doc=self.id_doc,
             table_index_data=table_index_data,
-            doc_row_id=int(self.hash_map['selected_card_key'])
+            doc_row_id=int(self.hash_map['selected_card_key']),
+            control=self.hash_map['control']
         )
         screen.parent_screen = self
         screen.show()
@@ -2765,7 +2766,8 @@ class DocumentsDocDetailScreen(DocDetailsScreen):
             self.hash_map,
             id_doc=self.id_doc,
             table_index_data=table_index_data,
-            doc_row_id=doc_row_id
+            doc_row_id=doc_row_id,
+            control=self.hash_map['control']
         )
         screen.show()
 
@@ -3049,8 +3051,8 @@ class FlowDocDetailsScreen(DocDetailsScreen):
 
 
 class BaseGoodSelect(Screen):
-    def __init__(self, hash_map: HashMap, rs_settings=None):
-        super().__init__(hash_map, _rs_settings)
+    def __init__(self, hash_map: HashMap, **kwargs):
+        super().__init__(hash_map, **kwargs)
         self.id_doc = ''
         self.doc_row_id = ''
         self.service = DocService(self.id_doc)
@@ -3060,6 +3062,7 @@ class BaseGoodSelect(Screen):
         self.screen_data = {}
         self.delta = 0.0
         self.new_qty = 0.0
+        self.control = kwargs.get('control', False)
 
     def init_screen(self):
         self._set_visibility()
@@ -3081,91 +3084,48 @@ class BaseGoodSelect(Screen):
         if self.listener in listeners:
             listeners[self.listener]()
         elif self.listener in ['btn_ok', "btn_cancel", 'BACK_BUTTON', 'ON_BACK_PRESSED']:
-            self._handle_btn_ok()
+            self._save_and_close()
         elif self._is_result_positive('modal_dialog_input_qtty'):
             self._set_qty_result()
         elif 'ops' in self.listener:
             self._ops_listener()
 
     def _ops_listener(self):
-        if int(self.screen_data.get('use_series', 0)):
-            self._open_series_screen()
-        else:
-            set_value = float(self.listener[4:])
-            self._set_delta(set_value)
+        set_value = float(self.listener[4:])
+        self._set_delta(set_value)
 
-    def _handle_btn_ok(self):
-        qtty_plan = float(self.screen_data.get('qtty_plan') or 0)
-        qtty = float(self.screen_data.get('qtty') or 0)
+    def _save_and_close(self):
+        if self._check_qty_control():
+            self._update_doc_table_qty(self.new_qty)
+            self._set_delta(reset=True)
 
+            self.service.set_doc_status_to_upload(self.id_doc)
+            self._back_screen()
+
+    def _check_qty_control(self):
         if self.new_qty < 0:
             self.hash_map.toast('Итоговое количество меньше 0')
             self.hash_map.playsound('error')
             self._set_delta(reset=True)
-            return
+            return False
 
-        control = self.hash_map.get_bool('control')
-        if control and (max(self.new_qty, qtty) > qtty_plan):
+        if self.control and self.new_qty > self.screen_data['qtty_plan']:
             self.toast('Количество план в документе превышено')
             self.hash_map.playsound('error')
             self._set_delta(reset=True)
-            return
+            return False
 
-        qtty = self.new_qty
-        self._handle_choice(qtty)
-        self._set_delta(reset=True)
+        return True
 
-    def _handle_choice(self, qtty):
+    def _update_doc_table_qty(self, qty):
         update_data = {
             'sent': 0,
-            'qtty': float(qtty) if qtty else 0,
+            'qtty': float(qty) if qty else 0,
         }
         self._update_doc_table_row(data=update_data, row_id=self.doc_row_id)
-        self.service.set_doc_status_to_upload(self.id_doc)
-        self._back_screen()
 
     def _process_the_barcode(self):
         self._listener_not_implemented()
-
-    def _save_new_delta(self):
-        if self.new_qty < 0:
-            self.hash_map.toast('Итоговое количество меньше 0')
-            self.hash_map.playsound('error')
-            self._set_delta(reset=True)
-            return
-
-        control = self.hash_map.get_bool('control')
-        if control:
-            if self.new_qty > self.screen_data.get('qtty_plan'):
-                self.toast('Количество план в документе превышено')
-                self.hash_map.playsound('error')
-                self._set_delta(reset=True)
-                return
-
-        qtty = self.new_qty
-        old_qtty = float(self.screen_data.get('qtty') or 0)
-        if self.hash_map.get('parent_screen') == 'ВыборТовараАртикул':
-            self._listener_not_implemented()
-
-            if qtty == self._get_float_value(self.hash_map.get('qtty')):
-                self.hash_map.show_screen("ВыборТовараАртикул")
-                return
-            finded_goods_cards = self.hash_map.get('finded_goods_cards', from_json=True)
-            cardsdata = finded_goods_cards['customcards']['cardsdata']
-
-            card_data = next(elem for elem in cardsdata
-                                if elem['key'] == self.doc_row_id)
-            card_data['qtty'] = qtty
-            self.hash_map.put('finded_goods_cards', finded_goods_cards, to_json=True)
-            self.hash_map.show_screen("ВыборТовараАртикул")
-        elif qtty != old_qtty:
-            update_data = {
-                'sent': 0,
-                'qtty': qtty,
-            }
-            self._update_doc_table_row(data=update_data, row_id=self.doc_row_id)
-            self.hash_map.put('new_qtty', str(round(qtty, 3)))
-            self.hash_map.put('qtty', str(qtty))
 
     def _get_float_value(self, value) -> float:
         if value and re.match("(^\d*\.?\d*$)", value):
@@ -3286,24 +3246,12 @@ class BaseGoodSelect(Screen):
         }'''
         self.hash_map.show_dialog(
             'modal_dialog_input_qtty',
-            title=f"Введите количество для изменения:",
+            title=f"Введите количество для добавления:",
             dialog_layout=layout
         )
 
     def _set_qty_result(self):
-        if self._validate_delta_input():
-            self.new_qty = (self._get_float_value(self.hash_map['delta']) +
-                            self._get_float_value(self.hash_map['qtty']))
-            self.hash_map['new_qtty'] = self.new_qty
-
-    def _validate_delta_input(self):
-        try:
-            float(self.hash_map.get('delta'))
-            return True
-        except:
-            self.toast('Введено некорректное значение')
-            self.hash_map.playsound('error')
-            self._set_delta(reset=True)
+        self._set_delta(self._get_float_value(self.hash_map['delta']))
 
     def _set_visibility(self):
         allow_fact_input = self.allow_fact_input and not int(self.screen_data['use_series'])
@@ -3323,9 +3271,9 @@ class GoodsSelectScreen(BaseGoodSelect):
             id_doc,
             doc_row_id,
             table_index_data,
-            rs_settings=None
+            **kwargs
     ):
-        super().__init__(hash_map)
+        super().__init__(hash_map, **kwargs)
         self.id_doc = id_doc
         self.table_index_data: list = table_index_data
         self.allow_fact_input = self.rs_settings.get('allow_fact_input') or False
@@ -3335,6 +3283,7 @@ class GoodsSelectScreen(BaseGoodSelect):
 
     def init_screen(self):
         self.current_index = self.table_index_data.index(self.doc_row_id)
+
         self._update_hash_map_keys()
         super().init_screen()
 
@@ -3352,19 +3301,24 @@ class GoodsSelectScreen(BaseGoodSelect):
             super().on_input()
 
     def _update_hash_map_keys(self):
-        self.doc_row_id = self.table_index_data[self.current_index]
-        self.screen_data = self.db_service.get_doc_row_data(self.doc_row_id)
+        self._init_screen_data()
         self.hash_map.put_data({
             key: self._format_quantity(self.screen_data.get(key, 0))
             if key in ['qtty_plan', 'qtty'] else self.screen_data.get(key, '')
             for key in self.hash_map_keys
         })
-
         self.hash_map['item_position'] = f'{self.current_index+1} / {len(self.table_index_data)}'
 
+    def _init_screen_data(self):
+        self.doc_row_id = self.table_index_data[self.current_index]
+        self.screen_data = self.db_service.get_doc_row_data(self.doc_row_id)
+
     def _goods_selector(self, action, index=None):
+        if not self._check_qty_control():
+            return
+
         if index is None:
-            self._save_new_delta()
+            self._update_doc_table_qty(self.new_qty)
         if action == 'next':
             new_index = self.current_index+1 if (self.current_index+1 < len(self.table_index_data)) else 0
             self.current_index = new_index
@@ -3405,33 +3359,11 @@ class GroupScanItemScreen(GoodsSelectScreen):
     def on_start(self):
         super().on_start()
 
-    def _update_hash_map_keys(self):
-        self.doc_row_id = self.table_index_data[self.current_index]
-        self.screen_data = self.db_service.get_doc_row_data(self.doc_row_id)
-        self.hash_map.put_data({
-            key: self._format_quantity(self.screen_data.get(key, 0))
-            if key in ['qtty_plan', 'qtty'] else self.screen_data.get(key, '')
-            for key in self.hash_map_keys
-        })
-
-        self.hash_map.put('qtty', self.screen_data.get('d_qtty') or '0')
-        self.hash_map['item_position'] = f'{self.current_index+1} / {len(self.table_index_data)}'
-        self.new_qty = self.screen_data['qtty']
+    def on_input(self):
+        super().on_input()
 
     def _process_the_barcode(self):
         super()._process_the_barcode()
-
-    def _set_delta(self, value: float = 0.0, reset: bool = False):
-        if reset:
-            self.delta = 0
-            self.new_qty = self.screen_data['d_qtty'] or 0
-            self.hash_map.put('new_qtty', self.screen_data['d_qtty'] or '0')
-        else:
-            self.delta = value
-            self.new_qty += self.delta
-            self.hash_map['new_qtty'] = self._format_quantity(self.new_qty)
-
-            self._add_new_qty_to_queue()
 
     def _update_doc_table_row(self, data: Dict, row_id):
         update_data = {
@@ -3440,17 +3372,11 @@ class GroupScanItemScreen(GoodsSelectScreen):
         }
         self.service.update_doc_table_row(data=update_data, row_id=row_id)
         self.service.set_doc_status_to_upload(self.hash_map.get('id_doc'))
+        self._add_new_qty_to_queue()
 
-    def _handle_btn_ok(self):
-        super()._handle_btn_ok()
+    def _save_and_close(self):
+        super()._save_and_close()
         self.hash_map.remove('stop_sync_doc')
-
-    def _set_qty_result(self):
-        if self._validate_delta_input():
-            self.new_qty = (self._get_float_value(self.hash_map['delta']) +
-                            self._get_float_value(self.hash_map['qtty']))
-            self.hash_map['new_qtty'] = self.new_qty
-            self._add_new_qty_to_queue()
 
     def _add_new_qty_to_queue(self):
         insert_to_queue = {
@@ -3460,7 +3386,7 @@ class GroupScanItemScreen(GoodsSelectScreen):
             "id_series": '',
             "id_unit": self.screen_data.get("unit_id"),
             "id_cell": "",
-            "d_qtty": float(self.delta),
+            "d_qtty": self.screen_data['qtty'] - float(self.new_qty),
             "sent": False,
             "price": self.screen_data.get("price"),
             "id_price": ""
@@ -3470,9 +3396,6 @@ class GroupScanItemScreen(GoodsSelectScreen):
         barcode_worker.queue_update_data = insert_to_queue
         barcode_worker.update_document_barcode_data()
 
-    def handle_series(self, series_qty, old_qty):
-        self.delta = series_qty - old_qty
-        self._set_delta()
 
 class BarcodeRegistrationScreen(Screen):
     screen_name = 'BarcodeRegistration'
