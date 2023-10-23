@@ -1733,13 +1733,34 @@ class GroupScanDocsListScreen(DocsListScreen):
                    f"в {current_mode.upper()} режиме.")
             if self.hash_map.get_json('selected_card_data')['is_group_scan'] == '0':
                 msg += warning_msg
-            self.hash_map.put('group_scan_message', msg)
+            self.hash_map.put('msg', msg)
 
-            self.hash_map.show_dialog('Подтвердите действие')
+            layout = '''{
+                                    "type": "LinearLayout",
+                                    "Variable": "",
+                                    "orientation": "horizontal",
+                                    "height": "wrap_content",
+                                    "width": "match_parent",
+                                    "weight": "0",
+                                    "Elements": [
+                                        {
+                                            "Value": "@msg",
+                                            "Variable": "msg",
+                                            "height": "wrap_content",
+                                            "width": "match_parent",
+                                            "weight": "0",
+                                            "type": "TextView"
+                                        }
+                                    ]
+                                }'''
+
+            self.hash_map.show_dialog('open_doc_confirmation',
+                                      title="Подтвердите действие", dialog_layout=layout)
+
             selected_card_key = self.hash_map['selected_card_key']
             self.hash_map['id_doc'] = selected_card_key
 
-        elif self._is_result_positive('Подтвердите действие'):
+        elif self._is_result_positive('open_doc_confirmation'):
             id_doc = self.hash_map['id_doc']
             self.service.doc_id = id_doc
             if self.hash_map.get_json('selected_card_data')['is_group_scan'] == '0':
@@ -2297,7 +2318,7 @@ class DocDetailsScreen(Screen):
         screen.show()
 
     def _show_dialog_input_barcode(self):
-        loyaut = '''{
+        layout = '''{
             "type": "LinearLayout",
             "Variable": "",
             "orientation": "horizontal",
@@ -2315,7 +2336,9 @@ class DocDetailsScreen(Screen):
                 }
             ]
         }'''
-        self.hash_map.show_dialog('modal_dialog_input_barcode', title="Введите штрихкод товара", dialog_layout=loyaut)
+        self.hash_map.show_dialog('modal_dialog_input_barcode',
+                                  title="Введите штрихкод товара",
+                                  dialog_layout=layout)
 
     class TextView(widgets.TextView):
         def __init__(self, value):
