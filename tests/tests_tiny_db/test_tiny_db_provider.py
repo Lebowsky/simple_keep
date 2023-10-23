@@ -1,8 +1,11 @@
+import datetime
 import json
+import time
 import unittest
 from tinydb import TinyDB
-from tiny_db_services import TinyNoSQLProvider, ScanningQueueService
+from tiny_db_services import TinyNoSQLProvider, ScanningQueueService, LoggerService
 from tests.data_for_tests.nosql.initial_data import initial_data
+from ui_utils import DateFormat
 
 
 class TestTinyNoSQLProvider(unittest.TestCase):
@@ -210,4 +213,47 @@ class TestScanningQueueService(unittest.TestCase):
         self.assertGreater(actual_124_lines, 0)
 
 
+class TestLoggerService(unittest.TestCase):
+    def setUp(self) -> None:
+        self.provider = TinyNoSQLProvider(table_name='test_logger_table', base_name='TestLogger', db_path='./')
+        self.provider.drop_table('test_logger_table')
 
+    def tearDown(self) -> None:
+        self.provider.close()
+
+    def test_write_to_log(self):
+        sut = LoggerService(provider=self.provider)
+        sut.write_to_log(error_text="", error_type="SQL",
+                         error_info="Комментарий к ошибке")
+        self.assertEqual(sut.provider.count(error_type="SQL"), 1)
+
+    def test_get_all_errors(self):
+        sut = LoggerService(provider=self.provider)
+        sut.write_to_log(error_text="", error_type="SQL",
+                         error_info="Комментарий к ошибке")
+        result = sut.get_all_errors(desc_sort=True)
+
+        self.assertEqual(len(result), 1)
+
+    def test_clear(self):
+        sut = LoggerService(provider=self.provider)
+        sut.write_to_log(error_text="", error_type="SQL",
+                         error_info="Комментарий к ошибке")
+        sut.clear()
+        expect = 0
+
+        result = sut.get_all_errors(desc_sort=True)
+
+        self.assertEqual(expect, len(result))
+
+
+class TestDateFormat(unittest.TestCase):
+
+    def test_get_table_view_format(self):
+        sut = DateFormat()
+        date = "2023-10-17 07:52:18"
+        expect = "2023-10-17 10:52:18"
+
+        result = sut.get_table_view_format(date, user_tmz_offset='3')
+
+        self.assertEqual(expect, result)
