@@ -1,7 +1,7 @@
 import unittest
 
 from main import create_screen, noClass, rs_settings
-from ui_models import GroupScanDocDetailsScreenNew, MockScreen
+from ui_models import GroupScanDocDetailsScreen, MockScreen
 
 from ui_utils import HashMap
 from data_for_tests.utils_for_tests import hashMap
@@ -19,10 +19,10 @@ class TestMainCreateScreen(unittest.TestCase):
 
         screen = create_screen(self.hash_map)
 
-        self.assertIsInstance(screen, GroupScanDocDetailsScreenNew)
+        self.assertIsInstance(screen, GroupScanDocDetailsScreen)
 
         from ui_models import current_screen
-        self.assertIsInstance(current_screen, GroupScanDocDetailsScreenNew)
+        self.assertIsInstance(current_screen, GroupScanDocDetailsScreen)
 
     def test_must_create_screen_and_not_rewrite_global_variable(self):
         self.hash_map['current_screen_name'] = 'Документ товары'
@@ -31,7 +31,7 @@ class TestMainCreateScreen(unittest.TestCase):
 
         screen = create_screen(self.hash_map)
 
-        self.assertIsInstance(screen, GroupScanDocDetailsScreenNew)
+        self.assertIsInstance(screen, GroupScanDocDetailsScreen)
 
         self.hash_map['listener'] = 'onInput'
         sut = create_screen(self.hash_map)
