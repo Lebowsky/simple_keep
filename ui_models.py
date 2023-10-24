@@ -5922,6 +5922,13 @@ class HttpSettingsScreen(Screen):
             self.hash_map.put('pass', self._get_modern_field(hint='pass', default_text=barc_struct.get('pass')))
             self.hash_map.put('user_name',
                               self._get_modern_field(hint='user_name', default_text=barc_struct.get('user_name')))
+            
+            # Явно обновить input_cache новыми значениями
+            self.input_cache['url'] = barc_struct.get('url', '')
+            self.input_cache['user'] = barc_struct.get('user', '')
+            self.input_cache['pass'] = barc_struct.get('pass', '')
+            self.input_cache['user_name'] = barc_struct.get('user_name', '')
+
         except (JSONDecodeError, AttributeError) as e:
             self.toast('Неверный формат QR-кода')
 
