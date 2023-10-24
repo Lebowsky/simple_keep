@@ -1345,10 +1345,17 @@ class SeriesService(DbService):
             return {}
 
     @staticmethod
-    def get_series_table_str(id):
+    def get_series_data_by_id(id):
         q = '''
-        SELECT 
-            IFNULL(RS_docs_series.name, '') AS name,
+        SELECT
+            RS_docs_series.id AS id, 
+            RS_docs_series.id_doc AS id_doc, 
+            RS_docs_series.id AS item_id,
+            RS_docs_series.id_properties AS property_id, 
+            RS_docs_series.id_series AS id_series, 
+            RS_docs_series.id_warehouse AS warehouse_id, 
+            RS_docs_series.cell AS cell_id, 
+            RS_docs_series.name AS name,
             IFNULL(RS_docs_series.best_before, '') AS best_before,
             IFNULL(RS_docs_series.number, '') AS number,
             IFNULL(RS_docs_series.production_date, '') AS production_date,
@@ -1439,22 +1446,7 @@ class SeriesService(DbService):
 
         return get_query_result(q, return_dict=True)
 
-    def save_table_str(self, params):
-        q = '''
-        UPDATE RS_docs_series
-        SET 
-           id_properties = :id_properties,
-           id_series = :id_series,
-           id_warehouse = :id_warehouse,
-           qtty = :qtty,
-           name = :name,
-           best_before = :best_before,
-           number = :number,
-           production_date = :production_date,
-           cell  = :cell
-        WHERE id = :id '''
-        res = get_query_result(q, params)
-        return True
+
 
     def get_total_qtty(self):
 
@@ -1477,6 +1469,84 @@ class SeriesService(DbService):
             '''
         get_query_result(q)
 
+class SeriesItemService(DbService):
+    def __init__(self):
+        super().__init__()
+
+    @staticmethod
+    def get_series_data_by_id(id):
+        q = '''
+            SELECT
+                RS_docs_series.id AS id, 
+                RS_docs_series.id_doc AS id_doc, 
+                RS_docs_series.id AS item_id,
+                RS_docs_series.id_properties AS property_id, 
+                RS_docs_series.id_series AS id_series, 
+                RS_docs_series.id_warehouse AS warehouse_id, 
+                RS_docs_series.cell AS cell_id, 
+                RS_docs_series.name AS name,
+                IFNULL(RS_docs_series.best_before, '') AS best_before,
+                IFNULL(RS_docs_series.number, '') AS number,
+                IFNULL(RS_docs_series.production_date, '') AS production_date,
+                IFNULL(RS_docs_series.qtty, 0) as qtty
+            FROM RS_docs_series
+            WHERE RS_docs_series.id = ?
+            LIMIT 1
+            '''
+        res = get_query_result(q, (id,), True)
+        if res:
+            return res[0]
+        else:
+            return {}
+
+    @staticmethod
+    def add_new_series(data):
+        q = '''
+            INSERT INTO RS_docs_series( 
+                id_doc, 
+                id_good, 
+                id_properties, 
+                id_warehouse, 
+                qtty, 
+                name, 
+                number, 
+                cell,
+                best_before,
+                production_date) 
+            VALUES(:id_doc, :item_id, :property_id, :warehouse_id, :qtty , :name, :number, :cell_id, :best_before, :production_date)'''
+        return get_query_result(q, data)
+
+    @staticmethod
+    def update_series_by_id(params):
+        q = '''
+        UPDATE RS_docs_series
+        SET 
+           id_properties = :id_properties,
+           id_series = :id_series,
+           id_warehouse = :id_warehouse,
+           qtty = :qtty,
+           name = :name,
+           best_before = :best_before,
+           number = :number,
+           production_date = :production_date,
+           cell  = :cell
+        WHERE id = :id '''
+        res = get_query_result(q, params)
+        return True
+
+    @staticmethod
+    def get_count_series(**kwargs):
+        q = f'''
+            SELECT COUNT(*) AS series_count
+            FROM RS_docs_series
+            WHERE RS_docs_series.id_doc = :id_doc 
+                AND RS_docs_series.id_good = :item_id 
+                AND RS_docs_series.id_properties = :property_id 
+                AND number = :number
+        '''
+
+        res = get_query_result(q, kwargs, True)
+        return res[0]['series_count'] if res else 0
 
 class AdrSeriesService(SeriesService):
     def get_screen_data(self, _id) -> dict:

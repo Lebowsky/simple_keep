@@ -4924,6 +4924,18 @@ class SeriesSelectScreen(Screen):
     def show(self, args=None):
         self.show_process_result(args)
 
+    def _cards_click(self):
+        series_id = self.hash_map['selected_card_key']
+        self._open_series_item_screen(series_id)
+
+    def _add_new_series(self):
+        self._open_series_item_screen()
+
+    def _open_series_item_screen(self, series_id=None):
+        screen = SeriesItem(self.hash_map, parent=self, series_id=series_id)
+        screen.show()
+
+
     def _update_hash_map_keys(self):
         self.hash_map.put_data({
             key: self._format_quantity(self.screen_data.get(key, 0))
@@ -4941,16 +4953,10 @@ class SeriesSelectScreen(Screen):
         else:
             self.hash_map.put('empty_series', 'Отсканируйте серии')
 
-    def _cards_click(self):
-        series_id = self.hash_map['selected_card_key']
-        self._open_series_item_screen(series_id)
 
-    def _add_new_series(self):
-        self._open_series_item_screen()
 
-    def _open_series_item_screen(self, series_id=None):
-        screen = SeriesItem(self.hash_map, parent=self, series_id=series_id)
-        screen.show()
+
+
 
     def _refresh_total_qtty(self):
         pass
@@ -4996,7 +5002,6 @@ class SeriesSelectScreen(Screen):
     def _format_row_data(self, row_data: dict):
         return {k: self.format_cards_data[k](v) if k in self.format_cards_data else v
                 for k,v in row_data.items()}
-
 
     def _get_doc_cards_view(self, table_data):
 
@@ -5119,122 +5124,93 @@ class SeriesItem(Screen):
     def __init__(self, hash_map: HashMap, series_id=None, **kwargs):
         super().__init__(hash_map, **kwargs)
         self.series_id = series_id
-        self.service = db_services.SeriesService()
-        self.screen_data = {}
+        self.service = db_services.SeriesItemService()
+        self.screen_data = kwargs
+        self.screen_data_keys = ['id_doc', 'item_id', 'property_id', 'warehouse_id', 'cell_id']
         self.hash_map_keys = [
-            'series_name', 'series_number', 'production_date', 'best_before', 'FillingSeriesScreen_qtty'
+            'name', 'number', 'production_date', 'best_before', 'FillingSeriesScreen_qtty'
         ]
-        self.format_screen_data = {
-            'best_before': lambda value: self._format_date(value) if value else '',
-            'production_date': lambda value: self._format_date(value) if value else '',
-        }
 
     def init_screen(self):
         if self.series_id:
-            self.screen_data = self.service.get_series_table_str(self.series_id)
+            self.screen_data = self.service.get_series_data_by_id(self.series_id)
 
             put_data = {
-                'series_name': self.screen_data.get('name',''),
-                'series_number': self.screen_data.get('number',''),
+                'name': self.screen_data.get('name',''),
+                'number': self.screen_data.get('number',''),
                 'production_date': self.screen_data.get('production_date',''),
                 'best_before': self.screen_data.get('best_before',''),
                 'FillingSeriesScreen_qtty' : self.screen_data.get('qtty','')
             }
 
-            self._handle_num_keys(put_data)
             self.hash_map.put_data(put_data)
 
+        else:
+            self.screen_data = {k: self.screen_data.get(k, '') for k in self.screen_data_keys}
+            for key in ['id_doc', 'item_id']:
+                if not self.screen_data.get(key):
+                    raise ValueError(f'Screen: {self}:\n'
+                                     f'method: init_screen\n'
+                                     f'key "{key}" not transferred in kwargs')
+
     def on_start(self):
-        self.screen_data = self.service.get_series_table_str(self.series_id)
-        # self.init_screen()
+        pass
 
     def on_input(self):
-        listener = self.listener
-        if listener == "btn_save":
-            self._btn_save_handler()
-        elif listener == "ON_BACK_PRESSED":
-            self._back_screen()
-        elif listener == "btn_cancel":
-            self._back_screen()
-        elif self._is_result_positive('confirm_update_series'):
-            params = self._get_params()
-            params.update(self._check_series_number())
-            self.service.save_table_str(params)
-            self._back_screen()
-
-        self.hash_map.refresh_screen()
-
-    def _save_data(self):
-        params = self._get_params()
-        self.service.save_table_str(params)
-
-    def _is_valid_date_format(self, date_str):
-        pattern = r"^(0[1-9]|[12][0-9]|3[01])\.(0[1-9]|1[0-2])\.\d{4}$"
-        return bool(re.match(pattern, date_str))
-
-    def _handle_num_keys(self, values: dict) -> dict:
-        numeric_keys = ('qtty', 'qtty_plan', 'd_qtty', 'FillingSeriesScreen_qtty')
-        for key in numeric_keys:
-            if key in values and re.match("^\d+\.?\d*$", str(values[key])):
-                values[key] = self._format_quantity(float(values[key]))
-            else:
-                values[key] = '0'
-        return values
+        listeners = {
+            'btn_save': self._btn_save_handler,
+            'ON_BACK_PRESSED': self._back_screen,
+            'BACK_BUTTON': self._back_screen,
+        }
+        if self.listener in listeners:
+            listeners[self.listener]()
 
     def _btn_save_handler(self):
-        if self.screen_data.get('id'):
-            self._save_data()
-            self._back_screen()
-        else:
-            if self._check_series_number():
-                self.hash_map.show_dialog('confirm_update_series', 'Серия с данным номером уже существует. Обновить данные?')
-            else:
-                params = self._get_params()
-                self._add_new_series(params)
-                self._back_screen()
 
-    def _get_params(self):
-        common_params = {
-            'id_doc': self.hash_map.get('id_doc'),
-            'id_good': self.hash_map.get('id_good'),
-            'id_properties': self.hash_map.get('id_properties'),
-            'id_warehouse': self.hash_map.get('id_warehouse'),
-            'qtty': self.hash_map.get('FillingSeriesScreen_qtty'),
+        data_to_save = {
+            **self.screen_data,
+            'qtty': int(self.hash_map.get('FillingSeriesScreen_qtty')),
             'name': self.hash_map.get('name'),
-            'best_before': self.hash_map.get('best_before') if self._is_valid_date_format(self.hash_map.get('best_before')) else None,
+            'best_before': self.hash_map.get('best_before'),
             'number': self.hash_map.get('number'),
-            'production_date': self.hash_map.get('production_date') if self._is_valid_date_format(self.hash_map.get('production_date')) else None,
-            'id_cell': self.hash_map.get('id_cell'),
-            'cell': self.hash_map.get('id_cell')
+            'production_date': self.hash_map.get('production_date'),
         }
 
-        if self.screen_data:
-            params = {
-                'id': int(self.screen_data.get('id', 0)),
-                'id_series': self.hash_map['id_series'],
-                **common_params,
-                'cell': common_params['id_cell']
-            }
+        if self._check_save_data(data_to_save):
+            self.save_series_data(data_to_save)
+            self._back_screen()
+
+    def save_series_data(self, data):
+        if self.series_id:
+            self.service.update_series_by_id(data)
         else:
-            params = {
-                'barcode': self.hash_map.get('number'),
-                **common_params
-            }
+            self.service.add_new_series(data)
 
-        return params
+    def _check_save_data(self, data):
+        series_number = data['number']
 
-    def _check_series_number(self):
-        series_number = self.hash_map.get('number')
-        self.service.params = self._get_params()
-        if series_number:
-            values = self.service.get_series_by_barcode(series_number, {})
-            if values:
-                return {'id': values[0]['id'], 'id_series': values[0]['id_series']}
-        return None
+        if not data['name']:
+            data['name'] = series_number
 
-    def _add_new_series(self, params: dict):
-        series_number = params.get('number')
-        self.service.add_new_series_in_doc_series_table(series_number)
+        if not bool(data['name'].strip()):
+            self.hash_map.playsound('warning')
+            self.toast('Не заполнено наименование')
+            return False
+
+        if data['qtty'] <= 0:
+            self.hash_map.playsound('warning')
+            self.toast('Введите количество')
+            return False
+
+        if data['number'] and self._has_series_by_number(data):
+            self.hash_map.playsound('warning')
+            self.toast(f'Серия с номером с таким номером уже есть в документе')
+            return False
+
+        return True
+
+    def _has_series_by_number(self, data):
+        return bool(self.service.get_count_series(**data))
 
     def _back_screen(self):
         for k in self.hash_map_keys:
