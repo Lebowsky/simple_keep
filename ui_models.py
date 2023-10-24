@@ -3277,13 +3277,11 @@ class GoodsSelectScreen(BaseGoodSelect):
         self.id_doc = id_doc
         self.table_index_data: list = table_index_data
         self.allow_fact_input = self.rs_settings.get('allow_fact_input') or False
-        self.db_service = DocService(self.id_doc)
         self.doc_row_id = doc_row_id
         self.current_index = 0
 
     def init_screen(self):
         self.current_index = self.table_index_data.index(self.doc_row_id)
-
         self._update_hash_map_keys()
         super().init_screen()
 
@@ -3311,14 +3309,14 @@ class GoodsSelectScreen(BaseGoodSelect):
 
     def _init_screen_data(self):
         self.doc_row_id = self.table_index_data[self.current_index]
-        self.screen_data = self.db_service.get_doc_row_data(self.doc_row_id)
+        self.screen_data = self.service.get_doc_row_data(self.doc_row_id)
 
     def _goods_selector(self, action, index=None):
         if not self._check_qty_control():
             return
 
-        if index is None:
-            self._update_doc_table_qty(self.new_qty)
+        self._update_doc_table_qty(self.new_qty)
+
         if action == 'next':
             new_index = self.current_index+1 if (self.current_index+1 < len(self.table_index_data)) else 0
             self.current_index = new_index
@@ -3355,6 +3353,10 @@ class GoodsSelectScreen(BaseGoodSelect):
 class GroupScanItemScreen(GoodsSelectScreen):
     screen_name = 'Товар выбор'
     process_name = 'Групповая обработка'
+    
+    def init_screen(self):
+        self.service.is_group_scan = True
+        super().init_screen()
 
     def on_start(self):
         super().on_start()
@@ -3379,6 +3381,10 @@ class GroupScanItemScreen(GoodsSelectScreen):
         self.hash_map.remove('stop_sync_doc')
 
     def _add_new_qty_to_queue(self):
+        total_delta = float(self.new_qty) - self.screen_data['qtty']
+        if total_delta == 0:
+            return
+
         insert_to_queue = {
             "id_doc": self.screen_data.get('id_doc'),
             "id_good": self.screen_data.get("item_id"),
@@ -3386,7 +3392,8 @@ class GroupScanItemScreen(GoodsSelectScreen):
             "id_series": '',
             "id_unit": self.screen_data.get("unit_id"),
             "id_cell": "",
-            "d_qtty": self.screen_data['qtty'] - float(self.new_qty),
+            "d_qtty": total_delta,
+            'row_key': self.doc_row_id,
             "sent": False,
             "price": self.screen_data.get("price"),
             "id_price": ""

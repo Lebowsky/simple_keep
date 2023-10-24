@@ -1085,7 +1085,7 @@ class DocService:
                 t.id_properties as property_id,
                 t.id_unit as unit_id,
                 t.qtty_plan,
-                t.{qtty_filed} as qtty,
+                IFNULL(t.{qtty_filed}, 0) as qtty,
                 t.use_series,
                 t.price,
                 IFNULL(g.name, '') AS item_name,
