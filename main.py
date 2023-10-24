@@ -506,12 +506,12 @@ def font_size_settings_listener(hash_map: HashMap):
 
 @HashMap()
 def test_barcode_listener(hash_map: HashMap):
-    screen: ui_models.BarcodeTestScreen = create_screen(hash_map)
+    screen: ui_models.BarcodeTestScreen = create_screen(hash_map, ui_models.BarcodeTestScreen)
     screen.on_input()
 
 @HashMap()
 def test_barcode_on_start(hash_map: HashMap):
-    screen: ui_models.BarcodeTestScreen = create_screen(hash_map)
+    screen: ui_models.BarcodeTestScreen = create_screen(hash_map, ui_models.BarcodeTestScreen)
     screen.on_start()  
 
 
