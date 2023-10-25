@@ -7139,7 +7139,7 @@
                                                                 "type": "TextView"
                                                             },
                                                             {
-                                                                "Value": "@good_art",
+                                                                "Value": "@article",
                                                                 "Variable": "",
                                                                 "height": "wrap_content",
                                                                 "width": "wrap_content",
@@ -7172,7 +7172,7 @@
                                                         "type": "TextView"
                                                     },
                                                     {
-                                                        "Value": "@properties_name",
+                                                        "Value": "@property",
                                                         "Variable": "",
                                                         "height": "wrap_content",
                                                         "width": "wrap_content",
@@ -7234,7 +7234,7 @@
                                                         "type": "TextView"
                                                     },
                                                     {
-                                                        "Value": "@good_unit",
+                                                        "Value": "@unit",
                                                         "Variable": "",
                                                         "height": "wrap_content",
                                                         "width": "wrap_content",
@@ -7249,7 +7249,7 @@
                                         ]
                                     },
                                     {
-                                        "Value": "@good_name",
+                                        "Value": "@item_name",
                                         "Variable": "",
                                         "height": "wrap_content",
                                         "width": "match_parent",
@@ -7453,11 +7453,11 @@
                                                 "type": "TextView"
                                             },
                                             {
-                                                "Value": "@series_name",
-                                                "Variable": "series_name",
+                                                "Value": "@name",
+                                                "Variable": "name",
                                                 "height": "wrap_content",
                                                 "width": "wrap_content",
-                                                "weight": "0",
+                                                "weight": "5",
                                                 "TextBold": false,
                                                 "TextItalic": false,
                                                 "TextSize": "21",
@@ -7485,11 +7485,11 @@
                                                 "type": "TextView"
                                             },
                                             {
-                                                "Value": "@series_number",
-                                                "Variable": "series_number",
+                                                "Value": "@number",
+                                                "Variable": "number",
                                                 "height": "wrap_content",
                                                 "width": "wrap_content",
-                                                "weight": "0",
+                                                "weight": "5",
                                                 "TextBold": false,
                                                 "TextItalic": false,
                                                 "TextSize": "21",
@@ -8283,6 +8283,10 @@
             },
             {
                 "PyFileKey": "barcode_workers",
+                "PyFileData": ""
+            },
+            {
+                "PyFileKey": "db_models",
                 "PyFileData": ""
             }
         ],

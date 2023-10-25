@@ -1131,218 +1131,81 @@ class DocService:
 class SeriesService(DbService):
     doc_basic_table_name = 'RS_docs_table'
     doc_basic_handler_name = 'RS_docs'
-    def __init__(self):
+    def __init__(self, doc_row_id):
         super().__init__()
-        #if params and isinstance(params, dict):
-        #    self.params = params
-        #else:
+        self.doc_row_id = doc_row_id
         self.params = {}
 
-    def get_series_by_barcode(self, barcode, params: dict):
+    def get_screen_data(self, id) -> dict:
 
-        params = [
-            self.params.get('id_doc'),
-            self.params.get('id_good'),
-            self.params.get('id_properties'),
-            barcode,
-            barcode
-        ]  # self.params.get('id_warehouse'),
-        q = '''
-        SELECT id,
-           id_doc,
-           id_good,
-           id_properties,
-           id_series,
-           id_warehouse,
-           qtty,
-           name,
-           best_before,
-           number,
-           production_date,
-           cell
-        FROM RS_docs_series
-        WHERE RS_docs_series.id_doc = ? AND 
-            RS_docs_series.id_good = ? AND 
-            RS_docs_series.id_properties = ? 
-            AND (name = ? OR number = ?)'''
-        return get_query_result(q, params, True)
-
-    def get_series_by_doc_and_goods(self):
-        params = (self.params.get('id_doc'), self.params.get('id_good'))  # , self.params.get('id_warehouse')
-
-        q = '''
-            SELECT 
-                RS_docs_series.id as key,
-                RS_docs_series.id_doc as id_doc,
-                RS_docs_series.id_good,
-                RS_docs_series.id_properties,
-                RS_docs_series.id_series,
-                RS_docs_series.id_warehouse,
-                RS_docs_series.qtty,
-                IFNULL(RS_docs_series.name, '') AS name,
-                IFNULL(RS_docs_series.best_before, '') AS best_before,
-                RS_docs_series.number,
-                IFNULL(RS_docs_series.production_date, '') AS production_date,
-                IFNULL(RS_docs.doc_type, '') AS doc_type,
-                IFNULL(RS_docs.doc_n, '') AS doc_n,
-                IFNULL(RS_docs.doc_date, '') AS doc_date,
-                IFNULL(RS_goods.art, '') AS art,
-                IFNULL(RS_warehouses.name , '') AS warehouse_name
-             
-            FROM RS_docs_series 
-            
-            LEFT JOIN RS_docs 
-                ON RS_docs_series.id_doc = RS_docs.id_doc
-            
-            LEFT JOIN RS_properties 
-                ON RS_docs_series.id_properties = RS_properties.id
-            
-            LEFT JOIN RS_goods 
-                ON RS_docs_series.id_good = RS_goods.id
-            
-            LEFT JOIN RS_warehouses 
-                ON RS_docs_series.id_warehouse = RS_warehouses.id
-            
-            WHERE RS_docs_series.id_doc = ? AND 
-                RS_docs_series.id_good = ? 
-            
-        '''
-        return get_query_result(q, params, True)
-
-    def get_series_by_adr_doc_and_goods(self):
-        curr_cell = self.params.get('cell') if self.params.get('cell') else self.params.get('id_cell')
-        params = (self.params.get('id_doc'), self.params.get('id_good'), curr_cell)  # , self.params.get('id_warehouse')
-
-        q = '''
-            SELECT 
-            
-            RS_docs_series.id as key,
-            RS_docs_series.id_doc as id_doc,
-            RS_docs_series.id_good,
-            RS_docs_series.id_properties,
-            RS_docs_series.id_series,
-            RS_docs_series.id_warehouse,
-            RS_docs_series.qtty,
-            RS_docs_series.name,
-            RS_docs_series.best_before,
-            RS_docs_series.number,
-            RS_docs_series.production_date,
-            RS_docs_series.cell,
-            RS_docs.doc_type,
-            RS_docs.doc_n, 
-            RS_docs.doc_date,
-            RS_goods.name as good_name,
-            RS_properties.name as properties_name,
-            RS_goods.art,
-            RS_warehouses.name as warehouse_name,
-            RS_cells.name as cell_name
-             
-            FROM RS_docs_series 
-            
-            LEFT JOIN 
-            RS_docs ON 
-            RS_docs_series.id_doc =  RS_docs.id_doc
-            
-            LEFT JOIN 
-            RS_goods ON 
-            RS_docs_series.id_good =  RS_goods.id
-            
-            LEFT JOIN 
-            RS_properties ON 
-            RS_docs_series.id_properties =  RS_properties.id
-            
-            LEFT JOIN 
-            RS_warehouses ON 
-            RS_docs_series.id_warehouse =  RS_warehouses.id
-            
-            LEFT JOIN RS_cells ON 
-            RS_docs_series.cell = RS_cells.id
-            
-            WHERE RS_docs_series.id_doc = ? AND 
-            RS_docs_series.id_good = ? AND 
-            RS_docs_series.cell = ?
-            '''
-        return get_query_result(q, params, True)
-
-    def add_qtty_to_table_str(self, item_id):
-        params = (item_id,)
-        q = '''UPDATE RS_docs_series
-            SET qtty = qtty + 1
-            WHERE id = ?'''
-
-        return get_query_result(q, params)
-
-
-    def add_new_series_in_doc_series_table(self, barcode):
-        q_params = (
-        self.params.get('id_doc'), self.params.get('id_good'), self.params.get('id_properties'), self.params.get('id_warehouse'), 1,
-                barcode, barcode, self.params.get('id_cell'))
-        q = 'INSERT INTO RS_docs_series (id_doc, id_good, id_properties, id_warehouse, qtty, name, number, cell) VALUES(?,?,?,?,?,?,?,?)'
-        return get_query_result(q, q_params)
-
-    def get_item_by_name(self, item_name, table_name):
-        q = f'SELECT id FROM {table_name} WHERE {table_name}.name = ?'
-        res = get_query_result(q, (item_name,))
-        if res:
-            return res[0][0]
-        else:
-            return None
-
-    def delete_current_st(self, id):
-        q = 'DELETE FROM RS_docs_series  WHERE id = ?'
-        return get_query_result(q, (id,))
-
-    def get_series_prop_by_id(self, id):
-        table_name = self.doc_basic_table_name
-        is_adr = False if table_name == 'RS_docs_table' else True
         q = f'''
-           SELECT {table_name}.id,
-           {table_name}.id_doc,
-           {table_name}.id_good,
-           {table_name}.id_properties,
-           {table_name}.id_series,
-           {table_name}.id_unit,
-           {table_name}.qtty,
-           {table_name}.qtty_plan,
-                     '''
-        q = q + f''' {table_name}.id_cell, 
-                 {table_name}.id_cell as cell, 
-                RS_cells.name as cell_name, 
-                0 as price,
-                Null as id_price,''' if is_adr else q +  f'''
-                {table_name}.price,
-                {table_name}.id_price,'''
+        SELECT RS_docs_table.id_doc,
+            RS_docs_table.id_good AS item_id,
+            RS_docs_table.id_properties AS property_id,
+            RS_docs_table.id_unit AS unit_id,
+            RS_docs_table.qtty,
+            RS_docs_table.qtty_plan,
+            RS_docs_table.price,
+            RS_docs_table.id_cell AS cell_id,
+            IFNULL(RS_docs.id_warehouse, '') AS warehouse_id,
+            IFNULL(RS_goods.name, '') AS item_name,
+            IFNULL(RS_goods.art, '') AS article,
+            IFNULL(RS_properties.name, '') AS property,
+            IFNULL(RS_units.name, '') AS unit 
+        FROM RS_docs_table AS RS_docs_table
 
-        q = q + f'''
-           {table_name}.use_series,
-           RS_goods.art as code_art, 
-           RS_goods.name as good_name,
-           RS_properties.name as properties_name,
-           RS_units.name as units_name
-                   
-              FROM {table_name} 
-            LEFT JOIN   RS_goods
-            ON {table_name}.id_good = RS_goods.id
-            
-            LEFT JOIN   RS_properties
-            ON {table_name}.id_properties = RS_properties.id
-            
-            LEFT JOIN   RS_units
-            ON {table_name}.id_unit = RS_units.id
-            '''
-        q = q + f'''
-            LEFT JOIN   RS_cells
-            ON {table_name}.id_cell = RS_cells.id
-            ''' if is_adr else q
-
-        q = q + f'''
-            WHERE {table_name}.id = ?
-            '''
+        LEFT JOIN RS_docs AS RS_docs ON
+            RS_docs_table.id_doc = RS_docs.id_doc
+        LEFT JOIN RS_goods ON
+            RS_docs_table.id_good = RS_goods.id
+        LEFT JOIN RS_properties ON
+            RS_docs_table.id_properties = RS_properties.id
+        LEFT JOIN RS_units ON
+            RS_docs_table.id_unit = RS_units.id
+        WHERE RS_docs_table.id = ?
+        '''
         res = get_query_result(q, (id,), True)
         if res:
             return res[0]
         else:
             return {}
+
+    @staticmethod
+    def get_series_data(doc_row_id):
+        q = f'''
+            SELECT 
+                series.id AS key,
+                series.id AS id,
+                series.qtty,
+                series.name,
+                series.best_before,
+                series.number,
+                series.production_date
+
+            FROM RS_docs_series AS series
+            JOIN RS_docs_table AS doc_table
+                ON series.id_good = doc_table.id_good 
+                AND series.id_properties = doc_table.id_properties
+            WHERE doc_table.id = '{doc_row_id}'
+        '''
+
+        return get_query_result(q, return_dict=True)
+
+    @staticmethod
+    def update_series_item_data(data: dict):
+        fields = ', '.join(data.keys())
+        values = ', '.join('?' * len(data.values()))
+        q = f'''
+            REPLACE INTO RS_docs_series({fields})
+            VALUES ({values})
+        '''
+        print(data)
+        get_query_result(q, list(data.values()))
+
+    @staticmethod
+    def delete_current_st(self, series_id):
+        q = 'DELETE FROM RS_docs_series WHERE id = ?'
+        return get_query_result(q, (series_id,))
 
     @staticmethod
     def get_series_data_by_id(id):
@@ -1369,98 +1232,6 @@ class SeriesService(DbService):
         else:
             return {}
 
-    def get_doc_prop_by_id(self, id_doc):
-        table_name = self.doc_basic_handler_name
-        q = f'''
-        SELECT {table_name}.id_doc,
-           {table_name}.doc_n,
-           {table_name}.doc_date,
-           {table_name}.id_warehouse as id_warehouse,
-           RS_warehouses.name as warehouse
-           
-        FROM {table_name}
-        LEFT JOIN RS_warehouses ON
-        {table_name}.id_warehouse = RS_warehouses.id
-          
-        WHERE {table_name}.id_doc = ?
-        '''
-        res = get_query_result(q,(id_doc,),True)
-        if res:
-            return res[0]
-        else:
-            return {}
-
-    def get_screen_data(self, id) -> dict:
-
-        q = f'''
-        SELECT RS_docs_table.id_doc,
-            RS_docs_table.id_good,
-            RS_docs_table.id_properties,
-            RS_docs_table.id_unit,
-            RS_docs_table.qtty,
-            RS_docs_table.d_qtty,
-            RS_docs_table.qtty_plan,
-            RS_docs_table.price,
-            RS_docs_table.use_series,
-            IFNULL(RS_docs.doc_type, '') AS doc_type,
-            IFNULL(RS_docs.doc_n, '') AS doc_n,
-            IFNULL(RS_docs.doc_date, '') AS doc_date,
-            IFNULL(RS_goods.name, '') AS good_name,
-            IFNULL(RS_goods.art, '') AS good_art,
-            IFNULL(RS_properties.name, '') AS properties_name,
-            IFNULL(RS_units.name, '') AS good_unit 
-        FROM RS_docs_table AS RS_docs_table
-        
-        LEFT JOIN RS_docs AS RS_docs ON
-            RS_docs_table.id_doc = RS_docs.id_doc
-        LEFT JOIN RS_goods ON
-            RS_docs_table.id_good = RS_goods.id
-        LEFT JOIN RS_properties ON
-            RS_docs_table.id_properties = RS_properties.id
-        LEFT JOIN RS_units ON
-            RS_docs_table.id_unit = RS_units.id
-        WHERE RS_docs_table.id = ?
-        '''
-        res = get_query_result(q,(id,),True)
-        if res:
-            return res[0]
-        else:
-            return {}
-
-    def get_series_data(self, doc_row_id):
-        q = f'''
-            SELECT 
-                series.id AS key,
-                series.qtty,
-                series.name,
-                series.best_before,
-                series.number,
-                series.production_date
-                
-            FROM RS_docs_series AS series
-            JOIN RS_docs_table AS doc_table
-                ON series.id_good = doc_table.id_good 
-                AND series.id_properties = doc_table.id_properties
-            WHERE doc_table.id = '{doc_row_id}'
-        '''
-
-        return get_query_result(q, return_dict=True)
-
-
-
-    def get_total_qtty(self):
-
-        params = (self.params.get('id_doc'), self.params.get('id_good'), self.params.get('id_properties'))
-        q = '''
-        SELECT 
-        sum(qtty) FROM RS_docs_series
-         WHERE id_doc = ? AND id_good = ? AND id_properties = ?'''
-        res = get_query_result(q, params)
-        if res and res[0][0] is not None:
-            return res[0][0]
-        else:
-            return 0
-
     def update_total_qty(self, qty, row_id):
         q = f'''
             UPDATE RS_docs_table
@@ -1474,7 +1245,7 @@ class SeriesItemService(DbService):
         super().__init__()
 
     @staticmethod
-    def get_series_data_by_id(id):
+    def get_series_item_data_by_id(id):
         q = '''
             SELECT
                 RS_docs_series.id AS id, 
@@ -1498,41 +1269,6 @@ class SeriesItemService(DbService):
             return res[0]
         else:
             return {}
-
-    @staticmethod
-    def add_new_series(data):
-        q = '''
-            INSERT INTO RS_docs_series( 
-                id_doc, 
-                id_good, 
-                id_properties, 
-                id_warehouse, 
-                qtty, 
-                name, 
-                number, 
-                cell,
-                best_before,
-                production_date) 
-            VALUES(:id_doc, :item_id, :property_id, :warehouse_id, :qtty , :name, :number, :cell_id, :best_before, :production_date)'''
-        return get_query_result(q, data)
-
-    @staticmethod
-    def update_series_by_id(params):
-        q = '''
-        UPDATE RS_docs_series
-        SET 
-           id_properties = :id_properties,
-           id_series = :id_series,
-           id_warehouse = :id_warehouse,
-           qtty = :qtty,
-           name = :name,
-           best_before = :best_before,
-           number = :number,
-           production_date = :production_date,
-           cell  = :cell
-        WHERE id = :id '''
-        res = get_query_result(q, params)
-        return True
 
     @staticmethod
     def get_count_series(**kwargs):
