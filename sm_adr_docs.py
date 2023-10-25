@@ -245,11 +245,7 @@ class AdrDocDetailsScreen(ui_models.DocDetailsScreen):
         self.table_type = self._get_table_type_from_name(self.doc_type)
         self.service.table_type = self.table_type
 
-        self.doc_data['doc_date'] = self._format_date(self.doc_data['doc_date'])
-        self.doc_title = '{doc_type} № {doc_n} от {doc_date}'.format(
-            **self.doc_data
-        )
-
+        self.doc_title = self._get_doc_title(**self.doc_data)
         self.doc_data['tables_type'] = self.tables_types
         self.doc_data['table_type'] = self.doc_data['doc_type']
         self.doc_data['doc_title'] = self.doc_title
