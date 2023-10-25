@@ -83,7 +83,6 @@ class TestSeriesItem(unittest.TestCase):
         self.assertTrue(sut.hash_map['toast'])
         self.assertIsNone(sut.data_to_save)
 
-
     def test_can_update_series(self):
         series_item_data = self.get_series_item_data()
 
@@ -120,7 +119,7 @@ class TestSeriesItem(unittest.TestCase):
             'name': 'sn_123',
             'number': 'sn_123',
             'cell_id': '555',
-            'best_before': '0001-01-01',
+            'best_before': '<..>',
             'production_date': '0001-01-01',
         }
 
@@ -156,7 +155,6 @@ class TestSeriesSelectScreen(unittest.TestCase):
         self.assertEqual(sut.hash_map['qtty'], '5.5')
         self.assertEqual(sut.hash_map['qtty_plan'], '10')
         self.assertTrue(sut.hash_map.get_json('series_cards')['customcards']['cardsdata'])
-        # self.assertFalse(self.hash_map.containsKey('empty_series'))
         self.assertEqual(self.hash_map['Show_empty_series'], '-1')
 
     def test_can_init_screen_without_series(self):
@@ -165,8 +163,7 @@ class TestSeriesSelectScreen(unittest.TestCase):
         SeriesService.get_series_data = MagicMock(return_value={})
         sut.init_screen()
 
-        self.assertIsNone(self.hash_map['series_cards'])
-        # self.assertTrue(self.hash_map.containsKey('empty_series'))
+        self.assertFalse(self.hash_map['series_cards'])
         self.assertEqual(self.hash_map['Show_empty_series'], '1')
 
     def test_can_add_series_item_by_barcode(self):

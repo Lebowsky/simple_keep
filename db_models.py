@@ -10,8 +10,8 @@ class SeriesItemModel(BaseModel):
     cell_id: Optional[str] = Field(alias='cell')
     name: str
     number: str
-    best_before: Optional[str]
-    production_date: Optional[str]
+    best_before: Optional[str] = ''
+    production_date: Optional[str] = ''
     qtty: int
 
     @root_validator(pre=True)

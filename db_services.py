@@ -1088,6 +1088,8 @@ class DocService:
                 IFNULL(t.{qtty_filed}, 0) as qtty,
                 t.use_series,
                 t.price,
+                t.id_cell AS cell_id,
+                d.id_warehouse as warehouse_id,
                 IFNULL(g.name, '') AS item_name,
                 IFNULL(g.art, '') AS article,
                 IFNULL(p.name, '') AS property,
@@ -1096,13 +1098,16 @@ class DocService:
             FROM {self.details_table_name} AS t
 
             LEFT JOIN RS_goods  AS g
-            ON t.id_good= g.id
+                ON t.id_good= g.id
 
             LEFT JOIN RS_properties  AS p
-            ON t.id_properties = p.id
+                ON t.id_properties = p.id
 
             LEFT JOIN RS_units  AS u
-            ON t.id_unit = u.id
+                ON t.id_unit = u.id
+                
+            LEFT JOIN  RS_docs AS d
+                ON t.id_doc = d.id_doc
 
             WHERE t.id = "{row_id}"
         '''
@@ -1144,6 +1149,7 @@ class SeriesService(DbService):
             RS_docs_table.id_properties AS property_id,
             RS_docs_table.id_unit AS unit_id,
             RS_docs_table.qtty,
+            RS_docs_table.d_qtty,
             RS_docs_table.qtty_plan,
             RS_docs_table.price,
             RS_docs_table.id_cell AS cell_id,
@@ -1185,7 +1191,7 @@ class SeriesService(DbService):
                 series.id_good AS item_id,
                 series.id_properties AS property_id,
                 series.id_warehouse AS warehouse_id,
-                series.id_cell AS cell_id
+                series.cell AS cell_id
 
             FROM RS_docs_series AS series
             JOIN RS_docs_table AS doc_details_table
@@ -1208,7 +1214,7 @@ class SeriesService(DbService):
         get_query_result(q, list(data.values()))
 
     @staticmethod
-    def delete_current_st(self, series_id):
+    def delete_series_item(series_id):
         q = 'DELETE FROM RS_docs_series WHERE id = ?'
         return get_query_result(q, (series_id,))
 
@@ -1259,6 +1265,15 @@ class SeriesService(DbService):
             WHERE id = {row_id}
             '''
         get_query_result(q)
+
+    def get_total_qtty(self, **kwargs):
+        q = '''
+            SELECT SUM (qtty) AS total
+            FROM RS_docs_series
+            WHERE id_doc = :id_doc AND id_good = :item_id AND id_properties = :property_id'''
+
+        res = get_query_result(q, kwargs, return_dict=True)
+        return res[0]['total'] if res else 0
 
 
 class AdrSeriesService(SeriesService):
