@@ -4861,6 +4861,7 @@ class SeriesSelectScreen(Screen):
         self.series_barcode_data = {}
         self.qty = 0
         self.series_item_data_to_save = None
+        self.series_count = 0
 
     def init_screen(self):
         if self.db_service is None:
@@ -4870,6 +4871,7 @@ class SeriesSelectScreen(Screen):
         self.qty = self.screen_data['qtty']
         self._update_hash_map_keys()
         self._update_series_cards()
+        self.hash_map.put('return_selected_data')
 
     def on_start(self):
         self.hash_map.set_title('Выбор серии')
@@ -4887,6 +4889,7 @@ class SeriesSelectScreen(Screen):
         }
         if self.listener in listeners:
             listeners[self.listener]()
+
 
         # elif listener == 'vision_cancel':
         #     SerialNumberOCRSettings.ocr_nosql_counter.destroy()
@@ -4907,7 +4910,7 @@ class SeriesSelectScreen(Screen):
         # elif listener == 'btn_series_add_barcode':
         #     self._btn_add_barcode()
 
-        self.hash_map.no_refresh()
+
 
     def show(self, args=None):
         self.show_process_result(args)
@@ -4925,11 +4928,14 @@ class SeriesSelectScreen(Screen):
             self.series_barcode_data = {
                 row['number']: row for row in series_data if row['number']
             }
+            self.series_count = len(series_data)
+
             doc_cards = self._get_doc_cards_view(self._prepare_table_data(series_data))
             self.hash_map['series_cards'] = doc_cards.to_json()
-            self.hash_map.remove('empty_series')
+            self.hash_map.put('Show_empty_series', '-1')
         else:
-            self.hash_map['empty_series'] = 'Отсканируйте серии'
+            self.hash_map['series_cards'] = ''
+            self.hash_map.put('Show_empty_series', '1')
 
     def _cards_click(self):
         series_id = self.hash_map['selected_card_key']
@@ -4941,20 +4947,24 @@ class SeriesSelectScreen(Screen):
     def _barcode_listener(self):
         """
         По штрихкоду ищем серию, инициализируем данные для записи в БД,
+        количество новой серии считаем по количеству товара если нет серий на этом этапе
         при событии on_start данные должны сохраниться в БД
         """
 
+        series_item_qtty = 1 if self.series_count else self.qty
         barcode = self.hash_map['barcode']
         news_series_item_data = {'name': barcode, 'number': barcode, 'qtty': 0}
         series_data = self.series_barcode_data.get(barcode, news_series_item_data)
-        series_data['qtty'] += 1
+        series_data['qtty'] += series_item_qtty
 
         data_to_save = self.screen_data.copy()
         data_to_save.update(series_data)
         self.series_item_data_to_save = (
-            db_models.SeriesItemModel(**data_to_save)
-            .dict(by_alias=True, exclude_none=True)
+            db_models.SeriesItemModel(**data_to_save).dict()
         )
+
+    # def _get_series_item_data_from_barcode(self, barcode=''):
+
 
     def save_new_series_item(self):
         """
@@ -4968,13 +4978,13 @@ class SeriesSelectScreen(Screen):
                 .dict(by_alias=True, exclude_none=True)
             )
             self.series_item_data_to_save = None
+            self._update_series_cards()
 
-    def _open_series_item_screen(self, series_id=None):
+    def _open_series_item_screen(self):
         screen = SeriesItem(
             self.hash_map,
             parent=self,
-            series_id=series_id,
-            **self.screen_data
+            screen_data=self.screen_data
         )
         screen.show()
 
@@ -5140,38 +5150,26 @@ class SeriesItem(Screen):
     process_name = 'SeriesProcess'
     screen_name = 'FillingSeriesScreen'
 
-    def __init__(self, hash_map: HashMap, series_id=None, **kwargs):
+    def __init__(self, hash_map: HashMap, series_item_data=None, **kwargs):
         super().__init__(hash_map, **kwargs)
-        self.series_id = series_id
-        self.service = db_services.SeriesItemService()
-        self.screen_data = kwargs
-        self.screen_data_keys = ['id_doc', 'item_id', 'property_id', 'warehouse_id', 'cell_id']
+        self.screen_data = series_item_data or {}
         self.hash_map_keys = [
             'name', 'number', 'production_date', 'best_before', 'FillingSeriesScreen_qtty'
         ]
         self.data_to_save = None
+        self.series_barcode_data = kwargs.get('series_barcode_data', {})
+        self.is_new_item = kwargs.get('is_new_item', False)
 
     def init_screen(self):
-        if self.series_id:
-            self.screen_data = self.service.get_series_item_data_by_id(self.series_id)
+        put_data = {
+            'name': self.screen_data.get('name',''),
+            'number': self.screen_data.get('number',''),
+            'production_date': self.screen_data.get('production_date',''),
+            'best_before': self.screen_data.get('best_before',''),
+            'FillingSeriesScreen_qtty': self._str_to_int(self.screen_data.get('qtty',''))
+        }
 
-            put_data = {
-                'name': self.screen_data.get('name',''),
-                'number': self.screen_data.get('number',''),
-                'production_date': self.screen_data.get('production_date',''),
-                'best_before': self.screen_data.get('best_before',''),
-                'FillingSeriesScreen_qtty': self._str_to_int(self.screen_data.get('qtty',''))
-            }
-
-            self.hash_map.put_data(put_data)
-
-        else:
-            self.screen_data = {k: self.screen_data.get(k, '') for k in self.screen_data_keys}
-            for key in ['id_doc', 'item_id']:
-                if not self.screen_data.get(key):
-                    raise ValueError(f'Screen: {self}:\n'
-                                     f'method: init_screen\n'
-                                     f'key "{key}" not transferred in kwargs')
+        self.hash_map.put_data(put_data)
 
     def on_start(self):
         pass
@@ -5189,16 +5187,17 @@ class SeriesItem(Screen):
         """
         Обработчик проверяет валидность данных и формирует структуру для записи в БД
         подразумевается что запись в БД происходит в родительском классе
-        :return:
         """
-        data_to_save = {
-            **self.screen_data,
-            'qtty': int(self.hash_map.get('FillingSeriesScreen_qtty') or 0),
-            'name': self.hash_map.get('name'),
-            'best_before': self._format_date(self.hash_map.get('best_before'), default=''),
-            'number': self.hash_map.get('number'),
-            'production_date': self._format_date(self.hash_map.get('production_date'), default=''),
-        }
+        data_to_save = {**self.screen_data}
+        data_to_save.update(
+            {
+                'qtty': self._get_qty(),
+                'name': self.hash_map.get('name'),
+                'best_before': self._format_date(self.hash_map.get('best_before'), default=''),
+                'number': self.hash_map.get('number'),
+                'production_date': self._format_date(self.hash_map.get('production_date'), default=''),
+            }
+        )
 
         if self._check_save_data(data_to_save):
             self.data_to_save = db_models.SeriesItemModel(**data_to_save).dict()
@@ -5206,15 +5205,18 @@ class SeriesItem(Screen):
                 self.parent_screen.series_item_data_to_save = self.data_to_save
             self._back_screen()
 
+    def _get_qty(self):
+        return int(float(self.hash_map.get('FillingSeriesScreen_qtty')) or 0)
+
     def _check_save_data(self, data):
         series_number = data['number']
 
         if not data['name']:
             data['name'] = series_number
 
-        if not bool(data['name'].strip()):
+        if not bool(data['number'].strip()):
             self.hash_map.playsound('warning')
-            self.toast('Не заполнено наименование')
+            self.toast('Не заполнен номер серии')
             return False
 
         if data['qtty'] <= 0:
@@ -5222,15 +5224,12 @@ class SeriesItem(Screen):
             self.toast('Введите количество')
             return False
 
-        if data['number'] and self._has_series_by_number(data):
+        if self.is_new_item and data['number'] in self.series_barcode_data:
             self.hash_map.playsound('warning')
             self.toast(f'Серия с номером с таким номером уже есть в документе')
             return False
 
         return True
-
-    def _has_series_by_number(self, data):
-        return bool(self.service.get_count_series(**data))
 
     def _back_screen(self):
         for k in self.hash_map_keys:

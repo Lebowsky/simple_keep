@@ -15,77 +15,83 @@ class TestSeriesItem(unittest.TestCase):
         self.rs_settings = noClass('rs_settings')
         self.rs_settings.put('path_to_databases', './', True)
 
-    def test_cant_show_not_inited_series_screen(self):
+    def test_can_show_new_item_screen(self):
         sut = SeriesItem(self.hash_map)
-        with self.assertRaises(ValueError):
-            sut.show()
-
-    def test_can_show_new_series_screen(self):
-        expect = {
-            'cell_id': '',
-            'id_doc': '123',
-            'item_id': '123',
-            'property_id': '',
-            'warehouse_id': ''
-        }
-        sut = SeriesItem(self.hash_map, id_doc='123', item_id='123')
         sut.show()
 
-        actual = sut.screen_data
-        self.assertEqual(expect, actual)
+        self.assertEqual(self.hash_map['name'], '')
+        self.assertEqual(self.hash_map['best_before'], '')
+        self.assertEqual(self.hash_map['number'], '')
+        self.assertEqual(self.hash_map['production_date'], '')
+        self.assertEqual(self.hash_map['FillingSeriesScreen_qtty'], '0')
 
-    def test_can_show_series_screen_by_series_id(self):
-        name = 'name123'
-        number = 'number123'
-        production_date = 'production_date_123'
-        best_before = 'best_before_123'
-        qtty = 10
-
-        sut = SeriesItem(self.hash_map, series_id='123')
-        sut.service.get_series_item_data_by_id = MagicMock(return_value={
-            'name': name,
-            'best_before': best_before,
-            'number': number,
-            'production_date': production_date,
-            'qtty': qtty,
-        })
+    def test_can_show_series_screen(self):
+        series_item_data = self.get_series_item_data()
+        sut = SeriesItem(self.hash_map, series_item_data=series_item_data)
         sut.show()
 
-        self.assertEqual(self.hash_map['name'], name)
-        self.assertEqual(self.hash_map['best_before'], best_before)
-        self.assertEqual(self.hash_map['number'], number)
-        self.assertEqual(self.hash_map['production_date'], production_date)
-        self.assertEqual(self.hash_map['FillingSeriesScreen_qtty'], str(qtty))
+        self.assertEqual(self.hash_map['name'], series_item_data['name'])
+        self.assertEqual(self.hash_map['best_before'], series_item_data['best_before'])
+        self.assertEqual(self.hash_map['number'], series_item_data['number'])
+        self.assertEqual(self.hash_map['production_date'], series_item_data['production_date'])
+        self.assertEqual(self.hash_map['FillingSeriesScreen_qtty'], str(series_item_data['qtty']))
 
     def test_can_save_new_series(self):
-        expect = self.get_series_data()
+        series_item_data = self.get_series_item_data()
+
         self.hash_map.hash_map.put('listener', 'btn_save')
         sut = SeriesItem(
             self.hash_map,
-            id_doc='111',
-            item_id='222',
-            property_id='333',
-            warehouse_id='444',
-            cell_id='555'
+            series_item_data=self.get_empty_series_item_data(),
+            is_new_item=True,
         )
-        sut.service.get_count_series = MagicMock(return_value=0)
-        sut.hash_map['number'] = expect['name']
-        sut.hash_map['best_before'] = expect['best_before']
-        sut.hash_map['production_date'] = expect['production_date']
-        sut.hash_map['FillingSeriesScreen_qtty'] = expect['qtty']
+        sut.show()
+        sut.hash_map['name'] = series_item_data['name']
+        sut.hash_map['best_before'] = series_item_data['best_before']
+        sut.hash_map['number'] = series_item_data['number']
+        sut.hash_map['production_date'] = series_item_data['production_date']
+        sut.hash_map['FillingSeriesScreen_qtty'] = '6'
         sut.on_input()
 
         self.assertFalse(sut.hash_map['toast'])
         self.assertIsNotNone(sut.data_to_save)
+        self.assertEqual(sut.data_to_save['qtty'], 6)
 
-    def test_can_update_series(self):
+    def test_must_set_error_toast(self):
+        series_item_data = self.get_series_item_data()
         self.hash_map.hash_map.put('listener', 'btn_save')
         sut = SeriesItem(
             self.hash_map,
-            series_id='111'
+            series_item_data=self.get_empty_series_item_data(),
+            is_new_item=True,
+            series_barcode_data = {'sn_123': ''}
         )
-        sut.screen_data = self.get_series_data()
-        sut.service.get_count_series = MagicMock(return_value=0)
+        sut.show()
+        sut.hash_map['name'] = series_item_data['name']
+        sut.hash_map['best_before'] = series_item_data['best_before']
+        sut.hash_map['number'] = ''
+        sut.hash_map['production_date'] = series_item_data['production_date']
+        sut.hash_map['FillingSeriesScreen_qtty'] = '6'
+
+        self.assertFalse(sut.hash_map['toast'])
+        sut.on_input()
+        self.assertTrue(sut.hash_map['toast'])
+        self.assertIsNone(sut.data_to_save)
+
+        sut.hash_map['number'] = series_item_data['number']
+        sut.on_input()
+        self.assertTrue(sut.hash_map['toast'])
+        self.assertIsNone(sut.data_to_save)
+
+
+    def test_can_update_series(self):
+        series_item_data = self.get_series_item_data()
+
+        self.hash_map.hash_map.put('listener', 'btn_save')
+        sut = SeriesItem(
+            self.hash_map,
+            series_item_data=series_item_data
+        )
 
         sut.hash_map['name'] = sut.screen_data['name']
         sut.hash_map['number'] = sut.screen_data['number']
@@ -94,13 +100,18 @@ class TestSeriesItem(unittest.TestCase):
         sut.hash_map['FillingSeriesScreen_qtty'] = 6
 
         sut.on_input()
+
         self.assertFalse(sut.hash_map['toast'])
         self.assertIsNotNone(sut.data_to_save)
         self.assertEqual(sut.data_to_save['qtty'], 6)
+        print(sut.data_to_save)
+
 
     @staticmethod
-    def get_series_data():
+    def get_series_item_data():
         return {
+            'id': '001',
+            'key': '001',
             'id_doc': '111',
             'item_id': '222',
             'property_id': '333',
@@ -111,6 +122,22 @@ class TestSeriesItem(unittest.TestCase):
             'cell_id': '555',
             'best_before': '0001-01-01',
             'production_date': '0001-01-01',
+        }
+
+    def get_empty_series_item_data(self):
+        return {
+            'id': None,
+            'key': None,
+            'id_doc': '111',
+            'item_id': '222',
+            'property_id': '333',
+            'warehouse_id': '444',
+            'cell_id': '555',
+            'qtty': 0,
+            'name': '',
+            'number': '',
+            'best_before': '',
+            'production_date': '',
         }
 
 class TestSeriesSelectScreen(unittest.TestCase):
@@ -129,7 +156,8 @@ class TestSeriesSelectScreen(unittest.TestCase):
         self.assertEqual(sut.hash_map['qtty'], '5.5')
         self.assertEqual(sut.hash_map['qtty_plan'], '10')
         self.assertTrue(sut.hash_map.get_json('series_cards')['customcards']['cardsdata'])
-        self.assertFalse(self.hash_map.containsKey('empty_series'))
+        # self.assertFalse(self.hash_map.containsKey('empty_series'))
+        self.assertEqual(self.hash_map['Show_empty_series'], '-1')
 
     def test_can_init_screen_without_series(self):
         sut = SeriesSelectScreen(self.hash_map, doc_row_id='000')
@@ -138,7 +166,8 @@ class TestSeriesSelectScreen(unittest.TestCase):
         sut.init_screen()
 
         self.assertIsNone(self.hash_map['series_cards'])
-        self.assertTrue(self.hash_map.containsKey('empty_series'))
+        # self.assertTrue(self.hash_map.containsKey('empty_series'))
+        self.assertEqual(self.hash_map['Show_empty_series'], '1')
 
     def test_can_add_series_item_by_barcode(self):
         self.hash_map.hash_map.put('listener', 'barcode')
@@ -160,9 +189,8 @@ class TestSeriesSelectScreen(unittest.TestCase):
         SeriesService.get_series_data = MagicMock(return_value=self.get_series_data())
         sut.init_screen()
         sut.hash_map['barcode'] = '456'
-
         sut.on_input()
-        print(sut.series_item_data_to_save)
+
         self.assertTrue(sut.series_item_data_to_save)
         self.assertEqual(sut.series_item_data_to_save['qtty'], 6)
 

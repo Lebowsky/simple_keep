@@ -5,9 +5,9 @@ class SeriesItemModel(BaseModel):
     id: Optional[str]
     id_doc: str
     item_id: str = Field(alias='id_good')
-    property_id: Optional[str] = Field(default='', alias='id_properties')
-    warehouse_id: Optional[str] = Field(default='', alias='id_warehouse')
-    cell_id: Optional[str] = Field(default='', alias='cell')
+    property_id: Optional[str] = Field(alias='id_properties')
+    warehouse_id: Optional[str] = Field(alias='id_warehouse')
+    cell_id: Optional[str] = Field(alias='cell')
     name: str
     number: str
     best_before: Optional[str]
@@ -19,7 +19,6 @@ class SeriesItemModel(BaseModel):
         if not values.get('name'):
             values['name'] = values.get('number')
         return values
-
 
     class Config:
         allow_population_by_field_name = True

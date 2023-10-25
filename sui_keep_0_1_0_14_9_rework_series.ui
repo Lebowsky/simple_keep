@@ -7341,8 +7341,8 @@
                                         "type": "CardsLayout"
                                     },
                                     {
-                                        "Value": "@empty_series",
-                                        "Variable": "",
+                                        "Value": "Отсканируйте серии",
+                                        "Variable": "empty_series",
                                         "height": "wrap_content",
                                         "width": "match_parent",
                                         "weight": "0",

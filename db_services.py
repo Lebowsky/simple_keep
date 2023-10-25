@@ -1131,12 +1131,12 @@ class DocService:
 class SeriesService(DbService):
     doc_basic_table_name = 'RS_docs_table'
     doc_basic_handler_name = 'RS_docs'
-    def __init__(self, doc_row_id):
+    def __init__(self, doc_row_id=''):
         super().__init__()
         self.doc_row_id = doc_row_id
         self.params = {}
 
-    def get_screen_data(self, id) -> dict:
+    def get_screen_data(self, doc_row_id) -> dict:
 
         q = f'''
         SELECT RS_docs_table.id_doc,
@@ -1164,7 +1164,7 @@ class SeriesService(DbService):
             RS_docs_table.id_unit = RS_units.id
         WHERE RS_docs_table.id = ?
         '''
-        res = get_query_result(q, (id,), True)
+        res = get_query_result(q, (doc_row_id,), True)
         if res:
             return res[0]
         else:
@@ -1180,13 +1180,18 @@ class SeriesService(DbService):
                 series.name,
                 series.best_before,
                 series.number,
-                series.production_date
+                series.production_date,
+                series.id_doc AS id_doc,
+                series.id_good AS item_id,
+                series.id_properties AS property_id,
+                series.id_warehouse AS warehouse_id,
+                series.id_cell AS cell_id
 
             FROM RS_docs_series AS series
-            JOIN RS_docs_table AS doc_table
-                ON series.id_good = doc_table.id_good 
-                AND series.id_properties = doc_table.id_properties
-            WHERE doc_table.id = '{doc_row_id}'
+            JOIN RS_docs_table AS doc_details_table
+                ON series.id_good = doc_details_table.id_good 
+                AND series.id_properties = doc_details_table.id_properties
+            WHERE doc_details_table.id = '{doc_row_id}'
         '''
 
         return get_query_result(q, return_dict=True)
@@ -1208,62 +1213,25 @@ class SeriesService(DbService):
         return get_query_result(q, (series_id,))
 
     @staticmethod
-    def get_series_data_by_id(id):
-        q = '''
-        SELECT
-            RS_docs_series.id AS id, 
-            RS_docs_series.id_doc AS id_doc, 
-            RS_docs_series.id AS item_id,
-            RS_docs_series.id_properties AS property_id, 
-            RS_docs_series.id_series AS id_series, 
-            RS_docs_series.id_warehouse AS warehouse_id, 
-            RS_docs_series.cell AS cell_id, 
-            RS_docs_series.name AS name,
-            IFNULL(RS_docs_series.best_before, '') AS best_before,
-            IFNULL(RS_docs_series.number, '') AS number,
-            IFNULL(RS_docs_series.production_date, '') AS production_date,
-            IFNULL(RS_docs_series.qtty, 0) as qtty
-        FROM RS_docs_series
-        WHERE RS_docs_series.id = ?
-        '''
-        res = get_query_result(q, (id,),True)
-        if res:
-            return res[0]
-        else:
-            return {}
-
-    def update_total_qty(self, qty, row_id):
-        q = f'''
-            UPDATE RS_docs_table
-            SET d_qtty = {qty}, use_series = 1
-            WHERE id = {row_id}
-            '''
-        get_query_result(q)
-
-class SeriesItemService(DbService):
-    def __init__(self):
-        super().__init__()
-
-    @staticmethod
     def get_series_item_data_by_id(id):
         q = '''
-            SELECT
-                RS_docs_series.id AS id, 
-                RS_docs_series.id_doc AS id_doc, 
-                RS_docs_series.id AS item_id,
-                RS_docs_series.id_properties AS property_id, 
-                RS_docs_series.id_series AS id_series, 
-                RS_docs_series.id_warehouse AS warehouse_id, 
-                RS_docs_series.cell AS cell_id, 
-                RS_docs_series.name AS name,
-                IFNULL(RS_docs_series.best_before, '') AS best_before,
-                IFNULL(RS_docs_series.number, '') AS number,
-                IFNULL(RS_docs_series.production_date, '') AS production_date,
-                IFNULL(RS_docs_series.qtty, 0) as qtty
-            FROM RS_docs_series
-            WHERE RS_docs_series.id = ?
-            LIMIT 1
-            '''
+                SELECT
+                    RS_docs_series.id AS id, 
+                    RS_docs_series.id_doc AS id_doc, 
+                    RS_docs_series.id_good AS item_id,
+                    RS_docs_series.id_properties AS property_id, 
+                    RS_docs_series.id_series AS id_series, 
+                    RS_docs_series.id_warehouse AS warehouse_id, 
+                    RS_docs_series.cell AS cell_id, 
+                    RS_docs_series.name AS name,
+                    IFNULL(RS_docs_series.best_before, '') AS best_before,
+                    IFNULL(RS_docs_series.number, '') AS number,
+                    IFNULL(RS_docs_series.production_date, '') AS production_date,
+                    IFNULL(RS_docs_series.qtty, 0) as qtty
+                FROM RS_docs_series
+                WHERE RS_docs_series.id = ?
+                LIMIT 1
+                '''
         res = get_query_result(q, (id,), True)
         if res:
             return res[0]
@@ -1273,16 +1241,25 @@ class SeriesItemService(DbService):
     @staticmethod
     def get_count_series(**kwargs):
         q = f'''
-            SELECT COUNT(*) AS series_count
-            FROM RS_docs_series
-            WHERE RS_docs_series.id_doc = :id_doc 
-                AND RS_docs_series.id_good = :item_id 
-                AND RS_docs_series.id_properties = :property_id 
-                AND number = :number
-        '''
+                SELECT COUNT(*) AS series_count
+                FROM RS_docs_series
+                WHERE RS_docs_series.id_doc = :id_doc 
+                    AND RS_docs_series.id_good = :item_id 
+                    AND RS_docs_series.id_properties = :property_id 
+                    AND number = :number
+            '''
 
         res = get_query_result(q, kwargs, True)
         return res[0]['series_count'] if res else 0
+
+    def update_total_qty(self, qty, row_id):
+        q = f'''
+            UPDATE RS_docs_table
+            SET d_qtty = {qty}, use_series = 1
+            WHERE id = {row_id}
+            '''
+        get_query_result(q)
+
 
 class AdrSeriesService(SeriesService):
     def get_screen_data(self, _id) -> dict:
