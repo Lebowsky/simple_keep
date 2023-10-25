@@ -2162,7 +2162,7 @@ class DocDetailsScreen(Screen):
                 product_row[key] = str(int(value)) if value.is_integer() else value
 
             use_series = bool(int(product_row.get('use_series', 0)))
-            product_row['_layout'] = self._get_doc_table_row_view()
+            product_row['_layout'] = self._get_doc_table_row_view(use_series)
             self._set_background_row_color(product_row)
 
             if self._added_goods_has_key(product_row['key']):
@@ -2528,16 +2528,29 @@ class GroupScanDocDetailsScreen(DocDetailsScreen):
 
         return table_view
 
-    def _get_doc_table_row_view(self):
+    def _get_doc_table_row_view(self, use_series=False, use_mark=False):
         row_view = widgets.LinearLayout(
             widgets.LinearLayout(
                 widgets.LinearLayout(
                     widgets.LinearLayout(
-                        self.TextView('@good_name'),
-                        widgets.TextView(
-                            Value='@good_info',
-                            TextSize=15,
-                            width='match_parent'
+                        widgets.LinearLayout(
+                            widgets.LinearLayout(
+                                widgets.Picture(
+                                    Value=static_data.sn_icon_green if use_series else None,
+                                    width=16,
+                                    height=12,
+                                ),
+                                widgets.Picture(
+                                    Value=static_data.mark_green if use_mark else None,
+                                    width=16,
+                                    height=12,
+                                ),
+                                orientation='horizontal',
+                                Padding = 16
+                            ),
+                            self.TextView('@good_name'),
+                            width='match_parent',
+                            orientation='horizontal',
                         ),
                         width='match_parent',
                     ),
