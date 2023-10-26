@@ -2016,7 +2016,7 @@ class BaseGoodSelect(Screen):
             'property_id': self.screen_data.get('property_id', ''),
             'unit_id': self.screen_data.get('unit_id', '')
         }
-        screen = BarcodeRegistrationScreen(self.hash_map, self.rs_settings)
+        screen = BarcodeRegistrationScreen(self.hash_map, self.rs_settings, **init_data)
         screen.parent_screen = self
         screen.show_process_result(init_data)
 
@@ -2238,14 +2238,14 @@ class BarcodeRegistrationScreen(Screen):
     screen_name = 'BarcodeRegistration'
     process_name = 'BarcodeRegistration'
 
-    def __init__(self, hash_map: HashMap, rs_settings):
+    def __init__(self, hash_map: HashMap, rs_settings, **kwargs):
         super().__init__(hash_map, rs_settings)
         self.service = BarcodeService()
         self.goods_service = GoodsService()
-        self.screen_values = {
-            'item_id': self.hash_map['item_id'],
-            'property_id': self.hash_map['property_id'] or '',
-            'unit_id': self.hash_map['unit_id'] or '',
+        self.init_values = {
+            'item_id': kwargs.get('item_id', ''),
+            'property_id': kwargs.get('property_id', ''),
+            'unit_id': kwargs.get('unit_id', ''),
         }
         self.title = 'Регистрация штрихкода'
         self.db_tables_matching = {
@@ -2258,8 +2258,8 @@ class BarcodeRegistrationScreen(Screen):
         self.hash_map_keys = ['scanned_barcode', 'property_select', 'unit_select', 'barcodes_data']
 
     def init_screen(self):
-        init_data = self.goods_service.get_item_data_by_condition(**self.screen_values)
-        self.screen_data = self.screen_values
+        init_data = self.goods_service.get_item_data_by_condition(**self.init_values)
+        self.screen_data = self.init_values
 
         if init_data:
             self.hash_map['scanned_barcode'] = ''
@@ -2709,7 +2709,7 @@ class ItemCard(Screen):
             'property_id': '',
             'unit_id': ''
         }
-        BarcodeRegistrationScreen(self.hash_map, self.rs_settings).show_process_result(init_data)
+        BarcodeRegistrationScreen(self.hash_map, self.rs_settings, **init_data).show_process_result(init_data)
 
     @staticmethod
     def _get_variants_cards_data(item_properties):
@@ -3952,7 +3952,7 @@ class SeriesSelectScreen(Screen):
             'property_id':  self.screen_data.get('id_properties', ''),
             'unit_id':  self.screen_data.get('id_unit', '')
         }
-        BarcodeRegistrationScreen(self.hash_map, self.rs_settings).show_process_result(init_data)
+        BarcodeRegistrationScreen(self.hash_map, self.rs_settings, **init_data).show_process_result(init_data)
 
 
 class SeriesItem(Screen):
