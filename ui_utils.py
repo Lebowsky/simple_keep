@@ -5,9 +5,16 @@ from dataclasses import dataclass, asdict
 from datetime import datetime, timedelta
 from functools import wraps
 from typing import Callable, Union, List, Dict, Literal, Optional, Tuple
+
+from PIL import Image
+
 from java import jclass
+from ru.travelfood.simple_ui import SimpleUtilites as suClass
+from pathlib import Path
+import uuid
 
-
+import traceback
+import os
 noClass = jclass("ru.travelfood.simple_ui.NoSQL")
 rs_settings = noClass("rs_settings")
 
@@ -329,6 +336,27 @@ class HashMap:
         process_screen = f'{process}|{screen}' if screen else process
         self.hash_map.put('SwitchProcessScreen', process_screen)
 
+    def html2png(
+            self,
+            html: str,
+            action: Literal['runasync', 'runprogress'],
+            post_exec_handlers: Optional[List] = None,
+            width: Optional[str] = None,
+            file_path: Optional[str] = None
+    ):
+        event = {
+            "action": action,
+            "type": "html2image",
+            "method": html,
+            "postExecute": json.dumps(post_exec_handlers) if post_exec_handlers else '[]'
+        }
+
+        self.put("RunEvent", json.dumps([event]))
+        if width:
+            self.put("html2image_width", width)
+        if file_path:
+            self.put('html2image_ToFile', file_path)
+
     def show_dialog(self, listener, title='', buttons=None, dialog_layout=None):
         self.put("ShowDialog", listener)
         
@@ -417,7 +445,6 @@ class HashMap:
 
         if timers:
             self.put(start_command,{"handler": timers, "period": period}, to_json=True)
-
 
     def stop_timers(self, bs_hash_map: bool=False):
         """
@@ -623,3 +650,54 @@ def get_ip_address():
         s.close()
 
     return ip_address
+
+
+def create_file(
+        ext: str,
+        folder: Optional[str] = None,
+        file_name: Optional[str] = None,
+):
+    """Создание файла с необходимым расширением."""
+    path = Path(suClass.get_temp_dir())
+    if folder:
+        path /= folder
+        path.mkdir(parents=True, exist_ok=True)
+
+    file_path = f'{path}/{file_name}.{ext}' if file_name else f'{path}/{str(uuid.uuid4())}.{ext}'
+    open(file_path, 'w').close()
+    return file_path
+
+
+def resize_image(
+        path_to_image: str,
+        width: Optional[int] = None,
+        height: Optional[int] = None,
+        ratio: Optional[float] = None
+) -> None:
+    if ratio is None and (width is None or height is None):
+        raise Exception('resize_image. Укажите ratio или width и height')
+    if ratio is not None and not isinstance(ratio, float):
+        raise Exception('resize_image. ratio должно быть float')
+    if ratio is None and (not isinstance(width, int) or not isinstance(height, int)):
+        raise Exception('resize_image. width и height должны быть int')
+    image = Image.open(path_to_image)
+    if ratio:
+        resized_image = image.resize((int(image.width * ratio), int(image.height * ratio)))
+    else:
+        resized_image = image.resize((width, height))
+    resized_image.save(path_to_image)
+
+
+def error_handler_decorator(func):
+    """Полный traceback ошибки в удобном виде"""
+    def wrapper(*args, **kwargs):
+        try:
+            return func(*args, **kwargs)
+        except Exception as e:
+            error_info = str(e)
+            for tb in traceback.extract_tb(e.__traceback__):
+                file_name = os.path.basename(tb.filename)
+                line_number = tb.lineno
+                error_info += f"  |File: {file_name} Line: {line_number - 3}|  "
+            raise Exception(error_info)
+    return wrapper

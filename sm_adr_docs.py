@@ -1,9 +1,9 @@
 from typing import Dict
 
 import db_services
+from printing_factory import PrintService
 import widgets
 import ui_models
-from printing_factory import PrintService
 from ui_utils import HashMap
 from barcode_workers import BarcodeAdrWorker
 import static_data
@@ -708,7 +708,7 @@ class AdrGoodsSelectScreen(ui_models.BaseGoodSelect):
             data[key] = self.hash_map.get(data[key])
 
         data['barcode'] = barcode if barcode else '0000000000000'
-        PrintService.print(self.hash_map, data)
+        PrintService(self.hash_map).print(data)
 
     def fill_barcodes_data(self):
         """

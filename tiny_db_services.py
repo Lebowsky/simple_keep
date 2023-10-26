@@ -177,9 +177,11 @@ class NoSQLProvider:
             return result if not from_json else json.loads(result)
         return result if not default else default
 
-    def delete(self, key: str) -> None:
+    def delete(self, key: str, with_file: Optional[bool] = False) -> None:
         """Удаляет ключ"""
         self.nosql.delete(key)
+        if with_file and os.path.isfile(key):
+            os.remove(key)
 
     def destroy(self) -> None:
         """Уничтожает все ключи базы"""

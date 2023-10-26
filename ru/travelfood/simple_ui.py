@@ -45,6 +45,10 @@ class SimpleUtilites:
          """
         pass
 
+    @staticmethod
+    def generateDataMatrix(data: str, witdh: int, height: int):
+        pass
+
 
 class ImportUtils:
     def __init__(self):
