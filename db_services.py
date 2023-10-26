@@ -1940,6 +1940,34 @@ class FlowDocService(DocService):
         self.provider.table_name = self.docs_table_name
         self.provider.update({'is_barc_flow': '1'}, {'id_doc': self.doc_id})
 
+    def get_mark_plan_data(self, id_doc) -> bool:
+        qtext = '''
+            SELECT distinct COUNT(id) as col_str
+            FROM RS_docs_barcodes WHERE id_doc = :id_doc AND is_plan = :is_plan
+        '''
+        res = self._get_query_result(qtext, {'id_doc': id_doc, 'is_plan': '1'})
+        if not res or res[0][0] is None:
+            return False
+        return res[0][0] > 0
+
+    def get_control_data(self, id_doc) -> bool:
+        falseValueList = (0, '0', 'false', 'False', None)
+        res = self._get_query_result('SELECT control from RS_docs  WHERE id_doc = ?', (id_doc,))
+        if res and res[0][0] and res[0][0] not in falseValueList:
+            return 'True'
+        return 'False'
+    
+    def get_quantity_plan_data(self, id_doc):
+        qtext = '''
+            SELECT distinct count(id) as col_str, sum(ifnull(qtty_plan,0)) as qtty_plan
+            from RS_docs_table Where id_doc = :id_doc
+        '''
+        res = self._get_query_result(qtext, {'id_doc': id_doc})
+        if not res:
+            return False, False
+        have_qtty_plan = res[0][1] > 0 if res[0][1] is not None else False
+        have_zero_plan = res[0][0] > 0 if res[0][0] is not None else False
+        return have_qtty_plan, have_zero_plan
 
 class GoodsService(DbService):
     def __init__(self, item_id=''):

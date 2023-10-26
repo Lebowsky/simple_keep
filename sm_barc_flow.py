@@ -112,34 +112,36 @@ class FlowDocScreen(DocsListScreen):
     def on_start(self):
         super().on_start()
 
-    def on_input(self):
-        if self.listener == "CardsClick":
-            args = self._get_selected_card_put_data()
-            self.hash_map.show_screen('ПотокШтрихкодовДокумента', args)
-            # screen: FlowDocDetailsScreen = FlowDocDetailsScreen(self.hash_map, self.rs_settings)
-            # screen.show(args=args)
-        elif self.listener == "ON_BACK_PRESSED":
-            self.hash_map.show_screen('Плитки')  # finish_process()
-        elif self.listener == 'doc_type_click':
-            self.hash_map.refresh_screen()
-        elif self._is_result_positive('confirm_clear_barcode_data'):
-            id_doc = self.get_id_doc()
-            res = self._clear_barcode_data(id_doc)
-            self.service.set_doc_status_to_upload(id_doc)
-            if res.get('result'):
-                self.toast('Все штрихкоды удалены из документа')
-            else:
-                self.toast('При очистке данных возникла ошибка.')
-                self.hash_map.error_log(res.get('error'))
+    def on_input(self) -> None:
+        listeners = {
+            'CardsClick': lambda: FlowDocDetailsScreen(self.hash_map).show(self._get_selected_card_put_data()),
+            'ON_BACK_PRESSED': lambda: self.hash_map.show_screen('Плитки'),
+            'doc_type_click': lambda: self.hash_map.refresh_screen(),
+            'confirm_clear_barcode_data': self._handle_clear_barcode_data
+        }
+
+        listener_func = listeners.get(self.listener)
+        if listener_func:
+            listener_func()
 
         super().on_input()
+
+    def _handle_clear_barcode_data(self):
+        id_doc = self.get_id_doc()
+        res = self._clear_barcode_data(id_doc)
+        self.service.set_doc_status_to_upload(id_doc)
+        if res.get('result'):
+            self.toast('Все штрихкоды удалены из документа')
+        else:
+            self.toast('При очистке данных возникла ошибка.')
+            self.hash_map.error_log(res.get('error'))
 
 
 class FlowDocDetailsScreen(DocDetailsScreen):
     screen_name = 'ПотокШтрихкодовДокумента'
     process_name = 'Сбор ШК'
 
-    def __init__(self, hash_map: HashMap, rs_settings):
+    def __init__(self, hash_map: HashMap, rs_settings=None):
         super().__init__(hash_map, rs_settings)
         self.service = db_services.FlowDocService(self.id_doc)
 
@@ -150,134 +152,84 @@ class FlowDocDetailsScreen(DocDetailsScreen):
         self._barcode_flow_on_start()
         self._set_vision_settings()
 
-    def on_input(self):
-        listener = self.hash_map.get('listener')
-        if listener == "CardsClick":
-            current_str = self.hash_map.get("selected_card_position")
-            jlist = json.loads(self.hash_map.get("doc_barc_flow"))
-            current_elem = jlist['customtable']['tabledata'][int(current_str)]
-            data = {'barcode': current_elem['barcode'],
-                    'Номенклатура': current_elem['name'],
-                    'qtty': current_elem['qtty'], 'Характеристика': ''}
+    def on_input(self) -> None:
+        listeners = {
+            'CardsClick': self._handle_cards_click,
+            'BACK_BUTTON': self._handle_back_button,
+            'btn_barcodes': self._show_dialog_input_barcode,
+            'barcode': self._handle_barcode_camera,
+            'modal_dialog_input_barcode': self._handle_dialog_input_barcode,
+            'confirm_verified': self._handle_confirm_verified,
+            'btn_doc_mark_verified': lambda: self.hash_map.show_dialog('confirm_verified', 'Завершить документ?', ['Да', 'Нет']),
+            'ON_BACK_PRESSED': lambda: self.hash_map.show_screen("Документы"),
+            'vision_cancel':  lambda: SerialNumberOCRSettings.ocr_nosql_counter.destroy(),
+            'vision': lambda: SerialNumberOCRSettings.ocr_nosql_counter.destroy(),
+            'ПечатьПревью': lambda: self.hash_map.put('RefreshScreen', ''),
+            'btn_ocr_serial_template_settings': self._handle_ocr_serial_template_settings
+        }
 
-            PrintService.print(self.hash_map, data)
+        listener_func = listeners.get(self.hash_map.get('listener'))
+        if listener_func:
+            listener_func()
 
-        elif listener == "BACK_BUTTON":
-            self.hash_map.remove('rows_filter')
-            self.hash_map.put("SearchString", "")
-            self.hash_map.finish_process()
+    def _handle_cards_click(self):
+        current_elem = self._get_selected_card_data() 
+        data = {
+            'barcode': current_elem['barcode'],
+            'Номенклатура': current_elem['name'],
+            'qtty': current_elem['qtty'], 
+            'Характеристика': ''
+        }
+        PrintService.print(self.hash_map, data)
 
-        elif listener == 'btn_barcodes':
-            self._show_dialog_input_barcode()
+    def _handle_back_button(self):
+        self.hash_map.remove('rows_filter')
+        self.hash_map.put("SearchString", "")
+        self.hash_map.finish_process()
 
-        elif listener == 'barcode':
-            barcode = self.hash_map.get('barcode_camera')
-            self.service.add_barcode_to_database(barcode)
-            self.service.set_doc_status_to_upload(self.id_doc)
-            self.service.set_barc_flow_status()
+    def _handle_barcode_camera(self):
+        barcode = self.hash_map.get('barcode_camera')
+        self.service.add_barcode_to_database(barcode)
+        self.service.set_doc_status_to_upload(self.id_doc)
+        self.service.set_barc_flow_status()
 
-        elif self._is_result_positive('modal_dialog_input_barcode'):
-            barcode = self.hash_map.get('fld_barcode')
-            self.service.add_barcode_to_database(barcode)
-            self.service.set_doc_status_to_upload(self.id_doc)
+    def _handle_dialog_input_barcode(self):
+        barcode = self.hash_map.get('fld_barcode')
+        self.service.add_barcode_to_database(barcode)
+        self.service.set_doc_status_to_upload(self.id_doc)
 
-        elif self._is_result_positive('confirm_verified'):
-            self.service.mark_verified()
-            self.hash_map.show_screen("Документы")
+    def _handle_confirm_verified(self):
+        self.service.mark_verified()
+        self.hash_map.show_screen("Документы")   
 
-        elif listener == 'btn_doc_mark_verified':
-            self.hash_map.show_dialog('confirm_verified',
-                                      'Завершить документ?',
-                                      ['Да', 'Нет'])
-
-        elif listener == 'ON_BACK_PRESSED':
-            self.hash_map.show_screen("Документы")
-
-        elif listener == 'vision_cancel':
-            SerialNumberOCRSettings.ocr_nosql_counter.destroy()
-
-        elif listener == 'vision':
-            SerialNumberOCRSettings.ocr_nosql_counter.destroy()
-
-        elif listener == 'ПечатьПревью':
-            self.hash_map.put('RefreshScreen', '')
-
-        elif listener == 'btn_ocr_serial_template_settings':
-            ocr_nosql = SerialNumberOCRSettings.ocr_nosql
-            ocr_nosql.put('show_process_result', True, True)
-            self.hash_map.show_process_result('OcrTextRecognition', 'SerialNumberOCRSettings')
+    def _handle_ocr_serial_template_settings(self):
+        ocr_nosql = SerialNumberOCRSettings.ocr_nosql
+        ocr_nosql.put('show_process_result', True, True)
+        self.hash_map.show_process_result('OcrTextRecognition', 'SerialNumberOCRSettings')
+        screen = SerialNumberOCRSettings(self.hash_map, None)
+        screen.parent_screen = self
+        screen.show_process_result()
 
     def _barcode_flow_on_start(self):
-
         id_doc = self.hash_map.get('id_doc')
-        falseValueList = (0, '0', 'false', 'False', None)
-        # Формируем таблицу карточек и запрос к базе
 
         doc_details = self.service.get_flow_table_data()
         table_data = self._prepare_table_data(doc_details)
         table_view = self._get_doc_table_view(table_data=table_data)
 
-        if doc_details:
-            # hashMap.put('id_doc', str(results[0]['id_doc']))
-
-            # Признак, have_qtty_plan ЕстьПланПОКОличеству  -  Истина когда сумма колонки Qtty_plan > 0
-            # Признак  have_mark_plan "ЕстьПланКОдовМаркировки – Истина, когда количество строк табл. RS_docs_barcodes с заданным id_doc и is_plan  больше нуля.
-            # Признак have_zero_plan "Есть строки товара в документе" Истина, когда есть заполненные строки товаров в документе
-            # Признак "Контролировать"  - признак для документа, надо ли контролировать
-
-            qtext = '''
-                SELECT distinct count(id) as col_str,
-                sum(ifnull(qtty_plan,0)) as qtty_plan
-                from RS_docs_table Where id_doc = :id_doc'''
-            res = ui_global.get_query_result(qtext, {'id_doc': id_doc})
-            if not res:
-                have_qtty_plan = False
-                have_zero_plan = False
-            else:
-                have_zero_plan = res[0][0] > 0  # В документе есть строки
-                if have_zero_plan:
-                    have_qtty_plan = res[0][1] > 0  # В документе есть колво план
-                else:
-                    have_qtty_plan = False
-            # Есть ли в документе план по кодам маркировки
-            qtext = '''
-                SELECT distinct count(id) as col_str
-                from RS_docs_barcodes Where id_doc = :id_doc AND is_plan = :is_plan'''
-            res = ui_global.get_query_result(qtext, {'id_doc': id_doc, 'is_plan': '1'})
-            if not res:
-                have_mark_plan = False
-
-            else:
-                have_mark_plan = res[0][0] > 0
-        else:
-            have_qtty_plan = False
-            have_zero_plan = False
-            have_mark_plan = False
+        have_qtty_plan, have_zero_plan = self.service.get_quantity_plan_data(id_doc)
+        have_mark_plan = self.service.get_mark_plan_data(id_doc)
+        control = self.service.get_control_data(id_doc)
 
         self.hash_map.put('have_qtty_plan', str(have_qtty_plan))
         self.hash_map.put('have_zero_plan', str(have_zero_plan))
         self.hash_map.put('have_mark_plan', str(have_mark_plan))
-        res = ui_global.get_query_result('SELECT control from RS_docs  WHERE id_doc = ?', (id_doc,))
-        # Есть ли контроль плана в документе
-        if res:
-            if res[0][0]:
-                if res[0][0] in falseValueList:
-                    control = 'False'
-                else:
-                    control = 'True'
-
-                # control = res[0][0] #'True'
-            else:
-                control = 'False'
-        else:
-            control = 'False'
-
         self.hash_map.put('control', control)
         self.hash_map.put("doc_barc_flow", table_view.to_json())
 
         if True in (have_qtty_plan, have_zero_plan, have_mark_plan, control):
             self.hash_map.put('toast',
-                              'Данный документ содержит плановые строки. Список штрихкодов в него поместить нельзя')
+                            'Данный документ содержит плановые строки. Список штрихкодов в него поместить нельзя')
             self.hash_map.put('ShowScreen', 'Документы')
 
     def on_post_start(self):
@@ -305,7 +257,7 @@ class FlowDocDetailsScreen(DocDetailsScreen):
 
         return table_view
 
-    def _get_doc_table_row_view(self):
+    def _get_doc_table_row_view(self, use_series=False, use_mark=False):
         row_view = widgets.LinearLayout(
             widgets.LinearLayout(
                 widgets.LinearLayout(
@@ -358,11 +310,11 @@ class FlowDocDetailsScreen(DocDetailsScreen):
         # self.hash_map.toast(self.hash_map.get('added_goods'))
 
         for record in doc_details:
-
+            use_series = bool(record.get('use_series', 0))
             product_row = {'key': str(record['barcode']), 'barcode': str(record['barcode']),
                            'name': record['name'] if record['name'] is not None else '-нет данных-',
                            'qtty': str(record['qtty']),
-                           '_layout': self._get_doc_table_row_view()}
+                           '_layout': self._get_doc_table_row_view(use_series)}
 
             product_row['_layout'].BackgroundColor = '#FFFFFF' if record['name'] is not None else "#FBE9E7"
 
