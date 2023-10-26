@@ -2,6 +2,7 @@ import unittest
 import json
 import os
 
+import db_services
 from db_services import DocService, DbCreator, TimerService, DbService, SqlQueryProvider, GoodsService, \
     get_query_result, BarcodeService, FlowDocService, AdrDocService
 from ui_utils import BarcodeParser
@@ -24,11 +25,12 @@ class TestDocService(unittest.TestCase):
 
     def test_can_get_docs_stat_for_no_group_scan_docs(self):
         self.data_creator.insert_data('RS_docs', 'RS_docs_table')
+        self.service = db_services.DocListService()
         self.assertTrue(self.service.get_docs_stat())
 
     def test_get_only_docs_stat(self):
         self.data_creator.insert_data('RS_docs', 'RS_docs_table')
-
+        self.service = db_services.DocListService()
         result = self.service.get_docs_stat()
         for tile in result:
             docs_count = tile['count']
@@ -60,10 +62,12 @@ class TestDocService(unittest.TestCase):
 
     def test_can_get_doc_view_data_if_no_group_scan(self):
         self.data_creator.insert_data('RS_docs', 'RS_docs_table')
-        self.assertTrue(self.service.get_doc_view_data(doc_status='К выгрузке', doc_type='Заказ'))
+        self.service = db_services.DocListService()
+        self.assertTrue(self.service.get_docs_view_data(doc_status='К выгрузке', doc_type='Заказ'))
 
     def test_can_get_docs_stat_for_group_scan_docs(self):
         self.data_creator.insert_data('RS_docs', 'RS_docs_table')
+        self.service = db_services.DocListService()
         self.service.is_group_scan = True
 
         result = self.service.get_docs_stat()
@@ -72,8 +76,9 @@ class TestDocService(unittest.TestCase):
 
     def test_can_get_doc_view_data_if_group_scan(self):
         self.data_creator.insert_data('RS_docs', 'RS_docs_table')
+        self.service = db_services.DocListService()
         self.service.is_group_scan = True
-        self.assertTrue(self.service.get_doc_view_data(doc_status='К выгрузке', doc_type='Заказ'))
+        self.assertTrue(self.service.get_docs_view_data(doc_status='К выгрузке', doc_type='Заказ'))
 
     def test_get_correct_documents_doc_types(self):
         self.data_creator.insert_data('RS_docs', 'RS_docs_table')
@@ -119,7 +124,8 @@ class TestDocService(unittest.TestCase):
 
         id_doc = '37c4c709-d22b-11e4-869d-0050568b35ac2'
         self.service.clear_barcode_data(id_doc)
-        result_doc = [x for x in self.service.get_doc_view_data() if x['id_doc'] == id_doc][0]
+        service = db_services.DocListService()
+        result_doc = [x for x in service.get_docs_view_data() if x['id_doc'] == id_doc][0]
         self.assertEqual(expect, result_doc['is_group_scan'])
 
     def test_clear_barcode_data_nulify_is_barc_flow(self):
@@ -129,7 +135,8 @@ class TestDocService(unittest.TestCase):
 
         id_doc = '37c4c709-d22b-11e4-869d-0050568b35ac3'
         self.service.clear_barcode_data(id_doc)
-        result_doc = [x for x in self.service.get_doc_view_data() if x['id_doc'] == id_doc][0]
+        service = db_services.DocListService()
+        result_doc = [x for x in service.get_docs_view_data() if x['id_doc'] == id_doc][0]
         self.assertEqual(expect, result_doc['is_barc_flow'])
 
     def test_get_doc_details_rows_count(self):
@@ -584,7 +591,8 @@ class TestFlowDocService(unittest.TestCase):
         self.data_creator.insert_data('RS_docs')
         self.service.doc_id = '37c4c709-d22b-11e4-869d-0050568b35ac1'
         self.service.set_barc_flow_status()
-        result = self.service.get_doc_view_data()
+        service = db_services.DocListService()
+        result = service.get_docs_view_data()
         self.assertEqual(result[0].get('is_barc_flow'), '1')
 
     def test_get_doc_view_data(self):
@@ -592,7 +600,8 @@ class TestFlowDocService(unittest.TestCase):
         self.service.doc_id = '37c4c709-d22b-11e4-869d-0050568b35ac1'
         expect = '"37c4c709-d22b-11e4-869d-0050568b35ac1"'
 
-        result_docs_list = self.service.get_doc_view_data(doc_type='Заказ')
+        service = db_services.DocListService()
+        result_docs_list = service.get_docs_view_data(doc_type='Заказ')
 
         result_flow_values = ['1' if not self.doc_has_lines(expect)
                               else x['is_barc_flow'] for x in result_docs_list]

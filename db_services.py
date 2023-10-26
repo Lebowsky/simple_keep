@@ -37,6 +37,10 @@ class DbService:
             self.provider.table_name = table_name
         return self.provider.sql_query(q, params)
 
+    @staticmethod
+    def _get_query_result(query_text, args=None, return_dict=False):
+        return get_query_result(query_text, args=args, return_dict=return_dict)
+
 class TimerService(DbService):
     def __int__(self):
         super().__init__()
@@ -287,185 +291,80 @@ class BarcodeService(DbService):
         provider.update(data=table_line)
 
 class DocListService(DbService):
-    def __init__(self):
+    def __init__(self, is_group_scan=False, is_barc_flow=False):
         super().__init__()
-
-class DocService:
-    def __init__(self, doc_id='', is_group_scan=False, is_barc_flow=False):
-        self.doc_id = doc_id
+        self.is_group_scan = is_group_scan
+        self.is_barc_flow = is_barc_flow
         self.docs_table_name = 'RS_docs'
         self.details_table_name = 'RS_docs_table'
         self.isAdr = False
         self.sql_text = ''
         self.sql_params = None
         self.debug = False
-        self.is_group_scan = is_group_scan
-        self.is_barc_flow = is_barc_flow
         self.provider = SqlQueryProvider(self.docs_table_name, sql_class=sqlClass())
         self.logger_service = LoggerService()
 
-    def get_all_articles_in_document(self) -> List[str]:
-        query = ('SELECT DISTINCT RS_goods.art as art'
-                 ' FROM RS_docs_table'
-                 ' LEFT JOIN RS_goods ON RS_docs_table.id_good = RS_goods.id'
-                 ' WHERE RS_docs_table.id_doc = ?')
-        goods = self.provider.sql_query(query, self.doc_id)
-        return [good['art'] for good in goods] if goods is not None else []
-
-    def set_doc_value(self, key, value):
-        query = f'''
-            UPDATE {self.docs_table_name}
-            SET {key} = {value}
-            WHERE id_doc = "{self.doc_id}"
-            '''
-
-        self._get_query_result(query)
-
-    def set_doc_values(self, **values):
-        if not values:
-            return
-
-        set_fields =[f'{k}={v}'for k, v in values.items()]
-        query = f'''
-            UPDATE {self.docs_table_name}
-            SET {','.join(set_fields)}
-            WHERE id_doc = "{self.doc_id}"
-            '''
-
-        self._get_query_result(query)
-
-    def get_doc_value(self, key, id_doc):
-        query = f'SELECT {key} from {self.docs_table_name}  WHERE id_doc = ?'
-        res = self._get_query_result(query, (id_doc,), True)
-        if res:
-            return res[0][key]
-
-    def get_doc_types(self) -> list:
-        where_group_scan = f'is_group_scan = "0"' if self.is_group_scan is False else True
-
-        where_empty = ("RS_docs.id_doc not in "
-                       "(SELECT distinct id_doc From RS_docs_table)")
-        where_barc_flow = f'(is_barc_flow = "1" OR {where_empty})' \
-            if self.is_barc_flow else f'is_barc_flow = "0"'
-
-        where = f"{where_group_scan} AND {where_barc_flow}"
-
-        query_text = f'SELECT DISTINCT doc_type from {self.docs_table_name}'
-        query = f"{query_text} WHERE {where}"
-
-        doc_types = [rec[0] for rec in self._get_query_result(query)]
-        return doc_types
-
-    def get_doc_view_data(self, doc_type='', doc_status='') -> list:
-        fields = [
-            f'{self.docs_table_name}.id_doc',
-            f'{self.docs_table_name}.doc_type',
-            f'{self.docs_table_name}.doc_n',
-            f'{self.docs_table_name}.doc_date',
-            f'{self.docs_table_name}.id_warehouse',
-            f'ifnull(RS_warehouses.name,"") as RS_warehouse',
-            f'ifnull(RS_warehouses.name,"") as warehouse',
-            f'ifnull({self.docs_table_name}.verified, 0) as verified',
-            f'ifnull({self.docs_table_name}.sent, 0) as sent',
-            f'{self.docs_table_name}.add_mark_selection',
-        ]
-
-        if self.docs_table_name == 'RS_docs':
-            fields.append(f'{self.docs_table_name}.id_countragents')
-            fields.append(f'ifnull({self.docs_table_name}.is_group_scan, 0) as is_group_scan')
-            fields.append(f'ifnull(RS_countragents.full_name, "") as RS_countragent')
-
-        query_text = 'SELECT ' + ',\n'.join(fields)
-
-        joins = f'''FROM {self.docs_table_name}
-            LEFT JOIN RS_warehouses as RS_warehouses
-                ON RS_warehouses.id = {self.docs_table_name}.id_warehouse
-        '''
-
-        if self.docs_table_name == 'RS_docs':
-            joins += f'''
-            LEFT JOIN RS_countragents as RS_countragents
-                ON RS_countragents.id = {self.docs_table_name}.id_countragents
-                '''
-        where = ''
-
-        if doc_status:
-            if doc_status == "Выгружен":
-                where = "WHERE sent=1 AND verified=1"
-            elif doc_status == "К выгрузке":
-                where = "WHERE ifnull(verified,0)=1 AND ifnull(sent,0)=0"
-            elif doc_status == "К выполнению":
-                where = "WHERE ifnull(verified,0)=0 AND ifnull(sent,0)=0"
-
-        if not doc_type or doc_type == "Все":
-            args_tuple = None
-        else:
-            args_tuple = (doc_type,)
-            if not doc_status or doc_status == "Все":
-                where = 'WHERE doc_type=?'
-            else:
-                where += ' AND doc_type=?'
-
-        if self.is_group_scan is False and self.docs_table_name == 'RS_docs':
-            if where:
-                where += f' AND is_group_scan={int(self.is_group_scan)}'
-            else:
-                where = f' WHERE is_group_scan={int(self.is_group_scan)}'
-        
-        if self.is_barc_flow is False and self.docs_table_name == 'RS_docs':
-            if where:
-                where += f' AND is_barc_flow={int(self.is_barc_flow)}'
-            else:
-                where = f' WHERE is_barc_flow={int(self.is_barc_flow)}'
-        
+    def get_docs_view_data(self, doc_type='', doc_status='') -> list:
         query_text = f'''
-            {query_text}
-            {joins}
-            {where}
-            ORDER BY {self.docs_table_name}.doc_date
-        '''
-        result = self._get_query_result(query_text, args_tuple, return_dict=True)
+               SELECT 
+                   doc.id_doc,
+                   doc.doc_type,
+                   doc.doc_n,
+                   doc.doc_date,
+                   doc.id_warehouse,
+                   doc.add_mark_selection,
+                   doc.id_countragents,
+                   IFNULL(doc.verified, 0) AS verified,
+                   IFNULL(doc.sent, 0) AS sent,
+                   IFNULL(doc.is_group_scan, 0) AS is_group_scan,
+                   IFNULL(wh.name, '') AS RS_warehouse,
+                   IFNULL(wh.name, '') AS warehouse,
+                   IFNULL(countragents.full_name, '') as RS_countragent
+               FROM RS_docs AS doc 
+
+               LEFT JOIN RS_warehouses as wh
+                   ON wh.id = doc.id_warehouse
+               LEFT JOIN RS_countragents as countragents
+                   ON countragents.id = doc.id_countragents   
+               '''
+
+        args = {}
+
+        doc_statuses = {
+            'Выгружен': {'sent': 1, 'verified': 1},
+            'К выгрузке': {'sent': 1, 'verified': 0},
+            'К выполнению': {'sent': 0, 'verified': 0}
+        }
+
+        where = ''
+        condition = []
+
+        if doc_status in doc_statuses:
+            condition.append('IFNULL(verified, 0) = :verified')
+            condition.append('IFNULL(sent, 0) = :sent')
+            args['verified'] = doc_statuses[doc_status]['verified']
+            args['sent'] = doc_statuses[doc_status]['sent']
+
+        if doc_type:
+            condition.append('doc_type = :doc_type')
+            args['doc_type'] = doc_type
+
+        if self.is_group_scan is False:
+            condition.append('is_group_scan = 0')
+
+        if self.is_barc_flow is False:
+            condition.append('is_barc_flow = 0')
+
+        if condition:
+            where = 'WHERE ' + ' AND\n'.join(condition)
+
+        query_text = f'''
+               {query_text}
+               {where}
+               ORDER BY doc.doc_date
+           '''
+        result = self._get_query_result(query_text, args, return_dict=True)
         return result
-
-    def delete_doc(self, id_doc):
-        queries = (
-        'DELETE FROM RS_barc_flow WHERE id_doc = ?',
-        'DELETE FROM RS_docs_table WHERE id_doc = ?',
-        'DELETE FROM RS_docs_series WHERE id_doc = ?',
-        'DELETE FROM RS_docs_barcodes WHERE id_doc = ?',
-        f'DELETE FROM {self.docs_table_name} WHERE id_doc = ?',
-        )
-        for query in queries:
-            self._get_query_result(query, (id_doc,))
-
-    def delete_adr_doc(self, id_doc):
-        queries = (
-        'DELETE FROM RS_adr_docs_table WHERE id_doc = ?',
-        'DELETE FROM RS_adr_docs WHERE id_doc = ?',
-        )
-        for query in queries:
-            self._get_query_result(query, (id_doc,))
-
-    def delete_old_docs(self, days: int) -> list:
-        old_docs_ids = self._find_old_docs(days)
-        old_adr_docs_ids = self._find_old_docs(days, 'RS_adr_docs')
-        for id_doc in old_docs_ids:
-            self.delete_doc(id_doc)
-        for id_doc in old_adr_docs_ids:
-            self.delete_adr_doc(id_doc)
-        return old_docs_ids + old_adr_docs_ids
-
-    def _find_old_docs(
-            self,
-            days: int,
-            table: Literal['RS_docs', 'RS_adr_docs'] = 'RS_docs'
-    ) -> List[str]:
-        """Возвращает список id всех устаревших документов"""
-        query = f'''SELECT id_doc FROM {table} WHERE created_at < ?'''
-        current_datetime = datetime.now(tz=timezone.utc)
-        target_time = current_datetime - timedelta(days=days)
-        docs = self._get_query_result(query, (target_time, ))
-        return [doc[0] for doc in docs]
 
     def get_docs_stat(self):
         where_group_scan = f'is_group_scan = "0"' if self.is_group_scan is False else True
@@ -563,6 +462,185 @@ class DocService:
         '''
         res = self._get_query_result(query, return_dict=True)
         return res
+
+    def delete_doc(self, id_doc):
+        queries = (
+        'DELETE FROM RS_barc_flow WHERE id_doc = ?',
+        'DELETE FROM RS_docs_table WHERE id_doc = ?',
+        'DELETE FROM RS_docs_series WHERE id_doc = ?',
+        'DELETE FROM RS_docs_barcodes WHERE id_doc = ?',
+        f'DELETE FROM {self.docs_table_name} WHERE id_doc = ?',
+        )
+        for query in queries:
+            self._get_query_result(query, (id_doc,))
+
+    def delete_adr_doc(self, id_doc):
+        queries = (
+        'DELETE FROM RS_adr_docs_table WHERE id_doc = ?',
+        'DELETE FROM RS_adr_docs WHERE id_doc = ?',
+        )
+        for query in queries:
+            self._get_query_result(query, (id_doc,))
+
+    def delete_old_docs(self, days: int) -> list:
+        old_docs_ids = self._find_old_docs(days)
+        old_adr_docs_ids = self._find_old_docs(days, 'RS_adr_docs')
+        for id_doc in old_docs_ids:
+            self.delete_doc(id_doc)
+        for id_doc in old_adr_docs_ids:
+            self.delete_adr_doc(id_doc)
+        return old_docs_ids + old_adr_docs_ids
+
+    def _find_old_docs(
+            self,
+            days: int,
+            table: Literal['RS_docs', 'RS_adr_docs'] = 'RS_docs'
+    ) -> List[str]:
+        """Возвращает список id всех устаревших документов"""
+        query = f'''SELECT id_doc FROM {table} WHERE created_at < ?'''
+        current_datetime = datetime.now(tz=timezone.utc)
+        target_time = current_datetime - timedelta(days=days)
+        docs = self._get_query_result(query, (target_time, ))
+        return [doc[0] for doc in docs]
+
+    def get_docs_count(self, doc_type=''):
+        query = f'SELECT COUNT(*) AS docs_count FROM {self.docs_table_name}'
+        args = None
+
+        if doc_type:
+            query = '\n'.join([query, 'WHERE doc_type = ?'])
+            args = (doc_type,)
+
+        res = self._get_query_result(query, args, True)
+        if res:
+            return res[0].get('docs_count', 0)
+        return 0
+
+    def get_data_to_send(self, id_doc=''):
+        data = []
+
+        doc_id_condition = f'id_doc="{id_doc}"' if id_doc else 'verified = 1 AND IFNULL(sent, 0) = 0'
+
+        q = f'''SELECT id_doc
+                FROM {self.docs_table_name} 
+                WHERE {doc_id_condition}
+            '''
+        res = self.provider.sql_query(q)
+
+        for row in res:
+            id_doc = row['id_doc']
+
+            doc_data = {
+                'id_doc': id_doc,
+            }
+
+            fields = ['id_doc', 'id_good', 'id_properties', 'id_series', 'id_unit', 'qtty', 'qtty_plan']
+            q = '''
+                SELECT {}
+                FROM RS_docs_table
+                WHERE id_doc = ? AND (sent = 0 OR sent IS NULL)
+            '''.format(','.join(fields))
+
+            goods = self.provider.sql_query(q, id_doc)
+            doc_data['RS_docs_table'] = goods
+
+            fields = ['id_doc', 'id_good', 'id_property', 'id_series', 'barcode_from_scanner', 'GTIN', 'Series']
+            q = '''
+                SELECT {}
+                FROM RS_docs_barcodes
+                WHERE id_doc = ? AND IFNULL(barcode_from_scanner, '') <> ''
+            '''.format(','.join(fields))
+
+            doc_barcodes = self.provider.sql_query(q, id_doc)
+            doc_data['RS_docs_barcodes'] = doc_barcodes
+
+            fields = ['id_doc', 'barcode']
+            q = '''
+                SELECT {}
+                FROM RS_barc_flow
+                WHERE id_doc = ?
+            '''.format(','.join(fields))
+
+            barc_flow = self.provider.sql_query(q, id_doc)
+            doc_data['RS_barc_flow'] = barc_flow
+
+            fields = ['id_doc', 'id_good', 'id_series', 'id_warehouse', 'qtty', 'name', 'best_before', 'number',
+                      'production_date']
+            q = '''
+                SELECT {}
+                FROM RS_docs_series
+                WHERE id_doc = ?
+            '''.format(','.join(fields))
+
+            series_table = self.provider.sql_query(q, id_doc)
+            doc_data['RS_docs_series'] = series_table
+            data.append(doc_data)
+
+        return data
+
+    def write_error_on_log(self, error_text, **kwargs):
+        self.logger_service.write_to_log(error_text, **kwargs)
+
+    @staticmethod
+    def _get_query_result(query_text, args=None, return_dict=False):
+        return get_query_result(query_text, args=args, return_dict=return_dict)
+
+class DocService(DocListService):
+    def __init__(self, doc_id='', is_group_scan=False, is_barc_flow=False):
+        super().__init__(is_group_scan, is_barc_flow)
+        self.doc_id = doc_id
+
+    def get_all_articles_in_document(self) -> List[str]:
+        query = ('SELECT DISTINCT RS_goods.art as art'
+                 ' FROM RS_docs_table'
+                 ' LEFT JOIN RS_goods ON RS_docs_table.id_good = RS_goods.id'
+                 ' WHERE RS_docs_table.id_doc = ?')
+        goods = self.provider.sql_query(query, self.doc_id)
+        return [good['art'] for good in goods] if goods is not None else []
+
+    def set_doc_value(self, key, value):
+        query = f'''
+            UPDATE {self.docs_table_name}
+            SET {key} = {value}
+            WHERE id_doc = "{self.doc_id}"
+            '''
+
+        self._get_query_result(query)
+
+    def set_doc_values(self, **values):
+        if not values:
+            return
+
+        set_fields =[f'{k}={v}'for k, v in values.items()]
+        query = f'''
+            UPDATE {self.docs_table_name}
+            SET {','.join(set_fields)}
+            WHERE id_doc = "{self.doc_id}"
+            '''
+
+        self._get_query_result(query)
+
+    def get_doc_value(self, key, id_doc):
+        query = f'SELECT {key} from {self.docs_table_name}  WHERE id_doc = ?'
+        res = self._get_query_result(query, (id_doc,), True)
+        if res:
+            return res[0][key]
+
+    def get_doc_types(self) -> list:
+        where_group_scan = f'is_group_scan = "0"' if self.is_group_scan is False else True
+
+        where_empty = ("RS_docs.id_doc not in "
+                       "(SELECT distinct id_doc From RS_docs_table)")
+        where_barc_flow = f'(is_barc_flow = "1" OR {where_empty})' \
+            if self.is_barc_flow else f'is_barc_flow = "0"'
+
+        where = f"{where_group_scan} AND {where_barc_flow}"
+
+        query_text = f'SELECT DISTINCT doc_type from {self.docs_table_name}'
+        query = f"{query_text} WHERE {where}"
+
+        doc_types = [rec[0] for rec in self._get_query_result(query)]
+        return doc_types
 
     def get_doc_details_data(
             self,
@@ -692,81 +770,6 @@ class DocService:
         res = self._get_query_result(query, return_dict=True)
         return res
 
-    def get_docs_count(self, doc_type=''):
-        query = f'SELECT COUNT(*) AS docs_count FROM {self.docs_table_name}'
-        args = None
-
-        if doc_type:
-            query = '\n'.join([query, 'WHERE doc_type = ?'])
-            args = (doc_type,)
-
-        res = self._get_query_result(query, args, True)
-        if res:
-            return res[0].get('docs_count', 0)
-        return 0
-
-    def get_data_to_send(self, id_doc=''):
-        data = []
-
-        doc_id_condition = f'id_doc="{id_doc}"' if id_doc else 'verified = 1 AND IFNULL(sent, 0) = 0'
-
-        q = f'''SELECT id_doc
-                FROM {self.docs_table_name} 
-                WHERE {doc_id_condition}
-            '''
-        res = self.provider.sql_query(q)
-
-        for row in res:
-            id_doc = row['id_doc']
-
-            doc_data = {
-                'id_doc': id_doc,
-            }
-
-            fields = ['id_doc', 'id_good', 'id_properties', 'id_series', 'id_unit', 'qtty', 'qtty_plan']
-            q = '''
-                SELECT {}
-                FROM RS_docs_table
-                WHERE id_doc = ? AND (sent = 0 OR sent IS NULL)
-            '''.format(','.join(fields))
-
-            goods = self.provider.sql_query(q, id_doc)
-            doc_data['RS_docs_table'] = goods
-
-            fields = ['id_doc', 'id_good', 'id_property', 'id_series', 'barcode_from_scanner', 'GTIN', 'Series']
-            q = '''
-                SELECT {}
-                FROM RS_docs_barcodes
-                WHERE id_doc = ? AND IFNULL(barcode_from_scanner, '') <> ''
-            '''.format(','.join(fields))
-
-            doc_barcodes = self.provider.sql_query(q, id_doc)
-            doc_data['RS_docs_barcodes'] = doc_barcodes
-
-            fields = ['id_doc', 'barcode']
-            q = '''
-                SELECT {}
-                FROM RS_barc_flow
-                WHERE id_doc = ?
-            '''.format(','.join(fields))
-
-            barc_flow = self.provider.sql_query(q, id_doc)
-            doc_data['RS_barc_flow'] = barc_flow
-
-            fields = ['id_doc', 'id_good', 'id_series', 'id_warehouse', 'qtty', 'name', 'best_before', 'number',
-                      'production_date']
-            q = '''
-                SELECT {}
-                FROM RS_docs_series
-                WHERE id_doc = ?
-            '''.format(','.join(fields))
-
-            series_table = self.provider.sql_query(q, id_doc)
-            doc_data['RS_docs_series'] = series_table
-            data.append(doc_data)
-
-        return data
-
     def get_data_to_send_by_doc_id(self, id_doc):
         return self.get_data_to_send(id_doc=id_doc)
 
@@ -893,42 +896,24 @@ class DocService:
         res = self._get_query_result(q, return_dict=True)
         return res[0] if res else None
 
-    def write_error_on_log(self, error_text, **kwargs):
-        self.logger_service.write_to_log(error_text, **kwargs)
-
-    def _sql_exec(self, q, params, table_name=''):
-        if table_name:
-            self.provider.table_name = table_name
-        if isinstance(params, str):
-            self.provider.sql_exec(q, params)
-        else:
-            self.provider.sql_exec_many(q, params)
-
-    def _sql_query(self, q, params, table_name=''):
-        if table_name:
-            self.provider.table_name = table_name
-        return self.provider.sql_query(q, params)
-
-    @staticmethod
-    def _get_query_result(query_text, args=None, return_dict=False):
-        return get_query_result(query_text, args=args, return_dict=return_dict)
-
 class SeriesService(DbService):
     doc_basic_table_name = 'RS_docs_table'
     doc_basic_handler_name = 'RS_docs'
     def __init__(self, doc_row_id=''):
         super().__init__()
         self.doc_row_id = doc_row_id
+        self.is_group_scan = False
         self.params = {}
 
     def get_screen_data(self, doc_row_id) -> dict:
+        qtty_filed = 'd_qtty' if self.is_group_scan else 'qtty'
 
         q = f'''
         SELECT RS_docs_table.id_doc,
             RS_docs_table.id_good AS item_id,
             RS_docs_table.id_properties AS property_id,
             RS_docs_table.id_unit AS unit_id,
-            RS_docs_table.qtty,
+            IFNULL(RS_docs_table.{qtty_filed}, 0) as qtty,
             RS_docs_table.d_qtty,
             RS_docs_table.qtty_plan,
             RS_docs_table.price,
@@ -999,7 +984,7 @@ class SeriesService(DbService):
         return get_query_result(q, (series_id,))
 
     @staticmethod
-    def get_series_item_data_by_id(id):
+    def get_series_item_data_by_id(series_id):
         q = '''
                 SELECT
                     RS_docs_series.id AS id, 
@@ -1017,8 +1002,8 @@ class SeriesService(DbService):
                 FROM RS_docs_series
                 WHERE RS_docs_series.id = ?
                 LIMIT 1
-                '''
-        res = get_query_result(q, (id,), True)
+            '''
+        res = get_query_result(q, (series_id,), True)
         if res:
             return res[0]
         else:
@@ -1039,9 +1024,11 @@ class SeriesService(DbService):
         return res[0]['series_count'] if res else 0
 
     def update_total_qty(self, qty, row_id):
+        qtty_filed = 'd_qtty' if self.is_group_scan else 'qtty'
+
         q = f'''
             UPDATE RS_docs_table
-            SET d_qtty = {qty}, use_series = 1
+            SET {qtty_filed} = {qty}, use_series = 1
             WHERE id = {row_id}
             '''
         get_query_result(q)
@@ -1054,7 +1041,7 @@ class SeriesService(DbService):
             WHERE id_doc = :id_doc AND id_good = :item_id AND id_properties = :property_id'''
 
         res = get_query_result(q, kwargs, return_dict=True)
-        return res[0]['total'] if res else 0
+        return res[0]['total'] or 0 if res else 0
 
 class AdrSeriesService(SeriesService):
     def get_screen_data(self, _id) -> dict:
@@ -1645,7 +1632,6 @@ class GoodsService(DbService):
     def get_values_by_field(self, table_name, field, field_value):
         self.provider.table_name = table_name
         return self.provider.select({field: field_value})
-
 
 class DbCreator(DbService):
     def __init__(self):
