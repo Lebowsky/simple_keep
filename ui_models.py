@@ -2023,6 +2023,7 @@ class BaseGoodSelect(Screen):
     def _open_marks_screen(self):
         table_data = self._get_marks_data(self.doc_row_id)
         if not table_data:
+            self.toast('Нет марок!')
             return
 
         screen_args = {
