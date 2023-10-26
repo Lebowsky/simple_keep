@@ -206,9 +206,6 @@ class FlowDocDetailsScreen(DocDetailsScreen):
         ocr_nosql = SerialNumberOCRSettings.ocr_nosql
         ocr_nosql.put('show_process_result', True, True)
         self.hash_map.show_process_result('OcrTextRecognition', 'SerialNumberOCRSettings')
-        screen = SerialNumberOCRSettings(self.hash_map, None)
-        screen.parent_screen = self
-        screen.show_process_result()
 
     def _barcode_flow_on_start(self):
         id_doc = self.hash_map.get('id_doc')
