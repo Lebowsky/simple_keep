@@ -114,7 +114,7 @@ class FlowDocScreen(DocsListScreen):
 
     def on_input(self) -> None:
         listeners = {
-            'CardsClick': lambda: self.hash_map.show_screen('ПотокШтрихкодовДокумента', self._get_selected_card_put_data()),
+            'CardsClick': lambda: FlowDocDetailsScreen(self.hash_map).show(self._get_selected_card_put_data()),
             'ON_BACK_PRESSED': lambda: self.hash_map.show_screen('Плитки'),
             'doc_type_click': lambda: self.hash_map.refresh_screen(),
             'confirm_clear_barcode_data': self._handle_clear_barcode_data
@@ -141,7 +141,7 @@ class FlowDocDetailsScreen(DocDetailsScreen):
     screen_name = 'ПотокШтрихкодовДокумента'
     process_name = 'Сбор ШК'
 
-    def __init__(self, hash_map: HashMap, rs_settings):
+    def __init__(self, hash_map: HashMap, rs_settings=None):
         super().__init__(hash_map, rs_settings)
         self.service = db_services.FlowDocService(self.id_doc)
 
@@ -173,9 +173,7 @@ class FlowDocDetailsScreen(DocDetailsScreen):
             listener_func()
 
     def _handle_cards_click(self):
-        current_str = self.hash_map.get("selected_card_position")
-        jlist = json.loads(self.hash_map.get("doc_barc_flow"))
-        current_elem = jlist['customtable']['tabledata'][int(current_str)]
+        current_elem = self._get_selected_card_data() 
         data = {
             'barcode': current_elem['barcode'],
             'Номенклатура': current_elem['name'],
@@ -208,6 +206,9 @@ class FlowDocDetailsScreen(DocDetailsScreen):
         ocr_nosql = SerialNumberOCRSettings.ocr_nosql
         ocr_nosql.put('show_process_result', True, True)
         self.hash_map.show_process_result('OcrTextRecognition', 'SerialNumberOCRSettings')
+        screen = SerialNumberOCRSettings(self.hash_map, None)
+        screen.parent_screen = self
+        screen.show_process_result()
 
     def _barcode_flow_on_start(self):
         id_doc = self.hash_map.get('id_doc')

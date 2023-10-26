@@ -1942,8 +1942,8 @@ class FlowDocService(DocService):
 
     def get_mark_plan_data(self, id_doc) -> bool:
         qtext = '''
-            SELECT distinct count(id) as col_str
-            from RS_docs_barcodes Where id_doc = :id_doc AND is_plan = :is_plan
+            SELECT distinct COUNT(id) as col_str
+            FROM RS_docs_barcodes WHERE id_doc = :id_doc AND is_plan = :is_plan
         '''
         res = self._get_query_result(qtext, {'id_doc': id_doc, 'is_plan': '1'})
         if not res or res[0][0] is None:
