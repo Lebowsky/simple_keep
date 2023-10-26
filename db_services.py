@@ -37,7 +37,6 @@ class DbService:
             self.provider.table_name = table_name
         return self.provider.sql_query(q, params)
 
-
 class TimerService(DbService):
     def __int__(self):
         super().__init__()
@@ -84,7 +83,8 @@ class TimerService(DbService):
                 )
             data['RS_docs_barcodes'] = docs_barcodes
 
-    def parse_barcode(self, val):
+    @staticmethod
+    def parse_barcode(val):
         if len(val) < 21:
             return {'GTIN': '', 'Series': ''}
 
@@ -122,10 +122,10 @@ class TimerService(DbService):
 
         return loaded_documents
 
-    def get_data_to_send(self):
+    @staticmethod
+    def get_data_to_send():
         data = DocService().get_data_to_send() + AdrDocService().get_data_to_send()
         return data
-
 
 class BarcodeService(DbService):
     def __init__(self):
@@ -286,6 +286,9 @@ class BarcodeService(DbService):
         provider = SqlQueryProvider(table_name='RS_docs_table')
         provider.update(data=table_line)
 
+class DocListService(DbService):
+    def __init__(self):
+        super().__init__()
 
 class DocService:
     def __init__(self, doc_id='', is_group_scan=False, is_barc_flow=False):
@@ -301,165 +304,6 @@ class DocService:
         self.provider = SqlQueryProvider(self.docs_table_name, sql_class=sqlClass())
         self.logger_service = LoggerService()
 
-    def get_last_edited_goods(self, to_json=False):
-        query_docs = f'SELECT * FROM {self.docs_table_name} WHERE id_doc = ? and verified = 1'
-
-        query_goods = f'''
-        SELECT * FROM {self.docs_table_name}_table
-        WHERE id_doc = ? and sent = 0
-        '''
-
-        try:
-            res_docs = get_query_result(query_docs, (self.doc_id,), True)
-            res_goods = get_query_result(query_goods, (self.doc_id,), True)
-        except Exception as e:
-            raise e
-            # return {'Error': e.args[0]}
-
-        if not res_goods:
-            return None
-
-        return self.form_data_for_request(res_docs, res_goods, to_json)
-
-    def form_data_for_request(self, res_docs, res_goods, to_json):
-        for item in res_docs:
-            filtered_list = [d for d in res_goods if d['id_doc'] == item['id_doc']]
-            goods_table = f'{self.docs_table_name}_table'
-            item[goods_table] = filtered_list
-            if not self.isAdr:
-                item['RS_docs_barcodes'] = []
-                item['RS_barc_flow'] = []
-
-        if to_json:
-            return json.dumps(res_docs)
-        else:
-            return res_docs
-
-    def update_data_from_json(self, json_data):
-        try:
-            data = json.loads(json_data)
-        except:
-            data = json_data
-
-        if data.get(self.docs_table_name):
-            self.update_docs(data)
-        else:
-            self.update_nsi(data)
-
-    def update_docs(self, data):
-        doc_ids = ','.join([f'"{item.get("id_doc")}"' for item in data[self.docs_table_name]])
-
-        query = f'''
-            SELECT id_doc, verified
-            FROM {self.docs_table_name}
-            WHERE id_doc IN ({doc_ids})
-        '''
-        docs = {item['id_doc']: item['verified'] or False for item in
-                self._get_query_result(query_text=query, return_dict=True)}
-
-        queries = self.json_to_sqlite_query(data, docs)
-
-        for query in queries:
-            try:
-                self._get_query_result(query)
-            except Exception as e:
-                raise e
-
-        return docs
-
-    def update_nsi(self, data):
-        queries = self.json_to_sqlite_query(data)
-
-        for query in queries:
-            try:
-                self._get_query_result(query)
-            except Exception as e:
-                raise e
-
-    def update_sent_data(self, data):
-        if data:
-            for doc in data:
-                id_doc = doc['id_doc']
-                id_goods = ','.join([f'"{item.get("id_good")}"' for item in doc.get('RS_docs_table', [])])
-
-                query = f'''
-                    UPDATE {self.details_table_name}
-                    SET sent = 1
-                    WHERE id_doc = '{id_doc}' AND id_good IN ({id_goods})
-                    '''
-
-                self._get_query_result(query)
-
-            query = f'UPDATE {self.docs_table_name} SET sent=1 WHERE id_doc = "{self.doc_id}"'
-            self._get_query_result(query)
-
-    def json_to_sqlite_query(self, data: dict, docs=None):
-        if docs is None:
-            docs = {}
-
-        qlist = []
-        # Цикл по именам таблиц
-        table_list = (
-            'RS_doc_types', 'RS_goods', 'RS_properties', 'RS_units', 'RS_types_goods', 'RS_series', 'RS_countragents',
-            'RS_warehouses', 'RS_price_types', 'RS_cells', 'RS_barcodes', 'RS_prices', 'RS_doc_types', 'RS_docs',
-            'RS_docs_table', 'RS_docs_barcodes', 'RS_adr_docs', 'RS_adr_docs_table')  # ,, 'RS_barc_flow'
-        table_for_delete = ('RS_docs_table', 'RS_docs_barcodes, RS_barc_flow', 'RS_adr_docs_table')  # , 'RS_barc_flow'
-        doc_id_list = []
-        for table_name in table_list:
-            if not data.get(table_name):
-                continue
-
-            # Добавим в запросы удаление из базы строк тех документов, что мы загружаем
-            if table_name in table_for_delete:
-                query = f"DELETE FROM {table_name} WHERE id_doc in ({', '.join(doc_id_list)}) "
-                qlist.append(query)
-
-            column_names = data[table_name][0].keys()
-            if 'mark_code' in column_names:
-                query_col_names = list(column_names)
-                query_col_names.append('GTIN')
-                query_col_names.append('Series')
-                query_col_names.remove('mark_code')
-            else:
-                query_col_names = list(column_names)
-
-            if table_name in ('RS_docs', 'RS_adr_docs'):  #
-                query_col_names.append('verified')
-
-            query = f"REPLACE INTO {table_name} ({', '.join(query_col_names)}) VALUES "
-            values = []
-
-            for row in data[table_name]:
-                row_values = []
-                list_quoted_fields = ('name', 'full_name', "mark_code")
-                for col in query_col_names:
-                    if col in list_quoted_fields and "\"" in row[col]:
-                        row[col] = row[col].replace("\"", "\"\"")
-
-                    # Здесь устанавливаем флаг verified!!!
-                    if col == 'verified' and (table_name in ['RS_docs', 'RS_adr_docs']):
-                        row[col] = docs.get(row['id_doc'], 0)
-
-                    if row.get(col) is None:
-                        row[col] = ''
-
-                    if col == 'mark_code':  # Заменяем это поле на поля GTIN и Series
-                        barc_struct = self.parse_barcode(row[col])
-                        row_values.append(barc_struct['GTIN'])
-                        row_values.append(barc_struct['Series'])
-                    else:
-                        row_values.append(row[col])  # (f'"{row[col]}"')
-
-                    if col == 'id_doc' and (table_name in ['RS_docs', 'RS_adr_docs']):
-                        doc_id_list.append('"' + row[col] + '"')
-
-                formatted_val = [f'"{x}"' if isinstance(x, str) else str(x) for x in row_values]
-                values.append(f"({', '.join(formatted_val)})")
-            query += ", ".join(values)
-            qlist.append(query)
-
-        return qlist
-
     def get_all_articles_in_document(self) -> List[str]:
         query = ('SELECT DISTINCT RS_goods.art as art'
                  ' FROM RS_docs_table'
@@ -467,10 +311,6 @@ class DocService:
                  ' WHERE RS_docs_table.id_doc = ?')
         goods = self.provider.sql_query(query, self.doc_id)
         return [good['art'] for good in goods] if goods is not None else []
-
-    @staticmethod
-    def _get_query_result(query_text, args=None, return_dict=False):
-        return get_query_result(query_text, args=args, return_dict=return_dict)
 
     def set_doc_value(self, key, value):
         query = f'''
@@ -588,22 +428,22 @@ class DocService:
         return result
 
     def delete_doc(self, id_doc):
-        queryes = (
+        queries = (
         'DELETE FROM RS_barc_flow WHERE id_doc = ?',
         'DELETE FROM RS_docs_table WHERE id_doc = ?',
         'DELETE FROM RS_docs_series WHERE id_doc = ?',
         'DELETE FROM RS_docs_barcodes WHERE id_doc = ?',
         f'DELETE FROM {self.docs_table_name} WHERE id_doc = ?',
         )
-        for query in queryes:
+        for query in queries:
             self._get_query_result(query, (id_doc,))
 
     def delete_adr_doc(self, id_doc):
-        queryes = (
+        queries = (
         'DELETE FROM RS_adr_docs_table WHERE id_doc = ?',
         'DELETE FROM RS_adr_docs WHERE id_doc = ?',
         )
-        for query in queryes:
+        for query in queries:
             self._get_query_result(query, (id_doc,))
 
     def delete_old_docs(self, days: int) -> list:
@@ -816,23 +656,6 @@ class DocService:
         res = self._get_query_result(query, args, return_dict=True)
         return res[0]['rows_qtty']
 
-
-    def parse_barcode(self, val):
-        if len(val) < 21:
-            return {'GTIN': '', 'Series': ''}
-
-        val.replace('(01)', '01')
-        val.replace('(21)', '21')
-
-        if val[:2] == '01':
-            GTIN = val[2:16]
-            Series = val[18:]
-        else:
-            GTIN = val[:14]
-            Series = val[14:]
-
-        return {'GTIN': GTIN, 'Series': Series}
-
     def clear_barcode_data(self, id_doc):
         query_text = ('Update RS_docs_barcodes Set approved = 0 Where id_doc=:id_doc',
                       'Delete From RS_docs_barcodes Where  id_doc=:id_doc And is_plan = 0',
@@ -881,27 +704,6 @@ class DocService:
         if res:
             return res[0].get('docs_count', 0)
         return 0
-
-    def get_existing_docs(self):
-        query_text = f"SELECT doc_n,doc_type FROM {self.docs_table_name}"
-        res = get_query_result(query_text)
-        return res
-
-    def write_error_on_log(self, error_text, **kwargs):
-        self.logger_service.write_to_log(error_text, **kwargs)
-
-    def get_docs_and_goods_for_upload(self):
-
-        query_docs = f'''SELECT * FROM {self.docs_table_name} WHERE verified = 1  and (sent <> 1 or sent is null)'''
-        query_goods = f'''SELECT * FROM {self.details_table_name} WHERE (sent = 0 OR sent is Null)'''
-        try:
-            res_docs = get_query_result(query_docs, None, True)
-            res_goods = get_query_result(query_goods, None, True)
-        except Exception as e:
-            raise e
-        if not res_goods:
-            return None
-        return self.form_data_for_request(res_docs, res_goods, False)
 
     def get_data_to_send(self, id_doc=''):
         data = []
@@ -982,64 +784,22 @@ class DocService:
 
     @staticmethod
     def update_uploaded_docs_status(doc_in_str):
-        qtext = f'UPDATE RS_docs SET sent = 1  WHERE id_doc in ({doc_in_str}) '
-        get_query_result(qtext)
+        query_text = f'UPDATE RS_docs SET sent = 1  WHERE id_doc in ({doc_in_str}) '
+        get_query_result(query_text)
 
-        qtext = f'UPDATE RS_adr_docs SET sent = 1  WHERE id_doc in ({doc_in_str}) '
-        get_query_result(qtext)
+        query_text = f'UPDATE RS_adr_docs SET sent = 1  WHERE id_doc in ({doc_in_str}) '
+        get_query_result(query_text)
 
-        qtext = f'UPDATE RS_docs_table SET sent = 1  WHERE id_doc in ({doc_in_str}) '
-        get_query_result(qtext)
-
-    @staticmethod
-    def update_rs_docs_table_sent_status(table_string_id: str):
-        qtext = f'UPDATE RS_docs_table SET sent = 0  WHERE id in ({table_string_id}) '
-        get_query_result(qtext)
+        query_text = f'UPDATE RS_docs_table SET sent = 1  WHERE id_doc in ({doc_in_str}) '
+        get_query_result(query_text)
 
     def set_doc_status_to_upload(self, doc_id):
-        qtext = f"UPDATE {self.docs_table_name} SET sent = 0, verified = 0  WHERE id_doc = '{doc_id}'"
-        get_query_result(qtext)
+        query_text = f"UPDATE {self.docs_table_name} SET sent = 0, verified = 0  WHERE id_doc = '{doc_id}'"
+        get_query_result(query_text)
 
     def update_doc_table_row(self, row_id, data):
         self.provider.table_name = self.details_table_name
         self.provider.update(data=data, _filter={'id': row_id})
-
-    def _sql_exec(self, q, params, table_name=''):
-        if table_name:
-            self.provider.table_name = table_name
-        if isinstance(params, str):
-            self.provider.sql_exec(q, params)
-        else:
-            self.provider.sql_exec_many(q, params)
-
-    def _sql_query(self, q, params, table_name=''):
-        if table_name:
-            self.provider.table_name = table_name
-        return self.provider.sql_query(q, params)
-    
-    def get_doc_rows_count(self, id_doc) -> dict:
-        result = {}  
-        
-        if id_doc:  
-            q = 'SELECT count(id_doc) as doc_rows FROM RS_docs_table WHERE id_doc=?'
-            res = self.provider.sql_query(q, str(id_doc))  
-            
-            if res and 'doc_rows' in res[0]: 
-                result = {'doc_rows': res[0]['doc_rows']}
-                
-        return result  
-
-    def get_barcode_data(self, barcode) -> dict:
-        result = {}  
-
-        if barcode:  
-            q = 'SELECT * FROM RS_barcodes WHERE barcode=?'
-            res = self.provider.sql_query(q, str(barcode)) 
-            
-            if res:  
-                result = res[0] if res else {}
-
-        return result    
 
     def mark_verified(self, value=1):
         self.provider.table_name = self.docs_table_name
@@ -1088,6 +848,8 @@ class DocService:
                 IFNULL(t.{qtty_filed}, 0) as qtty,
                 t.use_series,
                 t.price,
+                t.id_cell AS cell_id,
+                d.id_warehouse as warehouse_id,
                 IFNULL(g.name, '') AS item_name,
                 IFNULL(g.art, '') AS article,
                 IFNULL(p.name, '') AS property,
@@ -1096,13 +858,16 @@ class DocService:
             FROM {self.details_table_name} AS t
 
             LEFT JOIN RS_goods  AS g
-            ON t.id_good= g.id
+                ON t.id_good= g.id
 
             LEFT JOIN RS_properties  AS p
-            ON t.id_properties = p.id
+                ON t.id_properties = p.id
 
             LEFT JOIN RS_units  AS u
-            ON t.id_unit = u.id
+                ON t.id_unit = u.id
+                
+            LEFT JOIN  RS_docs AS d
+                ON t.id_doc = d.id_doc
 
             WHERE t.id = "{row_id}"
         '''
@@ -1128,319 +893,53 @@ class DocService:
         res = self._get_query_result(q, return_dict=True)
         return res[0] if res else None
 
+    def write_error_on_log(self, error_text, **kwargs):
+        self.logger_service.write_to_log(error_text, **kwargs)
+
+    def _sql_exec(self, q, params, table_name=''):
+        if table_name:
+            self.provider.table_name = table_name
+        if isinstance(params, str):
+            self.provider.sql_exec(q, params)
+        else:
+            self.provider.sql_exec_many(q, params)
+
+    def _sql_query(self, q, params, table_name=''):
+        if table_name:
+            self.provider.table_name = table_name
+        return self.provider.sql_query(q, params)
+
+    @staticmethod
+    def _get_query_result(query_text, args=None, return_dict=False):
+        return get_query_result(query_text, args=args, return_dict=return_dict)
+
 class SeriesService(DbService):
     doc_basic_table_name = 'RS_docs_table'
     doc_basic_handler_name = 'RS_docs'
-    def __init__(self):
+    def __init__(self, doc_row_id=''):
         super().__init__()
-        #if params and isinstance(params, dict):
-        #    self.params = params
-        #else:
+        self.doc_row_id = doc_row_id
         self.params = {}
 
-    def get_series_by_barcode(self, barcode, params: dict):
-
-        params = [
-            self.params.get('id_doc'),
-            self.params.get('id_good'),
-            self.params.get('id_properties'),
-            barcode,
-            barcode
-        ]  # self.params.get('id_warehouse'),
-        q = '''
-        SELECT id,
-           id_doc,
-           id_good,
-           id_properties,
-           id_series,
-           id_warehouse,
-           qtty,
-           name,
-           best_before,
-           number,
-           production_date,
-           cell
-        FROM RS_docs_series
-        WHERE RS_docs_series.id_doc = ? AND 
-            RS_docs_series.id_good = ? AND 
-            RS_docs_series.id_properties = ? 
-            AND (name = ? OR number = ?)'''
-        return get_query_result(q, params, True)
-
-    def get_adr_series_by_barcode(self, barcode):
-        params = [self.params.get('id_doc'), self.params.get('id_good'), self.params.get('cell'),
-                  barcode,  barcode]  # self.params.get('id_warehouse'),
-        q = '''
-        SELECT id,
-           id_doc,
-           id_good,
-           id_properties,
-           id_series,
-           id_warehouse,
-           qtty,
-           name,
-           best_before,
-           number,
-           production_date,
-           cell
-        FROM RS_docs_series
-        WHERE RS_docs_series.id_doc = ? AND 
-            RS_docs_series.id_good = ? AND RS_docs_series.cell = ?
-            AND (name = ? OR number = ?)'''
-        return get_query_result(q, params, True)
-
-    def get_series_by_doc_and_goods(self):
-        params = (self.params.get('id_doc'), self.params.get('id_good'))  # , self.params.get('id_warehouse')
-
-        q = '''
-            SELECT 
-                RS_docs_series.id as key,
-                RS_docs_series.id_doc as id_doc,
-                RS_docs_series.id_good,
-                RS_docs_series.id_properties,
-                RS_docs_series.id_series,
-                RS_docs_series.id_warehouse,
-                RS_docs_series.qtty,
-                IFNULL(RS_docs_series.name, '') AS name,
-                IFNULL(RS_docs_series.best_before, '') AS best_before,
-                RS_docs_series.number,
-                IFNULL(RS_docs_series.production_date, '') AS production_date,
-                IFNULL(RS_docs.doc_type, '') AS doc_type,
-                IFNULL(RS_docs.doc_n, '') AS doc_n,
-                IFNULL(RS_docs.doc_date, '') AS doc_date,
-                IFNULL(RS_goods.art, '') AS art,
-                IFNULL(RS_warehouses.name , '') AS warehouse_name
-             
-            FROM RS_docs_series 
-            
-            LEFT JOIN RS_docs 
-                ON RS_docs_series.id_doc = RS_docs.id_doc
-            
-            LEFT JOIN RS_properties 
-                ON RS_docs_series.id_properties = RS_properties.id
-            
-            LEFT JOIN RS_goods 
-                ON RS_docs_series.id_good = RS_goods.id
-            
-            LEFT JOIN RS_warehouses 
-                ON RS_docs_series.id_warehouse = RS_warehouses.id
-            
-            WHERE RS_docs_series.id_doc = ? AND 
-                RS_docs_series.id_good = ? 
-            
-        '''
-        return get_query_result(q, params, True)
-
-    def get_series_by_adr_doc_and_goods(self):
-        curr_cell = self.params.get('cell') if self.params.get('cell') else self.params.get('id_cell')
-        params = (self.params.get('id_doc'), self.params.get('id_good'), curr_cell)  # , self.params.get('id_warehouse')
-
-        q = '''
-            SELECT 
-            
-            RS_docs_series.id as key,
-            RS_docs_series.id_doc as id_doc,
-            RS_docs_series.id_good,
-            RS_docs_series.id_properties,
-            RS_docs_series.id_series,
-            RS_docs_series.id_warehouse,
-            RS_docs_series.qtty,
-            RS_docs_series.name,
-            RS_docs_series.best_before,
-            RS_docs_series.number,
-            RS_docs_series.production_date,
-            RS_docs_series.cell,
-            RS_docs.doc_type,
-            RS_docs.doc_n, 
-            RS_docs.doc_date,
-            RS_goods.name as good_name,
-            RS_properties.name as properties_name,
-            RS_goods.art,
-            RS_warehouses.name as warehouse_name,
-            RS_cells.name as cell_name
-             
-            FROM RS_docs_series 
-            
-            LEFT JOIN 
-            RS_docs ON 
-            RS_docs_series.id_doc =  RS_docs.id_doc
-            
-            LEFT JOIN 
-            RS_goods ON 
-            RS_docs_series.id_good =  RS_goods.id
-            
-            LEFT JOIN 
-            RS_properties ON 
-            RS_docs_series.id_properties =  RS_properties.id
-            
-            LEFT JOIN 
-            RS_warehouses ON 
-            RS_docs_series.id_warehouse =  RS_warehouses.id
-            
-            LEFT JOIN RS_cells ON 
-            RS_docs_series.cell = RS_cells.id
-            
-            WHERE RS_docs_series.id_doc = ? AND 
-            RS_docs_series.id_good = ? AND 
-            RS_docs_series.cell = ?
-            '''
-        return get_query_result(q, params, True)
-
-    def add_qtty_to_table_str(self, item_id):
-        params = (item_id,)
-        q = '''UPDATE RS_docs_series
-            SET qtty = qtty + 1
-            WHERE id = ?'''
-
-        return get_query_result(q, params)
-
-
-    def add_new_series_in_doc_series_table(self, barcode):
-        q_params = (
-        self.params.get('id_doc'), self.params.get('id_good'), self.params.get('id_properties'), self.params.get('id_warehouse'), 1,
-                barcode, barcode, self.params.get('id_cell'))
-        q = 'INSERT INTO RS_docs_series (id_doc, id_good, id_properties, id_warehouse, qtty, name, number, cell) VALUES(?,?,?,?,?,?,?,?)'
-        return get_query_result(q, q_params)
-
-    def get_item_by_name(self, item_name, table_name):
-        q = f'SELECT id FROM {table_name} WHERE {table_name}.name = ?'
-        res = get_query_result(q, (item_name,))
-        if res:
-            return res[0][0]
-        else:
-            return None
-
-    def delete_current_st(self, id):
-        q = 'DELETE FROM RS_docs_series  WHERE id = ?'
-        return get_query_result(q, (id,))
-
-
-    def get_series_prop_by_id(self, id):
-        table_name = self.doc_basic_table_name
-        is_adr = False if table_name == 'RS_docs_table' else True
-        q = f'''
-           SELECT {table_name}.id,
-           {table_name}.id_doc,
-           {table_name}.id_good,
-           {table_name}.id_properties,
-           {table_name}.id_series,
-           {table_name}.id_unit,
-           {table_name}.qtty,
-           {table_name}.qtty_plan,
-                     '''
-        q = q + f''' {table_name}.id_cell, 
-                 {table_name}.id_cell as cell, 
-                RS_cells.name as cell_name, 
-                0 as price,
-                Null as id_price,''' if is_adr else q +  f'''
-                {table_name}.price,
-                {table_name}.id_price,'''
-
-        q = q + f'''
-           {table_name}.use_series,
-           RS_goods.art as code_art, 
-           RS_goods.name as good_name,
-           RS_properties.name as properties_name,
-           RS_units.name as units_name
-                   
-              FROM {table_name} 
-            LEFT JOIN   RS_goods
-            ON {table_name}.id_good = RS_goods.id
-            
-            LEFT JOIN   RS_properties
-            ON {table_name}.id_properties = RS_properties.id
-            
-            LEFT JOIN   RS_units
-            ON {table_name}.id_unit = RS_units.id
-            '''
-        q = q + f'''
-            LEFT JOIN   RS_cells
-            ON {table_name}.id_cell = RS_cells.id
-            ''' if is_adr else q
-
-        q = q + f'''
-            WHERE {table_name}.id = ?
-            '''
-        res = get_query_result(q, (id,), True)
-        if res:
-            return res[0]
-        else:
-            return {}
-
-
-    @staticmethod
-    def get_series_table_str(id):
-        q = '''
-       SELECT 
-        RS_docs_series.id,
-        RS_docs_series.id_doc,
-        RS_docs_series.id_good,
-        RS_docs_series.id_series,
-        RS_docs_series.id_warehouse,
-        RS_docs_series.qtty,
-        IFNULL(RS_docs_series.name, '') AS name,
-        IFNULL(RS_docs_series.best_before, '') AS best_before,
-        RS_docs_series.number,
-        IFNULL(RS_docs_series.production_date, '') AS production_date,
-        RS_docs_series.cell,
-        RS_goods.name as good_name, 
-        RS_cells.name as cell_name
-        FROM RS_docs_series
-        LEFT JOIN RS_goods
-        ON RS_goods.id = RS_docs_series.id_good
-        LEFT JOIN RS_cells
-        ON RS_cells.id = RS_docs_series.cell
-        WHERE RS_docs_series.id = ?
-        '''
-        res = get_query_result(q, (id,),True)
-        if res:
-            return res[0]
-        else:
-            return {}
-
-
-    def get_doc_prop_by_id(self, id_doc):
-        table_name = self.doc_basic_handler_name
-        q = f'''
-        SELECT {table_name}.id_doc,
-           {table_name}.doc_n,
-           {table_name}.doc_date,
-           {table_name}.id_warehouse as id_warehouse,
-           RS_warehouses.name as warehouse
-           
-        FROM {table_name}
-        LEFT JOIN RS_warehouses ON
-        {table_name}.id_warehouse = RS_warehouses.id
-          
-        WHERE {table_name}.id_doc = ?
-        '''
-        res = get_query_result(q,(id_doc,),True)
-        if res:
-            return res[0]
-        else:
-            return {}
-
-    def get_values_for_screen_by_id(self, id) -> dict:
+    def get_screen_data(self, doc_row_id) -> dict:
 
         q = f'''
         SELECT RS_docs_table.id_doc,
-            RS_docs_table.id_good,
-            RS_docs_table.id_properties,
-            RS_docs_table.id_unit,
+            RS_docs_table.id_good AS item_id,
+            RS_docs_table.id_properties AS property_id,
+            RS_docs_table.id_unit AS unit_id,
             RS_docs_table.qtty,
             RS_docs_table.d_qtty,
             RS_docs_table.qtty_plan,
             RS_docs_table.price,
-            RS_docs_table.use_series,
-            IFNULL(RS_docs.doc_type, '') AS doc_type,
-            IFNULL(RS_docs.doc_n, '') AS doc_n,
-            IFNULL(RS_docs.doc_date, '') AS doc_date,
-            IFNULL(RS_goods.name, '') AS good_name,
-            IFNULL(RS_goods.art, '') AS good_art,
-            IFNULL(RS_properties.name, '') AS properties_name,
-            IFNULL(RS_units.name, '') AS good_unit 
+            RS_docs_table.id_cell AS cell_id,
+            IFNULL(RS_docs.id_warehouse, '') AS warehouse_id,
+            IFNULL(RS_goods.name, '') AS item_name,
+            IFNULL(RS_goods.art, '') AS article,
+            IFNULL(RS_properties.name, '') AS property,
+            IFNULL(RS_units.name, '') AS unit 
         FROM RS_docs_table AS RS_docs_table
-        
+
         LEFT JOIN RS_docs AS RS_docs ON
             RS_docs_table.id_doc = RS_docs.id_doc
         LEFT JOIN RS_goods ON
@@ -1451,41 +950,93 @@ class SeriesService(DbService):
             RS_docs_table.id_unit = RS_units.id
         WHERE RS_docs_table.id = ?
         '''
-        res = get_query_result(q,(id,),True)
+        res = get_query_result(q, (doc_row_id,), True)
         if res:
             return res[0]
         else:
             return {}
 
-    def save_table_str(self, params):
-        q = '''
-        UPDATE RS_docs_series
-        SET 
-           id_properties = :id_properties,
-           id_series = :id_series,
-           id_warehouse = :id_warehouse,
-           qtty = :qtty,
-           name = :name,
-           best_before = :best_before,
-           number = :number,
-           production_date = :production_date,
-           cell  = :cell
-        WHERE id = :id '''
-        res = get_query_result(q, params)
-        return True
+    @staticmethod
+    def get_series_data(doc_row_id):
+        q = f'''
+            SELECT 
+                series.id AS key,
+                series.id AS id,
+                series.qtty,
+                series.name,
+                series.best_before,
+                series.number,
+                series.production_date,
+                series.id_doc AS id_doc,
+                series.id_good AS item_id,
+                series.id_properties AS property_id,
+                series.id_warehouse AS warehouse_id,
+                series.cell AS cell_id
 
-    def get_total_qtty(self):
+            FROM RS_docs_series AS series
+            JOIN RS_docs_table AS doc_details_table
+                ON series.id_good = doc_details_table.id_good 
+                AND series.id_properties = doc_details_table.id_properties
+            WHERE doc_details_table.id = '{doc_row_id}'
+        '''
 
-        params = (self.params.get('id_doc'), self.params.get('id_good'), self.params.get('id_properties'))
+        return get_query_result(q, return_dict=True)
+
+    @staticmethod
+    def update_series_item_data(data: dict):
+        fields = ', '.join(data.keys())
+        values = ', '.join('?' * len(data.values()))
+        q = f'''
+            REPLACE INTO RS_docs_series({fields})
+            VALUES ({values})
+        '''
+        print(data)
+        get_query_result(q, list(data.values()))
+
+    @staticmethod
+    def delete_series_item(series_id):
+        q = 'DELETE FROM RS_docs_series WHERE id = ?'
+        return get_query_result(q, (series_id,))
+
+    @staticmethod
+    def get_series_item_data_by_id(id):
         q = '''
-        SELECT 
-        sum(qtty) FROM RS_docs_series
-         WHERE id_doc = ? AND id_good = ? AND id_properties = ?'''
-        res = get_query_result(q, params)
-        if res and res[0][0] is not None:
-            return res[0][0]
+                SELECT
+                    RS_docs_series.id AS id, 
+                    RS_docs_series.id_doc AS id_doc, 
+                    RS_docs_series.id_good AS item_id,
+                    RS_docs_series.id_properties AS property_id, 
+                    RS_docs_series.id_series AS id_series, 
+                    RS_docs_series.id_warehouse AS warehouse_id, 
+                    RS_docs_series.cell AS cell_id, 
+                    RS_docs_series.name AS name,
+                    IFNULL(RS_docs_series.best_before, '') AS best_before,
+                    IFNULL(RS_docs_series.number, '') AS number,
+                    IFNULL(RS_docs_series.production_date, '') AS production_date,
+                    IFNULL(RS_docs_series.qtty, 0) as qtty
+                FROM RS_docs_series
+                WHERE RS_docs_series.id = ?
+                LIMIT 1
+                '''
+        res = get_query_result(q, (id,), True)
+        if res:
+            return res[0]
         else:
-            return 0
+            return {}
+
+    @staticmethod
+    def get_count_series(**kwargs):
+        q = f'''
+                SELECT COUNT(*) AS series_count
+                FROM RS_docs_series
+                WHERE RS_docs_series.id_doc = :id_doc 
+                    AND RS_docs_series.id_good = :item_id 
+                    AND RS_docs_series.id_properties = :property_id 
+                    AND number = :number
+            '''
+
+        res = get_query_result(q, kwargs, True)
+        return res[0]['series_count'] if res else 0
 
     def update_total_qty(self, qty, row_id):
         q = f'''
@@ -1495,9 +1046,18 @@ class SeriesService(DbService):
             '''
         get_query_result(q)
 
+    @staticmethod
+    def get_total_qtty(**kwargs):
+        q = '''
+            SELECT SUM (qtty) AS total
+            FROM RS_docs_series
+            WHERE id_doc = :id_doc AND id_good = :item_id AND id_properties = :property_id'''
+
+        res = get_query_result(q, kwargs, return_dict=True)
+        return res[0]['total'] if res else 0
 
 class AdrSeriesService(SeriesService):
-    def get_values_for_screen_by_id(self, _id) -> dict:
+    def get_screen_data(self, _id) -> dict:
 
         q = f'''
         SELECT RS_docs_table.id_doc,
@@ -1544,7 +1104,6 @@ class AdrSeriesService(SeriesService):
             '''
         get_query_result(q)
 
-
 class SelectItemService(DbService):
     def __init__(self, table_name):
         super().__init__()
@@ -1553,7 +1112,6 @@ class SelectItemService(DbService):
     def get_select_data(self, **cond) -> list:
         self.provider.table_name = self.table_name
         return self.provider.select(cond)
-
 
 class AdrDocService(DocService):
     def __init__(self, id_doc='', cur_cell='', table_type='in'):
@@ -1811,16 +1369,13 @@ class AdrDocService(DocService):
 class FlowDocService(DocService):
 
     def __init__(self, doc_id=''):
+        super().__init__(is_barc_flow=True)
         self.doc_id = doc_id
-        self.docs_table_name = 'RS_docs'
-        self.details_table_name = 'RS_docs_table'
         self.isAdr = False
         self.sql_text = ''
         self.sql_params = None
         self.debug = False
         self.provider = SqlQueryProvider(self.docs_table_name, sql_class=sqlClass())
-        self.is_group_scan = False
-        self.is_barc_flow = True
 
     def get_doc_view_data(self, doc_type='', doc_status='') -> list:
         fields = [
@@ -1932,8 +1487,8 @@ class FlowDocService(DocService):
     def add_barcode_to_database(self, barcode: str):
         if not barcode:
             return
-        qtext = '''INSERT INTO RS_barc_flow (id_doc, barcode) VALUES (?,?)'''
-        self.provider.sql_exec(qtext, ','.join([self.doc_id, barcode]))
+        query_text = '''INSERT INTO RS_barc_flow (id_doc, barcode) VALUES (?,?)'''
+        self.provider.sql_exec(query_text, ','.join([self.doc_id, barcode]))
         self.set_doc_status_to_upload(self.doc_id)
 
     def set_barc_flow_status(self):
@@ -1956,7 +1511,7 @@ class FlowDocService(DocService):
         if res and res[0][0] and res[0][0] not in falseValueList:
             return 'True'
         return 'False'
-    
+
     def get_quantity_plan_data(self, id_doc):
         qtext = '''
             SELECT distinct count(id) as col_str, sum(ifnull(qtty_plan,0)) as qtty_plan
@@ -1974,10 +1529,6 @@ class GoodsService(DbService):
         super().__init__()
         self.item_id = item_id
         self.provider = SqlQueryProvider(table_name="RS_goods", sql_class=sqlClass())
-
-    def get_type_name_by_id(self, id):
-        query_text = f"SELECT name FROM RS_types_goods WHERE id ='{id}'"
-        return self._get_query_result(query_text, return_dict=True)
 
     def get_goods_list_data(self, goods_type='', item_id='') -> list:
         query_text = f"""
@@ -2095,23 +1646,13 @@ class GoodsService(DbService):
         self.provider.table_name = table_name
         return self.provider.select({field: field_value})
 
-    def get_query_with_arg_list(self, table_name, value, field, table_string_id):
-        query_text = f"""SELECT ifnull({value}, '-') as {value} FROM {table_name} WHERE {field} in ({table_string_id})"""
-        # self.provider.table_name = table_name
-        # return self._sql_query(query_text, table_name=table_name, params='')
-        return query_text
-
-    def get_select_data(self, table_name):
-        query_text = f'SELECT * FROM {table_name}'
-        self.provider.table_name = table_name
-        return self._sql_query(query_text, '')
-
 
 class DbCreator(DbService):
     def __init__(self):
         super().__init__()
 
-    def create_tables(self):
+    @staticmethod
+    def create_tables():
         import database_init_queryes
         # Создаем таблицы если их нет
         schema = database_init_queryes.database_shema()
@@ -2137,79 +1678,6 @@ class DbCreator(DbService):
         tables = self._sql_query(q)
 
         return [table['name'] for table in tables]
-
-
-class UniversalCardsService(DbService):
-    def __init__(self):
-        super().__init__()
-        self.table_name: str
-        self.filter_fields = []
-        self.filter_value = ''
-        self.exclude_list = []
-        self.no_label = False
-        self.table_names = self._table_names_dict()
-
-    def get_views_data(self, table_name: str):
-        fields = self._get_fields(table_name)
-        fields_links = {}
-        q_fields = []
-        q_joins = []
-        q_conditions = ['true']
-
-        for field in fields:
-            if field in self.exclude_list:
-                continue
-
-            q_fields.append('{}.{} AS {}'.format(
-                table_name, field, 'key' if field == 'id' else field))
-
-            link_table_name = self.table_names.get(field)
-            if link_table_name:
-                q_fields.append(f'{link_table_name}.name as {link_table_name}_name')
-                q_joins.append('LEFT JOIN {} ON {}.id = {}.{}'.format(
-                    link_table_name, link_table_name, table_name, field
-                ))
-
-                fields_links[field] = f'{link_table_name}_name'
-            else:
-                fields_links[field] = 'key' if field == 'id' else field
-
-        if self.filter_value:
-            q_conditions = [f"{table_name}.{field} LIKE '%{self.filter_value}%'" for field in self.filter_fields]
-
-        q = '''SELECT {} 
-                FROM {}
-                {}
-                WHERE {}
-        '''. format(','.join(q_fields), table_name, ' '.join(q_joins), ' OR '.join(q_conditions))
-
-        return fields_links, self._sql_query(q)
-
-    def _get_fields(self, table_name) -> List[str]:
-        """
-        :param table_name:
-        :return list column names:
-        """
-        q = f'PRAGMA table_info({table_name})'
-        res = self._sql_query(q, table_name=table_name)
-
-        return [row['name'] for row in res]
-
-    def _table_names_dict(self):
-        return {
-            'id_good': 'RS_goods',
-            'type_good': 'RS_types_goods',
-            'unit': 'RS_units',
-            'id_property': 'RS_properties',
-            'id_series': 'RS_series',
-            'id_unit': 'RS_units',
-            'id_countragents': 'RS_countragents',
-            'id_warehouse': 'RS_warehouses',
-            'id_doc': 'RS_docs',
-            'id_cell': 'RS_cells',
-            'id_owner': 'RS_goods',
-            'id_price_types': 'RS_price_types'
-        }
 
 class SqlQueryProvider:
     def __init__(self, table_name='', sql_class=sqlClass(), debug=False):

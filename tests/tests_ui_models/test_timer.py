@@ -21,29 +21,6 @@ class TestMainEvents(unittest.TestCase):
         self.data_path = './data_for_tests/http_requests'
         self.sut = Timer(self.hash_map)
 
-    def test_setUp(self):
-        pass
-        # print(self.sut.http_settings)
-
-    @unittest.skip
-    def test_load_docs(self):
-        self.rs_settings.put('URL', 'url', True)
-        self.rs_settings.put('USER', 'user', True)
-        self.rs_settings.put('PASS', '1234', True)
-        self.rs_settings.put('notification_id', None, True)
-        sut = Timer(self.hash_map)
-
-        load_data = self.get_load_data()
-        HsService.get_data = MagicMock(return_value=load_data)
-
-        DocService.update_data_from_json = MagicMock()
-
-        sut.load_docs()
-        HsService.get_data.assert_called_once()
-
-        DocService.update_data_from_json.assert_called_once()
-        self.assertIsNone(self.rs_settings.get('notification_id'))
-
     def test_can_upload_buffer_data_barcodes(self):
         http_result = HsService.HttpAnswer(url='', status_code=200)
         HsService.send_barcodes = MagicMock(return_value=http_result)

@@ -10,6 +10,7 @@ from typing import Dict, List, Tuple, Callable, Union
 import shutil
 import db_services
 import hs_services
+import db_models
 from printing_factory import HTMLDocument, PrintService, bt
 from ui_utils import HashMap, get_ip_address
 from barcode_workers import BarcodeWorker
@@ -176,10 +177,12 @@ class Screen(ABC):
             return round(qtty, 3)
 
     @staticmethod
-    def _format_date(date_str: str):
+    def _format_date(date_str: str, default=None):
         try:
             return datetime.fromisoformat(date_str).strftime('%m-%d-%Y %H:%M:%S')
         except ValueError:
+            if not default is None:
+                return default
             return date_str
 
     def _get_doc_title(self, **kwargs) -> str:
@@ -2786,17 +2789,12 @@ class BaseGoodSelect(Screen):
         PrintService.print(self.hash_map, data)
 
     def _open_series_screen(self):
-        screen_values = {
-            'doc_row_id': self.doc_row_id,
-            'title': 'Серии',
-            'use_adr_docs_tables': '0'
-        }
         screen = SeriesSelectScreen(
-            self.hash_map,
-            self.rs_settings
+            hash_map=self.hash_map,
+            doc_row_id=self.doc_row_id,
+            parent=self
         )
-        screen.parent_screen = self
-        screen.show_process_result(screen_values)
+        screen.show_process_result()
 
     def _open_register_barcode_screen(self):
         init_data = {
@@ -4465,148 +4463,184 @@ class SelectUnit(GoodsPricesItemCard):
 class SeriesSelectScreen(Screen):
     process_name = 'SeriesProcess'
     screen_name = 'SeriesSelectScreen'
-    doc_basic_table_name = 'RS_docs_table'
-    doc_basic_handler_name = 'RS_docs'
 
-    def __init__(self, hash_map: HashMap, rs_settings=None):
-        super().__init__(hash_map)
-        self.service = db_services.SeriesService()
+    def __init__(self, hash_map: HashMap, doc_row_id, **kwargs):
+        super().__init__(hash_map, **kwargs)
+        self.doc_row_id = doc_row_id
+        self.use_adr_docs_tables = kwargs.get('use_adr_docs_tables', False)
+        self.db_service = None
         self.screen_data = {}
-        self.screen_values = {
-            'title': 'Выбор серии',
-            'doc_row_id': self.hash_map['doc_row_id'],
+        self.hash_map_keys = ['qtty', 'qtty_plan', 'price', 'item_name', 'article', 'property', 'unit']
+        self.format_cards_data = {
+            'best_before': lambda value: f'годен до: {self._format_date(value)}' if value else '',
+            'production_date': lambda value: f'дата произв.: {self._format_date(value)}' if value else '',
+            'qtty': lambda value: f'кол-во: {self._format_quantity(value)}' if value else '',
         }
-        self.use_adr_docs_tables = self.hash_map.get_bool('use_adr_docs_tables')
-        self.qty_without_series = None
+        self.series_barcode_data = {}
+        self.total_qty = 0
+        self.series_item_data_to_save = None
+        self.series_count = 0
 
     def init_screen(self):
-        if self.use_adr_docs_tables:
-            self.service = db_services.AdrSeriesService()
-        key = self.screen_values['doc_row_id']
-        self.screen_data = self.service.get_values_for_screen_by_id(key)
-        # # Обработаем числовые ключи в словаре
-        self._handle_num_keys(self.screen_data)
-        self.service.params = self.screen_data
-        if self.qty_without_series is None:
-            self.qty_without_series = (int(self.screen_data['d_qtty'])
-                                       - self.service.get_total_qtty())
-        self._refresh_series_cards()
+        if self.db_service is None:
+            self.db_service = db_services.SeriesService(self.doc_row_id)
 
-        if not self.hash_map.get('doc_title'):
-            title = self._get_doc_title(self.screen_data)
-            self.hash_map.put('doc_title', title)
-
-        self.hash_map.put_data(self.screen_data)
-        self._refresh_total_qtty() # избыточное сохранение флага use_series
+        self.screen_data = self.db_service.get_screen_data(self.doc_row_id)
+        self.total_qty = self.screen_data['qtty']
+        self._update_hash_map_keys()
+        self._update_series_cards()
+        self.hash_map.put('return_selected_data')
+        self._set_vision_settings()
 
     def on_start(self):
-        self.hash_map.set_title(self.screen_values['title'])
-        self.init_screen()
-        self._set_vision_settings()
-        # self._refresh_series_cards()
+        self.hash_map.set_title('Выбор серии')
+        self._save_new_series_item()
 
     def on_input(self):
-        listener = self.listener
-        if listener =="CardsClick":
-            self._cards_click_handler()
-        elif listener =="btn_add_series":
-            self.hash_map.put("selected_card_key", '')
-            self._cards_click_handler()
-        elif listener == "ON_BACK_PRESSED":
-            self._back_screen()
-        elif listener == 'barcode':
-            self._barcode_listener()
-        elif listener == 'vision_cancel':
-            SerialNumberOCRSettings.ocr_nosql_counter.destroy()
-        elif listener == 'vision':
-            self._barcode_listener()
-            SerialNumberOCRSettings.ocr_nosql_counter.destroy()
-        elif self.listener == 'LayoutAction':
-            self._layout_action()
-        elif self._is_result_positive('confirm_delete'):
-            self.delete_series()
-        elif listener == 'btn_ocr_serial_template_settings':
-            ocr_nosql = SerialNumberOCRSettings.ocr_nosql
-            ocr_nosql.put('show_process_result', True, True)
-            self.hash_map.show_process_result('OcrTextRecognition',
-                                              'SerialNumberOCRSettings')
-        elif listener == 'btn_print':
-            self._print_ticket()
-        elif listener == 'btn_series_add_barcode':
-            self._btn_add_barcode()
+        listeners = {
+            'CardsClick': self._cards_click,
+            'btn_add_series': self._add_new_series,
+            'barcode': self._barcode_listener,
+            'vision': self._vision_listener,
+            'vision_cancel': lambda: SerialNumberOCRSettings.ocr_nosql_counter.destroy(),
+            'btn_print': self._print_ticket,
+            'btn_series_add_barcode': self._btn_add_barcode,
+            'btn_ocr_serial_template_settings': self._osr_settings,
+            'LayoutAction': self._layout_action,
+            'ON_BACK_PRESSED': self._back_screen,
+            'BACK_BUTTON': self._back_screen,
+        }
 
-        self.hash_map.no_refresh()
+        if self.listener in listeners:
+            listeners[self.listener]()
+        elif self._is_result_positive('confirm_delete'):
+            self._delete_series_item()
 
     def show(self, args=None):
         self.show_process_result(args)
 
-    def _cards_click_handler(self):
-        self._open_series_item_screen()
+    def _update_hash_map_keys(self):
+        self.hash_map.put_data({
+            key: self._format_quantity(self.screen_data.get(key, 0))
+            if key in ['qtty_plan', 'qtty'] else self.screen_data.get(key, '')
+            for key in self.hash_map_keys
+        })
 
-    def _open_series_item_screen(self):
-        args = {
-            'series_id': self.hash_map.get("selected_card_key"),
-            'title': 'Серия'
-        }
-        screen = SeriesItem(self.hash_map, self.rs_settings)
-        screen.parent_screen = self
-        screen.show(args)
+    def _update_series_cards(self):
+        series_data = self.db_service.get_series_data(self.doc_row_id)
+        if series_data:
+            self.series_barcode_data = {
+                row['number']: row for row in series_data if row['number']
+            }
+            self.series_count = len(series_data)
 
-    def _refresh_total_qtty(self):
-        current_series_qtty = self.service.get_total_qtty() or 0
-        total_table_qty = self.qty_without_series + current_series_qtty
-        self.service.update_total_qty(qty=total_table_qty, row_id=self.screen_values['doc_row_id'])
-        self.hash_map['qtty'] = self._format_quantity(total_table_qty)
+            doc_cards = self._get_doc_cards_view(self._prepare_table_data(series_data))
+            self.hash_map['series_cards'] = doc_cards.to_json()
+            self.hash_map.put('Show_empty_series', '-1')
+        else:
+            self.hash_map['series_cards'] = ''
+            self.hash_map.put('Show_empty_series', '1')
+
+    def _cards_click(self):
+        card_data = self._get_selected_card_data()
+        series_item_data = self._get_series_item_data_by_number(card_data['number'])
+        self._open_series_item_screen(series_item_data)
+
+    def _add_new_series(self):
+        series_item_data = self._get_series_item_data_by_number()
+        series_item_data['qtty'] = 1 if self.series_count else self.total_qty
+        self._open_series_item_screen(series_item_data)
 
     def _barcode_listener(self):
-        self._identify_add_barcode_series()
-        self._refresh_series_cards()
-        self._refresh_total_qtty()
-        self.hash_map.refresh_screen()
+        barcode = self.hash_map['barcode']
+        self._add_series_item_on_scanning(barcode)
 
-    def _check_qtty_limits(self):
-        if self.hash_map.get_bool('control'):
-            qtty = float(self.hash_map.get('qtty'))
-            qtty_plan = float(self.hash_map.get('qtty_plan'))
-            if qtty > qtty_plan:
-                self.toast("Факт превышает план")
-                return False
-        return True
+    def _vision_listener(self):
+        ocr_nosql = SerialNumberOCRSettings.ocr_nosql
+        number = ocr_nosql.get('ocr_result')
+        if number:
+            ocr_nosql.delete('ocr_result')
+            self._add_series_item_on_scanning(number)
+            SerialNumberOCRSettings.ocr_nosql_counter.destroy()
+
+    def _osr_settings(self):
+        ocr_nosql = SerialNumberOCRSettings.ocr_nosql
+        ocr_nosql.put('show_process_result', True, True)
+        self.hash_map.show_process_result('OcrTextRecognition',
+                                          'SerialNumberOCRSettings')
+
+    def _add_series_item_on_scanning(self, number):
+        """
+        # По номеру ищем серию, инициализируем данные для записи в БД,
+        # количество новой серии считаем по количеству товара если нет серий на этом этапе
+        # при событии on_start данные должны сохраниться в БД
+        """
+
+        series_item_qtty = 1 if self.series_count else max(self.total_qty, 0)
+        series_item_data = self._get_series_item_data_by_number(number)
+        series_item_data['qtty'] += series_item_qtty
+
+        self.series_item_data_to_save = series_item_data
+
+    def _get_series_item_data_by_number(self, number=''):
+        series_item_data = self.series_barcode_data.get(number)
+        if not series_item_data:
+            news_series_item_data = {**self.screen_data}
+            news_series_item_data.update({'name': number, 'number': number, 'qtty': 0})
+            series_item_data = db_models.SeriesItemModel(**news_series_item_data).dict()
+
+        return series_item_data
+
+    def _save_new_series_item(self):
+        """
+        Метод для добавления новой или обновления существующей серии.
+        Вызывается в событии on_start для обработки ситуации когда данные для записи добавлены из другого экрана.
+        """
+
+        if self.series_item_data_to_save:
+            self.db_service.update_series_item_data(
+                db_models.SeriesItemModel(**self.series_item_data_to_save)
+                .dict(by_alias=True, exclude_none=True)
+            )
+            self.series_item_data_to_save = None
+            self._update_series_cards()
+            self._update_total_qty()
+
+    def _update_total_qty(self):
+        self.total_qty = self.db_service.get_total_qtty(**self.screen_data)
+        self.hash_map['qtty'] = self._format_quantity(self.total_qty)
+        self.db_service.update_total_qty(qty=self.total_qty, row_id=self.doc_row_id)
+
+    def _open_series_item_screen(self, series_item_data):
+        screen = SeriesItem(
+            self.hash_map,
+            parent=self,
+            series_item_data=series_item_data
+        )
+        screen.show()
+
+    def _layout_action(self):
+        layout_listener = self.hash_map.get('layout_listener')
+
+        if layout_listener == 'Удалить':
+            self.hash_map.show_dialog(
+                listener='confirm_delete',
+                title='Удалить серию?'
+            )
 
     def _back_screen(self):
-        if self._check_qtty_limits():
-            self._finish_process()
+        self._finish_process()
 
     def _finish_process(self):
         super()._finish_process_result()
 
-    def _refresh_series_cards(self):
-        list_data = self.service.get_series_by_doc_and_goods()
-        list_data = [self._handle_num_keys(item) for item in list_data]
-        list_data = [self._add_text_in_values(item) for item in list_data]
-        doc_cards = self._get_doc_cards_view(list_data)
-        # Добавим надпись если нет серий в списке
-        self.hash_map.put('empty_series', ("","Отсканируйте серии")[len(list_data)==0])
-        self.hash_map['series_cards'] = doc_cards.to_json()
+    def _prepare_table_data(self, series_data: List[dict]):
+        table_data = [self._format_row_data(row_data) for row_data in series_data]
+        return table_data
 
-    def _handle_num_keys(self, values: dict) -> dict:
-        numeric_keys = ('qtty', 'qtty_plan', 'd_qtty')
-        for key in numeric_keys:
-            if key in values and re.match("^\d+\.?\d*$", str(values[key])):
-                values[key] = self._format_quantity(float(values[key]))
-            else:
-                values[key] = '0'
-        return values
-
-    def _add_text_in_values(self, values: dict) -> dict:
-        for key in values.keys():
-            if key == 'best_before' and values[key]:
-                values[key] = f'годен до: {values[key]}'
-            elif key == 'production_date' and values[key]:
-                values[key] = f'дата произв.: {values[key]}'
-            elif key == 'qtty' and values[key] is not None and values[key] != '':
-                values[key] = f'кол-во: {values[key]}'
-        return values
+    def _format_row_data(self, row_data: dict):
+        return {k: self.format_cards_data[k](v) if k in self.format_cards_data else v
+                for k,v in row_data.items()}
 
     def _get_doc_cards_view(self, table_data):
 
@@ -4672,40 +4706,11 @@ class SeriesSelectScreen(Screen):
 
         return doc_cards
 
-    def _identify_add_barcode_series(self):
-        ocr_nosql = SerialNumberOCRSettings.ocr_nosql
-        barcode = self.hash_map.get('barcode') or ocr_nosql.get('ocr_result')
-        if barcode:
-            ocr_nosql.delete('ocr_result')
-            self.hash_map.delete('barcode')
-            values = self.service.get_series_by_barcode(barcode, self.screen_data)
-            if values:
-                item_id = values[0]['id']
-                self.service.add_qtty_to_table_str(item_id)
-            else:
-                self.service.add_new_series_in_doc_series_table(barcode)
-
-    def _layout_action(self):
-        layout_listener = self.hash_map.get('layout_listener')
-
-        if layout_listener == 'Удалить':
-            self.hash_map.show_dialog(
-                listener='confirm_delete',
-                title='Удалить серию?'
-            )
-        elif layout_listener == 'Изменить':
-            self.hash_map['current_series_id'] = self.hash_map.get('selected_card_key')
-            self.hash_map.show_screen('Заполнение серии', self.params)
-
-    def _format_quantity(self, qtty):
-        if float(qtty) % 1 == 0:
-            return int(float(qtty))
-        else:
-            return qtty
-
-    def delete_series(self):
-        id = self.hash_map.get('selected_card_key')
-        self.service.delete_current_st(id)
+    def _delete_series_item(self):
+        series_id = self.hash_map.get('card_data', from_json=True)['id']
+        self.db_service.delete_series_item(int(series_id))
+        self._update_series_cards()
+        self._update_total_qty()
 
     def _set_vision_settings(self) -> None:
         ocr_nosql = SerialNumberOCRSettings.ocr_nosql
@@ -4718,10 +4723,15 @@ class SeriesSelectScreen(Screen):
     def _print_ticket(self):
         # Получим первый баркод документа
         barcode = db_services.BarcodeService().get_barcode_from_doc_table(self.screen_values['doc_row_id'])
-        data = {'Дата_док': 'Doc_data', 'Номенклатура': 'Good',
-                'Артикул': 'good_art', 'Серийный номер': 'good_sn',
-                'Характеристика': 'good_property', 'Цена': 'good_price',
-                'ЕдИзм': 'good_unit', 'Ключ': 'key', 'Валюта': 'price_type'}
+        data = {
+            'Документ': 'doc_title',
+            'Номенклатура': 'item_name',
+            'Артикул': 'article',
+            'Характеристика': 'property',
+            'Цена': 'price',
+            'ЕдИзм': 'unit',
+            'Ключ': 'key',
+        }
         for key in data:
             data[key] = self.hash_map.get(data[key])
         data['barcode'] = barcode if barcode else '0000000000000'
@@ -4735,136 +4745,116 @@ class SeriesSelectScreen(Screen):
         }
         BarcodeRegistrationScreen(self.hash_map, self.rs_settings).show_process_result(init_data)
 
+
 class SeriesItem(Screen):
     process_name = 'SeriesProcess'
     screen_name = 'FillingSeriesScreen'
-    doc_basic_table_name = 'RS_docs_table'
-    doc_basic_handler_name = 'RS_docs'
 
-    def __init__(self, hash_map: HashMap, rs_settings):
-        super().__init__(hash_map, rs_settings)
-        self.service = db_services.SeriesService()
-        self.screen_data = {}
-        self.screen_values = {
-            'title': 'Заполнение серии',
-            'series_id': self.hash_map['series_id'],
-        }
-
+    def __init__(self, hash_map: HashMap, series_item_data=None, **kwargs):
+        super().__init__(hash_map, **kwargs)
+        self.screen_data = series_item_data or {}
+        self.hash_map_keys = [
+            'name', 'number', 'production_date', 'best_before', 'FillingSeriesScreen_qtty'
+        ]
+        self.data_to_save = None
+        self.series_barcode_data = kwargs.get('series_barcode_data', {})
+        self.is_new_item = kwargs.get('is_new_item', False)
 
     def init_screen(self):
-        series_id = self.screen_values['series_id']
-        self.screen_data = self.service.get_series_table_str(series_id)
-
         put_data = {
-            'good_name': self.screen_data.get('good_name') or self.hash_map.get('good_name'),
             'name': self.screen_data.get('name',''),
             'number': self.screen_data.get('number',''),
             'production_date': self.screen_data.get('production_date',''),
             'best_before': self.screen_data.get('best_before',''),
-            'FillingSeriesScreen_qtty' : self.screen_data.get('qtty','')
+            'FillingSeriesScreen_qtty': self._str_to_int(self.screen_data.get('qtty',''))
         }
 
-        self._handle_num_keys(put_data)
         self.hash_map.put_data(put_data)
 
     def on_start(self):
-        series_id = self.screen_values['series_id']
-        self.screen_data = self.service.get_series_table_str(series_id)
-        # self.init_screen()
+        pass
 
     def on_input(self):
-        listener = self.listener
-        if listener == "btn_save":
-            self._btn_save_handler()
-        elif listener == "ON_BACK_PRESSED":
-            self._back_screen()
-        elif listener == "btn_cancel":
-            self._back_screen()
-        elif self._is_result_positive('confirm_update_series'):
-            params = self._get_params()
-            params.update(self._check_series_number())
-            self.service.save_table_str(params)
-            self._back_screen()
-
-        self.hash_map.refresh_screen()
-
-    def _save_data(self):
-        params = self._get_params()
-        self.service.save_table_str(params)
-
-    def _is_valid_date_format(self, date_str):
-        pattern = r"^(0[1-9]|[12][0-9]|3[01])\.(0[1-9]|1[0-2])\.\d{4}$"
-        return bool(re.match(pattern, date_str))
-
-    def _handle_num_keys(self, values: dict) -> dict:
-        numeric_keys = ('qtty', 'qtty_plan', 'd_qtty', 'FillingSeriesScreen_qtty')
-        for key in numeric_keys:
-            if key in values and re.match("^\d+\.?\d*$", str(values[key])):
-                values[key] = self._format_quantity(float(values[key]))
-            else:
-                values[key] = '0'
-        return values
-
-    def _format_quantity(self, qtty):
-        if float(qtty) % 1 == 0:
-            return int(float(qtty))
-        else:
-            return qtty
+        listeners = {
+            'btn_save': self._btn_save_handler,
+            'ON_BACK_PRESSED': self._back_screen,
+            'BACK_BUTTON': self._back_screen,
+        }
+        if self.listener in listeners:
+            listeners[self.listener]()
 
     def _btn_save_handler(self):
-        if self.screen_data.get('id'):
-            self._save_data()
+        """
+        Обработчик проверяет валидность данных и формирует структуру для записи в БД
+        подразумевается что запись в БД происходит в родительском классе
+        """
+        data_to_save = {**self.screen_data}
+        data_to_save.update(
+            {
+                'qtty': self._get_qty(),
+                'name': self.hash_map.get('name'),
+                'best_before': self._format_date(self.hash_map.get('best_before'), default=''),
+                'number': self.hash_map.get('number'),
+                'production_date': self._format_date(self.hash_map.get('production_date'), default=''),
+            }
+        )
+
+        if self._check_save_data(data_to_save):
+            self.data_to_save = db_models.SeriesItemModel(**data_to_save).dict()
+            if self.parent_screen:
+                self.parent_screen.series_item_data_to_save = self.data_to_save
             self._back_screen()
+
+    def _get_qty(self):
+        return int(float(self.hash_map.get('FillingSeriesScreen_qtty')) or 0)
+
+    def _check_save_data(self, data):
+        series_number = data['number']
+
+        if not data['name']:
+            data['name'] = series_number
+
+        if not bool(data['number'].strip()):
+            self.hash_map.playsound('warning')
+            self.toast('Не заполнен номер серии')
+            return False
+
+        if data['qtty'] <= 0:
+            self.hash_map.playsound('warning')
+            self.toast('Введите количество')
+            return False
+
+        if self.is_new_item and data['number'] in self.series_barcode_data:
+            self.hash_map.playsound('warning')
+            self.toast(f'Серия с номером с таким номером уже есть в документе')
+            return False
+
+        return True
+
+    def _back_screen(self):
+        for k in self.hash_map_keys:
+            self.hash_map.remove(k)
+        super()._back_screen()
+
+    @staticmethod
+    def _format_date(date_str, default=''):
+        def _is_valid_date_format():
+            pattern = r"^(0[1-9]|[12][0-9]|3[01])\.(0[1-9]|1[0-2])\.\d{4}$"
+            return bool(re.match(pattern, date_str))
+
+        if _is_valid_date_format():
+            return date_str
         else:
-            if self._check_series_number():
-                self.hash_map.show_dialog('confirm_update_series', 'Серия с данным номером уже существует. Обновить данные?')
-            else:
-                params = self._get_params()
-                self._add_new_series(params)
-                self._back_screen()
+            return default
 
-    def _get_params(self):
-        common_params = {
-            'id_doc': self.hash_map.get('id_doc'),
-            'id_good': self.hash_map.get('id_good'),
-            'id_properties': self.hash_map.get('id_properties'),
-            'id_warehouse': self.hash_map.get('id_warehouse'),
-            'qtty': self.hash_map.get('FillingSeriesScreen_qtty'),
-            'name': self.hash_map.get('name'),
-            'best_before': self.hash_map.get('best_before') if self._is_valid_date_format(self.hash_map.get('best_before')) else None,
-            'number': self.hash_map.get('number'),
-            'production_date': self.hash_map.get('production_date') if self._is_valid_date_format(self.hash_map.get('production_date')) else None,
-            'id_cell': self.hash_map.get('id_cell'),
-            'cell': self.hash_map.get('id_cell')
-        }
 
-        if self.screen_data:
-            params = {
-                'id': int(self.screen_data.get('id', 0)),
-                'id_series': self.hash_map['id_series'],
-                **common_params
-            }
-            params['cell'] = common_params['id_cell']
-        else:
-            params = {
-                'barcode': self.hash_map.get('number'),
-                **common_params
-            }
+    @staticmethod
+    def _str_to_int(value: str) -> int:
+        try:
+            return int(float(value))
+        except ValueError:
+            return 0
 
-        return params
-
-    def _check_series_number(self) -> dict:
-        series_number = self.hash_map.get('number')
-        self.service.params = self._get_params()
-        if series_number:
-            values = self.service.get_series_by_barcode(series_number, {})
-            if values:
-                return {'id': values[0]['id'], 'id_series': values[0]['id_series']}
-        return None
-
-    def _add_new_series(self, params: dict):
-        series_number = params.get('number')
-        self.service.add_new_series_in_doc_series_table(series_number)
 
 # ^^^^^^^^^^^^^^^^^^^^^ Series ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
