@@ -6,7 +6,6 @@ from ru.travelfood.simple_ui import SimpleSQLProvider as sqlClass
 from ui_global import get_query_result, bulk_query
 from tiny_db_services import ScanningQueueService, LoggerService
 
-
 class DbService:
     def __init__(self):
         self.sql_text = ''
@@ -36,7 +35,6 @@ class DbService:
         if table_name:
             self.provider.table_name = table_name
         return self.provider.sql_query(q, params)
-
 
 class TimerService(DbService):
     def __int__(self):
@@ -125,7 +123,6 @@ class TimerService(DbService):
     def get_data_to_send(self):
         data = DocService().get_data_to_send() + AdrDocService().get_data_to_send()
         return data
-
 
 class BarcodeService(DbService):
     def __init__(self):
@@ -300,165 +297,6 @@ class DocService:
         self.is_barc_flow = is_barc_flow
         self.provider = SqlQueryProvider(self.docs_table_name, sql_class=sqlClass())
         self.logger_service = LoggerService()
-
-    def get_last_edited_goods(self, to_json=False):
-        query_docs = f'SELECT * FROM {self.docs_table_name} WHERE id_doc = ? and verified = 1'
-
-        query_goods = f'''
-        SELECT * FROM {self.docs_table_name}_table
-        WHERE id_doc = ? and sent = 0
-        '''
-
-        try:
-            res_docs = get_query_result(query_docs, (self.doc_id,), True)
-            res_goods = get_query_result(query_goods, (self.doc_id,), True)
-        except Exception as e:
-            raise e
-            # return {'Error': e.args[0]}
-
-        if not res_goods:
-            return None
-
-        return self.form_data_for_request(res_docs, res_goods, to_json)
-
-    def form_data_for_request(self, res_docs, res_goods, to_json):
-        for item in res_docs:
-            filtered_list = [d for d in res_goods if d['id_doc'] == item['id_doc']]
-            goods_table = f'{self.docs_table_name}_table'
-            item[goods_table] = filtered_list
-            if not self.isAdr:
-                item['RS_docs_barcodes'] = []
-                item['RS_barc_flow'] = []
-
-        if to_json:
-            return json.dumps(res_docs)
-        else:
-            return res_docs
-
-    def update_data_from_json(self, json_data):
-        try:
-            data = json.loads(json_data)
-        except:
-            data = json_data
-
-        if data.get(self.docs_table_name):
-            self.update_docs(data)
-        else:
-            self.update_nsi(data)
-
-    def update_docs(self, data):
-        doc_ids = ','.join([f'"{item.get("id_doc")}"' for item in data[self.docs_table_name]])
-
-        query = f'''
-            SELECT id_doc, verified
-            FROM {self.docs_table_name}
-            WHERE id_doc IN ({doc_ids})
-        '''
-        docs = {item['id_doc']: item['verified'] or False for item in
-                self._get_query_result(query_text=query, return_dict=True)}
-
-        queries = self.json_to_sqlite_query(data, docs)
-
-        for query in queries:
-            try:
-                self._get_query_result(query)
-            except Exception as e:
-                raise e
-
-        return docs
-
-    def update_nsi(self, data):
-        queries = self.json_to_sqlite_query(data)
-
-        for query in queries:
-            try:
-                self._get_query_result(query)
-            except Exception as e:
-                raise e
-
-    def update_sent_data(self, data):
-        if data:
-            for doc in data:
-                id_doc = doc['id_doc']
-                id_goods = ','.join([f'"{item.get("id_good")}"' for item in doc.get('RS_docs_table', [])])
-
-                query = f'''
-                    UPDATE {self.details_table_name}
-                    SET sent = 1
-                    WHERE id_doc = '{id_doc}' AND id_good IN ({id_goods})
-                    '''
-
-                self._get_query_result(query)
-
-            query = f'UPDATE {self.docs_table_name} SET sent=1 WHERE id_doc = "{self.doc_id}"'
-            self._get_query_result(query)
-
-    def json_to_sqlite_query(self, data: dict, docs=None):
-        if docs is None:
-            docs = {}
-
-        qlist = []
-        # Цикл по именам таблиц
-        table_list = (
-            'RS_doc_types', 'RS_goods', 'RS_properties', 'RS_units', 'RS_types_goods', 'RS_series', 'RS_countragents',
-            'RS_warehouses', 'RS_price_types', 'RS_cells', 'RS_barcodes', 'RS_prices', 'RS_doc_types', 'RS_docs',
-            'RS_docs_table', 'RS_docs_barcodes', 'RS_adr_docs', 'RS_adr_docs_table')  # ,, 'RS_barc_flow'
-        table_for_delete = ('RS_docs_table', 'RS_docs_barcodes, RS_barc_flow', 'RS_adr_docs_table')  # , 'RS_barc_flow'
-        doc_id_list = []
-        for table_name in table_list:
-            if not data.get(table_name):
-                continue
-
-            # Добавим в запросы удаление из базы строк тех документов, что мы загружаем
-            if table_name in table_for_delete:
-                query = f"DELETE FROM {table_name} WHERE id_doc in ({', '.join(doc_id_list)}) "
-                qlist.append(query)
-
-            column_names = data[table_name][0].keys()
-            if 'mark_code' in column_names:
-                query_col_names = list(column_names)
-                query_col_names.append('GTIN')
-                query_col_names.append('Series')
-                query_col_names.remove('mark_code')
-            else:
-                query_col_names = list(column_names)
-
-            if table_name in ('RS_docs', 'RS_adr_docs'):  #
-                query_col_names.append('verified')
-
-            query = f"REPLACE INTO {table_name} ({', '.join(query_col_names)}) VALUES "
-            values = []
-
-            for row in data[table_name]:
-                row_values = []
-                list_quoted_fields = ('name', 'full_name', "mark_code")
-                for col in query_col_names:
-                    if col in list_quoted_fields and "\"" in row[col]:
-                        row[col] = row[col].replace("\"", "\"\"")
-
-                    # Здесь устанавливаем флаг verified!!!
-                    if col == 'verified' and (table_name in ['RS_docs', 'RS_adr_docs']):
-                        row[col] = docs.get(row['id_doc'], 0)
-
-                    if row.get(col) is None:
-                        row[col] = ''
-
-                    if col == 'mark_code':  # Заменяем это поле на поля GTIN и Series
-                        barc_struct = self.parse_barcode(row[col])
-                        row_values.append(barc_struct['GTIN'])
-                        row_values.append(barc_struct['Series'])
-                    else:
-                        row_values.append(row[col])  # (f'"{row[col]}"')
-
-                    if col == 'id_doc' and (table_name in ['RS_docs', 'RS_adr_docs']):
-                        doc_id_list.append('"' + row[col] + '"')
-
-                formatted_val = [f'"{x}"' if isinstance(x, str) else str(x) for x in row_values]
-                values.append(f"({', '.join(formatted_val)})")
-            query += ", ".join(values)
-            qlist.append(query)
-
-        return qlist
 
     def get_all_articles_in_document(self) -> List[str]:
         query = ('SELECT DISTINCT RS_goods.art as art'
@@ -816,23 +654,6 @@ class DocService:
         res = self._get_query_result(query, args, return_dict=True)
         return res[0]['rows_qtty']
 
-
-    def parse_barcode(self, val):
-        if len(val) < 21:
-            return {'GTIN': '', 'Series': ''}
-
-        val.replace('(01)', '01')
-        val.replace('(21)', '21')
-
-        if val[:2] == '01':
-            GTIN = val[2:16]
-            Series = val[18:]
-        else:
-            GTIN = val[:14]
-            Series = val[14:]
-
-        return {'GTIN': GTIN, 'Series': Series}
-
     def clear_barcode_data(self, id_doc):
         query_text = ('Update RS_docs_barcodes Set approved = 0 Where id_doc=:id_doc',
                       'Delete From RS_docs_barcodes Where  id_doc=:id_doc And is_plan = 0',
@@ -881,27 +702,6 @@ class DocService:
         if res:
             return res[0].get('docs_count', 0)
         return 0
-
-    def get_existing_docs(self):
-        query_text = f"SELECT doc_n,doc_type FROM {self.docs_table_name}"
-        res = get_query_result(query_text)
-        return res
-
-    def write_error_on_log(self, error_text, **kwargs):
-        self.logger_service.write_to_log(error_text, **kwargs)
-
-    def get_docs_and_goods_for_upload(self):
-
-        query_docs = f'''SELECT * FROM {self.docs_table_name} WHERE verified = 1  and (sent <> 1 or sent is null)'''
-        query_goods = f'''SELECT * FROM {self.details_table_name} WHERE (sent = 0 OR sent is Null)'''
-        try:
-            res_docs = get_query_result(query_docs, None, True)
-            res_goods = get_query_result(query_goods, None, True)
-        except Exception as e:
-            raise e
-        if not res_goods:
-            return None
-        return self.form_data_for_request(res_docs, res_goods, False)
 
     def get_data_to_send(self, id_doc=''):
         data = []
@@ -991,11 +791,6 @@ class DocService:
         qtext = f'UPDATE RS_docs_table SET sent = 1  WHERE id_doc in ({doc_in_str}) '
         get_query_result(qtext)
 
-    @staticmethod
-    def update_rs_docs_table_sent_status(table_string_id: str):
-        qtext = f'UPDATE RS_docs_table SET sent = 0  WHERE id in ({table_string_id}) '
-        get_query_result(qtext)
-
     def set_doc_status_to_upload(self, doc_id):
         qtext = f"UPDATE {self.docs_table_name} SET sent = 0, verified = 0  WHERE id_doc = '{doc_id}'"
         get_query_result(qtext)
@@ -1003,43 +798,6 @@ class DocService:
     def update_doc_table_row(self, row_id, data):
         self.provider.table_name = self.details_table_name
         self.provider.update(data=data, _filter={'id': row_id})
-
-    def _sql_exec(self, q, params, table_name=''):
-        if table_name:
-            self.provider.table_name = table_name
-        if isinstance(params, str):
-            self.provider.sql_exec(q, params)
-        else:
-            self.provider.sql_exec_many(q, params)
-
-    def _sql_query(self, q, params, table_name=''):
-        if table_name:
-            self.provider.table_name = table_name
-        return self.provider.sql_query(q, params)
-    
-    def get_doc_rows_count(self, id_doc) -> dict:
-        result = {}  
-        
-        if id_doc:  
-            q = 'SELECT count(id_doc) as doc_rows FROM RS_docs_table WHERE id_doc=?'
-            res = self.provider.sql_query(q, str(id_doc))  
-            
-            if res and 'doc_rows' in res[0]: 
-                result = {'doc_rows': res[0]['doc_rows']}
-                
-        return result  
-
-    def get_barcode_data(self, barcode) -> dict:
-        result = {}  
-
-        if barcode:  
-            q = 'SELECT * FROM RS_barcodes WHERE barcode=?'
-            res = self.provider.sql_query(q, str(barcode)) 
-            
-            if res:  
-                result = res[0] if res else {}
-
-        return result    
 
     def mark_verified(self, value=1):
         self.provider.table_name = self.docs_table_name
@@ -1132,6 +890,24 @@ class DocService:
         '''
         res = self._get_query_result(q, return_dict=True)
         return res[0] if res else None
+
+    def write_error_on_log(self, error_text, **kwargs):
+        self.logger_service.write_to_log(error_text, **kwargs)
+
+    def _sql_exec(self, q, params, table_name=''):
+        if table_name:
+            self.provider.table_name = table_name
+        if isinstance(params, str):
+            self.provider.sql_exec(q, params)
+        else:
+            self.provider.sql_exec_many(q, params)
+
+    def _sql_query(self, q, params, table_name=''):
+        if table_name:
+            self.provider.table_name = table_name
+        return self.provider.sql_query(q, params)
+
+
 
 class SeriesService(DbService):
     doc_basic_table_name = 'RS_docs_table'
@@ -1275,7 +1051,6 @@ class SeriesService(DbService):
         res = get_query_result(q, kwargs, return_dict=True)
         return res[0]['total'] if res else 0
 
-
 class AdrSeriesService(SeriesService):
     def get_screen_data(self, _id) -> dict:
 
@@ -1324,7 +1099,6 @@ class AdrSeriesService(SeriesService):
             '''
         get_query_result(q)
 
-
 class SelectItemService(DbService):
     def __init__(self, table_name):
         super().__init__()
@@ -1333,7 +1107,6 @@ class SelectItemService(DbService):
     def get_select_data(self, **cond) -> list:
         self.provider.table_name = self.table_name
         return self.provider.select(cond)
-
 
 class AdrDocService(DocService):
     def __init__(self, id_doc='', cur_cell='', table_type='in'):
@@ -1720,7 +1493,6 @@ class FlowDocService(DocService):
         self.provider.table_name = self.docs_table_name
         self.provider.update({'is_barc_flow': '1'}, {'id_doc': self.doc_id})
 
-
 class GoodsService(DbService):
     def __init__(self, item_id=''):
         super().__init__()
@@ -1858,7 +1630,6 @@ class GoodsService(DbService):
         self.provider.table_name = table_name
         return self._sql_query(query_text, '')
 
-
 class DbCreator(DbService):
     def __init__(self):
         super().__init__()
@@ -1889,7 +1660,6 @@ class DbCreator(DbService):
         tables = self._sql_query(q)
 
         return [table['name'] for table in tables]
-
 
 class UniversalCardsService(DbService):
     def __init__(self):
