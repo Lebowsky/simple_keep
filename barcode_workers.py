@@ -176,7 +176,7 @@ class BarcodeWorker:
             self._set_process_result_info('success_barcode')
 
     def _use_mark(self):
-        return rs_settings.get('use_mark') == 'true' and self.barcode_data['use_mark']
+        return rs_settings.get('use_mark') == 'true' and self.barcode_data.get('use_mark', False)
 
     def _set_process_result_info(self, info_key):
         ratio = getattr(self.barcode_data, 'ratio', 0)
