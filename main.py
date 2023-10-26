@@ -58,39 +58,39 @@ def on_close_app(hash_map):
 # =============== Documents =================
 @HashMap()
 def flow_docs_on_start(hash_map: HashMap):
-    screen = sm_barc_flow.FlowDocScreen(hash_map, rs_settings)
+    screen = create_screen(hash_map, sm_barc_flow.FlowDocScreen)
     screen.on_start()
 
 
 @HashMap()
 def flow_docs_on_select(hash_map: HashMap):
-    screen = sm_barc_flow.FlowDocScreen(hash_map, rs_settings)
+    screen = create_screen(hash_map, sm_barc_flow.FlowDocScreen)
     screen.on_input()
 
 
 @HashMap()
 def flow_tiles_on_start(hash_map: HashMap):
-    screen = sm_barc_flow.FlowTilesScreen(hash_map, rs_settings)
+    screen = create_screen(hash_map, sm_barc_flow.FlowTilesScreen)
     screen.on_start()
 
 
 @HashMap()
 def flow_tiles_on_select(hash_map: HashMap):
-    screen = sm_barc_flow.FlowTilesScreen(hash_map, rs_settings)
+    screen = create_screen(hash_map, sm_barc_flow.FlowTilesScreen)
     screen.on_input()
 
 
 @HashMap()
 def barcode_flow_on_start(hash_map: HashMap):
     """Процесс: Сбор ШК. Экран: ПотокШтрихкодовДокумента"""
-    screen = sm_barc_flow.FlowDocDetailsScreen(hash_map, rs_settings)
+    screen = create_screen(hash_map, sm_barc_flow.FlowDocDetailsScreen)
     screen.on_start()
 
 
 @HashMap()
 def barcode_flow_listener(hash_map: HashMap):
     """Процесс: Сбор ШК. Экран: ПотокШтрихкодовДокумента"""
-    screen = sm_barc_flow.FlowDocDetailsScreen(hash_map, rs_settings)
+    screen = create_screen(hash_map, sm_barc_flow.FlowDocDetailsScreen)
     screen.on_input()
 
 
