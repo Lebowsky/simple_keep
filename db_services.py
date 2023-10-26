@@ -82,7 +82,8 @@ class TimerService(DbService):
                 )
             data['RS_docs_barcodes'] = docs_barcodes
 
-    def parse_barcode(self, val):
+    @staticmethod
+    def parse_barcode(val):
         if len(val) < 21:
             return {'GTIN': '', 'Series': ''}
 
@@ -120,7 +121,8 @@ class TimerService(DbService):
 
         return loaded_documents
 
-    def get_data_to_send(self):
+    @staticmethod
+    def get_data_to_send():
         data = DocService().get_data_to_send() + AdrDocService().get_data_to_send()
         return data
 
@@ -283,6 +285,9 @@ class BarcodeService(DbService):
         provider = SqlQueryProvider(table_name='RS_docs_table')
         provider.update(data=table_line)
 
+class DocListService(DbService):
+    def __init__(self):
+        super().__init__()
 
 class DocService:
     def __init__(self, doc_id='', is_group_scan=False, is_barc_flow=False):
@@ -305,10 +310,6 @@ class DocService:
                  ' WHERE RS_docs_table.id_doc = ?')
         goods = self.provider.sql_query(query, self.doc_id)
         return [good['art'] for good in goods] if goods is not None else []
-
-    @staticmethod
-    def _get_query_result(query_text, args=None, return_dict=False):
-        return get_query_result(query_text, args=args, return_dict=return_dict)
 
     def set_doc_value(self, key, value):
         query = f'''
@@ -426,22 +427,22 @@ class DocService:
         return result
 
     def delete_doc(self, id_doc):
-        queryes = (
+        queries = (
         'DELETE FROM RS_barc_flow WHERE id_doc = ?',
         'DELETE FROM RS_docs_table WHERE id_doc = ?',
         'DELETE FROM RS_docs_series WHERE id_doc = ?',
         'DELETE FROM RS_docs_barcodes WHERE id_doc = ?',
         f'DELETE FROM {self.docs_table_name} WHERE id_doc = ?',
         )
-        for query in queryes:
+        for query in queries:
             self._get_query_result(query, (id_doc,))
 
     def delete_adr_doc(self, id_doc):
-        queryes = (
+        queries = (
         'DELETE FROM RS_adr_docs_table WHERE id_doc = ?',
         'DELETE FROM RS_adr_docs WHERE id_doc = ?',
         )
-        for query in queryes:
+        for query in queries:
             self._get_query_result(query, (id_doc,))
 
     def delete_old_docs(self, days: int) -> list:
@@ -782,18 +783,18 @@ class DocService:
 
     @staticmethod
     def update_uploaded_docs_status(doc_in_str):
-        qtext = f'UPDATE RS_docs SET sent = 1  WHERE id_doc in ({doc_in_str}) '
-        get_query_result(qtext)
+        query_text = f'UPDATE RS_docs SET sent = 1  WHERE id_doc in ({doc_in_str}) '
+        get_query_result(query_text)
 
-        qtext = f'UPDATE RS_adr_docs SET sent = 1  WHERE id_doc in ({doc_in_str}) '
-        get_query_result(qtext)
+        query_text = f'UPDATE RS_adr_docs SET sent = 1  WHERE id_doc in ({doc_in_str}) '
+        get_query_result(query_text)
 
-        qtext = f'UPDATE RS_docs_table SET sent = 1  WHERE id_doc in ({doc_in_str}) '
-        get_query_result(qtext)
+        query_text = f'UPDATE RS_docs_table SET sent = 1  WHERE id_doc in ({doc_in_str}) '
+        get_query_result(query_text)
 
     def set_doc_status_to_upload(self, doc_id):
-        qtext = f"UPDATE {self.docs_table_name} SET sent = 0, verified = 0  WHERE id_doc = '{doc_id}'"
-        get_query_result(qtext)
+        query_text = f"UPDATE {self.docs_table_name} SET sent = 0, verified = 0  WHERE id_doc = '{doc_id}'"
+        get_query_result(query_text)
 
     def update_doc_table_row(self, row_id, data):
         self.provider.table_name = self.details_table_name
@@ -907,7 +908,9 @@ class DocService:
             self.provider.table_name = table_name
         return self.provider.sql_query(q, params)
 
-
+    @staticmethod
+    def _get_query_result(query_text, args=None, return_dict=False):
+        return get_query_result(query_text, args=args, return_dict=return_dict)
 
 class SeriesService(DbService):
     doc_basic_table_name = 'RS_docs_table'
@@ -1042,7 +1045,8 @@ class SeriesService(DbService):
             '''
         get_query_result(q)
 
-    def get_total_qtty(self, **kwargs):
+    @staticmethod
+    def get_total_qtty(**kwargs):
         q = '''
             SELECT SUM (qtty) AS total
             FROM RS_docs_series
@@ -1364,16 +1368,13 @@ class AdrDocService(DocService):
 class FlowDocService(DocService):
 
     def __init__(self, doc_id=''):
+        super().__init__(is_barc_flow=True)
         self.doc_id = doc_id
-        self.docs_table_name = 'RS_docs'
-        self.details_table_name = 'RS_docs_table'
         self.isAdr = False
         self.sql_text = ''
         self.sql_params = None
         self.debug = False
         self.provider = SqlQueryProvider(self.docs_table_name, sql_class=sqlClass())
-        self.is_group_scan = False
-        self.is_barc_flow = True
 
     def get_doc_view_data(self, doc_type='', doc_status='') -> list:
         fields = [
@@ -1485,8 +1486,8 @@ class FlowDocService(DocService):
     def add_barcode_to_database(self, barcode: str):
         if not barcode:
             return
-        qtext = '''INSERT INTO RS_barc_flow (id_doc, barcode) VALUES (?,?)'''
-        self.provider.sql_exec(qtext, ','.join([self.doc_id, barcode]))
+        query_text = '''INSERT INTO RS_barc_flow (id_doc, barcode) VALUES (?,?)'''
+        self.provider.sql_exec(query_text, ','.join([self.doc_id, barcode]))
         self.set_doc_status_to_upload(self.doc_id)
 
     def set_barc_flow_status(self):
@@ -1498,10 +1499,6 @@ class GoodsService(DbService):
         super().__init__()
         self.item_id = item_id
         self.provider = SqlQueryProvider(table_name="RS_goods", sql_class=sqlClass())
-
-    def get_type_name_by_id(self, id):
-        query_text = f"SELECT name FROM RS_types_goods WHERE id ='{id}'"
-        return self._get_query_result(query_text, return_dict=True)
 
     def get_goods_list_data(self, goods_type='', item_id='') -> list:
         query_text = f"""
@@ -1619,22 +1616,13 @@ class GoodsService(DbService):
         self.provider.table_name = table_name
         return self.provider.select({field: field_value})
 
-    def get_query_with_arg_list(self, table_name, value, field, table_string_id):
-        query_text = f"""SELECT ifnull({value}, '-') as {value} FROM {table_name} WHERE {field} in ({table_string_id})"""
-        # self.provider.table_name = table_name
-        # return self._sql_query(query_text, table_name=table_name, params='')
-        return query_text
-
-    def get_select_data(self, table_name):
-        query_text = f'SELECT * FROM {table_name}'
-        self.provider.table_name = table_name
-        return self._sql_query(query_text, '')
 
 class DbCreator(DbService):
     def __init__(self):
         super().__init__()
 
-    def create_tables(self):
+    @staticmethod
+    def create_tables():
         import database_init_queryes
         # Создаем таблицы если их нет
         schema = database_init_queryes.database_shema()
@@ -1660,78 +1648,6 @@ class DbCreator(DbService):
         tables = self._sql_query(q)
 
         return [table['name'] for table in tables]
-
-class UniversalCardsService(DbService):
-    def __init__(self):
-        super().__init__()
-        self.table_name: str
-        self.filter_fields = []
-        self.filter_value = ''
-        self.exclude_list = []
-        self.no_label = False
-        self.table_names = self._table_names_dict()
-
-    def get_views_data(self, table_name: str):
-        fields = self._get_fields(table_name)
-        fields_links = {}
-        q_fields = []
-        q_joins = []
-        q_conditions = ['true']
-
-        for field in fields:
-            if field in self.exclude_list:
-                continue
-
-            q_fields.append('{}.{} AS {}'.format(
-                table_name, field, 'key' if field == 'id' else field))
-
-            link_table_name = self.table_names.get(field)
-            if link_table_name:
-                q_fields.append(f'{link_table_name}.name as {link_table_name}_name')
-                q_joins.append('LEFT JOIN {} ON {}.id = {}.{}'.format(
-                    link_table_name, link_table_name, table_name, field
-                ))
-
-                fields_links[field] = f'{link_table_name}_name'
-            else:
-                fields_links[field] = 'key' if field == 'id' else field
-
-        if self.filter_value:
-            q_conditions = [f"{table_name}.{field} LIKE '%{self.filter_value}%'" for field in self.filter_fields]
-
-        q = '''SELECT {} 
-                FROM {}
-                {}
-                WHERE {}
-        '''. format(','.join(q_fields), table_name, ' '.join(q_joins), ' OR '.join(q_conditions))
-
-        return fields_links, self._sql_query(q)
-
-    def _get_fields(self, table_name) -> List[str]:
-        """
-        :param table_name:
-        :return list column names:
-        """
-        q = f'PRAGMA table_info({table_name})'
-        res = self._sql_query(q, table_name=table_name)
-
-        return [row['name'] for row in res]
-
-    def _table_names_dict(self):
-        return {
-            'id_good': 'RS_goods',
-            'type_good': 'RS_types_goods',
-            'unit': 'RS_units',
-            'id_property': 'RS_properties',
-            'id_series': 'RS_series',
-            'id_unit': 'RS_units',
-            'id_countragents': 'RS_countragents',
-            'id_warehouse': 'RS_warehouses',
-            'id_doc': 'RS_docs',
-            'id_cell': 'RS_cells',
-            'id_owner': 'RS_goods',
-            'id_price_types': 'RS_price_types'
-        }
 
 class SqlQueryProvider:
     def __init__(self, table_name='', sql_class=sqlClass(), debug=False):
