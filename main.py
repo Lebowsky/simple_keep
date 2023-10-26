@@ -1,4 +1,5 @@
 import sm_adr_docs
+import sm_services
 import sm_barc_flow
 from java import jclass
 from printing_factory import PrintService
@@ -96,43 +97,43 @@ def barcode_flow_listener(hash_map: HashMap):
 
 @HashMap()
 def article_cv_on_object_detected(hash_map: HashMap):
-    """Процесс: Распознавание артикулов. Шаг: Новый шаг ActiveCV."""
-    screen = ui_models.ActiveCVArticleRecognition(hash_map, rs_settings)
+    """Процесс: OcrArticleRecognition. Шаг: NextStepActiveCV."""
+    screen = sm_services.ActiveCVArticleRecognition(hash_map, rs_settings)
     screen.on_object_detected()
 
 
 @HashMap()
 def article_cv_on_input(hash_map: HashMap):
-    """Процесс: Распознавание артикулов. Шаг: Новый шаг ActiveCV."""
-    screen = ui_models.ActiveCVArticleRecognition(hash_map, rs_settings)
+    """Процесс: OcrArticleRecognition. Шаг: NextStepActiveCV."""
+    screen = sm_services.ActiveCVArticleRecognition(hash_map, rs_settings)
     screen.on_input()
 
 
 @HashMap()
 def article_cv_on_start(hash_map: HashMap):
-    """Процесс: Распознавание артикулов. Шаг: Новый шаг ActiveCV."""
-    screen = ui_models.ActiveCVArticleRecognition(hash_map, rs_settings)
+    """Процесс: OcrArticleRecognition. Шаг: NextStepActiveCV."""
+    screen = sm_services.ActiveCVArticleRecognition(hash_map, rs_settings)
     screen.on_start()
 
 
 @HashMap()
 def serial_number_ocr_settings_on_start(hash_map: HashMap):
     """Процесс: OcrTextRecognition. Экран: SerialNumberOCRSettings."""
-    screen = ui_models.SerialNumberOCRSettings(hash_map, rs_settings)
+    screen = sm_services.SerialNumberOCRSettings(hash_map, rs_settings)
     screen.on_start()
 
 
 @HashMap()
 def serial_number_ocr_settings_on_input(hash_map: HashMap):
     """Процесс: OcrTextRecognition. Экран: SerialNumberOCRSettings."""
-    screen = ui_models.SerialNumberOCRSettings(hash_map, rs_settings)
+    screen = sm_services.SerialNumberOCRSettings(hash_map, rs_settings)
     screen.on_input()
 
 
 @HashMap()
 def serial_key_recognition_ocr(hash_map: HashMap):
     """Процесс: OcrTextRecognition. Экран: SerialNumberOCRSettings."""
-    ui_models.SerialNumberOCRSettings.serial_key_recognition_ocr(hash_map)
+    sm_services.SerialNumberOCRSettings.serial_key_recognition_ocr(hash_map)
 
 
 @HashMap()
@@ -509,7 +510,7 @@ def test_barcode_listener(hash_map: HashMap):
 @HashMap()
 def test_barcode_on_start(hash_map: HashMap):
     screen: ui_models.BarcodeTestScreen = create_screen(hash_map, ui_models.BarcodeTestScreen)
-    screen.on_start()  
+    screen.on_start()
 
 
 @HashMap()
@@ -568,124 +569,157 @@ def documents_settings_on_start(hash_map):
 
 @HashMap()
 def print_settings_on_input(hash_map):
-    """Процесс: Печать. Экран: Настройки печати"""
-    screen = ui_models.PrintSettings(hash_map, rs_settings)
+    """Процесс: Print. Экран: PrintSettings"""
+    screen = sm_services.PrintSettings(hash_map)
     screen.on_input()
 
 
 @HashMap()
 def print_settings_on_start(hash_map):
-    """Процесс: Печать. Экран: Настройки печати"""
-    screen = ui_models.PrintSettings(hash_map, rs_settings)
+    """Процесс: Print. Экран: PrintSettings"""
+    screen = sm_services.PrintSettings(hash_map)
     screen.on_start()
 
 
 @HashMap()
 def template_list_on_start(hash_map):
-    """Процесс: Печать. Экран: Список шаблонов"""
-    screen: ui_models.TemplatesList = ui_models.TemplatesList(hash_map, rs_settings)
+    """Процесс: Print. Экран: TemplatesList"""
+    screen = sm_services.TemplatesList(hash_map)
     screen.on_start()
 
 
 @HashMap()
 def template_list_on_input(hash_map):
-    """Процесс: Печать. Экран: Список шаблонов"""
-    screen: ui_models.TemplatesList = ui_models.TemplatesList(hash_map, rs_settings)
+    """Процесс: Print. Экран: TemplatesList"""
+    screen = sm_services.TemplatesList(hash_map)
     screen.on_input()
 
 
 @HashMap()
-def html_view_on_start(hash_map):
-    """Процесс: Печать. Экран: Результат"""
-    screen = ui_models.HtmlView(hash_map, rs_settings)
+def print_templates_1c_parameters_on_start(hash_map):
+    """Процесс: Print. Экран: PrintTemplates1CParameters"""
+    screen = sm_services.PrintTemplates1CParameters(hash_map)
     screen.on_start()
 
 
 @HashMap()
-def html_view_on_input(hash_map):
-    """Процесс: Печать. Экран: Результат"""
-    screen = ui_models.HtmlView(hash_map, rs_settings)
+def print_templates_1c_parameters_on_input(hash_map):
+    """Процесс: Print. Экран: PrintTemplates1CParameters"""
+    screen = sm_services.PrintTemplates1CParameters(hash_map)
     screen.on_input()
 
 
 @HashMap()
-def print_bluetooth_settings_on_input(hash_map):
-    """Процесс: Печать. Экран: Настройки печати Bluetooth"""
-    screen = ui_models.PrintBluetoothSettings(hash_map, rs_settings)
+def print_templates_1c_parameters_post_exec(hash_map):
+    screen = sm_services.PrintTemplates1CParameters(hash_map)
+    screen.print_templates_1c_parameters_post_exec()
+
+
+@HashMap()
+def print_bluetooth_on_input(hash_map):
+    """Процесс: Print. Экран: PrintBluetooth"""
+    screen = sm_services.PrintBluetooth(hash_map)
     screen.on_input()
 
 
 @HashMap()
-def print_bluetooth_settings_on_start(hash_map):
-    """Процесс: Печать. Экран: Настройки печати Bluetooth"""
-    screen = ui_models.PrintBluetoothSettings(hash_map, rs_settings)
+def print_bluetooth_on_start(hash_map):
+    """Процесс: Print. Экран: PrintBluetooth"""
+    screen = sm_services.PrintBluetooth(hash_map)
+    screen.on_start()
+
+
+@HashMap()
+def print_template_zpl_on_input(hash_map):
+    """Процесс: Print. Экран: PrintTemplatesZPL"""
+    screen = sm_services.PrintTemplatesZPL(hash_map)
+    screen.on_input()
+
+
+@HashMap()
+def print_template_zpl_on_start(hash_map):
+    """Процесс: Print. Экран: PrintTemplatesZPL"""
+    screen = sm_services.PrintTemplatesZPL(hash_map)
+    screen.on_start()
+
+
+@HashMap()
+def print_template_zpl_constructor_on_input(hash_map):
+    """Процесс: Print. Экран: PrintTemplatesZPLConstructor"""
+    screen = sm_services.PrintTemplatesZPLConstructor(hash_map)
+    screen.on_input()
+
+
+@HashMap()
+def print_template_zpl_constructor_on_start(hash_map):
+    """Процесс: Print. Экран: PrintTemplatesZPLConstructor"""
+    screen = sm_services.PrintTemplatesZPLConstructor(hash_map)
     screen.on_start()
 
 
 @HashMap()
 def bluetooth_error(hash_map):
-    """Общий обработчик ошибки при печати через Bluetooth"""
-    PrintService.bluetooth_error(hash_map)
+    PrintService(hash_map).bluetooth_error()
 
 
 @HashMap()
-def print_wifi_settings_on_input(hash_map):
-    """Процесс: Печать. Экран: Настройки печати WiFi"""
-    screen = ui_models.PrintWiFiSettings(hash_map, rs_settings)
+def print_wifi_on_input(hash_map):
+    """Процесс: Print. Экран: PrintWiFi"""
+    screen = sm_services.PrintWiFi(hash_map)
     screen.on_input()
 
 
 @HashMap()
-def print_wifi_settings_on_start(hash_map):
-    """Процесс: Печать. Экран: Настройки печати WiFi"""
-    screen = ui_models.PrintWiFiSettings(hash_map, rs_settings)
+def print_wifi_on_start(hash_map):
+    """Процесс: Print. Экран: PrintWiFi"""
+    screen = sm_services.PrintWiFi(hash_map)
     screen.on_start()
 
 
 @HashMap()
 def print_wifi(hash_map):
     """Обработчик для печати через WiFi. Должен быть вызван асинхронно"""
-    PrintService.print_wifi(hash_map)
+    PrintService(hash_map).print_wifi()
 
 
 @HashMap()
 def wifi_error(hash_map):
     """Общий обработчик ошибки при печати через WiFi"""
-    PrintService.wifi_error(hash_map)
+    PrintService(hash_map).wifi_error()
 
 
 @HashMap()
-def print_label_templates_on_start(hash_map):
-    """Процесс: Печать. Экран: Настройки печати Шаблоны"""
-    screen = ui_models.PrintLabelTemplatesSettings(hash_map, rs_settings)
+def print_templates_1c_on_start(hash_map):
+    """Процесс: Print. Экран: PrintTemplates1C"""
+    screen = sm_services.PrintTemplates1C(hash_map)
     screen.on_start()
 
 
 @HashMap()
-def print_label_templates_on_input(hash_map):
-    """Процесс: Печать. Экран: Настройки печати Шаблоны"""
-    screen = ui_models.PrintLabelTemplatesSettings(hash_map, rs_settings)
+def print_templates_1c_on_input(hash_map):
+    """Процесс: Print. Экран: PrintTemplates1C"""
+    screen = sm_services.PrintTemplates1C(hash_map)
     screen.on_input()
 
 
 @HashMap()
-def print_label_template_size_on_input(hash_map):
-    """Процесс: Печать. Экран: Настройки печати Размеры"""
-    screen = ui_models.PrintTemplateSizeSettings(hash_map, rs_settings)
+def print_templates_1c_sizes_on_input(hash_map):
+    """Процесс: Print. Экран: PrintTemplates1CSizes"""
+    screen = sm_services.PrintTemplates1CSizes(hash_map)
     screen.on_input()
 
 
 @HashMap()
-def print_label_template_size_on_start(hash_map):
-    """Процесс: Печать. Экран: Настройки печати Размеры"""
-    screen = ui_models.PrintTemplateSizeSettings(hash_map, rs_settings)
+def print_templates_1c_sizes_on_start(hash_map):
+    """Процесс: Print. Экран: PrintTemplates1CSizes"""
+    screen = sm_services.PrintTemplates1CSizes(hash_map)
     screen.on_start()
 
 
 @HashMap()
 def print_post_execute(hash_map):
     """Срабатывает после вызова PrintService.print и печатает ценник"""
-    PrintService.print_post_execute(hash_map)
+    PrintService(hash_map).print_post_execute()
 
 # ^^^^^^^^^^^^^^^^^ Print ^^^^^^^^^^^^^^^^^
 
@@ -716,5 +750,3 @@ def debug_listener(hash_map, _files=None, _data=None):
     screen.on_input()
 
 # ^^^^^^^^^^^^^^^^^ Debug ^^^^^^^^^^^^^^^^^
-
-
