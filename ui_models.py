@@ -2874,11 +2874,11 @@ class BaseGoodSelect(Screen):
         self._set_delta(self._get_float_value(self.hash_map['delta']))
 
     def _set_visibility(self):
-        allow_fact_input = self.allow_fact_input and not int(self.screen_data['use_series'])
+        allow_fact_input = self.allow_fact_input and not int(self.use_series)
         self.hash_map.put("Show_fact_qtty_input", '1' if allow_fact_input else '-1')
         self.hash_map.put("Show_fact_qtty_note", '-1' if allow_fact_input else '1')
 
-        self.hash_map['Show_btn_to_series'] = int(self.screen_data['use_series'])
+        self.hash_map['Show_btn_to_series'] = int(self.use_series)
 
 
 class GoodsSelectScreen(BaseGoodSelect):
@@ -4488,6 +4488,7 @@ class SeriesSelectScreen(Screen):
         self.series_item_data_to_save = None
         self.series_count = 0
         self.is_group_scan = kwargs.get('is_group_scan', False)
+        self.use_series = False
 
     def init_screen(self):
         if self.db_service is None:
@@ -4496,6 +4497,7 @@ class SeriesSelectScreen(Screen):
 
         self.screen_data = self.db_service.get_screen_data(self.doc_row_id)
         self.total_qty = self.screen_data['qtty']
+        self.use_series = bool(self.screen_data['use_series'])
         self._update_total_qty()
         self._update_hash_map_keys()
         self._update_series_cards()
@@ -4544,6 +4546,7 @@ class SeriesSelectScreen(Screen):
                 row['number']: row for row in series_data if row['number']
             }
             self.series_count = len(series_data)
+            self.use_series =  bool(self.series_count) or self.use_series
 
             doc_cards = self._get_doc_cards_view(self._prepare_table_data(series_data))
             self.hash_map['series_cards'] = doc_cards.to_json()
@@ -4559,7 +4562,7 @@ class SeriesSelectScreen(Screen):
 
     def _add_new_series(self):
         series_item_data = self._get_series_item_data_by_number()
-        series_item_data['qtty'] = 1 if self.series_count else self.total_qty
+        series_item_data['qtty'] = 1 if self.series_count else max(self.total_qty, 1)
         self._open_series_item_screen(series_item_data)
 
     def _barcode_listener(self):
@@ -4587,7 +4590,7 @@ class SeriesSelectScreen(Screen):
         # при событии on_start данные должны сохраниться в БД
         """
 
-        series_item_qtty = 1 if self.series_count else max(self.total_qty, 0)
+        series_item_qtty = 1 if self.series_count else max(self.total_qty, 1)
         series_item_data = self._get_series_item_data_by_number(number)
         series_item_data['qtty'] += series_item_qtty
 
@@ -4618,11 +4621,13 @@ class SeriesSelectScreen(Screen):
             self._update_total_qty()
 
     def _update_total_qty(self):
-        series_total_qty = self.db_service.get_total_qtty(**self.screen_data)
-        if series_total_qty > 0 and series_total_qty != self.total_qty:
-            self.total_qty = series_total_qty
-            self.hash_map['qtty'] = self._format_quantity(self.total_qty)
-            self.db_service.update_total_qty(qty=self.total_qty, row_id=self.doc_row_id)
+        self.total_qty = self.db_service.get_total_qtty(**self.screen_data)
+        self.hash_map['qtty'] = self._format_quantity(self.total_qty)
+        self.db_service.update_total_qty(
+            qty=self.total_qty,
+            row_id=self.doc_row_id,
+            use_series=int(self.use_series)
+        )
 
     def _open_series_item_screen(self, series_item_data):
         screen = SeriesItem(
@@ -4645,7 +4650,7 @@ class SeriesSelectScreen(Screen):
         self._update_total_qty()
         if self.parent_screen:
             self.parent_screen.new_qty = self.total_qty
-            self.parent_screen.use_series = not self.parent_screen.use_series and self.series_count > 0
+            self.parent_screen.use_series = self.use_series
         self._finish_process()
 
     def _finish_process(self):

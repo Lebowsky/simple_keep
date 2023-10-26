@@ -918,6 +918,7 @@ class SeriesService(DbService):
             RS_docs_table.qtty_plan,
             RS_docs_table.price,
             RS_docs_table.id_cell AS cell_id,
+            RS_docs_table.use_series AS use_series,
             IFNULL(RS_docs.id_warehouse, '') AS warehouse_id,
             IFNULL(RS_goods.name, '') AS item_name,
             IFNULL(RS_goods.art, '') AS article,
@@ -960,7 +961,8 @@ class SeriesService(DbService):
 
             FROM RS_docs_series AS series
             JOIN RS_docs_table AS doc_details_table
-                ON series.id_good = doc_details_table.id_good 
+                ON series.id_doc = doc_details_table.id_doc 
+                AND series.id_good = doc_details_table.id_good 
                 AND series.id_properties = doc_details_table.id_properties
             WHERE doc_details_table.id = '{doc_row_id}'
         '''
@@ -1023,15 +1025,15 @@ class SeriesService(DbService):
         res = get_query_result(q, kwargs, True)
         return res[0]['series_count'] if res else 0
 
-    def update_total_qty(self, qty, row_id):
+    def update_total_qty(self, **kwargs):
         qtty_filed = 'd_qtty' if self.is_group_scan else 'qtty'
 
         q = f'''
             UPDATE RS_docs_table
-            SET {qtty_filed} = {qty}, use_series = 1
-            WHERE id = {row_id}
+            SET {qtty_filed} = :qty, use_series = :use_series
+            WHERE id = :row_id
             '''
-        get_query_result(q)
+        get_query_result(q, kwargs)
 
     @staticmethod
     def get_total_qtty(**kwargs):
@@ -1083,7 +1085,7 @@ class AdrSeriesService(SeriesService):
         else:
             return {}
 
-    def update_total_qty(self, qty, row_id):
+    def update_total_qty(self, qty, row_id, use_series):
         q = f'''
             UPDATE RS_adr_docs_table
             SET qtty = {qty}, use_series = 1
