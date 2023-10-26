@@ -6,6 +6,7 @@ import ui_models
 from printing_factory import PrintService
 from ui_utils import HashMap
 from barcode_workers import BarcodeAdrWorker
+import static_data
 
 
 class AdrDocsListScreen(ui_models.DocsListScreen):
@@ -465,8 +466,8 @@ class AdrDocDetailsScreen(ui_models.DocDetailsScreen):
                                                else record['qtty_plan'])
             else:
                 product_row['qtty_plan'] = "0"
-
-            product_row['_layout'] = self._get_doc_table_row_view()
+            use_series = bool(int(product_row.get('use_series', 0)))
+            product_row['_layout'] = self._get_doc_table_row_view(use_series)
             self._set_background_row_color(product_row)
 
             if self._added_goods_has_key(product_row['key']):
@@ -524,7 +525,28 @@ class AdrDocDetailsScreen(ui_models.DocDetailsScreen):
             widgets.LinearLayout(
                 widgets.LinearLayout(
                     widgets.LinearLayout(
-                        self.TextView('@good_name'),
+                        widgets.LinearLayout(
+                            widgets.LinearLayout(
+                                widgets.LinearLayout(
+                                    widgets.Picture(
+                                        Value=static_data.sn_icon_green if use_series else None,
+                                        width=16,
+                                        height=12,
+                                    ),
+                                    widgets.Picture(
+                                        Value=static_data.mark_green if use_mark else None,
+                                        width=16,
+                                        height=12,
+                                    ),
+                                    orientation='horizontal',
+                                    Padding = 8
+                                ),
+                                self.TextView('@good_name'),
+                                width='match_parent',
+                                orientation='horizontal',
+                            ),
+                            width='match_parent',
+                        ),
                         widgets.TextView(
                             Value='@good_info',
                             TextSize=15,
