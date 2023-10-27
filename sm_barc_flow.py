@@ -160,7 +160,7 @@ class FlowDocDetailsScreen(DocDetailsScreen):
             'btn_barcodes': self._show_dialog_input_barcode,
             'barcode': self._handle_barcode_camera,
             'modal_dialog_input_barcode': self._handle_dialog_input_barcode,
-            'confirm_verified': self._handle_confirm_verified,
+            'confirm_verified': self._handle_confirm_verified if self._is_result_positive('confirm_verified') else (lambda: None),
             'btn_doc_mark_verified': self._show_dialog_mark_verified,
             'ON_BACK_PRESSED': lambda: self.hash_map.show_screen("Документы"),
             'vision_cancel':  lambda: ocr_nosql_counter.destroy(),
