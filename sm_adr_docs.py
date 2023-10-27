@@ -261,7 +261,7 @@ class AdrDocDetailsScreen(ui_models.DocDetailsScreen):
     def on_input(self) -> None:
         listeners = {
             'CardsClick': self._cards_click,
-            'btn_barcodes': lambda: self.hash_map.show_dialog(listener="ВвестиШтрихкод"),
+            'btn_barcodes': self._show_dialog_input_barcode,
             'barcode': lambda: self._barcode_listener(self.hash_map.get('barcode_camera')),
             'btn_doc_mark_verified': self._doc_mark_verified,
             'btn_select_cell': self._select_cell,
@@ -274,7 +274,7 @@ class AdrDocDetailsScreen(ui_models.DocDetailsScreen):
 
         if self.listener in listeners:
             listeners[self.listener]()
-        elif self._is_result_positive('ВвестиШтрихкод'):
+        elif self._is_result_positive('modal_dialog_input_barcode'):
             self._barcode_listener(self.hash_map['fld_barcode'])
         super().on_input()
 
@@ -613,6 +613,13 @@ class AdrDocDetailsScreen(ui_models.DocDetailsScreen):
         else:
             self.hash_map['Show_btn_clear_cell'] = -1
 
+    def _show_dialog_input_barcode(self, title=''):
+        if self.current_cell_id:
+            title = 'Введите штрихкод товара или ячейки'
+        else:
+            title = 'Введите штрихкод ячейки'
+
+        super()._show_dialog_input_barcode(title)
 
 class AdrGoodsSelectScreen(ui_models.BaseGoodSelect):
     screen_name = 'Товар выбор'

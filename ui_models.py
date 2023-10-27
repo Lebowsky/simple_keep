@@ -1421,7 +1421,8 @@ class DocDetailsScreen(Screen):
         screen.parent_screen = self
         screen.show()
 
-    def _show_dialog_input_barcode(self):
+    def _show_dialog_input_barcode(self, title="Введите штрихкод товара"):
+        self.hash_map['fld_barcode'] = ''
         layout = '''{
             "type": "LinearLayout",
             "Variable": "",
@@ -1441,7 +1442,7 @@ class DocDetailsScreen(Screen):
             ]
         }'''
         self.hash_map.show_dialog('modal_dialog_input_barcode',
-                                  title="Введите штрихкод товара",
+                                  title=title,
                                   dialog_layout=layout)
 
     class TextView(widgets.TextView):
