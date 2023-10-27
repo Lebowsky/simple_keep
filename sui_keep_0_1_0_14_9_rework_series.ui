@@ -7354,11 +7354,6 @@
                                 ]
                             },
                             {
-                                "type": "Vision",
-                                "Value": "#f002",
-                                "Variable": "btn_series_ocr_serial_number"
-                            },
-                            {
                                 "type": "MenuItem",
                                 "Value": "Настройки шаблона",
                                 "Variable": "btn_ocr_serial_template_settings"
@@ -7382,6 +7377,11 @@
                                 "type": "barcode",
                                 "Value": "",
                                 "Variable": "barcode"
+                            },
+                            {
+                                "type": "Vision",
+                                "Value": "#f002",
+                                "Variable": "btn_series_ocr_serial_number"
                             }
                         ],
                         "Handlers": [
