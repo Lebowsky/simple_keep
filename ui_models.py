@@ -2020,7 +2020,7 @@ class BaseGoodSelect(Screen):
             'property_id': self.screen_data.get('property_id', ''),
             'unit_id': self.screen_data.get('unit_id', '')
         }
-        screen = BarcodeRegistrationScreen(self.hash_map, self.rs_settings, **init_data)
+        screen = BarcodeRegistrationScreen(self.hash_map, **init_data)
         screen.parent_screen = self
         screen.show_process_result(init_data)
 
@@ -2717,7 +2717,7 @@ class ItemCard(Screen):
             'property_id': '',
             'unit_id': ''
         }
-        BarcodeRegistrationScreen(self.hash_map, self.rs_settings, **init_data).show_process_result(init_data)
+        BarcodeRegistrationScreen(self.hash_map, **init_data).show_process_result(init_data)
 
     @staticmethod
     def _get_variants_cards_data(item_properties):
@@ -3975,7 +3975,7 @@ class SeriesSelectScreen(Screen):
             'property_id':  self.screen_data.get('id_properties', ''),
             'unit_id':  self.screen_data.get('id_unit', '')
         }
-        BarcodeRegistrationScreen(self.hash_map, self.rs_settings, **init_data).show_process_result(init_data)
+        BarcodeRegistrationScreen(self.hash_map, **init_data).show_process_result(init_data)
 
 
 class SeriesItem(Screen):
