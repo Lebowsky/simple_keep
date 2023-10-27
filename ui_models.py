@@ -2027,7 +2027,7 @@ class BaseGoodSelect(Screen):
     def _open_marks_screen(self):
         table_data = self._get_marks_data(self.doc_row_id)
         if not table_data:
-            self.toast('Нет марок!')
+            self.toast('У текущего товара нет марок в документе.')
             return
 
         screen_args = {
@@ -2247,8 +2247,8 @@ class BarcodeRegistrationScreen(Screen):
     screen_name = 'BarcodeRegistration'
     process_name = 'BarcodeRegistration'
 
-    def __init__(self, hash_map: HashMap, rs_settings, **kwargs):
-        super().__init__(hash_map, rs_settings)
+    def __init__(self, hash_map: HashMap, **kwargs):
+        super().__init__(hash_map)
         self.service = BarcodeService()
         self.goods_service = GoodsService()
         self.init_values = {
