@@ -1637,7 +1637,7 @@
                                 "listener": "",
                                 "action": "run",
                                 "type": "python",
-                                "method": "doc_details_on_start",
+                                "method": "group_doc_details_on_start",
                                 "postExecute": ""
                             },
                             {
@@ -1645,7 +1645,7 @@
                                 "listener": "",
                                 "action": "run",
                                 "type": "python",
-                                "method": "doc_details_listener",
+                                "method": "group_doc_details_listener",
                                 "postExecute": ""
                             }
                         ]
@@ -5180,7 +5180,7 @@
                                         "Variable": "",
                                         "height": "wrap_content",
                                         "width": "match_parent",
-                                        "weight": 0,
+                                        "weight": "0",
                                         "TextBold": true,
                                         "TextItalic": false,
                                         "TextSize": "22",
@@ -5191,7 +5191,7 @@
                                         "Variable": "use_hardware_scanner",
                                         "height": "wrap_content",
                                         "width": "wrap_content",
-                                        "weight": 0,
+                                        "weight": "0",
                                         "TextBold": false,
                                         "TextItalic": false,
                                         "type": "CheckBox"
@@ -5269,7 +5269,7 @@
                                                                 "Variable": "IntentScannerMessage",
                                                                 "height": "wrap_content",
                                                                 "width": "match_parent",
-                                                                "weight": 0,
+                                                                "weight": "0",
                                                                 "TextBold": false,
                                                                 "TextItalic": false,
                                                                 "type": "EditTextText"
@@ -5299,7 +5299,7 @@
                                                                 "Variable": "IntentScannerVariable",
                                                                 "height": "wrap_content",
                                                                 "width": "match_parent",
-                                                                "weight": 0,
+                                                                "weight": "0",
                                                                 "TextBold": false,
                                                                 "TextItalic": false,
                                                                 "type": "EditTextText"
