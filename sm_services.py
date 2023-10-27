@@ -166,23 +166,39 @@ class PrintSettings(PrintScreenMixin):
     def _manage_check_box_input(self):
         listener = self.listener
         if listener == 'check_box_bluetooth_print':
-            self.hash_map.put('check_box_wifi_print', 'false')
-            self.print_nosql.put('print_through', 'BT')
+            check_box_bluetooth = self.hash_map.get('check_box_bluetooth_print')
+            if check_box_bluetooth == 'false':
+                self.print_nosql.delete('print_through')
+            elif check_box_bluetooth == 'true':
+                self.hash_map.put('check_box_wifi_print', 'false')
+                self.print_nosql.put('print_through', 'BT')
 
         elif listener == 'check_box_wifi_print':
-            self.hash_map.put('check_box_bluetooth_print', 'false')
-            self.print_nosql.put('print_through', 'WiFi')
+            check_box_wifi = self.hash_map.get('check_box_wifi_print')
+            if check_box_wifi == 'false':
+                self.print_nosql.delete('print_through')
+            elif check_box_wifi == 'true':
+                self.hash_map.put('check_box_bluetooth_print', 'false')
+                self.print_nosql.put('print_through', 'WiFi')
 
         elif listener == 'check_box_template_1c':
-            self.hash_map.put('check_box_template_zpl', 'false')
-            self.print_nosql.put('print_template_type', '1C')
+            check_box_template_1c = self.hash_map.get('check_box_template_1c')
+            if check_box_template_1c == 'false':
+                self.print_nosql.delete('print_template_type')
+            elif check_box_template_1c == 'true':
+                self.hash_map.put('check_box_template_zpl', 'false')
+                self.print_nosql.put('print_template_type', '1C')
 
         elif listener == 'check_box_template_zpl':
-            self.hash_map.put('check_box_template_1c', 'false')
-            self.print_nosql.put('print_template_type', 'ZPL')
+            check_box_template_zpl = self.hash_map.get('check_box_template_zpl')
+            if check_box_template_zpl == 'false':
+                self.print_nosql.delete('print_template_type')
+            elif check_box_template_zpl == 'true':
+                self.hash_map.put('check_box_template_1c', 'false')
+                self.print_nosql.put('print_template_type', 'ZPL')
 
-        through = self.print_nosql.get('print_through')
-        template_type = self.print_nosql.get('print_template_type')
+        through = self.print_nosql.get('print_through') or 'Не указано'
+        template_type = self.print_nosql.get('print_template_type') or 'Не указано'
         self.hash_map.toast(f'Печать через: {through}. Шаблон печати: {template_type}')
         self._save_screen_values()
 
@@ -773,8 +789,6 @@ class PrintTemplates1CSizes(PrintScreenMixin):
     def _sent_to_print(self):
         self.hash_map.toast('Отправлено на печать')
         zpl_data = self.print_nosql.get('zpldata')
-        # self.hash_map.put('SaveExternalFile', json.dumps({'path': self.print_nosql.get('preview_template_image_temp'), 'default': '345345.png'}))
-        # return
         PrintService(self.hash_map).print_zpl(zpl_data)
 
     def _refresh_image(self):
@@ -793,7 +807,6 @@ class PrintTemplates1CSizes(PrintScreenMixin):
         preview_path = path + '_preview' + ext
         with open(preview_path, 'wb') as out_file:
             shutil.copyfileobj(response, out_file)
-        # resize_image(preview_path, ratio=2.2)
         self.print_nosql.put('preview_template_image_temp', preview_path)
         self.hash_map.put('print_image_sizes', '~' + preview_path)
 

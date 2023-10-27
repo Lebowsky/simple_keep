@@ -1772,9 +1772,13 @@ class DocumentsDocDetailScreen(DocDetailsScreen):
                 return
             if (noClass('articles_ocr_ncl').get('finded_articles')
                     and not self.rs_settings.get('allow_fact_input')):
-                self.service.update_doc_table_row(
-                    data={'sent': 0, 'd_qtty': float(selected_card_data['d_qtty']) + 1.0},
-                    row_id=int(selected_card_data['key']))
+                data = {
+                    'sent': 0,
+                    'd_qtty': float(selected_card_data['qtty']) + 1.0,
+                    'qtty': float(selected_card_data['qtty']) + 1.0,
+                }
+                row_id = int(selected_card_data['key'])
+                self.service.update_doc_table_row(data=data, row_id=row_id)
                 noClass('articles_ocr_ncl').delete('finded_articles')
                 self.hash_map.toast(
                     f'Артикул: {selected_card_data["art"]}\n'
@@ -2024,13 +2028,14 @@ class BaseGoodSelect(Screen):
             'property_id': self.screen_data.get('property_id', ''),
             'unit_id': self.screen_data.get('unit_id', '')
         }
-        screen = BarcodeRegistrationScreen(self.hash_map, self.rs_settings)
+        screen = BarcodeRegistrationScreen(self.hash_map, **init_data)
         screen.parent_screen = self
         screen.show_process_result(init_data)
 
     def _open_marks_screen(self):
         table_data = self._get_marks_data(self.doc_row_id)
         if not table_data:
+            self.toast('У текущего товара нет марок в документе.')
             return
 
         screen_args = {
@@ -2250,14 +2255,14 @@ class BarcodeRegistrationScreen(Screen):
     screen_name = 'BarcodeRegistration'
     process_name = 'BarcodeRegistration'
 
-    def __init__(self, hash_map: HashMap, rs_settings):
-        super().__init__(hash_map, rs_settings)
+    def __init__(self, hash_map: HashMap, **kwargs):
+        super().__init__(hash_map)
         self.service = BarcodeService()
         self.goods_service = GoodsService()
-        self.screen_values = {
-            'item_id': self.hash_map['item_id'],
-            'property_id': self.hash_map['property_id'] or '',
-            'unit_id': self.hash_map['unit_id'] or '',
+        self.init_values = {
+            'item_id': kwargs.get('item_id', ''),
+            'property_id': kwargs.get('property_id', ''),
+            'unit_id': kwargs.get('unit_id', ''),
         }
         self.title = 'Регистрация штрихкода'
         self.db_tables_matching = {
@@ -2270,8 +2275,8 @@ class BarcodeRegistrationScreen(Screen):
         self.hash_map_keys = ['scanned_barcode', 'property_select', 'unit_select', 'barcodes_data']
 
     def init_screen(self):
-        init_data = self.goods_service.get_item_data_by_condition(**self.screen_values)
-        self.screen_data = self.screen_values
+        init_data = self.goods_service.get_item_data_by_condition(**self.init_values)
+        self.screen_data = self.init_values
 
         if init_data:
             self.hash_map['scanned_barcode'] = ''
@@ -2720,7 +2725,7 @@ class ItemCard(Screen):
             'property_id': '',
             'unit_id': ''
         }
-        BarcodeRegistrationScreen(self.hash_map, self.rs_settings).show_process_result(init_data)
+        BarcodeRegistrationScreen(self.hash_map, **init_data).show_process_result(init_data)
 
     @staticmethod
     def _get_variants_cards_data(item_properties):
@@ -3717,13 +3722,13 @@ class SeriesSelectScreen(Screen):
         self._update_total_qty()
         self._update_hash_map_keys()
         self._update_series_cards()
-        self._set_vision_settings()
 
         self.hash_map.put('return_selected_data')
 
     def on_start(self):
         self.hash_map.set_title('Выбор серии')
         self._save_new_series_item()
+        self._set_vision_settings()
 
     def on_input(self):
         listeners = {
@@ -3978,7 +3983,7 @@ class SeriesSelectScreen(Screen):
             'property_id':  self.screen_data.get('id_properties', ''),
             'unit_id':  self.screen_data.get('id_unit', '')
         }
-        BarcodeRegistrationScreen(self.hash_map, self.rs_settings).show_process_result(init_data)
+        BarcodeRegistrationScreen(self.hash_map, **init_data).show_process_result(init_data)
 
 
 class SeriesItem(Screen):
