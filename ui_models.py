@@ -499,7 +499,7 @@ class GroupScanTiles(Tiles):
 
     def __init__(self, hash_map: HashMap, rs_settings):
         super().__init__(hash_map, rs_settings)
-        self.db_service = DocService(is_group_scan=True)
+        self.db_service = db_services.DocListService(is_group_scan=True)
         self.screen_name = self.hash_map.get_current_screen()
         self.process_name = self.hash_map.get_current_process()
 
@@ -574,7 +574,7 @@ class DocumentsTiles(GroupScanTiles):
 
     def __init__(self, hash_map: HashMap, rs_settings):
         super().__init__(hash_map, rs_settings)
-        self.db_service = DocService()
+        self.db_service = db_services.DocListService()
 
     def on_start(self):
         super().on_start()
@@ -592,8 +592,9 @@ class DocumentsTiles(GroupScanTiles):
 
 
 class DocsListScreen(Screen):
-    def __init__(self, hash_map: HashMap, rs_settings=None):
-        super().__init__(hash_map)
+    def __init__(self, hash_map: HashMap, **kwargs):
+        super().__init__(hash_map, **kwargs)
+        self.db_service = db_services.DocListService()
         self.service = DocService()
         self.screen_values = {}
         self.popup_menu_data = ''
@@ -692,7 +693,7 @@ class DocsListScreen(Screen):
             return
 
     def _get_doc_list_data(self, doc_type, doc_status) -> list:
-        results = self.service.get_doc_view_data(doc_type, doc_status)
+        results = self.db_service.get_docs_view_data(doc_type, doc_status)
         return results
 
     def _prepare_table_data(self, list_data):
@@ -854,7 +855,8 @@ class GroupScanDocsListScreen(DocsListScreen):
     process_name = 'Групповая обработка'
 
     def __init__(self, hash_map, rs_settings):
-        super().__init__(hash_map, rs_settings)
+        super().__init__(hash_map)
+        self.db_service = db_services.DocListService(is_group_scan=True)
         self.service.is_group_scan = True
         self.popup_menu_data = ';'.join(
             ['Удалить', ])  #'Очистить данные пересчета'
@@ -937,7 +939,7 @@ class DocumentsDocsListScreen(DocsListScreen):
     process_name = 'Документы'
 
     def __init__(self, hash_map, rs_settings):
-        super().__init__(hash_map, rs_settings)
+        super().__init__(hash_map)
         self.service.docs_table_name = 'RS_docs'
         self.popup_menu_data = ';'.join(
             ['Удалить', 'Очистить данные пересчета', 'Отправить повторно'])
@@ -980,14 +982,10 @@ class DocumentsDocsListScreen(DocsListScreen):
         id_doc = card_data.get('key') or self.hash_map['selected_card_key']
         return id_doc
 
-    def _get_doc_list_data(self, doc_type, doc_status) -> list:
-        results = self.service.get_doc_view_data(doc_type, doc_status)
-        return results
-
 
 class DocsOfflineListScreen(DocsListScreen):
     def __init__(self, hash_map: HashMap, rs_settings):
-        super().__init__(hash_map, rs_settings)
+        super().__init__(hash_map)
         self.popup_menu_data = ';'.join(
             ['Удалить', 'Очистить данные пересчета'])
 
@@ -1898,13 +1896,16 @@ class BaseGoodSelect(Screen):
         self.delta = 0.0
         self.new_qty = 0.0
         self.control = kwargs.get('control', False)
+        self.is_group_scan = False
+        self.use_series = False
 
     def init_screen(self):
-        self._set_visibility()
         self._set_delta(reset=True)
+        self.use_series = int(self.screen_data.get('use_series', 0))
 
     def on_start(self):
-        pass
+        self._set_visibility()
+        self.hash_map['new_qtty'] = self._format_quantity(self.new_qty)
 
     def on_input(self):
         listeners = {
@@ -1924,6 +1925,8 @@ class BaseGoodSelect(Screen):
             self._set_qty_result()
         elif 'ops' in self.listener:
             self._ops_listener()
+
+        self.hash_map.no_refresh()
 
     def _ops_listener(self):
         set_value = float(self.listener[4:])
@@ -1972,11 +1975,11 @@ class BaseGoodSelect(Screen):
         if reset:
             self.delta = 0
             self.new_qty = self.screen_data['qtty']
-            self.hash_map.put('new_qtty', self.hash_map.get('qtty'))
         else:
             self.delta = value
             self.new_qty += self.delta
-            self.hash_map['new_qtty'] = self._format_quantity(self.new_qty)
+
+        self.hash_map['new_qtty'] = self._format_quantity(self.new_qty)
 
     def _set_result_qtty(self, delta):
         new_qtty = float(self.hash_map.get('qtty') or 0) + delta
@@ -2006,7 +2009,8 @@ class BaseGoodSelect(Screen):
         screen = SeriesSelectScreen(
             hash_map=self.hash_map,
             doc_row_id=self.doc_row_id,
-            parent=self
+            parent=self,
+            is_group_scan=self.is_group_scan
         )
         screen.show_process_result()
 
@@ -2084,11 +2088,11 @@ class BaseGoodSelect(Screen):
         self._set_delta(self._get_float_value(self.hash_map['delta']))
 
     def _set_visibility(self):
-        allow_fact_input = self.allow_fact_input and not int(self.screen_data['use_series'])
+        allow_fact_input = self.allow_fact_input and not int(self.use_series)
         self.hash_map.put("Show_fact_qtty_input", '1' if allow_fact_input else '-1')
         self.hash_map.put("Show_fact_qtty_note", '-1' if allow_fact_input else '1')
 
-        self.hash_map['Show_btn_to_series'] = int(self.screen_data['use_series'])
+        self.hash_map['Show_btn_to_series'] = int(self.use_series)
 
 
 class GoodsSelectScreen(BaseGoodSelect):
@@ -2116,7 +2120,7 @@ class GoodsSelectScreen(BaseGoodSelect):
         super().init_screen()
 
     def on_start(self):
-        pass
+        super().on_start()
 
     def on_input(self):
         listeners = {
@@ -2183,6 +2187,10 @@ class GoodsSelectScreen(BaseGoodSelect):
 class GroupScanItemScreen(GoodsSelectScreen):
     screen_name = 'Товар выбор'
     process_name = 'Групповая обработка'
+
+    def __init__(self, hash_map, **kwargs):
+        super().__init__(hash_map, **kwargs)
+        self.is_group_scan = True
 
     def init_screen(self):
         self.service.is_group_scan = True
@@ -2658,7 +2666,6 @@ class ItemCard(Screen):
             self.hash_map.put("load_info", "")
         else:
             self.hash_map.put("load_info", "Данные о характеристиках отсутствуют")
-
 
     def init_screen(self):
         super().init_screen()
@@ -3692,17 +3699,23 @@ class SeriesSelectScreen(Screen):
         self.total_qty = 0
         self.series_item_data_to_save = None
         self.series_count = 0
+        self.is_group_scan = kwargs.get('is_group_scan', False)
+        self.use_series = False
 
     def init_screen(self):
         if self.db_service is None:
             self.db_service = db_services.SeriesService(self.doc_row_id)
+            self.db_service.is_group_scan = self.is_group_scan
 
         self.screen_data = self.db_service.get_screen_data(self.doc_row_id)
         self.total_qty = self.screen_data['qtty']
+        self.use_series = bool(self.screen_data['use_series'])
+        self._update_total_qty()
         self._update_hash_map_keys()
         self._update_series_cards()
-        self.hash_map.put('return_selected_data')
         self._set_vision_settings()
+
+        self.hash_map.put('return_selected_data')
 
     def on_start(self):
         self.hash_map.set_title('Выбор серии')
@@ -3745,6 +3758,7 @@ class SeriesSelectScreen(Screen):
                 row['number']: row for row in series_data if row['number']
             }
             self.series_count = len(series_data)
+            self.use_series =  bool(self.series_count) or self.use_series
 
             doc_cards = self._get_doc_cards_view(self._prepare_table_data(series_data))
             self.hash_map['series_cards'] = doc_cards.to_json()
@@ -3760,7 +3774,7 @@ class SeriesSelectScreen(Screen):
 
     def _add_new_series(self):
         series_item_data = self._get_series_item_data_by_number()
-        series_item_data['qtty'] = 1 if self.series_count else self.total_qty
+        series_item_data['qtty'] = 1 if self.series_count else max(self.total_qty, 1)
         self._open_series_item_screen(series_item_data)
 
     def _barcode_listener(self):
@@ -3786,7 +3800,7 @@ class SeriesSelectScreen(Screen):
         # при событии on_start данные должны сохраниться в БД
         """
 
-        series_item_qtty = 1 if self.series_count else max(self.total_qty, 0)
+        series_item_qtty = 1 if self.series_count else max(self.total_qty, 1)
         series_item_data = self._get_series_item_data_by_number(number)
         series_item_data['qtty'] += series_item_qtty
 
@@ -3819,7 +3833,11 @@ class SeriesSelectScreen(Screen):
     def _update_total_qty(self):
         self.total_qty = self.db_service.get_total_qtty(**self.screen_data)
         self.hash_map['qtty'] = self._format_quantity(self.total_qty)
-        self.db_service.update_total_qty(qty=self.total_qty, row_id=self.doc_row_id)
+        self.db_service.update_total_qty(
+            qty=self.total_qty,
+            row_id=self.doc_row_id,
+            use_series=int(self.use_series)
+        )
 
     def _open_series_item_screen(self, series_item_data):
         screen = SeriesItem(
@@ -3839,6 +3857,10 @@ class SeriesSelectScreen(Screen):
             )
 
     def _back_screen(self):
+        self._update_total_qty()
+        if self.parent_screen:
+            self.parent_screen.new_qty = self.total_qty
+            self.parent_screen.use_series = self.use_series
         self._finish_process()
 
     def _finish_process(self):
