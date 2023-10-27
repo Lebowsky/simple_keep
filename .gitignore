@@ -8,3 +8,4 @@ local_data
 *.db
 *.sqlite
 tests\*.json
+/TestData/
