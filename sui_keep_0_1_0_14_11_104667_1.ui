@@ -5302,6 +5302,26 @@
                                         ]
                                     },
                                     {
+                                        "Value": "Применить",
+                                        "Variable": "btn_apply",
+                                        "height": "wrap_content",
+                                        "width": "match_parent",
+                                        "weight": "0",
+                                        "TextBold": false,
+                                        "TextItalic": false,
+                                        "type": "Button"
+                                    },
+                                    {
+                                        "Value": "",
+                                        "Variable": "",
+                                        "height": "wrap_content",
+                                        "width": "wrap_content",
+                                        "weight": 0,
+                                        "TextBold": false,
+                                        "TextItalic": false,
+                                        "type": "TextView"
+                                    },
+                                    {
                                         "Value": "Отсканируйте штрихкод",
                                         "Variable": "",
                                         "height": "wrap_content",
