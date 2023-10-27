@@ -539,7 +539,7 @@ class GroupScanTiles(Tiles):
     def on_input(self) -> None:
         super().on_input()
         if self.listener == 'ON_BACK_PRESSED':
-            self.hash_map.put('FinishProcess', '')
+            self._back_screen()
 
     def on_post_start(self):
         pass
@@ -567,6 +567,9 @@ class GroupScanTiles(Tiles):
     def _get_docs_stat(self):
         return self.db_service.get_docs_stat()
 
+    def _back_screen(self):
+        MainEvents.start_timer(self.hash_map)
+        self._finish_process()
 
 class DocumentsTiles(GroupScanTiles):
     screen_name = 'Плитки'
@@ -669,8 +672,8 @@ class DocsListScreen(Screen):
 
     def _resend_doc(self):
         id_doc = self.get_id_doc()
-        self.hash_map['debug_id_doc'] = id_doc
-        doc_data = self.service.get_data_to_send_by_doc_id(id_doc)
+        self.service.doc_id = id_doc
+        doc_data = self.service.get_doc_data_to_resend()
 
         if doc_data:
             http_service = hs_services.HsService(http_params=self.get_http_settings())
@@ -930,7 +933,7 @@ class GroupScanDocsListScreen(DocsListScreen):
                 self.hash_map.error_log(res.get('error'))
 
     def _back_screen(self):
-        MainEvents.start_timer(self.hash_map)
+
         super()._back_screen()
 
 
@@ -1418,7 +1421,8 @@ class DocDetailsScreen(Screen):
         screen.parent_screen = self
         screen.show()
 
-    def _show_dialog_input_barcode(self):
+    def _show_dialog_input_barcode(self, title="Введите штрихкод товара"):
+        self.hash_map['fld_barcode'] = ''
         layout = '''{
             "type": "LinearLayout",
             "Variable": "",
@@ -1438,7 +1442,7 @@ class DocDetailsScreen(Screen):
             ]
         }'''
         self.hash_map.show_dialog('modal_dialog_input_barcode',
-                                  title="Введите штрихкод товара",
+                                  title=title,
                                   dialog_layout=layout)
 
     class TextView(widgets.TextView):
@@ -1768,9 +1772,13 @@ class DocumentsDocDetailScreen(DocDetailsScreen):
                 return
             if (noClass('articles_ocr_ncl').get('finded_articles')
                     and not self.rs_settings.get('allow_fact_input')):
-                self.service.update_doc_table_row(
-                    data={'sent': 0, 'd_qtty': float(selected_card_data['d_qtty']) + 1.0},
-                    row_id=int(selected_card_data['key']))
+                data = {
+                    'sent': 0,
+                    'd_qtty': float(selected_card_data['qtty']) + 1.0,
+                    'qtty': float(selected_card_data['qtty']) + 1.0,
+                }
+                row_id = int(selected_card_data['key'])
+                self.service.update_doc_table_row(data=data, row_id=row_id)
                 noClass('articles_ocr_ncl').delete('finded_articles')
                 self.hash_map.toast(
                     f'Артикул: {selected_card_data["art"]}\n'
@@ -3714,13 +3722,13 @@ class SeriesSelectScreen(Screen):
         self._update_total_qty()
         self._update_hash_map_keys()
         self._update_series_cards()
-        self._set_vision_settings()
 
         self.hash_map.put('return_selected_data')
 
     def on_start(self):
         self.hash_map.set_title('Выбор серии')
         self._save_new_series_item()
+        self._set_vision_settings()
 
     def on_input(self):
         listeners = {

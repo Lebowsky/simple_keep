@@ -207,21 +207,89 @@ class PrintService:
         self.hash_map = hash_map
 
     def print(self, data: Dict, many: bool = False):
+        available, answer = self._check_print_available()
+        if not available:
+            self.hash_map.toast(answer)
+            return
         print_template_type = print_nosql.get('print_template_type')
         if print_template_type == '1C':
             self.print_1c_template(data)
         elif print_template_type == 'ZPL':
             self.print_zpl_template(data, many)
 
+    def _check_print_available(self) -> Tuple[bool, str]:
+        available = True
+        error = ''
+
+        print_through = print_nosql.get('print_through')
+        if not print_through:
+            available = False
+            error += 'Не выбрано устройство для печати \n'
+
+        print_template_type = print_nosql.get('print_template_type')
+        if not print_template_type:
+            available = False
+            error += 'Не указан тип шаблона печати \n'
+
+        if print_through == 'BT':
+            bt_available, bt_error = self._check_bt_available()
+            if not bt_available:
+                available = False
+                error += bt_error
+
+        if print_through == 'WiFi':
+            wifi_available, wifi_error = self._check_wifi_available()
+            if not wifi_available:
+                available = False
+                error += wifi_error
+
+        if print_template_type == '1C':
+            label_path = print_nosql.get('current_1c_template_path')
+            if not label_path or not os.path.isfile(label_path):
+                available = False
+                error += 'Не выбран шаблон печати 1C \n'
+            template_sizes = print_nosql.get('saved_print_template_sizes')
+            if not template_sizes:
+                available = False
+                error += 'Не указаны размеры шаблона печати 1C \n'
+
+        if print_template_type == 'ZPL':
+            zpl_template_path = print_nosql.get('default_zpl_template_path')
+            zpl_template_from_string = print_nosql.get('default_zpl_template_from_string')
+            if not (zpl_template_path or zpl_template_from_string):
+                available = False
+                error += 'Не выбран шаблон печати ZPL \n'
+            if zpl_template_path and not os.path.isfile(zpl_template_path):
+                available = False
+                error += 'ZPL шаблон недоступен, укажите другой \n'
+
+        return available, error
+
+    def _check_bt_available(self) -> Tuple[bool, str]:
+        available = True
+        error = ''
+        printer = print_nosql.get("default_printer")
+        if printer is None:
+            available = False
+            error += "Не отправлено.Не выбран BT-принтер \n"
+        else:
+            device = bt.get_device(printer)
+            if device is None:
+                available = False
+                error += "Не отправлено.Не получилось подключиться к BT-принтеру \n"
+        return available, error
+
+    def _check_wifi_available(self) -> Tuple[bool, str]:
+        available = True
+        error = ''
+        if not print_nosql.get('current_wi_fi_printer_ip'):
+            available = False
+            error += 'Не указан ip WiFi принтера \n'
+
+        return available, error
+
     def print_1c_template(self, data: Dict):
         label_path = print_nosql.get('current_1c_template_path')
-        if not label_path or not os.path.isfile(label_path):
-            self.hash_map.toast('Не выбран шаблон печати 1C')
-            return
-        template_sizes = print_nosql.get('saved_print_template_sizes')
-        if not template_sizes:
-            self.hash_map.toast('Не указаны размеры шаблона печати 1C')
-            return
         matching_table = json.loads(print_nosql.get('matching_table'))
         data_for_printing = HTMLDocument.replase_params_names(data, matching_table)
         self.hash_map.toast(data_for_printing)
@@ -239,14 +307,10 @@ class PrintService:
         self.hash_map.put("html2image_ToFile", img_path)
 
     def print_zpl_template(self, data: Dict, many: bool = False):
-        zpl_template_path = print_nosql.get('default_zpl_template_path')
-        template_from_string = print_nosql.get('default_zpl_template_from_string')
-        if zpl_template_path:
+        if print_nosql.get('default_zpl_template_path'):
             self.print_zpl_template_from_file(data, many)
-        elif template_from_string:
+        elif print_nosql.get('default_zpl_template_from_string'):
             self.print_zpl_template_from_string(data, many)
-        else:
-            self.hash_map.toast('Не выбран ZPL шаблон')
 
     def make_zpl_from_label(
             self,
@@ -306,10 +370,8 @@ class PrintService:
         return True, response.raw
 
     def print_zpl_template_from_file(self, data, many: bool = False):
+        """Печать ZPL кода созданного в конструкторе"""
         zpl_template_path = print_nosql.get('default_zpl_template_path')
-        if not os.path.isfile(zpl_template_path):
-            self.hash_map.toast('ZPL шаблон недоступен, укажите другой')
-            return
         with open(zpl_template_path, 'r') as f:
             zpl_template = json.loads(f.read())
         if many:
@@ -323,6 +385,7 @@ class PrintService:
         self.print_zpl(data_to_print)
 
     def print_zpl_template_from_string(self, data, many: bool = False):
+        """Печать ZPL кода из строки ввода ZPL"""
         template_from_string = print_nosql.get('default_zpl_template_from_string')
         if many:
             data_to_print = []
@@ -373,30 +436,35 @@ class PrintService:
     def print_post_execute(self):
         path_to_img = print_nosql.get('path_to_html2image_file')
         template_sizes = print_nosql.get('saved_print_template_sizes', from_json=True)
-        zpldata = self.make_zpl_from_label(path_to_img=path_to_img,
-                                                   **template_sizes)
+        zpldata = self.make_zpl_from_label(path_to_img=path_to_img, **template_sizes)
         self.print_zpl(zpldata)
 
     def print_zpl(self, zpl_data: str):
+        if not zpl_data:
+            self.hash_map.toast('Нет данных для печати')
+            return
+
         print_through = print_nosql.get('print_through')
-        if not print_through:
-            self.hash_map.toast('Не выбрано устройство для печати')
-        elif print_through == 'BT':
-            sent, result = self.print_bt(zpl_data)
-            self.hash_map.toast(result)
+
+        if print_through == 'BT':
+            bt_available, bt_error = self._check_bt_available()
+            if bt_available:
+                sent, result = self.print_bt(zpl_data)
+                self.hash_map.toast(result)
+            else:
+                self.hash_map.toast(bt_error)
+
         elif print_through == 'WiFi':
-            print_nosql.put('wifi_data_to_print', zpl_data, True)
-            self.hash_map.run_event_async('print_wifi')
+            wifi_available, wifi_error = self._check_wifi_available()
+            if wifi_available:
+                print_nosql.put('wifi_data_to_print', zpl_data)
+                self.hash_map.run_event_async('print_wifi')
+            else:
+                self.hash_map.toast(wifi_error)
 
     def print_wifi(self):
         ip = print_nosql.get('current_wi_fi_printer_ip')
-        if not ip:
-            self.hash_map.toast('Не указан ip')
-            return
         data = print_nosql.get('wifi_data_to_print')
-        if not data:
-            self.hash_map.toast('Нет данных для печати wifi')
-            return
         print_nosql.delete('wifi_data_to_print')
         fail_handlers = [{"action": "run", "type": "python", "method": "wifi_error"}]
         sended = suClass.write_socket(ip, 9100, data, json.dumps(fail_handlers))
@@ -405,11 +473,7 @@ class PrintService:
     def print_bt(self, data: Union[str, int, bytes]):
         bt_handlers = [{"action": "run", "type": "python", "method": "bluetooth_error"}]
         printer = print_nosql.get("default_printer")
-        if printer is None:
-            return False, "Не отправлено.Не выбран BT-принтер"
         device = bt.get_device(printer)
-        if device is None:
-            return False, "Не отправлено.Не получилось подключиться к устройству"
         try:
             bt.write_data(data, json.dumps(bt_handlers))
             return True, ("Отправлено на печать."
@@ -418,7 +482,7 @@ class PrintService:
             try:
                 bt.connect_to_client(device, json.dumps(bt_handlers))
                 bt.write_data(data, json.dumps(bt_handlers))
-                return True, "Успешно отправлено на печать"
+                return True, "Отправлено на печать"
             except Exception as e:
                 return False, str(e)
 
