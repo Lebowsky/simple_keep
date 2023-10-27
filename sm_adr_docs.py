@@ -685,9 +685,13 @@ class AdrGoodsSelectScreen(ui_models.BaseGoodSelect):
             'doc_row_id': self.doc_row_id,
             'title': 'Серии',
         }
-        screen = ui_models.SeriesSelectScreen(self.hash_map)
-        screen.parent_screen = self
-        screen.show_process_result(screen_values)
+        screen = ui_models.SeriesSelectScreen(
+            hash_map=self.hash_map,
+            doc_row_id=self.doc_row_id,
+            parent=self
+        )
+        screen.db_service = db_services.AdrSeriesService()
+        screen.show_process_result()
 
     def _open_barcode_register_screen(self):
         init_data = {

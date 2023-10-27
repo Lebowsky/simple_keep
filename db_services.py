@@ -1050,21 +1050,19 @@ class AdrSeriesService(SeriesService):
 
         q = f'''
         SELECT RS_docs_table.id_doc,
-            RS_docs_table.id_good,
-            RS_docs_table.id_properties,
-            RS_docs_table.id_unit,
+            RS_docs_table.id_good AS item_id,
+            RS_docs_table.id_properties AS property_id,
+            RS_docs_table.id_unit AS unit_id,
             RS_docs_table.qtty,
             RS_docs_table.qtty_plan,
+            RS_docs_table.id_cell AS cell_id,
             RS_docs_table.use_series,
-            RS_docs_table.id_cell,
-            IFNULL(RS_docs.doc_type, '') AS doc_type,
-            IFNULL(RS_docs.doc_n, '') AS doc_n,
-            IFNULL(RS_docs.doc_date, '') AS doc_date,
-            IFNULL(RS_goods.name, '') AS good_name,
-            IFNULL(RS_goods.art, '') AS good_art,
-            IFNULL(RS_properties.name, '') AS properties_name,
-            IFNULL(RS_units.name, '') AS good_unit, 
-            IFNULL(RS_cells.name, '') AS cell_name
+            IFNULL(RS_docs.id_warehouse, '') AS warehouse_id,
+            IFNULL(RS_goods.name, '') AS item_name,
+            IFNULL(RS_goods.art, '') AS article,
+            IFNULL(RS_properties.name, '') AS property,
+            IFNULL(RS_units.name, '') AS unit, 
+            IFNULL(RS_cells.name, '') AS cell
         FROM RS_adr_docs_table AS RS_docs_table
 
         LEFT JOIN RS_adr_docs AS RS_docs ON
@@ -1092,6 +1090,34 @@ class AdrSeriesService(SeriesService):
             WHERE id = {row_id}
             '''
         get_query_result(q)
+
+    @staticmethod
+    def get_series_data(doc_row_id):
+        q = f'''
+                SELECT 
+                    series.id AS key,
+                    series.id AS id,
+                    series.qtty,
+                    series.name,
+                    series.best_before,
+                    series.number,
+                    series.production_date,
+                    series.id_doc AS id_doc,
+                    series.id_good AS item_id,
+                    series.id_properties AS property_id,
+                    series.id_warehouse AS warehouse_id,
+                    series.cell AS cell_id
+
+                FROM RS_docs_series AS series
+                JOIN RS_adr_docs_table AS doc_details_table
+                    ON series.id_doc = doc_details_table.id_doc 
+                    AND series.id_good = doc_details_table.id_good 
+                    AND series.id_properties = doc_details_table.id_properties
+                WHERE doc_details_table.id = '{doc_row_id}'
+            '''
+
+        return get_query_result(q, return_dict=True)
+
 
 class SelectItemService(DbService):
     def __init__(self, table_name):
