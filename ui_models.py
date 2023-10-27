@@ -4587,7 +4587,8 @@ class BarcodeTestScreen(Screen):
             'BACK_BUTTON': self._back_screen,
             'device_value': self._fill_scan_settings,
             'use_hardware_scanner': self._switch_scanner_settings_visibility,
-            'btn_save_handmade_settings': self.save_scan_settings
+            'btn_save_handmade_settings': self.save_scan_settings,
+            'btn_apply': self._handler_btn_apply_settings
         }
         if self.listener in listeners:
             listeners[self.listener]()
@@ -4686,6 +4687,9 @@ class BarcodeTestScreen(Screen):
     def save_scan_settings(self):
         self.rs_settings.put('handmade_hardware_scanner_options', json.dumps(self._form_scan_parameters()), True)
 
+    def _handler_btn_apply_settings(self):
+        self.hash_map.put('UpdateConfiguration','')
+        self.toast('Настройки применены.')
 
 class HttpSettingsScreen(Screen):
     screen_name = 'Настройки http соединения'
