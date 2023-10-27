@@ -3637,6 +3637,11 @@
                                 "type": "Vision",
                                 "Value": "#f002",
                                 "Variable": "btn_find_serial_cv"
+                            },
+                            {
+                                "type": "MenuItem",
+                                "Value": "Печатать всё",
+                                "Variable": "btn_print_all"
                             }
                         ],
                         "Handlers": [
@@ -5980,1015 +5985,6 @@
             },
             {
                 "type": "Process",
-                "ProcessName": "Печать",
-                "DefineOnBackPressed": true,
-                "hidden": true,
-                "login_screen": false,
-                "SC": false,
-                "Operations": [
-                    {
-                        "type": "Operation",
-                        "Name": "Настройки печати",
-                        "Timer": false,
-                        "hideToolBarScreen": false,
-                        "hideBottomBarScreen": true,
-                        "noScroll": false,
-                        "handleKeyUp": false,
-                        "noConfirmation": false,
-                        "Elements": [
-                            {
-                                "type": "LinearLayout",
-                                "Variable": "",
-                                "orientation": "vertical",
-                                "height": "wrap_content",
-                                "width": "match_parent",
-                                "weight": "0",
-                                "Elements": [
-                                    {
-                                        "Value": "Настройка Bluetooth принтера",
-                                        "Variable": "btn_bluetooth_printer_settings",
-                                        "height": "wrap_content",
-                                        "width": "match_parent",
-                                        "weight": "0",
-                                        "type": "Button"
-                                    },
-                                    {
-                                        "Value": "Настройка WiFi принтера",
-                                        "Variable": "btn_wifi_printer_settings",
-                                        "height": "wrap_content",
-                                        "width": "match_parent",
-                                        "weight": "0",
-                                        "type": "Button"
-                                    },
-                                    {
-                                        "Value": "Настройка шаблонов печати",
-                                        "Variable": "btn_label_templates_settings",
-                                        "height": "wrap_content",
-                                        "width": "match_parent",
-                                        "weight": "0",
-                                        "type": "Button"
-                                    },
-                                    {
-                                        "Value": "Печать через Bluetooth",
-                                        "Variable": "check_box_bluetooth_print",
-                                        "height": "wrap_content",
-                                        "width": "wrap_content",
-                                        "weight": "0",
-                                        "type": "CheckBox"
-                                    },
-                                    {
-                                        "Value": "Печать через WiFi",
-                                        "Variable": "check_box_wifi_print",
-                                        "height": "wrap_content",
-                                        "width": "wrap_content",
-                                        "weight": "0",
-                                        "type": "CheckBox"
-                                    }
-                                ]
-                            }
-                        ],
-                        "Handlers": [
-                            {
-                                "event": "onStart",
-                                "listener": "",
-                                "action": "run",
-                                "type": "python",
-                                "method": "print_settings_on_start",
-                                "postExecute": ""
-                            },
-                            {
-                                "event": "onInput",
-                                "listener": "",
-                                "action": "run",
-                                "type": "python",
-                                "method": "print_settings_on_input",
-                                "postExecute": ""
-                            }
-                        ]
-                    },
-                    {
-                        "type": "Operation",
-                        "Name": "Список шаблонов",
-                        "Timer": false,
-                        "hideToolBarScreen": true,
-                        "hideBottomBarScreen": true,
-                        "noScroll": false,
-                        "handleKeyUp": false,
-                        "noConfirmation": true,
-                        "Elements": [
-                            {
-                                "type": "LinearLayout",
-                                "Variable": "",
-                                "orientation": "vertical",
-                                "height": "wrap_content",
-                                "width": "match_parent",
-                                "weight": "0",
-                                "Elements": [
-                                    {
-                                        "Value": "@templates_cards",
-                                        "Variable": "templates_cards",
-                                        "height": "wrap_content",
-                                        "width": "match_parent",
-                                        "weight": "0",
-                                        "TextBold": false,
-                                        "TextItalic": false,
-                                        "type": "CardsLayout"
-                                    }
-                                ]
-                            }
-                        ],
-                        "Handlers": [
-                            {
-                                "event": "onStart",
-                                "listener": "",
-                                "action": "run",
-                                "type": "python",
-                                "method": "template_list_on_start",
-                                "postExecute": ""
-                            },
-                            {
-                                "event": "onInput",
-                                "listener": "",
-                                "action": "run",
-                                "type": "python",
-                                "method": "template_list_on_input",
-                                "postExecute": ""
-                            }
-                        ]
-                    },
-                    {
-                        "type": "Operation",
-                        "Name": "Результат",
-                        "Timer": false,
-                        "hideToolBarScreen": false,
-                        "hideBottomBarScreen": true,
-                        "noScroll": false,
-                        "handleKeyUp": false,
-                        "noConfirmation": true,
-                        "Elements": [
-                            {
-                                "type": "LinearLayout",
-                                "Variable": "",
-                                "orientation": "vertical",
-                                "height": "match_parent",
-                                "width": "match_parent",
-                                "weight": "0",
-                                "Elements": [
-                                    {
-                                        "Value": "Шаблон:",
-                                        "Variable": "",
-                                        "height": "wrap_content",
-                                        "width": "match_parent",
-                                        "weight": "0",
-                                        "TextBold": false,
-                                        "TextItalic": false,
-                                        "type": "TextView"
-                                    },
-                                    {
-                                        "Value": "@html",
-                                        "Variable": "html",
-                                        "height": "300",
-                                        "width": "match_parent",
-                                        "orientation": "vertical",
-                                        "weight": "3",
-                                        "TextBold": false,
-                                        "TextItalic": false,
-                                        "type": "html"
-                                    },
-                                    {
-                                        "Value": "@matching_table",
-                                        "Variable": "matching_table_values",
-                                        "height": "wrap_content",
-                                        "width": "match_parent",
-                                        "weight": "1",
-                                        "TextBold": false,
-                                        "TextItalic": false,
-                                        "type": "TableLayout"
-                                    },
-                                    {
-                                        "Value": "Параметры штрихкода",
-                                        "Variable": "",
-                                        "height": "wrap_content",
-                                        "width": "match_parent",
-                                        "weight": "1",
-                                        "TextBold": false,
-                                        "TextItalic": false,
-                                        "type": "TextView"
-                                    },
-                                    {
-                                        "type": "LinearLayout",
-                                        "Variable": "",
-                                        "orientation": "horizontal",
-                                        "height": "wrap_content",
-                                        "width": "match_parent",
-                                        "weight": "1",
-                                        "Elements": [
-                                            {
-                                                "Value": "Ширина",
-                                                "Variable": "",
-                                                "height": "wrap_content",
-                                                "width": "match_parent",
-                                                "weight": "4",
-                                                "TextBold": false,
-                                                "TextItalic": false,
-                                                "type": "TextView"
-                                            },
-                                            {
-                                                "Value": "@barcode_width",
-                                                "Variable": "barcode_width",
-                                                "height": "wrap_content",
-                                                "width": "match_parent",
-                                                "weight": "4",
-                                                "TextBold": false,
-                                                "TextItalic": false,
-                                                "type": "EditTextNumeric"
-                                            },
-                                            {
-                                                "Value": "Высота",
-                                                "Variable": "",
-                                                "height": "wrap_content",
-                                                "width": "match_parent",
-                                                "weight": "4",
-                                                "TextBold": false,
-                                                "TextItalic": false,
-                                                "type": "TextView"
-                                            },
-                                            {
-                                                "Value": "@barcode_height",
-                                                "Variable": "barcode_height",
-                                                "height": "wrap_content",
-                                                "width": "match_parent",
-                                                "weight": "4",
-                                                "TextBold": false,
-                                                "TextItalic": false,
-                                                "type": "EditTextNumeric"
-                                            },
-                                            {
-                                                "Value": "Тип:",
-                                                "Variable": "",
-                                                "height": "wrap_content",
-                                                "width": "match_parent",
-                                                "weight": "4",
-                                                "type": "TextView"
-                                            },
-                                            {
-                                                "Value": "@barcode_types",
-                                                "Variable": "barcode_type_click",
-                                                "height": "wrap_content",
-                                                "width": "match_parent",
-                                                "weight": "3",
-                                                "type": "SpinnerLayout"
-                                            }
-                                        ]
-                                    },
-                                    {
-                                        "type": "LinearLayout",
-                                        "Variable": "",
-                                        "orientation": "horizontal",
-                                        "height": "wrap_content",
-                                        "width": "match_parent",
-                                        "weight": "1",
-                                        "Elements": [
-                                            {
-                                                "Value": "Влево",
-                                                "Variable": "",
-                                                "height": "wrap_content",
-                                                "width": "match_parent",
-                                                "weight": "1",
-                                                "type": "TextView"
-                                            },
-                                            {
-                                                "Value": "@barcode_left",
-                                                "Variable": "barcode_left",
-                                                "height": "wrap_content",
-                                                "width": "match_parent",
-                                                "weight": "1",
-                                                "type": "EditTextNumeric"
-                                            },
-                                            {
-                                                "Value": "Вправо",
-                                                "Variable": "",
-                                                "height": "wrap_content",
-                                                "width": "match_parent",
-                                                "weight": "1",
-                                                "type": "TextView"
-                                            },
-                                            {
-                                                "Value": "@barcode_right",
-                                                "Variable": "barcode_right",
-                                                "height": "wrap_content",
-                                                "width": "match_parent",
-                                                "weight": "1",
-                                                "type": "EditTextNumeric"
-                                            },
-                                            {
-                                                "Value": "Вверх",
-                                                "Variable": "",
-                                                "height": "wrap_content",
-                                                "width": "match_parent",
-                                                "weight": "1",
-                                                "type": "TextView"
-                                            },
-                                            {
-                                                "Value": "@barcode_up",
-                                                "Variable": "barcode_up",
-                                                "height": "wrap_content",
-                                                "width": "match_parent",
-                                                "weight": "1",
-                                                "type": "EditTextNumeric"
-                                            },
-                                            {
-                                                "Value": "Вниз",
-                                                "Variable": "",
-                                                "height": "wrap_content",
-                                                "width": "match_parent",
-                                                "weight": "1",
-                                                "type": "TextView"
-                                            },
-                                            {
-                                                "Value": "@barcode_down",
-                                                "Variable": "barcode_down",
-                                                "height": "wrap_content",
-                                                "width": "match_parent",
-                                                "weight": "1",
-                                                "type": "EditTextNumeric"
-                                            }
-                                        ]
-                                    },
-                                    {
-                                        "type": "LinearLayout",
-                                        "Variable": "",
-                                        "orientation": "horizontal",
-                                        "height": "wrap_content",
-                                        "width": "match_parent",
-                                        "weight": "1",
-                                        "Elements": [
-                                            {
-                                                "Value": "Сохранить",
-                                                "Variable": "btn_save",
-                                                "height": "wrap_content",
-                                                "width": "wrap_content",
-                                                "weight": "0",
-                                                "TextBold": false,
-                                                "TextItalic": false,
-                                                "type": "Button"
-                                            }
-                                        ]
-                                    }
-                                ]
-                            }
-                        ],
-                        "Handlers": [
-                            {
-                                "event": "onInput",
-                                "listener": "",
-                                "action": "run",
-                                "type": "python",
-                                "method": "html_view_on_input",
-                                "postExecute": ""
-                            },
-                            {
-                                "event": "onStart",
-                                "listener": "",
-                                "action": "run",
-                                "type": "python",
-                                "method": "html_view_on_start",
-                                "postExecute": ""
-                            }
-                        ]
-                    },
-                    {
-                        "type": "Operation",
-                        "Name": "НастройкаСоответствияДиалог",
-                        "Timer": false,
-                        "hideToolBarScreen": false,
-                        "hideBottomBarScreen": false,
-                        "noScroll": false,
-                        "handleKeyUp": false,
-                        "noConfirmation": false,
-                        "Elements": [
-                            {
-                                "type": "LinearLayout",
-                                "Variable": "layout",
-                                "orientation": "vertical",
-                                "height": "match_parent",
-                                "width": "match_parent",
-                                "weight": "0",
-                                "Elements": [
-                                    {
-                                        "Value": "@list_field",
-                                        "Variable": "select_field",
-                                        "height": "wrap_content",
-                                        "width": "wrap_content",
-                                        "weight": "0",
-                                        "type": "SpinnerLayout"
-                                    }
-                                ]
-                            }
-                        ],
-                        "Handlers": []
-                    },
-                    {
-                        "type": "Operation",
-                        "Name": "Настройки печати Bluetooth",
-                        "Timer": false,
-                        "hideToolBarScreen": false,
-                        "hideBottomBarScreen": true,
-                        "noScroll": false,
-                        "handleKeyUp": false,
-                        "noConfirmation": true,
-                        "Elements": [
-                            {
-                                "type": "LinearLayout",
-                                "Variable": "",
-                                "orientation": "vertical",
-                                "height": "wrap_content",
-                                "width": "match_parent",
-                                "weight": "0",
-                                "Elements": [
-                                    {
-                                        "Value": "Настройки принтера Bluetooth",
-                                        "Variable": "",
-                                        "height": "wrap_content",
-                                        "width": "match_parent",
-                                        "weight": "0",
-                                        "type": "TextView"
-                                    },
-                                    {
-                                        "Value": "Показать присоединенные",
-                                        "Variable": "btn_show_connected",
-                                        "height": "wrap_content",
-                                        "width": "match_parent",
-                                        "weight": "0",
-                                        "type": "Button"
-                                    },
-                                    {
-                                        "Value": "Начать сканирование",
-                                        "Variable": "btn_start_scan",
-                                        "height": "wrap_content",
-                                        "width": "match_parent",
-                                        "weight": "0",
-                                        "type": "Button"
-                                    },
-                                    {
-                                        "Value": "Остановить сканирование",
-                                        "Variable": "btn_stop_scan",
-                                        "height": "wrap_content",
-                                        "width": "match_parent",
-                                        "weight": "0",
-                                        "type": "Button"
-                                    },
-                                    {
-                                        "Value": "Тест печати",
-                                        "Variable": "btn_test_print",
-                                        "height": "wrap_content",
-                                        "width": "match_parent",
-                                        "weight": "0",
-                                        "type": "Button"
-                                    },
-                                    {
-                                        "Value": "Сбросить подключение",
-                                        "Variable": "btn_bt_disconnect",
-                                        "height": "wrap_content",
-                                        "width": "match_parent",
-                                        "weight": "0",
-                                        "type": "Button"
-                                    },
-                                    {
-                                        "type": "LinearLayout",
-                                        "Variable": "",
-                                        "orientation": "horizontal",
-                                        "height": "wrap_content",
-                                        "width": "wrap_content",
-                                        "weight": "0",
-                                        "Elements": [
-                                            {
-                                                "Value": "Подключенный принтер:",
-                                                "Variable": "",
-                                                "height": "wrap_content",
-                                                "width": "wrap_content",
-                                                "weight": "0",
-                                                "type": "TextView"
-                                            },
-                                            {
-                                                "Value": "@default_printer",
-                                                "Variable": "",
-                                                "height": "wrap_content",
-                                                "width": "wrap_content",
-                                                "weight": "0",
-                                                "type": "TextView"
-                                            }
-                                        ]
-                                    },
-                                    {
-                                        "Value": "@cards",
-                                        "Variable": "",
-                                        "height": "wrap_content",
-                                        "width": "match_parent",
-                                        "weight": "0",
-                                        "type": "CardsLayout"
-                                    }
-                                ]
-                            }
-                        ],
-                        "Handlers": [
-                            {
-                                "event": "onInput",
-                                "listener": "",
-                                "action": "run",
-                                "type": "python",
-                                "method": "print_bluetooth_settings_on_input",
-                                "postExecute": ""
-                            },
-                            {
-                                "event": "onStart",
-                                "listener": "",
-                                "action": "run",
-                                "type": "set",
-                                "method": "BTGetBounded",
-                                "postExecute": ""
-                            },
-                            {
-                                "event": "onStart",
-                                "listener": "",
-                                "action": "run",
-                                "type": "python",
-                                "method": "print_bluetooth_settings_on_start",
-                                "postExecute": ""
-                            }
-                        ]
-                    },
-                    {
-                        "type": "Operation",
-                        "Name": "Настройки печати WiFi",
-                        "Timer": false,
-                        "hideToolBarScreen": false,
-                        "hideBottomBarScreen": true,
-                        "noScroll": false,
-                        "handleKeyUp": false,
-                        "noConfirmation": false,
-                        "Elements": [
-                            {
-                                "type": "LinearLayout",
-                                "Variable": "",
-                                "orientation": "vertical",
-                                "height": "wrap_content",
-                                "width": "match_parent",
-                                "weight": "0",
-                                "Elements": [
-                                    {
-                                        "Value": "Укажите ip устройства",
-                                        "Variable": "",
-                                        "height": "wrap_content",
-                                        "width": "match_parent",
-                                        "weight": "0",
-                                        "type": "TextView"
-                                    },
-                                    {
-                                        "Value": "@wi_fi_ip",
-                                        "Variable": "wi_fi_ip",
-                                        "height": "wrap_content",
-                                        "width": "match_parent",
-                                        "weight": "0",
-                                        "type": "EditTextText"
-                                    },
-                                    {
-                                        "Value": "Сохранить IP",
-                                        "Variable": "btn_wifi_save_ip",
-                                        "height": "wrap_content",
-                                        "width": "match_parent",
-                                        "weight": "0",
-                                        "type": "Button"
-                                    },
-                                    {
-                                        "Value": "Удалить IP",
-                                        "Variable": "btn_wifi_delete_ip",
-                                        "height": "wrap_content",
-                                        "width": "match_parent",
-                                        "weight": "0",
-                                        "type": "Button"
-                                    },
-                                    {
-                                        "Value": "@info_wifi_current_ip",
-                                        "Variable": "",
-                                        "height": "wrap_content",
-                                        "width": "wrap_content",
-                                        "weight": "0",
-                                        "type": "TextView"
-                                    },
-                                    {
-                                        "Value": "Тест печати",
-                                        "Variable": "btn_test_wi_fi",
-                                        "height": "wrap_content",
-                                        "width": "match_parent",
-                                        "weight": "0",
-                                        "type": "Button"
-                                    },
-                                    {
-                                        "Value": "Код ZPL для печати:",
-                                        "Variable": "",
-                                        "height": "wrap_content",
-                                        "width": "match_parent",
-                                        "weight": "0",
-                                        "type": "TextView"
-                                    },
-                                    {
-                                        "Value": "@wi_fi_zpl_input",
-                                        "Variable": "wi_fi_zpl_input",
-                                        "height": "wrap_content",
-                                        "width": "match_parent",
-                                        "weight": "0",
-                                        "type": "EditTextText"
-                                    },
-                                    {
-                                        "Value": "Напечатать zpl",
-                                        "Variable": "btn_wi_fi_print_zpl",
-                                        "height": "wrap_content",
-                                        "width": "match_parent",
-                                        "weight": "0",
-                                        "type": "Button"
-                                    }
-                                ]
-                            }
-                        ],
-                        "Handlers": [
-                            {
-                                "event": "onInput",
-                                "listener": "",
-                                "action": "run",
-                                "type": "python",
-                                "method": "print_wifi_settings_on_input",
-                                "postExecute": ""
-                            },
-                            {
-                                "event": "onStart",
-                                "listener": "",
-                                "action": "run",
-                                "type": "python",
-                                "method": "print_wifi_settings_on_start",
-                                "postExecute": ""
-                            }
-                        ]
-                    },
-                    {
-                        "type": "Operation",
-                        "Name": "Настройки печати Шаблоны",
-                        "Timer": false,
-                        "hideToolBarScreen": false,
-                        "hideBottomBarScreen": false,
-                        "noScroll": false,
-                        "handleKeyUp": false,
-                        "noConfirmation": false,
-                        "Elements": [
-                            {
-                                "type": "LinearLayout",
-                                "Variable": "",
-                                "orientation": "vertical",
-                                "height": "wrap_content",
-                                "width": "match_parent",
-                                "weight": "0",
-                                "Elements": [
-                                    {
-                                        "Value": "Настройки шаблонов ценников и этикеток",
-                                        "Variable": "",
-                                        "height": "wrap_content",
-                                        "width": "match_parent",
-                                        "weight": "0",
-                                        "type": "TextView"
-                                    },
-                                    {
-                                        "Value": "Получить шаблоны с сервера",
-                                        "Variable": "btn_get_labels",
-                                        "height": "wrap_content",
-                                        "width": "match_parent",
-                                        "weight": "0",
-                                        "type": "ProgressButton"
-                                    },
-                                    {
-                                        "Value": "@current_label_template_name",
-                                        "Variable": "",
-                                        "height": "wrap_content",
-                                        "width": "match_parent",
-                                        "weight": "0",
-                                        "type": "TextView"
-                                    },
-                                    {
-                                        "Value": "Выбрать из списка",
-                                        "Variable": "btn_select_label_template",
-                                        "height": "wrap_content",
-                                        "width": "match_parent",
-                                        "weight": "0",
-                                        "type": "Button"
-                                    },
-                                    {
-                                        "Value": "Удалить настройки шаблонов печати",
-                                        "Variable": "btn_delete_template_settings",
-                                        "height": "wrap_content",
-                                        "width": "match_parent",
-                                        "weight": "0",
-                                        "type": "Button"
-                                    },
-                                    {
-                                        "Value": "Настройка размеров шаблона",
-                                        "Variable": "btn_label_template_size_settings",
-                                        "height": "wrap_content",
-                                        "width": "match_parent",
-                                        "weight": "0",
-                                        "type": "Button"
-                                    },
-                                    {
-                                        "Value": "@preview_label_template_image",
-                                        "Variable": "",
-                                        "height": "300",
-                                        "width": "match_parent",
-                                        "weight": "3",
-                                        "type": "Picture"
-                                    }
-                                ]
-                            }
-                        ],
-                        "Handlers": [
-                            {
-                                "event": "onStart",
-                                "listener": "",
-                                "action": "run",
-                                "type": "python",
-                                "method": "print_label_templates_on_start",
-                                "postExecute": ""
-                            },
-                            {
-                                "event": "onInput",
-                                "listener": "",
-                                "action": "run",
-                                "type": "python",
-                                "method": "print_label_templates_on_input",
-                                "postExecute": ""
-                            }
-                        ]
-                    },
-                    {
-                        "type": "Operation",
-                        "Name": "Настройки печати Размеры",
-                        "Timer": false,
-                        "hideToolBarScreen": false,
-                        "hideBottomBarScreen": true,
-                        "noScroll": false,
-                        "handleKeyUp": false,
-                        "noConfirmation": false,
-                        "Elements": [
-                            {
-                                "type": "LinearLayout",
-                                "Variable": "",
-                                "orientation": "vertical",
-                                "height": "wrap_content",
-                                "width": "match_parent",
-                                "weight": "0",
-                                "Elements": [
-                                    {
-                                        "type": "LinearLayout",
-                                        "Variable": "",
-                                        "orientation": "vertical",
-                                        "height": "wrap_content",
-                                        "width": "match_parent",
-                                        "weight": "0",
-                                        "Elements": [
-                                            {
-                                                "type": "LinearLayout",
-                                                "Variable": "",
-                                                "orientation": "horizontal",
-                                                "height": "wrap_content",
-                                                "width": "match_parent",
-                                                "weight": "0",
-                                                "Elements": [
-                                                    {
-                                                        "Value": "label Width (мм)",
-                                                        "Variable": "",
-                                                        "height": "wrap_content",
-                                                        "width": "match_parent",
-                                                        "weight": "2",
-                                                        "type": "TextView"
-                                                    },
-                                                    {
-                                                        "Value": "@width_print_template",
-                                                        "Variable": "width_print_template",
-                                                        "height": "wrap_content",
-                                                        "width": "match_parent",
-                                                        "weight": "2",
-                                                        "type": "EditTextNumeric"
-                                                    },
-                                                    {
-                                                        "Value": "Label Height (мм)",
-                                                        "Variable": "",
-                                                        "height": "wrap_content",
-                                                        "width": "match_parent",
-                                                        "weight": "2",
-                                                        "type": "TextView"
-                                                    },
-                                                    {
-                                                        "Value": "@height_print_template",
-                                                        "Variable": "height_print_template",
-                                                        "height": "wrap_content",
-                                                        "width": "match_parent",
-                                                        "weight": "2",
-                                                        "type": "EditTextNumeric"
-                                                    }
-                                                ]
-                                            },
-                                            {
-                                                "type": "LinearLayout",
-                                                "Variable": "",
-                                                "orientation": "horizontal",
-                                                "height": "wrap_content",
-                                                "width": "match_parent",
-                                                "weight": "0",
-                                                "Elements": [
-                                                    {
-                                                        "Value": "Img Width (мм)",
-                                                        "Variable": "",
-                                                        "height": "wrap_content",
-                                                        "width": "match_parent",
-                                                        "weight": "2",
-                                                        "type": "TextView"
-                                                    },
-                                                    {
-                                                        "Value": "@image_width_print_template",
-                                                        "Variable": "image_width_print_template",
-                                                        "height": "wrap_content",
-                                                        "width": "match_parent",
-                                                        "weight": "2",
-                                                        "type": "EditTextNumeric"
-                                                    },
-                                                    {
-                                                        "Value": "Img Height (мм)",
-                                                        "Variable": "",
-                                                        "height": "wrap_content",
-                                                        "width": "match_parent",
-                                                        "weight": "2",
-                                                        "type": "TextView"
-                                                    },
-                                                    {
-                                                        "Value": "@image_height_print_template",
-                                                        "Variable": "image_height_print_template",
-                                                        "height": "wrap_content",
-                                                        "width": "match_parent",
-                                                        "weight": "2",
-                                                        "type": "EditTextNumeric"
-                                                    }
-                                                ]
-                                            },
-                                            {
-                                                "type": "LinearLayout",
-                                                "Variable": "",
-                                                "orientation": "horizontal",
-                                                "height": "wrap_content",
-                                                "width": "match_parent",
-                                                "weight": "0",
-                                                "Elements": [
-                                                    {
-                                                        "Value": "LL",
-                                                        "Variable": "",
-                                                        "height": "wrap_content",
-                                                        "width": "match_parent",
-                                                        "weight": "2",
-                                                        "type": "TextView"
-                                                    },
-                                                    {
-                                                        "Value": "@image_ll_print_template",
-                                                        "Variable": "image_ll_print_template",
-                                                        "height": "wrap_content",
-                                                        "width": "match_parent",
-                                                        "weight": "2",
-                                                        "type": "EditTextNumeric"
-                                                    },
-                                                    {
-                                                        "Value": "PW",
-                                                        "Variable": "",
-                                                        "height": "wrap_content",
-                                                        "width": "match_parent",
-                                                        "weight": "2",
-                                                        "type": "TextView"
-                                                    },
-                                                    {
-                                                        "Value": "@image_pw_print_template",
-                                                        "Variable": "image_pw_print_template",
-                                                        "height": "wrap_content",
-                                                        "width": "match_parent",
-                                                        "weight": "2",
-                                                        "type": "EditTextNumeric"
-                                                    }
-                                                ]
-                                            },
-                                            {
-                                                "type": "LinearLayout",
-                                                "Variable": "",
-                                                "orientation": "horizontal",
-                                                "height": "wrap_content",
-                                                "width": "match_parent",
-                                                "weight": "0",
-                                                "Elements": [
-                                                    {
-                                                        "Value": "Сдвиг вправо",
-                                                        "Variable": "",
-                                                        "height": "wrap_content",
-                                                        "width": "match_parent",
-                                                        "weight": "2",
-                                                        "type": "TextView"
-                                                    },
-                                                    {
-                                                        "Value": "@image_x_print_template",
-                                                        "Variable": "image_x_print_template",
-                                                        "height": "wrap_content",
-                                                        "width": "match_parent",
-                                                        "weight": "2",
-                                                        "type": "EditTextNumeric"
-                                                    },
-                                                    {
-                                                        "Value": "Сдвиг вниз",
-                                                        "Variable": "",
-                                                        "height": "wrap_content",
-                                                        "width": "match_parent",
-                                                        "weight": "2",
-                                                        "type": "TextView"
-                                                    },
-                                                    {
-                                                        "Value": "@image_y_print_template",
-                                                        "Variable": "image_y_print_template",
-                                                        "height": "wrap_content",
-                                                        "width": "match_parent",
-                                                        "weight": "2",
-                                                        "type": "EditTextNumeric"
-                                                    },
-                                                    {
-                                                        "Value": "dpmm",
-                                                        "Variable": "",
-                                                        "height": "wrap_content",
-                                                        "width": "match_parent",
-                                                        "weight": "2",
-                                                        "type": "TextView"
-                                                    },
-                                                    {
-                                                        "Value": "6;8;12;24",
-                                                        "Variable": "dpmm_print_template",
-                                                        "height": "wrap_content",
-                                                        "width": "match_parent",
-                                                        "weight": "2",
-                                                        "type": "SpinnerLayout"
-                                                    }
-                                                ]
-                                            }
-                                        ],
-                                        "StrokeWidth": "5"
-                                    },
-                                    {
-                                        "Value": "@image_print",
-                                        "Variable": "",
-                                        "height": "wrap_content",
-                                        "width": "match_parent",
-                                        "weight": "0",
-                                        "type": "Picture"
-                                    }
-                                ],
-                                "StrokeWidth": "5"
-                            },
-                            {
-                                "type": "MenuItem",
-                                "Value": "Отправить на печать",
-                                "Variable": "btn_sent_to_print"
-                            },
-                            {
-                                "type": "MenuItem",
-                                "Value": "Сохранить шаблон",
-                                "Variable": "btn_save_template_sizes"
-                            },
-                            {
-                                "type": "MenuItem",
-                                "Value": "Удалить шаблон",
-                                "Variable": "btn_delete_print_template"
-                            }
-                        ],
-                        "Handlers": [
-                            {
-                                "event": "onStart",
-                                "listener": "",
-                                "action": "run",
-                                "type": "python",
-                                "method": "print_label_template_size_on_start",
-                                "postExecute": ""
-                            },
-                            {
-                                "event": "onInput",
-                                "listener": "",
-                                "action": "run",
-                                "type": "python",
-                                "method": "print_label_template_size_on_input",
-                                "postExecute": ""
-                            }
-                        ]
-                    }
-                ]
-            },
-            {
-                "type": "Process",
                 "ProcessName": "Проводник",
                 "DefineOnBackPressed": false,
                 "hidden": false,
@@ -7354,11 +6350,6 @@
                                 ]
                             },
                             {
-                                "type": "Vision",
-                                "Value": "#f002",
-                                "Variable": "btn_series_ocr_serial_number"
-                            },
-                            {
                                 "type": "MenuItem",
                                 "Value": "Настройки шаблона",
                                 "Variable": "btn_ocr_serial_template_settings"
@@ -7382,6 +6373,11 @@
                                 "type": "barcode",
                                 "Value": "",
                                 "Variable": "barcode"
+                            },
+                            {
+                                "type": "Vision",
+                                "Value": "#f002",
+                                "Variable": "btn_series_ocr_serial_number"
                             }
                         ],
                         "Handlers": [
@@ -7638,12 +6634,12 @@
                 ]
             },
             {
-                "CVOperationName": "Распознавание артикулов",
+                "CVOperationName": "OcrArticleRecognition",
                 "type": "CVOperation",
                 "hidden": true,
                 "CVFrames": [
                     {
-                        "Name": "Новый шаг ActiveCV",
+                        "Name": "NextStepActiveCV",
                         "type": "CVFrame",
                         "CVOnline": false,
                         "CVDetector": "OCR",
@@ -8196,6 +7192,1562 @@
                         ]
                     }
                 ]
+            },
+            {
+                "type": "Process",
+                "ProcessName": "Print",
+                "DefineOnBackPressed": true,
+                "hidden": true,
+                "login_screen": false,
+                "SC": false,
+                "Operations": [
+                    {
+                        "type": "Operation",
+                        "Name": "PrintSettings",
+                        "Timer": false,
+                        "hideToolBarScreen": false,
+                        "hideBottomBarScreen": true,
+                        "noScroll": false,
+                        "handleKeyUp": false,
+                        "noConfirmation": false,
+                        "Elements": [
+                            {
+                                "type": "LinearLayout",
+                                "Variable": "",
+                                "orientation": "vertical",
+                                "height": "wrap_content",
+                                "width": "match_parent",
+                                "weight": "0",
+                                "Elements": [
+                                    {
+                                        "Value": "Настройка Bluetooth принтера",
+                                        "Variable": "btn_bluetooth_printer_settings",
+                                        "height": "wrap_content",
+                                        "width": "match_parent",
+                                        "weight": "0",
+                                        "type": "Button"
+                                    },
+                                    {
+                                        "Value": "Настройка WiFi принтера",
+                                        "Variable": "btn_wifi_printer_settings",
+                                        "height": "wrap_content",
+                                        "width": "match_parent",
+                                        "weight": "0",
+                                        "type": "Button"
+                                    },
+                                    {
+                                        "type": "LinearLayout",
+                                        "Variable": "",
+                                        "orientation": "horizontal",
+                                        "height": "wrap_content",
+                                        "width": "match_parent",
+                                        "weight": "0",
+                                        "Elements": [
+                                            {
+                                                "Value": "Шаблон 1С",
+                                                "Variable": "btn_label_templates_1c",
+                                                "height": "wrap_content",
+                                                "width": "match_parent",
+                                                "weight": "1",
+                                                "type": "Button"
+                                            },
+                                            {
+                                                "Value": "Шаблон ZPL",
+                                                "Variable": "btn_label_templates_zpl",
+                                                "height": "wrap_content",
+                                                "width": "match_parent",
+                                                "weight": "1",
+                                                "type": "Button"
+                                            }
+                                        ]
+                                    },
+                                    {
+                                        "Value": "Печать через Bluetooth",
+                                        "Variable": "check_box_bluetooth_print",
+                                        "height": "wrap_content",
+                                        "width": "wrap_content",
+                                        "weight": "0",
+                                        "type": "CheckBox"
+                                    },
+                                    {
+                                        "Value": "Печать через WiFi",
+                                        "Variable": "check_box_wifi_print",
+                                        "height": "wrap_content",
+                                        "width": "wrap_content",
+                                        "weight": "0",
+                                        "type": "CheckBox"
+                                    },
+                                    {
+                                        "Value": "Шаблон 1С",
+                                        "Variable": "check_box_template_1c",
+                                        "height": "wrap_content",
+                                        "width": "wrap_content",
+                                        "weight": "0",
+                                        "type": "CheckBox"
+                                    },
+                                    {
+                                        "Value": "Шаблон ZPL",
+                                        "Variable": "check_box_template_zpl",
+                                        "height": "wrap_content",
+                                        "width": "wrap_content",
+                                        "weight": "0",
+                                        "type": "CheckBox"
+                                    }
+                                ]
+                            }
+                        ],
+                        "Handlers": [
+                            {
+                                "event": "onStart",
+                                "listener": "",
+                                "action": "run",
+                                "type": "python",
+                                "method": "print_settings_on_start",
+                                "postExecute": ""
+                            },
+                            {
+                                "event": "onInput",
+                                "listener": "",
+                                "action": "run",
+                                "type": "python",
+                                "method": "print_settings_on_input",
+                                "postExecute": ""
+                            }
+                        ]
+                    },
+                    {
+                        "type": "Operation",
+                        "Name": "TemplatesList",
+                        "Timer": false,
+                        "hideToolBarScreen": true,
+                        "hideBottomBarScreen": true,
+                        "noScroll": false,
+                        "handleKeyUp": false,
+                        "noConfirmation": true,
+                        "Elements": [
+                            {
+                                "type": "LinearLayout",
+                                "Variable": "",
+                                "orientation": "vertical",
+                                "height": "wrap_content",
+                                "width": "match_parent",
+                                "weight": "0",
+                                "Elements": [
+                                    {
+                                        "Value": "@templates_cards",
+                                        "Variable": "templates_cards",
+                                        "height": "wrap_content",
+                                        "width": "match_parent",
+                                        "weight": "0",
+                                        "TextBold": false,
+                                        "TextItalic": false,
+                                        "type": "CardsLayout"
+                                    }
+                                ]
+                            }
+                        ],
+                        "Handlers": [
+                            {
+                                "event": "onStart",
+                                "listener": "",
+                                "action": "run",
+                                "type": "python",
+                                "method": "template_list_on_start",
+                                "postExecute": ""
+                            },
+                            {
+                                "event": "onInput",
+                                "listener": "",
+                                "action": "run",
+                                "type": "python",
+                                "method": "template_list_on_input",
+                                "postExecute": ""
+                            }
+                        ]
+                    },
+                    {
+                        "type": "Operation",
+                        "Name": "PrintBluetooth",
+                        "Timer": false,
+                        "hideToolBarScreen": false,
+                        "hideBottomBarScreen": true,
+                        "noScroll": false,
+                        "handleKeyUp": false,
+                        "noConfirmation": true,
+                        "Elements": [
+                            {
+                                "type": "LinearLayout",
+                                "Variable": "",
+                                "orientation": "vertical",
+                                "height": "wrap_content",
+                                "width": "match_parent",
+                                "weight": "0",
+                                "Elements": [
+                                    {
+                                        "Value": "Настройки принтера Bluetooth",
+                                        "Variable": "",
+                                        "height": "wrap_content",
+                                        "width": "match_parent",
+                                        "weight": "0",
+                                        "type": "TextView"
+                                    },
+                                    {
+                                        "Value": "Показать присоединенные",
+                                        "Variable": "btn_show_connected",
+                                        "height": "wrap_content",
+                                        "width": "match_parent",
+                                        "weight": "0",
+                                        "type": "Button"
+                                    },
+                                    {
+                                        "type": "LinearLayout",
+                                        "Variable": "",
+                                        "orientation": "horizontal",
+                                        "height": "wrap_content",
+                                        "width": "match_parent",
+                                        "weight": "0",
+                                        "Elements": [
+                                            {
+                                                "Value": "Начать сканирование",
+                                                "Variable": "btn_start_scan",
+                                                "height": "wrap_content",
+                                                "width": "match_parent",
+                                                "weight": "1",
+                                                "type": "Button"
+                                            },
+                                            {
+                                                "Value": "Остановить сканирование",
+                                                "Variable": "btn_stop_scan",
+                                                "height": "wrap_content",
+                                                "width": "match_parent",
+                                                "weight": "1",
+                                                "type": "Button"
+                                            }
+                                        ]
+                                    },
+                                    {
+                                        "Value": "Сбросить подключение",
+                                        "Variable": "btn_bt_disconnect",
+                                        "height": "wrap_content",
+                                        "width": "match_parent",
+                                        "weight": "0",
+                                        "type": "Button"
+                                    },
+                                    {
+                                        "Value": "Тест печати",
+                                        "Variable": "btn_test_print",
+                                        "height": "wrap_content",
+                                        "width": "match_parent",
+                                        "weight": "0",
+                                        "type": "Button"
+                                    },
+                                    {
+                                        "type": "LinearLayout",
+                                        "Variable": "",
+                                        "orientation": "horizontal",
+                                        "height": "wrap_content",
+                                        "width": "wrap_content",
+                                        "weight": "0",
+                                        "Elements": [
+                                            {
+                                                "Value": "Подключенный принтер:",
+                                                "Variable": "",
+                                                "height": "wrap_content",
+                                                "width": "wrap_content",
+                                                "weight": "0",
+                                                "type": "TextView"
+                                            },
+                                            {
+                                                "Value": "@default_printer",
+                                                "Variable": "",
+                                                "height": "wrap_content",
+                                                "width": "wrap_content",
+                                                "weight": "0",
+                                                "type": "TextView"
+                                            }
+                                        ]
+                                    },
+                                    {
+                                        "Value": "@bluetooth_devices_cards",
+                                        "Variable": "",
+                                        "height": "wrap_content",
+                                        "width": "match_parent",
+                                        "weight": "0",
+                                        "type": "CardsLayout"
+                                    }
+                                ]
+                            }
+                        ],
+                        "Handlers": [
+                            {
+                                "event": "onInput",
+                                "listener": "",
+                                "action": "run",
+                                "type": "python",
+                                "method": "print_bluetooth_on_input",
+                                "postExecute": ""
+                            },
+                            {
+                                "event": "onStart",
+                                "listener": "",
+                                "action": "run",
+                                "type": "set",
+                                "method": "BTGetBounded",
+                                "postExecute": ""
+                            },
+                            {
+                                "event": "onStart",
+                                "listener": "",
+                                "action": "run",
+                                "type": "python",
+                                "method": "print_bluetooth_on_start",
+                                "postExecute": ""
+                            }
+                        ]
+                    },
+                    {
+                        "type": "Operation",
+                        "Name": "PrintWiFi",
+                        "Timer": false,
+                        "hideToolBarScreen": false,
+                        "hideBottomBarScreen": true,
+                        "noScroll": false,
+                        "handleKeyUp": false,
+                        "noConfirmation": false,
+                        "Elements": [
+                            {
+                                "type": "LinearLayout",
+                                "Variable": "",
+                                "orientation": "vertical",
+                                "height": "wrap_content",
+                                "width": "match_parent",
+                                "weight": "0",
+                                "Elements": [
+                                    {
+                                        "Value": "Укажите ip устройства",
+                                        "Variable": "",
+                                        "height": "wrap_content",
+                                        "width": "match_parent",
+                                        "weight": "0",
+                                        "type": "TextView"
+                                    },
+                                    {
+                                        "Value": "@wi_fi_ip",
+                                        "Variable": "wi_fi_ip",
+                                        "height": "wrap_content",
+                                        "width": "match_parent",
+                                        "weight": "0",
+                                        "type": "EditTextText"
+                                    },
+                                    {
+                                        "type": "LinearLayout",
+                                        "Variable": "",
+                                        "orientation": "horizontal",
+                                        "height": "wrap_content",
+                                        "width": "match_parent",
+                                        "weight": "0",
+                                        "Elements": [
+                                            {
+                                                "Value": "Сохранить IP",
+                                                "Variable": "btn_wifi_save_ip",
+                                                "height": "wrap_content",
+                                                "width": "match_parent",
+                                                "weight": "1",
+                                                "type": "Button"
+                                            },
+                                            {
+                                                "Value": "Удалить IP",
+                                                "Variable": "btn_wifi_delete_ip",
+                                                "height": "wrap_content",
+                                                "width": "match_parent",
+                                                "weight": "1",
+                                                "type": "Button"
+                                            }
+                                        ]
+                                    },
+                                    {
+                                        "type": "LinearLayout",
+                                        "Variable": "",
+                                        "orientation": "horizontal",
+                                        "height": "wrap_content",
+                                        "width": "match_parent",
+                                        "weight": "0",
+                                        "Elements": [
+                                            {
+                                                "Value": "IP подключенного принтера:",
+                                                "Variable": "",
+                                                "height": "wrap_content",
+                                                "width": "match_parent",
+                                                "weight": "1",
+                                                "type": "TextView"
+                                            },
+                                            {
+                                                "Value": "@info_wifi_current_ip",
+                                                "Variable": "",
+                                                "height": "wrap_content",
+                                                "width": "match_parent",
+                                                "weight": "1",
+                                                "type": "TextView"
+                                            }
+                                        ]
+                                    },
+                                    {
+                                        "Value": "Тест печати",
+                                        "Variable": "btn_test_wi_fi",
+                                        "height": "wrap_content",
+                                        "width": "match_parent",
+                                        "weight": "0",
+                                        "type": "Button"
+                                    }
+                                ]
+                            }
+                        ],
+                        "Handlers": [
+                            {
+                                "event": "onInput",
+                                "listener": "",
+                                "action": "run",
+                                "type": "python",
+                                "method": "print_wifi_on_input",
+                                "postExecute": ""
+                            },
+                            {
+                                "event": "onStart",
+                                "listener": "",
+                                "action": "run",
+                                "type": "python",
+                                "method": "print_wifi_on_start",
+                                "postExecute": ""
+                            }
+                        ]
+                    },
+                    {
+                        "type": "Operation",
+                        "Name": "PrintTemplates1C",
+                        "Timer": false,
+                        "hideToolBarScreen": false,
+                        "hideBottomBarScreen": true,
+                        "noScroll": false,
+                        "handleKeyUp": false,
+                        "noConfirmation": false,
+                        "Elements": [
+                            {
+                                "type": "LinearLayout",
+                                "Variable": "",
+                                "orientation": "vertical",
+                                "height": "wrap_content",
+                                "width": "match_parent",
+                                "weight": "0",
+                                "Elements": [
+                                    {
+                                        "Value": "Настройки шаблонов ценников и этикеток",
+                                        "Variable": "",
+                                        "height": "wrap_content",
+                                        "width": "match_parent",
+                                        "weight": "0",
+                                        "type": "TextView"
+                                    },
+                                    {
+                                        "Value": "Получить шаблоны с сервера",
+                                        "Variable": "btn_get_labels",
+                                        "height": "wrap_content",
+                                        "width": "match_parent",
+                                        "weight": "0",
+                                        "type": "ProgressButton"
+                                    },
+                                    {
+                                        "type": "LinearLayout",
+                                        "Variable": "",
+                                        "orientation": "horizontal",
+                                        "height": "wrap_content",
+                                        "width": "wrap_content",
+                                        "weight": "0",
+                                        "Elements": [
+                                            {
+                                                "Value": "Текущий шаблон:",
+                                                "Variable": "",
+                                                "height": "wrap_content",
+                                                "width": "match_parent",
+                                                "weight": "1",
+                                                "type": "TextView"
+                                            },
+                                            {
+                                                "Value": "@current_1c_template_name",
+                                                "Variable": "",
+                                                "height": "wrap_content",
+                                                "width": "match_parent",
+                                                "weight": "1",
+                                                "type": "TextView"
+                                            }
+                                        ]
+                                    },
+                                    {
+                                        "Value": "Выбрать шаблон",
+                                        "Variable": "btn_select_label_template",
+                                        "height": "wrap_content",
+                                        "width": "match_parent",
+                                        "weight": "0",
+                                        "type": "Button"
+                                    },
+                                    {
+                                        "Value": "Удалить настройки шаблонов печати",
+                                        "Variable": "btn_delete_template_settings",
+                                        "height": "wrap_content",
+                                        "width": "match_parent",
+                                        "weight": "0",
+                                        "type": "Button"
+                                    },
+                                    {
+                                        "Value": "Настройка размеров шаблона",
+                                        "Variable": "btn_label_template_size_settings",
+                                        "height": "wrap_content",
+                                        "width": "match_parent",
+                                        "weight": "0",
+                                        "type": "Button"
+                                    },
+                                    {
+                                        "type": "LinearLayout",
+                                        "Variable": "",
+                                        "orientation": "vertical",
+                                        "height": "wrap_content",
+                                        "width": "match_parent",
+                                        "weight": "0",
+                                        "Elements": [
+                                            {
+                                                "Value": "@preview_template_image",
+                                                "Variable": "",
+                                                "height": "300",
+                                                "width": "match_parent",
+                                                "weight": "3",
+                                                "type": "Picture"
+                                            }
+                                        ],
+                                        "BackgroundColor": "#A9A9A9"
+                                    }
+                                ]
+                            }
+                        ],
+                        "Handlers": [
+                            {
+                                "event": "onStart",
+                                "listener": "",
+                                "action": "run",
+                                "type": "python",
+                                "method": "print_templates_1c_on_start",
+                                "postExecute": ""
+                            },
+                            {
+                                "event": "onInput",
+                                "listener": "",
+                                "action": "run",
+                                "type": "python",
+                                "method": "print_templates_1c_on_input",
+                                "postExecute": ""
+                            }
+                        ]
+                    },
+                    {
+                        "type": "Operation",
+                        "Name": "PrintTemplates1CParameters",
+                        "Timer": false,
+                        "hideToolBarScreen": false,
+                        "hideBottomBarScreen": true,
+                        "noScroll": false,
+                        "handleKeyUp": false,
+                        "noConfirmation": true,
+                        "Elements": [
+                            {
+                                "type": "LinearLayout",
+                                "Variable": "",
+                                "orientation": "vertical",
+                                "height": "match_parent",
+                                "width": "match_parent",
+                                "weight": "0",
+                                "Elements": [
+                                    {
+                                        "Value": "@html",
+                                        "Variable": "html",
+                                        "height": "300",
+                                        "width": "wrap_content",
+                                        "orientation": "vertical",
+                                        "weight": "1",
+                                        "TextBold": false,
+                                        "TextItalic": false,
+                                        "type": "html"
+                                    },
+                                    {
+                                        "Value": "@matching_table",
+                                        "Variable": "matching_table_values",
+                                        "height": "wrap_content",
+                                        "width": "match_parent",
+                                        "weight": "1",
+                                        "TextBold": false,
+                                        "TextItalic": false,
+                                        "type": "TableLayout"
+                                    },
+                                    {
+                                        "Value": "Параметры штрихкода",
+                                        "Variable": "",
+                                        "height": "wrap_content",
+                                        "width": "match_parent",
+                                        "weight": "1",
+                                        "TextBold": false,
+                                        "TextItalic": false,
+                                        "type": "TextView"
+                                    },
+                                    {
+                                        "type": "LinearLayout",
+                                        "Variable": "",
+                                        "orientation": "horizontal",
+                                        "height": "wrap_content",
+                                        "width": "match_parent",
+                                        "weight": "1",
+                                        "Elements": [
+                                            {
+                                                "Value": "Ширина",
+                                                "Variable": "",
+                                                "height": "wrap_content",
+                                                "width": "match_parent",
+                                                "weight": "4",
+                                                "TextBold": false,
+                                                "TextItalic": false,
+                                                "type": "TextView"
+                                            },
+                                            {
+                                                "Value": "@barcode_width",
+                                                "Variable": "barcode_width",
+                                                "height": "wrap_content",
+                                                "width": "match_parent",
+                                                "weight": "4",
+                                                "TextBold": false,
+                                                "TextItalic": false,
+                                                "type": "EditTextNumeric"
+                                            },
+                                            {
+                                                "Value": "Высота",
+                                                "Variable": "",
+                                                "height": "wrap_content",
+                                                "width": "match_parent",
+                                                "weight": "4",
+                                                "TextBold": false,
+                                                "TextItalic": false,
+                                                "type": "TextView"
+                                            },
+                                            {
+                                                "Value": "@barcode_height",
+                                                "Variable": "barcode_height",
+                                                "height": "wrap_content",
+                                                "width": "match_parent",
+                                                "weight": "4",
+                                                "TextBold": false,
+                                                "TextItalic": false,
+                                                "type": "EditTextNumeric"
+                                            },
+                                            {
+                                                "Value": "Тип:",
+                                                "Variable": "",
+                                                "height": "wrap_content",
+                                                "width": "match_parent",
+                                                "weight": "4",
+                                                "type": "TextView"
+                                            },
+                                            {
+                                                "Value": "@barcode_types",
+                                                "Variable": "barcode_type",
+                                                "height": "wrap_content",
+                                                "width": "match_parent",
+                                                "weight": "3",
+                                                "type": "SpinnerLayout"
+                                            }
+                                        ]
+                                    },
+                                    {
+                                        "type": "LinearLayout",
+                                        "Variable": "",
+                                        "orientation": "horizontal",
+                                        "height": "wrap_content",
+                                        "width": "match_parent",
+                                        "weight": "1",
+                                        "Elements": [
+                                            {
+                                                "Value": "Влево",
+                                                "Variable": "",
+                                                "height": "wrap_content",
+                                                "width": "match_parent",
+                                                "weight": "1",
+                                                "type": "TextView"
+                                            },
+                                            {
+                                                "Value": "@barcode_left",
+                                                "Variable": "barcode_left",
+                                                "height": "wrap_content",
+                                                "width": "match_parent",
+                                                "weight": "1",
+                                                "type": "EditTextNumeric"
+                                            },
+                                            {
+                                                "Value": "Вправо",
+                                                "Variable": "",
+                                                "height": "wrap_content",
+                                                "width": "match_parent",
+                                                "weight": "1",
+                                                "type": "TextView"
+                                            },
+                                            {
+                                                "Value": "@barcode_right",
+                                                "Variable": "barcode_right",
+                                                "height": "wrap_content",
+                                                "width": "match_parent",
+                                                "weight": "1",
+                                                "type": "EditTextNumeric"
+                                            },
+                                            {
+                                                "Value": "Вверх",
+                                                "Variable": "",
+                                                "height": "wrap_content",
+                                                "width": "match_parent",
+                                                "weight": "1",
+                                                "type": "TextView"
+                                            },
+                                            {
+                                                "Value": "@barcode_up",
+                                                "Variable": "barcode_up",
+                                                "height": "wrap_content",
+                                                "width": "match_parent",
+                                                "weight": "1",
+                                                "type": "EditTextNumeric"
+                                            },
+                                            {
+                                                "Value": "Вниз",
+                                                "Variable": "",
+                                                "height": "wrap_content",
+                                                "width": "match_parent",
+                                                "weight": "1",
+                                                "type": "TextView"
+                                            },
+                                            {
+                                                "Value": "@barcode_down",
+                                                "Variable": "barcode_down",
+                                                "height": "wrap_content",
+                                                "width": "match_parent",
+                                                "weight": "1",
+                                                "type": "EditTextNumeric"
+                                            }
+                                        ]
+                                    },
+                                    {
+                                        "type": "LinearLayout",
+                                        "Variable": "",
+                                        "orientation": "horizontal",
+                                        "height": "wrap_content",
+                                        "width": "match_parent",
+                                        "weight": "1",
+                                        "Elements": [
+                                            {
+                                                "Value": "Сохранить",
+                                                "Variable": "btn_save",
+                                                "height": "wrap_content",
+                                                "width": "wrap_content",
+                                                "weight": "0",
+                                                "TextBold": false,
+                                                "TextItalic": false,
+                                                "type": "Button"
+                                            },
+                                            {
+                                                "Value": "Сбросить",
+                                                "Variable": "btn_default",
+                                                "height": "wrap_content",
+                                                "width": "wrap_content",
+                                                "weight": "0",
+                                                "type": "Button"
+                                            }
+                                        ]
+                                    }
+                                ]
+                            }
+                        ],
+                        "Handlers": [
+                            {
+                                "event": "onInput",
+                                "listener": "",
+                                "action": "run",
+                                "type": "python",
+                                "method": "print_templates_1c_parameters_on_input",
+                                "postExecute": ""
+                            },
+                            {
+                                "event": "onStart",
+                                "listener": "",
+                                "action": "run",
+                                "type": "python",
+                                "method": "print_templates_1c_parameters_on_start",
+                                "postExecute": ""
+                            }
+                        ]
+                    },
+                    {
+                        "type": "Operation",
+                        "Name": "PrintTemplates1CSizes",
+                        "Timer": false,
+                        "hideToolBarScreen": false,
+                        "hideBottomBarScreen": true,
+                        "noScroll": false,
+                        "handleKeyUp": false,
+                        "noConfirmation": false,
+                        "Elements": [
+                            {
+                                "type": "LinearLayout",
+                                "Variable": "",
+                                "orientation": "vertical",
+                                "height": "wrap_content",
+                                "width": "match_parent",
+                                "weight": "0",
+                                "Elements": [
+                                    {
+                                        "type": "LinearLayout",
+                                        "Variable": "",
+                                        "orientation": "vertical",
+                                        "height": "wrap_content",
+                                        "width": "match_parent",
+                                        "weight": "0",
+                                        "Elements": [
+                                            {
+                                                "type": "LinearLayout",
+                                                "Variable": "",
+                                                "orientation": "horizontal",
+                                                "height": "wrap_content",
+                                                "width": "match_parent",
+                                                "weight": "0",
+                                                "Elements": [
+                                                    {
+                                                        "Value": "label Width (мм)",
+                                                        "Variable": "",
+                                                        "height": "wrap_content",
+                                                        "width": "match_parent",
+                                                        "weight": "2",
+                                                        "type": "TextView"
+                                                    },
+                                                    {
+                                                        "Value": "@print_template_width",
+                                                        "Variable": "print_template_width",
+                                                        "height": "wrap_content",
+                                                        "width": "match_parent",
+                                                        "weight": "2",
+                                                        "type": "EditTextNumeric"
+                                                    },
+                                                    {
+                                                        "Value": "Label Height (мм)",
+                                                        "Variable": "",
+                                                        "height": "wrap_content",
+                                                        "width": "match_parent",
+                                                        "weight": "2",
+                                                        "type": "TextView"
+                                                    },
+                                                    {
+                                                        "Value": "@print_template_height",
+                                                        "Variable": "print_template_height",
+                                                        "height": "wrap_content",
+                                                        "width": "match_parent",
+                                                        "weight": "2",
+                                                        "type": "EditTextNumeric"
+                                                    }
+                                                ]
+                                            },
+                                            {
+                                                "type": "LinearLayout",
+                                                "Variable": "",
+                                                "orientation": "horizontal",
+                                                "height": "wrap_content",
+                                                "width": "match_parent",
+                                                "weight": "0",
+                                                "Elements": [
+                                                    {
+                                                        "Value": "Img Width (мм)",
+                                                        "Variable": "",
+                                                        "height": "wrap_content",
+                                                        "width": "match_parent",
+                                                        "weight": "2",
+                                                        "type": "TextView"
+                                                    },
+                                                    {
+                                                        "Value": "@print_image_width",
+                                                        "Variable": "print_image_width",
+                                                        "height": "wrap_content",
+                                                        "width": "match_parent",
+                                                        "weight": "2",
+                                                        "type": "EditTextNumeric"
+                                                    },
+                                                    {
+                                                        "Value": "Img Height (мм)",
+                                                        "Variable": "",
+                                                        "height": "wrap_content",
+                                                        "width": "match_parent",
+                                                        "weight": "2",
+                                                        "type": "TextView"
+                                                    },
+                                                    {
+                                                        "Value": "@print_image_height",
+                                                        "Variable": "print_image_height",
+                                                        "height": "wrap_content",
+                                                        "width": "match_parent",
+                                                        "weight": "2",
+                                                        "type": "EditTextNumeric"
+                                                    }
+                                                ]
+                                            },
+                                            {
+                                                "type": "LinearLayout",
+                                                "Variable": "",
+                                                "orientation": "horizontal",
+                                                "height": "wrap_content",
+                                                "width": "match_parent",
+                                                "weight": "0",
+                                                "Elements": [
+                                                    {
+                                                        "Value": "LL",
+                                                        "Variable": "",
+                                                        "height": "wrap_content",
+                                                        "width": "match_parent",
+                                                        "weight": "2",
+                                                        "type": "TextView"
+                                                    },
+                                                    {
+                                                        "Value": "@print_template_ll",
+                                                        "Variable": "print_template_ll",
+                                                        "height": "wrap_content",
+                                                        "width": "match_parent",
+                                                        "weight": "2",
+                                                        "type": "EditTextNumeric"
+                                                    },
+                                                    {
+                                                        "Value": "PW",
+                                                        "Variable": "",
+                                                        "height": "wrap_content",
+                                                        "width": "match_parent",
+                                                        "weight": "2",
+                                                        "type": "TextView"
+                                                    },
+                                                    {
+                                                        "Value": "@print_template_pw",
+                                                        "Variable": "print_template_pw",
+                                                        "height": "wrap_content",
+                                                        "width": "match_parent",
+                                                        "weight": "2",
+                                                        "type": "EditTextNumeric"
+                                                    }
+                                                ]
+                                            },
+                                            {
+                                                "type": "LinearLayout",
+                                                "Variable": "",
+                                                "orientation": "horizontal",
+                                                "height": "wrap_content",
+                                                "width": "match_parent",
+                                                "weight": "0",
+                                                "Elements": [
+                                                    {
+                                                        "Value": "Сдвиг вправо",
+                                                        "Variable": "",
+                                                        "height": "wrap_content",
+                                                        "width": "match_parent",
+                                                        "weight": "2",
+                                                        "type": "TextView"
+                                                    },
+                                                    {
+                                                        "Value": "@print_template_x_origin",
+                                                        "Variable": "print_template_x_origin",
+                                                        "height": "wrap_content",
+                                                        "width": "match_parent",
+                                                        "weight": "2",
+                                                        "type": "EditTextNumeric"
+                                                    },
+                                                    {
+                                                        "Value": "Сдвиг вниз",
+                                                        "Variable": "",
+                                                        "height": "wrap_content",
+                                                        "width": "match_parent",
+                                                        "weight": "2",
+                                                        "type": "TextView"
+                                                    },
+                                                    {
+                                                        "Value": "@print_template_y_origin",
+                                                        "Variable": "print_template_y_origin",
+                                                        "height": "wrap_content",
+                                                        "width": "match_parent",
+                                                        "weight": "2",
+                                                        "type": "EditTextNumeric"
+                                                    },
+                                                    {
+                                                        "Value": "dpmm",
+                                                        "Variable": "",
+                                                        "height": "wrap_content",
+                                                        "width": "match_parent",
+                                                        "weight": "2",
+                                                        "type": "TextView"
+                                                    },
+                                                    {
+                                                        "Value": "6;8;12;24",
+                                                        "Variable": "print_template_dpmm",
+                                                        "height": "wrap_content",
+                                                        "width": "match_parent",
+                                                        "weight": "2",
+                                                        "type": "SpinnerLayout"
+                                                    }
+                                                ]
+                                            },
+                                            {
+                                                "type": "LinearLayout",
+                                                "Variable": "",
+                                                "orientation": "horizontal",
+                                                "height": "wrap_content",
+                                                "width": "wrap_content",
+                                                "weight": "0",
+                                                "Elements": [
+                                                    {
+                                                        "Value": "Сохранить",
+                                                        "Variable": "btn_save_template_sizes",
+                                                        "height": "wrap_content",
+                                                        "width": "wrap_content",
+                                                        "weight": "0",
+                                                        "type": "Button"
+                                                    },
+                                                    {
+                                                        "Value": "Сбросить",
+                                                        "Variable": "btn_default_template_sizes",
+                                                        "height": "wrap_content",
+                                                        "width": "wrap_content",
+                                                        "weight": "0",
+                                                        "type": "Button"
+                                                    }
+                                                ]
+                                            }
+                                        ],
+                                        "StrokeWidth": "5"
+                                    },
+                                    {
+                                        "type": "LinearLayout",
+                                        "Variable": "",
+                                        "orientation": "vertical",
+                                        "height": "wrap_content",
+                                        "width": "match_parent",
+                                        "weight": "0",
+                                        "Elements": [
+                                            {
+                                                "Value": "@print_image_sizes",
+                                                "Variable": "",
+                                                "height": "match_parent",
+                                                "width": "match_parent",
+                                                "weight": "0",
+                                                "type": "Picture"
+                                            }
+                                        ],
+                                        "BackgroundColor": "#A9A9A9"
+                                    }
+                                ]
+                            },
+                            {
+                                "type": "MenuItem",
+                                "Value": "Отправить на печать",
+                                "Variable": "btn_sent_to_print"
+                            },
+                            {
+                                "type": "MenuItem",
+                                "Value": "Удалить шаблон",
+                                "Variable": "btn_delete_print_template"
+                            }
+                        ],
+                        "Handlers": [
+                            {
+                                "event": "onStart",
+                                "listener": "",
+                                "action": "run",
+                                "type": "python",
+                                "method": "print_templates_1c_sizes_on_start",
+                                "postExecute": ""
+                            },
+                            {
+                                "event": "onInput",
+                                "listener": "",
+                                "action": "run",
+                                "type": "python",
+                                "method": "print_templates_1c_sizes_on_input",
+                                "postExecute": ""
+                            }
+                        ]
+                    },
+                    {
+                        "type": "Operation",
+                        "Name": "PrintTemplatesZPL",
+                        "Timer": false,
+                        "hideToolBarScreen": false,
+                        "hideBottomBarScreen": true,
+                        "noScroll": false,
+                        "handleKeyUp": false,
+                        "noConfirmation": false,
+                        "Elements": [
+                            {
+                                "type": "LinearLayout",
+                                "Variable": "",
+                                "orientation": "vertical",
+                                "height": "wrap_content",
+                                "width": "match_parent",
+                                "weight": "0",
+                                "Elements": [
+                                    {
+                                        "Value": "Конструктор ZPL",
+                                        "Variable": "btn_zpl_constructor_redirect",
+                                        "height": "wrap_content",
+                                        "width": "match_parent",
+                                        "weight": "0",
+                                        "type": "Button"
+                                    },
+                                    {
+                                        "type": "LinearLayout",
+                                        "Variable": "zpl_template_from_string_data",
+                                        "orientation": "horizontal",
+                                        "height": "wrap_content",
+                                        "width": "match_parent",
+                                        "weight": "0",
+                                        "Elements": [
+                                            {
+                                                "Value": "dpmm",
+                                                "Variable": "",
+                                                "height": "wrap_content",
+                                                "width": "match_parent",
+                                                "weight": "8",
+                                                "type": "TextView"
+                                            },
+                                            {
+                                                "Value": "6;8;12;24",
+                                                "Variable": "zpl_template_from_string_dpmm",
+                                                "height": "wrap_content",
+                                                "width": "match_parent",
+                                                "weight": "7",
+                                                "type": "SpinnerLayout"
+                                            },
+                                            {
+                                                "Value": "Width",
+                                                "Variable": "",
+                                                "height": "wrap_content",
+                                                "width": "match_parent",
+                                                "weight": "8",
+                                                "type": "TextView"
+                                            },
+                                            {
+                                                "Value": "x",
+                                                "Variable": "",
+                                                "height": "wrap_content",
+                                                "width": "match_parent",
+                                                "weight": "9",
+                                                "type": "TextView"
+                                            },
+                                            {
+                                                "Value": "Height",
+                                                "Variable": "",
+                                                "height": "wrap_content",
+                                                "width": "match_parent",
+                                                "weight": "8",
+                                                "type": "TextView"
+                                            },
+                                            {
+                                                "Value": "@zpl_template_from_string_width",
+                                                "Variable": "zpl_template_from_string_width",
+                                                "height": "wrap_content",
+                                                "width": "match_parent",
+                                                "weight": "8",
+                                                "type": "EditTextNumeric"
+                                            },
+                                            {
+                                                "Value": "x",
+                                                "Variable": "",
+                                                "height": "wrap_content",
+                                                "width": "match_parent",
+                                                "weight": "9",
+                                                "type": "TextView"
+                                            },
+                                            {
+                                                "Value": "@zpl_template_from_string_height",
+                                                "Variable": "zpl_template_from_string_height",
+                                                "height": "wrap_content",
+                                                "width": "match_parent",
+                                                "weight": "8",
+                                                "type": "EditTextNumeric"
+                                            }
+                                        ],
+                                        "StrokeWidth": "3"
+                                    },
+                                    {
+                                        "Value": "Шаблон ZPL из строки",
+                                        "Variable": "",
+                                        "height": "wrap_content",
+                                        "width": "match_parent",
+                                        "weight": "0",
+                                        "TextSize": "16",
+                                        "type": "TextView"
+                                    },
+                                    {
+                                        "type": "LinearLayout",
+                                        "Variable": "",
+                                        "orientation": "vertical",
+                                        "height": "wrap_content",
+                                        "width": "match_parent",
+                                        "weight": "0",
+                                        "Elements": [
+                                            {
+                                                "Value": "@zpl_template_from_string",
+                                                "Variable": "zpl_template_from_string",
+                                                "height": "wrap_content",
+                                                "width": "match_parent",
+                                                "weight": "0",
+                                                "type": "EditTextText"
+                                            }
+                                        ],
+                                        "StrokeWidth": "3"
+                                    },
+                                    {
+                                        "type": "LinearLayout",
+                                        "Variable": "",
+                                        "orientation": "vertical",
+                                        "height": "wrap_content",
+                                        "width": "match_parent",
+                                        "weight": "0",
+                                        "Elements": [
+                                            {
+                                                "Value": "@zpl_template_from_string_image",
+                                                "Variable": "",
+                                                "height": "300",
+                                                "width": "match_parent",
+                                                "weight": "0",
+                                                "type": "Picture"
+                                            }
+                                        ],
+                                        "BackgroundColor": "#A9A9A9"
+                                    },
+                                    {
+                                        "Value": "Сделать шаблоном по умолчанию",
+                                        "Variable": "btn_template_from_string_make_default",
+                                        "height": "wrap_content",
+                                        "width": "match_parent",
+                                        "weight": "0",
+                                        "type": "Button"
+                                    }
+                                ]
+                            },
+                            {
+                                "type": "MenuItem",
+                                "Value": "Печатать ZPL",
+                                "Variable": "btn_zpl_template_from_string_print"
+                            }
+                        ],
+                        "Handlers": [
+                            {
+                                "event": "onStart",
+                                "listener": "",
+                                "action": "run",
+                                "type": "python",
+                                "method": "print_template_zpl_on_start",
+                                "postExecute": ""
+                            },
+                            {
+                                "event": "onInput",
+                                "listener": "",
+                                "action": "run",
+                                "type": "python",
+                                "method": "print_template_zpl_on_input",
+                                "postExecute": ""
+                            }
+                        ]
+                    },
+                    {
+                        "type": "Operation",
+                        "Name": "PrintTemplatesZPLConstructor",
+                        "Timer": false,
+                        "hideToolBarScreen": false,
+                        "hideBottomBarScreen": true,
+                        "noScroll": false,
+                        "handleKeyUp": false,
+                        "noConfirmation": false,
+                        "Elements": [
+                            {
+                                "type": "LinearLayout",
+                                "Variable": "",
+                                "orientation": "vertical",
+                                "height": "wrap_content",
+                                "width": "match_parent",
+                                "weight": "0",
+                                "Elements": [
+                                    {
+                                        "type": "LinearLayout",
+                                        "Variable": "",
+                                        "orientation": "vertical",
+                                        "height": "wrap_content",
+                                        "width": "match_parent",
+                                        "weight": "0",
+                                        "Elements": [
+                                            {
+                                                "Value": "@zpl_preview",
+                                                "Variable": "",
+                                                "height": "300",
+                                                "width": "match_parent",
+                                                "weight": "0",
+                                                "type": "Picture"
+                                            }
+                                        ],
+                                        "BackgroundColor": "#A9A9A9"
+                                    },
+                                    {
+                                        "type": "LinearLayout",
+                                        "Variable": "zpl_preview_create_template_data",
+                                        "orientation": "horizontal",
+                                        "height": "wrap_content",
+                                        "width": "match_parent",
+                                        "weight": "0",
+                                        "Elements": [
+                                            {
+                                                "Value": "dpmm",
+                                                "Variable": "",
+                                                "height": "wrap_content",
+                                                "width": "match_parent",
+                                                "weight": "8",
+                                                "type": "TextView"
+                                            },
+                                            {
+                                                "Value": "6;8;12;24",
+                                                "Variable": "zpl_preview_dpmm",
+                                                "height": "wrap_content",
+                                                "width": "match_parent",
+                                                "weight": "7",
+                                                "type": "SpinnerLayout"
+                                            },
+                                            {
+                                                "Value": "Width",
+                                                "Variable": "",
+                                                "height": "wrap_content",
+                                                "width": "match_parent",
+                                                "weight": "8",
+                                                "type": "TextView"
+                                            },
+                                            {
+                                                "Value": "x",
+                                                "Variable": "",
+                                                "height": "wrap_content",
+                                                "width": "match_parent",
+                                                "weight": "9",
+                                                "type": "TextView"
+                                            },
+                                            {
+                                                "Value": "Height",
+                                                "Variable": "",
+                                                "height": "wrap_content",
+                                                "width": "match_parent",
+                                                "weight": "8",
+                                                "type": "TextView"
+                                            },
+                                            {
+                                                "Value": "@zpl_preview_label_width",
+                                                "Variable": "zpl_preview_label_width",
+                                                "height": "wrap_content",
+                                                "width": "match_parent",
+                                                "weight": "8",
+                                                "type": "EditTextNumeric"
+                                            },
+                                            {
+                                                "Value": "x",
+                                                "Variable": "",
+                                                "height": "wrap_content",
+                                                "width": "match_parent",
+                                                "weight": "9",
+                                                "type": "TextView"
+                                            },
+                                            {
+                                                "Value": "@zpl_preview_label_height",
+                                                "Variable": "zpl_preview_label_height",
+                                                "height": "wrap_content",
+                                                "width": "match_parent",
+                                                "weight": "8",
+                                                "type": "EditTextNumeric"
+                                            }
+                                        ],
+                                        "StrokeWidth": "3"
+                                    },
+                                    {
+                                        "type": "LinearLayout",
+                                        "Variable": "zpl_preview_table",
+                                        "orientation": "vertical",
+                                        "height": "wrap_content",
+                                        "width": "match_parent",
+                                        "weight": "0",
+                                        "Elements": [
+                                            {
+                                                "type": "LinearLayout",
+                                                "Variable": "",
+                                                "orientation": "horizontal",
+                                                "height": "wrap_content",
+                                                "width": "match_parent",
+                                                "weight": "0",
+                                                "Elements": [
+                                                    {
+                                                        "Value": "Текущий шаблон:",
+                                                        "Variable": "",
+                                                        "height": "wrap_content",
+                                                        "width": "match_parent",
+                                                        "weight": "1",
+                                                        "type": "TextView"
+                                                    },
+                                                    {
+                                                        "Value": "@zpl_current_template_name",
+                                                        "Variable": "",
+                                                        "height": "wrap_content",
+                                                        "width": "match_parent",
+                                                        "weight": "1",
+                                                        "type": "TextView"
+                                                    }
+                                                ]
+                                            },
+                                            {
+                                                "Value": "Добавить элемент",
+                                                "Variable": "btn_zpl_preview_add_element",
+                                                "height": "wrap_content",
+                                                "width": "wrap_content",
+                                                "weight": "0",
+                                                "type": "Button"
+                                            },
+                                            {
+                                                "Value": "@zpl_preview_table",
+                                                "Variable": "",
+                                                "height": "wrap_content",
+                                                "width": "match_parent",
+                                                "weight": "0",
+                                                "type": "TableLayout"
+                                            }
+                                        ]
+                                    },
+                                    {
+                                        "type": "LinearLayout",
+                                        "Variable": "zpl_current_element_params",
+                                        "orientation": "vertical",
+                                        "height": "wrap_content",
+                                        "width": "match_parent",
+                                        "weight": "0",
+                                        "Elements": [
+                                            {
+                                                "type": "LinearLayout",
+                                                "Variable": "",
+                                                "orientation": "horizontal",
+                                                "height": "wrap_content",
+                                                "width": "match_parent",
+                                                "weight": "0",
+                                                "Elements": [
+                                                    {
+                                                        "Value": "X:",
+                                                        "Variable": "",
+                                                        "height": "wrap_content",
+                                                        "width": "match_parent",
+                                                        "weight": "1",
+                                                        "type": "TextView"
+                                                    },
+                                                    {
+                                                        "Value": "@zpl_preview_current_element_x",
+                                                        "Variable": "zpl_preview_current_element_x",
+                                                        "height": "wrap_content",
+                                                        "width": "match_parent",
+                                                        "weight": "1",
+                                                        "type": "EditTextNumeric"
+                                                    },
+                                                    {
+                                                        "Value": "Y:",
+                                                        "Variable": "",
+                                                        "height": "wrap_content",
+                                                        "width": "match_parent",
+                                                        "weight": "1",
+                                                        "type": "TextView"
+                                                    },
+                                                    {
+                                                        "Value": "@zpl_preview_current_element_y",
+                                                        "Variable": "zpl_preview_current_element_y",
+                                                        "height": "wrap_content",
+                                                        "width": "match_parent",
+                                                        "weight": "1",
+                                                        "type": "EditTextNumeric"
+                                                    },
+                                                    {
+                                                        "Value": "Сохранить",
+                                                        "Variable": "btn_zpl_preview_save_current_element",
+                                                        "height": "wrap_content",
+                                                        "width": "match_parent",
+                                                        "weight": "1",
+                                                        "type": "Button"
+                                                    }
+                                                ]
+                                            },
+                                            {
+                                                "Value": "@current_element_params_table",
+                                                "Variable": "current_element_params_table",
+                                                "height": "wrap_content",
+                                                "width": "match_parent",
+                                                "weight": "0",
+                                                "type": "TableLayout"
+                                            }
+                                        ]
+                                    }
+                                ]
+                            },
+                            {
+                                "type": "MenuItem",
+                                "Value": "Печать ZPL",
+                                "Variable": "btn_zpl_preview_print_zpl"
+                            },
+                            {
+                                "type": "MenuItem",
+                                "Value": "Сохранить шаблон",
+                                "Variable": "btn_zpl_preview_save_template"
+                            },
+                            {
+                                "type": "MenuItem",
+                                "Value": "Удалить шаблон",
+                                "Variable": "btn_zpl_preview_delete_template"
+                            },
+                            {
+                                "type": "MenuItem",
+                                "Value": "Создать шаблон",
+                                "Variable": "btn_zpl_preview_create_template"
+                            },
+                            {
+                                "type": "MenuItem",
+                                "Value": "Выбрать шаблон",
+                                "Variable": "btn_zpl_preview_select_template"
+                            },
+                            {
+                                "type": "MenuItem",
+                                "Value": "Сохранить как",
+                                "Variable": "btn_zpl_preview_save_as"
+                            },
+                            {
+                                "type": "MenuItem",
+                                "Value": "Сделать основным",
+                                "Variable": "btn_zpl_preview_make_default_zpl_template"
+                            }
+                        ],
+                        "Handlers": [
+                            {
+                                "event": "onStart",
+                                "listener": "",
+                                "action": "run",
+                                "type": "python",
+                                "method": "print_template_zpl_constructor_on_start",
+                                "postExecute": ""
+                            },
+                            {
+                                "event": "onInput",
+                                "listener": "",
+                                "action": "run",
+                                "type": "python",
+                                "method": "print_template_zpl_constructor_on_input",
+                                "postExecute": ""
+                            }
+                        ]
+                    }
+                ]
             }
         ],
         "ConfigurationSettings": {
@@ -8287,6 +8839,14 @@
             },
             {
                 "PyFileKey": "db_models",
+                "PyFileData": ""
+            },
+            {
+                "PyFileKey": "sm_barc_flow",
+                "PyFileData": ""
+            },
+            {
+                "PyFileKey": "sm_services",
                 "PyFileData": ""
             }
         ],
