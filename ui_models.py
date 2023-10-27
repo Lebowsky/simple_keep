@@ -1768,9 +1768,13 @@ class DocumentsDocDetailScreen(DocDetailsScreen):
                 return
             if (noClass('articles_ocr_ncl').get('finded_articles')
                     and not self.rs_settings.get('allow_fact_input')):
-                self.service.update_doc_table_row(
-                    data={'sent': 0, 'd_qtty': float(selected_card_data['d_qtty']) + 1.0},
-                    row_id=int(selected_card_data['key']))
+                data = {
+                    'sent': 0,
+                    'd_qtty': float(selected_card_data['qtty']) + 1.0,
+                    'qtty': float(selected_card_data['qtty']) + 1.0,
+                }
+                row_id = int(selected_card_data['key'])
+                self.service.update_doc_table_row(data=data, row_id=row_id)
                 noClass('articles_ocr_ncl').delete('finded_articles')
                 self.hash_map.toast(
                     f'Артикул: {selected_card_data["art"]}\n'
@@ -3714,13 +3718,13 @@ class SeriesSelectScreen(Screen):
         self._update_total_qty()
         self._update_hash_map_keys()
         self._update_series_cards()
-        self._set_vision_settings()
 
         self.hash_map.put('return_selected_data')
 
     def on_start(self):
         self.hash_map.set_title('Выбор серии')
         self._save_new_series_item()
+        self._set_vision_settings()
 
     def on_input(self):
         listeners = {
