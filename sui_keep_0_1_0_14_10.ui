@@ -7139,7 +7139,7 @@
                                                                 "type": "TextView"
                                                             },
                                                             {
-                                                                "Value": "@good_art",
+                                                                "Value": "@article",
                                                                 "Variable": "",
                                                                 "height": "wrap_content",
                                                                 "width": "wrap_content",
@@ -7172,7 +7172,7 @@
                                                         "type": "TextView"
                                                     },
                                                     {
-                                                        "Value": "@properties_name",
+                                                        "Value": "@property",
                                                         "Variable": "",
                                                         "height": "wrap_content",
                                                         "width": "wrap_content",
@@ -7234,7 +7234,7 @@
                                                         "type": "TextView"
                                                     },
                                                     {
-                                                        "Value": "@good_unit",
+                                                        "Value": "@unit",
                                                         "Variable": "",
                                                         "height": "wrap_content",
                                                         "width": "wrap_content",
@@ -7249,7 +7249,7 @@
                                         ]
                                     },
                                     {
-                                        "Value": "@good_name",
+                                        "Value": "@item_name",
                                         "Variable": "",
                                         "height": "wrap_content",
                                         "width": "match_parent",
@@ -7331,17 +7331,6 @@
                                         ]
                                     },
                                     {
-                                        "Value": "Добавить",
-                                        "Variable": "btn_add_series",
-                                        "height": "wrap_content",
-                                        "width": "match_parent",
-                                        "weight": "0",
-                                        "TextBold": false,
-                                        "TextItalic": false,
-                                        "TextSize": "18",
-                                        "type": "Button"
-                                    },
-                                    {
                                         "Value": "@series_cards",
                                         "Variable": "series_cards",
                                         "height": "wrap_content",
@@ -7352,8 +7341,8 @@
                                         "type": "CardsLayout"
                                     },
                                     {
-                                        "Value": "@empty_series",
-                                        "Variable": "",
+                                        "Value": "Отсканируйте серии",
+                                        "Variable": "empty_series",
                                         "height": "wrap_content",
                                         "width": "match_parent",
                                         "weight": "0",
@@ -7363,16 +7352,6 @@
                                         "type": "TextView"
                                     }
                                 ]
-                            },
-                            {
-                                "type": "Vision",
-                                "Value": "#f002",
-                                "Variable": "btn_series_ocr_serial_number"
-                            },
-                            {
-                                "type": "barcode",
-                                "Value": "",
-                                "Variable": "barcode"
                             },
                             {
                                 "type": "MenuItem",
@@ -7388,6 +7367,21 @@
                                 "type": "MenuItem",
                                 "Value": "Добавить штрихкод",
                                 "Variable": "btn_series_add_barcode"
+                            },
+                            {
+                                "type": "fab",
+                                "Value": "#f067",
+                                "Variable": "btn_add_series"
+                            },
+                            {
+                                "type": "barcode",
+                                "Value": "",
+                                "Variable": "barcode"
+                            },
+                            {
+                                "type": "Vision",
+                                "Value": "#f002",
+                                "Variable": "btn_series_ocr_serial_number"
                             }
                         ],
                         "Handlers": [
@@ -7428,7 +7422,7 @@
                                 "weight": "1",
                                 "Elements": [
                                     {
-                                        "Value": "@good_name",
+                                        "Value": "@item_name",
                                         "Variable": "",
                                         "height": "wrap_content",
                                         "width": "match_parent",
@@ -7463,7 +7457,7 @@
                                                 "Variable": "name",
                                                 "height": "wrap_content",
                                                 "width": "wrap_content",
-                                                "weight": "0",
+                                                "weight": "5",
                                                 "TextBold": false,
                                                 "TextItalic": false,
                                                 "TextSize": "21",
@@ -7495,7 +7489,7 @@
                                                 "Variable": "number",
                                                 "height": "wrap_content",
                                                 "width": "wrap_content",
-                                                "weight": "0",
+                                                "weight": "5",
                                                 "TextBold": false,
                                                 "TextItalic": false,
                                                 "TextSize": "21",
@@ -8289,6 +8283,18 @@
             },
             {
                 "PyFileKey": "barcode_workers",
+                "PyFileData": ""
+            },
+            {
+                "PyFileKey": "db_models",
+                "PyFileData": ""
+            },
+            {
+                "PyFileKey": "sm_barc_flow",
+                "PyFileData": ""
+            },
+            {
+                "PyFileKey": "sm_services",
                 "PyFileData": ""
             }
         ],
