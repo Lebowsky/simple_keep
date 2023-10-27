@@ -539,7 +539,7 @@ class GroupScanTiles(Tiles):
     def on_input(self) -> None:
         super().on_input()
         if self.listener == 'ON_BACK_PRESSED':
-            self.hash_map.put('FinishProcess', '')
+            self._back_screen()
 
     def on_post_start(self):
         pass
@@ -567,6 +567,9 @@ class GroupScanTiles(Tiles):
     def _get_docs_stat(self):
         return self.db_service.get_docs_stat()
 
+    def _back_screen(self):
+        MainEvents.start_timer(self.hash_map)
+        self._finish_process()
 
 class DocumentsTiles(GroupScanTiles):
     screen_name = 'Плитки'
@@ -930,7 +933,7 @@ class GroupScanDocsListScreen(DocsListScreen):
                 self.hash_map.error_log(res.get('error'))
 
     def _back_screen(self):
-        MainEvents.start_timer(self.hash_map)
+
         super()._back_screen()
 
 
