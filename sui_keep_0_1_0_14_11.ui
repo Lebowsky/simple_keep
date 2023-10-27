@@ -2952,7 +2952,7 @@
                                             },
                                             {
                                                 "type": "LinearLayout",
-                                                "Variable": "fact_qtty_input",
+                                                "Variable": "",
                                                 "orientation": "vertical",
                                                 "height": "wrap_content",
                                                 "width": "match_parent",
@@ -3365,45 +3365,6 @@
                                 "postExecute": ""
                             }
                         ]
-                    },
-                    {
-                        "type": "Operation",
-                        "Name": "ВвестиШтрихкод",
-                        "Timer": false,
-                        "hideToolBarScreen": false,
-                        "hideBottomBarScreen": false,
-                        "noScroll": false,
-                        "handleKeyUp": false,
-                        "noConfirmation": false,
-                        "Elements": [
-                            {
-                                "type": "LinearLayout",
-                                "Variable": "",
-                                "orientation": "vertical",
-                                "height": "wrap_content",
-                                "width": "wrap_content",
-                                "weight": "0",
-                                "Elements": [
-                                    {
-                                        "Value": "Введите значение штрихкода",
-                                        "Variable": "",
-                                        "height": "wrap_content",
-                                        "width": "wrap_content",
-                                        "weight": "0",
-                                        "type": "TextView"
-                                    },
-                                    {
-                                        "Value": "@fld_barcode",
-                                        "Variable": "fld_barcode",
-                                        "height": "wrap_content",
-                                        "width": "match_parent",
-                                        "weight": "0",
-                                        "type": "EditTextText"
-                                    }
-                                ]
-                            }
-                        ],
-                        "Handlers": []
                     }
                 ]
             },
