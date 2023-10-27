@@ -297,12 +297,12 @@ class DocListService(DbService):
         self.is_barc_flow = is_barc_flow
         self.docs_table_name = 'RS_docs'
         self.details_table_name = 'RS_docs_table'
-        self.isAdr = False
         self.sql_text = ''
         self.sql_params = None
         self.debug = False
         self.provider = SqlQueryProvider(self.docs_table_name, sql_class=sqlClass())
         self.logger_service = LoggerService()
+
 
     def get_docs_view_data(self, doc_type='', doc_status='') -> list:
         query_text = f'''
@@ -585,10 +585,12 @@ class DocListService(DbService):
     def _get_query_result(query_text, args=None, return_dict=False):
         return get_query_result(query_text, args=args, return_dict=return_dict)
 
+
 class DocService(DocListService):
     def __init__(self, doc_id='', is_group_scan=False, is_barc_flow=False):
         super().__init__(is_group_scan, is_barc_flow)
         self.doc_id = doc_id
+        self.doc_tables = ['RS_docs_table', 'RS_docs_series', 'RS_docs_barcodes', 'RS_barc_flow']
 
     def get_all_articles_in_document(self) -> List[str]:
         query = ('SELECT DISTINCT RS_goods.art as art'
@@ -772,6 +774,16 @@ class DocService(DocListService):
 
     def get_data_to_send_by_doc_id(self, id_doc):
         return self.get_data_to_send(id_doc=id_doc)
+
+    def get_doc_data_to_resend(self) -> List[dict]:
+        _filter = {'id_doc': self.doc_id}
+        result = {**_filter}
+
+        for table_name in self.doc_tables:
+            self.provider.table_name = table_name
+            result[table_name] = self.provider.select(_filter=_filter)
+
+        return [result]
 
     def get_count_mark_codes(self, id_doc):
         q = '''
@@ -1050,21 +1062,19 @@ class AdrSeriesService(SeriesService):
 
         q = f'''
         SELECT RS_docs_table.id_doc,
-            RS_docs_table.id_good,
-            RS_docs_table.id_properties,
-            RS_docs_table.id_unit,
+            RS_docs_table.id_good AS item_id,
+            RS_docs_table.id_properties AS property_id,
+            RS_docs_table.id_unit AS unit_id,
             RS_docs_table.qtty,
             RS_docs_table.qtty_plan,
+            RS_docs_table.id_cell AS cell_id,
             RS_docs_table.use_series,
-            RS_docs_table.id_cell,
-            IFNULL(RS_docs.doc_type, '') AS doc_type,
-            IFNULL(RS_docs.doc_n, '') AS doc_n,
-            IFNULL(RS_docs.doc_date, '') AS doc_date,
-            IFNULL(RS_goods.name, '') AS good_name,
-            IFNULL(RS_goods.art, '') AS good_art,
-            IFNULL(RS_properties.name, '') AS properties_name,
-            IFNULL(RS_units.name, '') AS good_unit, 
-            IFNULL(RS_cells.name, '') AS cell_name
+            IFNULL(RS_docs.id_warehouse, '') AS warehouse_id,
+            IFNULL(RS_goods.name, '') AS item_name,
+            IFNULL(RS_goods.art, '') AS article,
+            IFNULL(RS_properties.name, '') AS property,
+            IFNULL(RS_units.name, '') AS unit, 
+            IFNULL(RS_cells.name, '') AS cell
         FROM RS_adr_docs_table AS RS_docs_table
 
         LEFT JOIN RS_adr_docs AS RS_docs ON
@@ -1093,6 +1103,34 @@ class AdrSeriesService(SeriesService):
             '''
         get_query_result(q)
 
+    @staticmethod
+    def get_series_data(doc_row_id):
+        q = f'''
+                SELECT 
+                    series.id AS key,
+                    series.id AS id,
+                    series.qtty,
+                    series.name,
+                    series.best_before,
+                    series.number,
+                    series.production_date,
+                    series.id_doc AS id_doc,
+                    series.id_good AS item_id,
+                    series.id_properties AS property_id,
+                    series.id_warehouse AS warehouse_id,
+                    series.cell AS cell_id
+
+                FROM RS_docs_series AS series
+                JOIN RS_adr_docs_table AS doc_details_table
+                    ON series.id_doc = doc_details_table.id_doc 
+                    AND series.id_good = doc_details_table.id_good 
+                    AND series.id_properties = doc_details_table.id_properties
+                WHERE doc_details_table.id = '{doc_row_id}'
+            '''
+
+        return get_query_result(q, return_dict=True)
+
+
 class SelectItemService(DbService):
     def __init__(self, table_name):
         super().__init__()
@@ -1108,12 +1146,12 @@ class AdrDocService(DocService):
         self.doc_id = id_doc
         self.docs_table_name = 'RS_Adr_docs'
         self.details_table_name = 'RS_adr_docs_table'
-        self.isAdr = True
         self.is_barc_flow = False
         self.current_cell = cur_cell
         self.table_type = table_type
         self.provider = SqlQueryProvider(self.docs_table_name, sql_class=sqlClass())
         self.is_group_scan = False
+        self.doc_tables = ['RS_adr_docs_table', 'RS_docs_series']
 
     def get_doc_details_data(
             self,
@@ -1360,7 +1398,6 @@ class FlowDocService(DocService):
     def __init__(self, doc_id=''):
         super().__init__(is_barc_flow=True)
         self.doc_id = doc_id
-        self.isAdr = False
         self.sql_text = ''
         self.sql_params = None
         self.debug = False
