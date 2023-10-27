@@ -6,12 +6,11 @@ import os
 from pathlib import Path
 import time
 from datetime import datetime
-from typing import Dict, List, Tuple, Callable, Union
-import shutil
+from typing import Dict, List, Callable, Union
 import db_services
 import hs_services
+from printing_factory import PrintService
 import db_models
-from printing_factory import HTMLDocument, PrintService, bt
 from ui_utils import HashMap, get_ip_address
 from barcode_workers import BarcodeWorker
 from db_services import DocService, GoodsService, BarcodeService, TimerService
@@ -19,10 +18,9 @@ from tiny_db_services import ScanningQueueService, ExchangeQueueBuffer, LoggerSe
 from hs_services import HsService
 import static_data
 from ru.travelfood.simple_ui import SimpleUtilites as suClass
-
 import widgets
 import ui_global
-import base64
+
 from java import jclass
 
 noClass = jclass("ru.travelfood.simple_ui.NoSQL")
@@ -201,789 +199,6 @@ class Screen(ABC):
         modified_number = str(int(number))
         return f"{prefix}-{modified_number}"
 
-# ==================== Printing screens =============================
-
-
-class HtmlView(Screen):
-    screen_name = 'Результат'
-    process_name = 'Печать'
-
-    def __init__(self, hash_map: HashMap, rs_settings):
-        super().__init__(hash_map, rs_settings)
-        self.print_ncl = noClass("print_ncl")
-
-    def on_start(self):
-        lable_full_path = self.print_ncl.get('lable_full_path')
-        barcode_width = self.hash_map.get('barcode_width')
-        barcode_width = str(int(float(barcode_width))) if barcode_width else '20'
-        barcode_height = self.hash_map.get('barcode_height')
-        barcode_height = str(int(float(barcode_height))) if barcode_height else '20'
-        barcode_left = self.hash_map.get('barcode_left')
-        barcode_left = str(int(float(barcode_left))) if barcode_left else '0'
-        barcode_right = self.hash_map.get('barcode_right')
-        barcode_right = str(int(float(barcode_right))) if barcode_right else '0'
-        barcode_up = self.hash_map.get('barcode_up')
-        barcode_up = str(int(float(barcode_up))) if barcode_up else '0'
-        barcode_down = self.hash_map.get('barcode_down')
-        barcode_down = str(int(float(barcode_down))) if barcode_down else '0'
-        barcode_type = self.hash_map.get('barcode_type_click') or 'ean13'
-
-        barcode_types = ['ean13', 'code39', 'code128', 'qr-code']
-
-        template_dir, template_file = os.path.split(lable_full_path)
-        html_doc_params = HTMLDocument.find_template_variables(template_dir, template_file)
-        doc_details = self.get_details_data(html_doc_params)
-
-        data_for_printing = {elem['key']: elem['value'] for elem in doc_details}
-        data_for_printing.update(barcode='123123123123')
-        list_for_choose = ';'.join(data_for_printing.keys())
-
-        table_data = self._prepare_table_data(doc_details)
-        table_view = self._get_doc_table_view(table_data=table_data)
-
-        html = HTMLDocument(template_dir, template_file).create_html(
-            data_for_printing, barcode_type=barcode_type)
-
-        html = HTMLDocument.inject_css_style(
-            html,
-            width=barcode_width,
-            height=barcode_height,
-            x=str(int(barcode_right) - int(barcode_left)),
-            y=str(int(barcode_down) - int(barcode_up)),
-        )
-        self.hash_map.put('barcode_width', barcode_width)
-        self.hash_map.put('barcode_height', barcode_height)
-        self.hash_map.put('barcode_left', barcode_left)
-        self.hash_map.put('barcode_right', barcode_right)
-        self.hash_map.put('barcode_up', barcode_up)
-        self.hash_map.put('barcode_down', barcode_down)
-        self.hash_map.put('barcode_types', ';'.join(barcode_types))
-        self.hash_map.put('html', html)
-        self.hash_map.put('data_for_printing_keys', list_for_choose)
-        self.hash_map.put('matching_table', table_view.to_json())
-        self.hash_map.put('return_selected_data')
-        self.hash_map.refresh_screen()
-
-    def get_details_data(self, html_doc_params: set) -> List[Dict]:
-        matching_table = self.hash_map.get('matching_table')
-        if not matching_table:
-            return [{'key': elem, 'value': elem} for elem in html_doc_params]
-        matching_table = json.loads(matching_table)
-        matching_table_data = matching_table['customtable']['tabledata']
-        result = []
-        for elem in html_doc_params:
-            value = elem
-            for data in matching_table_data:
-                if data.get('key') == elem:
-                    value = data['value']
-            result.append({'key': elem, 'value': value})
-        return result
-
-    def on_input(self):
-        if self.listener == 'ON_BACK_PRESSED':
-            if self.print_ncl.get('from_file_browser'):
-                self.print_ncl.delete('from_file_browser')
-                self.hash_map.finish_process_result()
-                return
-            self.hash_map.show_screen('Список шаблонов')
-
-        elif self.listener == 'btn_save':
-            matching_table = json.loads(self.hash_map.get("matching_table"))
-            current_table = matching_table['customtable']['tabledata']
-            current_table.pop(0)
-            for el in current_table:
-                if el.get('key'):
-                    el.pop('_layout')
-
-            self.print_ncl.put('barcode_width', self.hash_map.get('barcode_width'),True)
-            self.print_ncl.put('barcode_height', self.hash_map.get('barcode_height'),True)
-            self.print_ncl.put('barcode_left', self.hash_map.get('barcode_left'),True)
-            self.print_ncl.put('barcode_right', self.hash_map.get('barcode_right'),True)
-            self.print_ncl.put('barcode_up', self.hash_map.get('barcode_up'),True)
-            self.print_ncl.put('barcode_down', self.hash_map.get('barcode_down'),True)
-            self.print_ncl.put('matching_table', json.dumps(current_table), True)
-            self.print_ncl.put('barcode_type', self.hash_map.get('barcode_type_click'),True)
-            self.print_ncl.put('current_label_template_name', self.print_ncl.get('lable_file_name'), True)
-            self.print_ncl.put('current_label_template_path', self.print_ncl.get('lable_full_path'), True)
-            html = self.hash_map.get('html')
-
-            old_preview_tmp = self.print_ncl.get('preview_label_template_image_temp')
-            if old_preview_tmp and os.path.exists(old_preview_tmp):
-                os.remove(old_preview_tmp)
-            self.print_ncl.delete('preview_label_template_image_temp')
-
-            old_preview = self.print_ncl.get('preview_label_template_image')
-            if old_preview and os.path.exists(old_preview):
-                os.remove(old_preview)
-            self.hash_map.put('PrintPreview', html)
-            self.hash_map.put('PrintToBitmap')
-
-        elif self.listener == 'PrintBitmap':
-            path_to_png = self.hash_map.get('PrintBitmapPath')
-            # Перенос шаблонов в отдельную папку.
-            directory, name = os.path.split(path_to_png)
-            new_path = os.path.join(directory, 'saved_label_templates', name)
-            os.makedirs(os.path.join(directory, 'saved_label_templates'), exist_ok=True)
-            shutil.copy(path_to_png, new_path)
-            os.remove(path_to_png)
-
-            self.print_ncl.put('preview_label_template_image', new_path, True)
-            self.hash_map.beep()
-            self.hash_map.toast('Шаблон сохранён')
-            self.print_ncl.delete('from_file_browser')
-            self.hash_map.show_screen('Настройки печати Шаблоны')
-
-        elif self.listener == 'CardsClick':
-            card_data = json.loads(self.hash_map.get('selected_card_data'))
-            if not card_data:
-                return
-            self.hash_map.put('list_field', self.hash_map.get('data_for_printing_keys'))
-            self.hash_map.show_dialog('НастройкаСоответствияДиалог',
-                                      title=card_data['key'], buttons=['Да', 'Нет'])
-
-        elif self.hash_map.get("event") == 'onResultPositive':
-            card_position = int(self.hash_map.get('selected_card_position'))
-            matching_table = json.loads(self.hash_map.get("matching_table"))
-            current_elem = matching_table['customtable']['tabledata'][card_position]
-            current_elem['value'] = self.hash_map.get('select_field')
-            self.hash_map.put("matching_table",
-                              json.dumps(matching_table, ensure_ascii=False).encode(
-                                  'utf8').decode())
-            self.on_start()
-            self.hash_map.refresh_screen()
-
-    def on_post_start(self):
-        pass
-
-    def show(self, args=None):
-        pass
-
-    def _prepare_table_data(self, details: List[dict]):
-        table_data = [{}]
-        for record in details:
-            record.update(_layout=self._get_doc_table_row_view())
-            background_color = "#FFFFFF" if record['value'] else '#FBE9E7'
-            record['_layout'].BackgroundColor = background_color
-            table_data.append(record)
-        return table_data
-
-    def _get_doc_table_view(self, table_data):
-        table_view = widgets.CustomTable(
-            widgets.LinearLayout(
-                self.LinearLayout(
-                    self.TextView('Ключ', self.rs_settings),
-                    weight=1
-                ),
-                self.LinearLayout(
-                    self.TextView('Значение', self.rs_settings),
-                    weight=1
-                ),
-
-                orientation='horizontal',
-                height="match_parent",
-                width="match_parent",
-                BackgroundColor='#FFFFFF'
-            ),
-            options=widgets.Options().options,
-            tabledata=table_data
-        )
-
-        return table_view
-
-    def _get_doc_table_row_view(self):
-        row_view = widgets.LinearLayout(
-            widgets.LinearLayout(
-                widgets.LinearLayout(
-                    widgets.LinearLayout(
-                        self.TextView('@key', self.rs_settings),
-
-                        width='match_parent',
-                    ),
-                    width='match_parent',
-                    orientation='horizontal',
-                    StrokeWidth=1
-                ),
-                width='match_parent',
-                weight=1,
-                StrokeWidth=1
-            ),
-            widgets.LinearLayout(
-                widgets.TextView(
-                    Value='@value',
-                    TextSize=15,
-                    width='match_parent',
-                ),
-                width='match_parent',
-                height='match_parent',
-                weight=1,
-                StrokeWidth=1
-            ),
-            orientation='horizontal',
-            width='match_parent',
-            BackgroundColor='#FFFFFF'
-        )
-
-        return row_view
-
-    class TextView(widgets.TextView):
-        def __init__(self, value, rs_settings):
-            super().__init__()
-            self.TextSize = rs_settings.get('DocTypeCardTextSize')
-            self.TextColor = '#333333'
-            self.BackgroundColor = 'FFCC99'
-            self.weight = 0
-            self.Value = value
-
-    class LinearLayout(widgets.LinearLayout):
-        def __init__(self, *args, **kwargs):
-            super().__init__(*args, **kwargs)
-            self.orientation = 'horizontal'
-            self.height = "match_parent"
-            self.width = "match_parent"
-            self.StrokeWidth = 1
-
-class TemplatesList(Screen):
-    screen_name = 'Список шаблонов'
-    process_name = 'Печать'
-
-    def __init__(self, hash_map: HashMap, rs_settings):
-        super().__init__(hash_map, rs_settings)
-        self.print_ncl = noClass("print_ncl")
-
-    def on_start(self):
-        list_data = self.get_all_files_from_patch()
-        if not list_data:
-            self.hash_map.toast('Список шаблонов пуст')
-            self.hash_map.show_screen('Настройки печати Шаблоны')
-            return
-        doc_cards = self._get_doc_cards_view(list_data)
-        self.print_ncl.put('templates_cards', doc_cards.to_json(), True)
-        self.hash_map.put('templates_cards', doc_cards.to_json())
-        self.hash_map.put('return_selected_data')
-        self.hash_map.delete('matching_table')
-
-    def on_input(self):
-        if self.listener == 'ON_BACK_PRESSED':
-            self.hash_map.show_screen('Настройки печати Шаблоны')
-
-        elif self.listener == 'CardsClick':
-            card_data = json.loads(self.hash_map.get('selected_card_data'))
-            self.print_ncl.put('lable_file_name', card_data.get('file_name'), True)
-            self.print_ncl.put('lable_full_path', card_data.get('full_path'), True)
-            self.hash_map.show_screen('Результат')
-
-    def on_post_start(self):
-        pass
-
-    def show(self, args=None):
-        pass
-
-    def _get_doc_cards_view(self, table_data):
-        card_title_text_size = self.rs_settings.get('CardTitleTextSize')
-        card_date_text_size = self.rs_settings.get('CardDateTextSize')
-
-        doc_cards = widgets.CustomCards(
-            widgets.LinearLayout(
-                widgets.LinearLayout(
-                    widgets.TextView(
-                        Value='@file_name',
-                        TextBold=True,
-                        TextSize=card_title_text_size
-                    ),
-                    orientation="horizontal"
-                ),
-                widgets.LinearLayout(
-                    widgets.TextView(
-                        Value='@file_size',
-                        TextSize=card_date_text_size
-                    ),
-                    widgets.TextView(
-                        Value='@creation_time',
-                        TextSize=card_date_text_size
-                    )
-                ),
-                width="match_parent"
-            ),
-            options=widgets.Options().options,
-            cardsdata=table_data
-        )
-
-        return doc_cards
-
-    def get_all_files_from_patch(self):
-        templates_dir = self.print_ncl.get('label_templates_dir')
-        folder_path = templates_dir or os.path.join(suClass.get_temp_dir(), 'labels')
-        self.print_ncl.put('label_templates_dir', folder_path, True)
-        html_files_info = []
-
-        for root, dirs, files in os.walk(folder_path):
-            for file in files:
-                if file.lower().endswith('.htm'):  # and mask in file:
-                    file_path = os.path.join(root, file)
-                    file_size_bytes = os.path.getsize(file_path)
-                    file_size_kb = file_size_bytes / 1024  # Convert bytes to kilobytes
-                    creation_time = datetime.fromtimestamp(os.path.getctime(file_path))
-                    formatted_creation_time = creation_time.strftime(
-                        '%Y-%m-%d %H:%M:%S')  # Format datetime for user eyes ))
-
-                    file_info = {
-                        'full_path': file_path,
-                        'file_name': file,
-                        'file_size': f'{file_size_kb:.2f} KB',
-                        # Format file size with 2 decimal places
-                        'creation_time': formatted_creation_time
-                    }
-                    html_files_info.append(file_info)
-        return html_files_info
-
-
-class PrintSettings(Screen):
-    screen_name = 'Настройки печати'
-    process_name = 'Печать'
-
-    def __init__(self, hash_map: HashMap, rs_settings):
-        super().__init__(hash_map, rs_settings)
-        self.print_ncl = noClass('print_ncl')
-
-    def on_start(self):
-        print_through = self.print_ncl.get('print_through')
-        self.hash_map.put('check_box_bluetooth_print',
-                          str(print_through == 'BT').lower())
-        self.hash_map.put('check_box_wifi_print', str(print_through == 'WiFi').lower())
-
-    def on_input(self):
-        listener = self.listener
-        if listener == 'btn_bluetooth_printer_settings':
-            self.hash_map.show_screen('Настройки печати Bluetooth')
-        elif listener == 'btn_wifi_printer_settings':
-            self.hash_map.show_screen('Настройки печати WiFi')
-        elif listener == 'btn_label_templates_settings':
-            self.hash_map.show_screen('Настройки печати Шаблоны')
-        elif listener == 'check_box_bluetooth_print':
-            self.print_ncl.put('print_through', 'BT', True)
-            self.hash_map.toast('Печать через Bluetooth')
-        elif listener == 'check_box_wifi_print':
-            self.print_ncl.put('print_through', 'WiFi', True)
-            self.hash_map.toast('Печать через WiFi')
-        elif listener == 'ON_BACK_PRESSED':
-            self.hash_map.finish_process()
-
-    def on_post_start(self):
-        pass
-
-    def show(self, args=None):
-        pass
-
-
-class PrintBluetoothSettings(Screen):
-    screen_name = 'Настройки печати Bluetooth'
-    process_name = 'Печать'
-
-    def __init__(self, hash_map: HashMap, rs_settings):
-        super().__init__(hash_map, rs_settings)
-        self.bt_ncl = noClass("bt_settings")
-
-    def on_start(self):
-        printer = self.bt_ncl.get("default_printer") or 'Не выбран'
-        self.hash_map.put('default_printer', printer)
-
-    def on_input(self):
-        listener = self.listener
-        if listener == 'btn_show_connected':
-            devices = self.hash_map.get("BTResult")
-            devices = json.loads(devices) if devices else []
-            jcards = {"cards": []}
-
-            for device in devices:
-                card = {"key": device.get("address"),
-                        "items": [
-                            {
-                                "key": "Устройство",
-                                "value": device.get("name"),
-                                "size": "15",
-                                "color": "#1b31c2",
-                                "caption_size": "12",
-                                "caption_color": "#1b31c2"
-                            },
-                            {
-                                "key": "MAC",
-                                "value": device.get("address"),
-                                "size": "15",
-                                "color": "#131e61",
-                                "caption_size": "12",
-                                "caption_color": "#1b31c2"
-                            },
-                            {
-                                "key": "state",
-                                "value": device.get("state"),
-                                "size": "15",
-                                "color": "#131e61",
-                                "caption_size": "12",
-                                "caption_color": "#1b31c2"
-                            }
-                        ]}
-
-                jcards["cards"].append(card)
-
-            self.hash_map.put("cards", json.dumps(jcards))
-
-        elif listener == 'btn_stop_scan':
-            if self.bt_ncl.get('scanning'):
-                self.bt_ncl.put('scanning', False, True)
-                self.hash_map.put('BTStopScan', '')
-                self.hash_map.toast('Сканирование остановлено')
-
-        elif listener == 'btn_bt_disconnect':
-            if self.bt_ncl.get('default_printer'):
-                try:
-                    bt.close_socket()
-                    self.hash_map.delete('default_printer')
-                    self.bt_ncl.delete('default_printer')
-                    self.hash_map.put('default_printer', 'Не выбран')
-                    self.hash_map.toast('Принтер отключен')
-                except Exception as e:
-                    self.hash_map.toast('Нет подключенных принтеров')
-            else:
-                self.hash_map.toast('Нет подключенных принтеров')
-
-        elif listener == 'btn_start_scan':
-            bt_discover_handlers = [{
-                "action": "run", "type": "set",
-                "method": "beep;toast=@BTDiscoverResult",
-                "postExecute": ""
-            }]
-            self.bt_ncl.put('scanning', True, True)
-            self.hash_map.put("BTStartScan", "")
-            self.hash_map.put("BTDiscoverHandlers", json.dumps(bt_discover_handlers))
-
-            self.hash_map.toast('Сканирование')
-
-        elif listener == 'CardsClick':
-            bt_handlers = [
-                {"action": "run", "type": "python", "method": "bluetooth_error"}
-            ]
-
-            mac = self.hash_map.get("selected_card_key")
-            device = bt.get_device(mac)
-            if device is None:
-                self.hash_map.toast("Не получилось подключиться к устройству")
-                return
-            self.hash_map.toast('тест')
-            connected = bt.connect_to_client(device, json.dumps(bt_handlers))
-            if not connected:
-                self.hash_map.toast("Устройство не является принтером")
-                return
-            self.bt_ncl.put("default_printer", mac, False)
-            self.hash_map.put("default_printer", mac)
-            self.hash_map.beep()
-            self.hash_map.toast('Успешно')
-
-        elif listener == 'btn_test_print':
-            if self.bt_ncl.get('default_printer'):
-                zpl = '^XA^CFA,30^FO10,50^FDTest^FS^BY3,2,120^FO10,150^BC^FD12345678^FS^XZ'
-                sent, result = PrintService.print_bt(zpl)
-                self.hash_map.toast(result)
-            else:
-                self.hash_map.toast('Нет подключенных принтеров')
-        elif listener == 'ON_BACK_PRESSED':
-            self.hash_map.show_screen('Настройки печати')
-
-    def on_post_start(self):
-        pass
-
-    def show(self, args=None):
-        pass
-
-
-class PrintWiFiSettings(Screen):
-    screen_name = 'Настройки печати WiFi'
-    process_name = 'Печать'
-
-    def __init__(self, hash_map: HashMap, rs_settings):
-        super().__init__(hash_map, rs_settings)
-        self.print_ncl = noClass("print_ncl")
-
-    def on_start(self):
-        import re
-        ip = self.print_ncl.get('current_ip')
-        if ip:
-            self.hash_map.put('wi_fi_ip', ip)
-            self.hash_map.put('info_wifi_current_ip',
-                              f'IP подключенного принтера: {ip}')
-        else:
-            ip = self.hash_map.get('wi_fi_ip')
-            if ip:
-                pattern = r'^(\d{1,3}\.){3}\d{1,3}$'
-                if not re.match(pattern, ip):
-                    self.hash_map.delete('wi_fi_ip')
-                    self.hash_map.toast('Неверный формат IP')
-                    self.hash_map.put('info_wifi_current_ip',
-                                      f'Нет подключенного принтера')
-                    return
-                self.hash_map.put('info_wifi_current_ip',
-                                  f'IP подключенного принтера: {ip}')
-            else:
-                self.hash_map.put('info_wifi_current_ip', f'Нет подключенного принтера')
-
-    def on_input(self):
-        listener = self.listener
-        if listener == 'btn_wifi_save_ip':
-            self._wifi_save_ip()
-        elif listener == 'btn_wifi_delete_ip':
-            self._wifi_delete_ip()
-        elif listener == 'btn_test_wi_fi':
-            self.hash_map.toast('Тест печати')
-            self._test_wi_fi()
-        elif listener == 'btn_wi_fi_print_zpl':
-            self.hash_map.toast('Тест zpl')
-            self._print_zpl()
-        elif listener == 'ON_BACK_PRESSED':
-            self.hash_map.show_screen('Настройки печати')
-
-    def on_post_start(self):
-        pass
-
-    def show(self, args=None):
-        pass
-
-    def _wifi_save_ip(self):
-        import re
-        ip = self.hash_map.get('wi_fi_ip')
-        if not ip:
-            self.hash_map.toast('Не указан ip')
-            return
-        pattern = r'^(\d{1,3}\.){3}\d{1,3}$'
-        if not re.match(pattern, ip):
-            self.hash_map.delete('wi_fi_ip')
-            self.hash_map.toast('Неверный формат IP')
-            return
-        self.print_ncl.put('current_ip', ip, True)
-        self.hash_map.beep()
-        self.hash_map.toast('IP принтера записан')
-
-    def _wifi_delete_ip(self):
-        ip = self.print_ncl.get('current_ip')
-        if not ip:
-            self.hash_map.toast('Не указан ip')
-            return
-        self.hash_map.delete('wi_fi_ip')
-        self.print_ncl.delete('current_ip')
-        self.hash_map.toast('IP принтера удалён')
-
-    def _print_zpl(self):
-        zpl = self.hash_map.get('wi_fi_zpl_input')
-        if not zpl:
-            self.hash_map.toast('Нет zpl кода для печати')
-            return
-        self.print_ncl.put('wifi_data_to_print', zpl, True)
-        self.hash_map.run_event_async('print_wifi')
-
-    def _test_wi_fi(self):
-        zpl = '^XA^CFA,30^FO10,50^FDTest^FS^BY3,2,120^FO10,150^BC^FD12345678^FS^XZ'
-        self.print_ncl.put('wifi_data_to_print', zpl, True)
-        self.hash_map.run_event_async('print_wifi')
-
-
-class PrintLabelTemplatesSettings(Screen):
-    screen_name = 'Настройки печати Шаблоны'
-    process_name = 'Печать'
-
-    def __init__(self, hash_map: HashMap, rs_settings):
-        super().__init__(hash_map, rs_settings)
-        self.print_ncl = noClass("print_ncl")
-        self.hs_service = HsService(self.get_http_settings())
-
-    def on_start(self):
-        template = self.print_ncl.get('current_label_template_name') or 'Нет'
-        self.hash_map.put('current_label_template_name', f'Текущий шаблон: {template}')
-        path_to_label_preview_image = self.print_ncl.get('preview_label_template_image')
-        if not path_to_label_preview_image:
-            return
-        temp_preview = self.print_ncl.get('preview_label_template_image_temp')
-        path = temp_preview if temp_preview else path_to_label_preview_image
-        self.hash_map.put('preview_label_template_image', '~' + path)
-
-    def on_input(self):
-        listener = self.listener
-        if listener == 'btn_get_labels':
-            self._get_labels()
-        elif listener == 'btn_select_label_template':
-            self.hash_map.show_screen('Список шаблонов')
-        elif listener == 'btn_delete_template_settings':
-            self.delete_template_settings()
-        elif listener == 'btn_label_template_size_settings':
-            path_to_label = self.print_ncl.get('preview_label_template_image')
-            if not path_to_label or not os.path.isfile(path_to_label):
-                self.hash_map.toast('Сначала нужно выбрать шаблон')
-                return
-            self.hash_map.show_screen('Настройки печати Размеры')
-        elif listener == 'ON_BACK_PRESSED':
-            self.hash_map.show_screen('Настройки печати')
-
-    def on_post_start(self):
-        pass
-
-    def show(self, args=None):
-        pass
-
-    def _get_labels(self):
-        try:
-            answer = self.hs_service.get_templates()
-            if answer['status_code'] != 200:
-                reason = answer['error_pool']
-                raise f'Ошибка соединения с сервером: {reason}'
-
-            output_folder = os.path.join(suClass.get_temp_dir(), 'labels')
-
-            os.makedirs(output_folder, exist_ok=True)
-
-            data_list = answer['data']
-            self.hash_map.toast(f'data_list:{type(data_list)}, {data_list}')
-
-            for data_dict in data_list:
-                file_name = self._correct_filename(data_dict['name']) + '.htm'
-                file_path = os.path.join(output_folder, file_name)
-
-                try:
-                    with open(file_path, 'w', encoding='utf-8') as file:
-                        file.write(base64.b64decode(data_dict['html']).decode('utf-8'))
-                except Exception as e:
-                    self.hash_map.toast(
-                        f'Ошибка сохранения файла {file_path}: {str(e)}')
-                    raise f'Ошибка сохранения файла {file_path}: {str(e)}'
-            self.print_ncl.put('label_templates_dir', output_folder, True)
-            self.hash_map.toast('Шаблоны загружены')
-        except Exception as e:
-            self.hash_map.toast(str(e))
-
-    @staticmethod
-    def _correct_filename(filename):
-        illegal_chars = ['<', '>', ':', '"', "'", '/', '\\', '|', '?', '*', "<", ">",
-                         '\x00']
-        for char in illegal_chars:
-            filename = filename.replace(char, '')
-        return filename
-
-    def delete_template_settings(self):
-        self.print_ncl.delete('barcode_width')
-        self.print_ncl.delete('barcode_height')
-        self.print_ncl.delete('barcode_left')
-        self.print_ncl.delete('barcode_right')
-        self.print_ncl.delete('barcode_up')
-        self.print_ncl.delete('barcode_down')
-        self.print_ncl.delete('matching_table')
-        self.print_ncl.delete('barcode_type')
-        self.print_ncl.delete('current_label_template_name')
-        self.print_ncl.delete('current_label_template_path')
-
-        old_preview_tmp = self.print_ncl.get('preview_label_template_image_temp')
-        if old_preview_tmp and os.path.exists(old_preview_tmp):
-            os.remove(old_preview_tmp)
-        self.print_ncl.delete('preview_label_template_image_temp')
-        old_preview = self.print_ncl.get('preview_label_template_image')
-        if old_preview and os.path.exists(old_preview):
-            os.remove(old_preview)
-        self.print_ncl.delete('preview_label_template_image')
-
-
-class PrintTemplateSizeSettings(Screen):
-    screen_name = 'Настройки печати Размеры'
-    process_name = 'Печать'
-
-    def __init__(self, hash_map: HashMap, rs_settings):
-        super().__init__(hash_map, rs_settings)
-        self.print_ncl = noClass("print_ncl")
-
-    def on_start(self):
-        width_template = self.hash_map.get('width_print_template')
-        width_template = int(float(width_template)) if width_template else 50
-        height_template = self.hash_map.get('height_print_template')
-        height_template = int(float(height_template)) if height_template else 50
-        dpmm = self.hash_map.get('dpmm_print_template')
-        dpmm = int(dpmm) if dpmm else 8
-        image_height = self.hash_map.get('image_height_print_template')
-        image_height = int(float(image_height)) if image_height else 50
-        image_width = self.hash_map.get('image_width_print_template')
-        image_width = int(float(image_width)) if image_width else 50
-        ll = self.hash_map.get('image_ll_print_template')
-        ll = int(float(ll)) if ll else 15
-        pw = self.hash_map.get('image_pw_print_template')
-        pw = int(float(pw)) if pw else 1000
-        y = self.hash_map.get('image_y_print_template')
-        y = int(float(y)) if y else 0
-        x = self.hash_map.get('image_x_print_template')
-        x = int(float(x)) if x else 0
-
-        path_to_img = self.print_ncl.get('preview_label_template_image')
-        zpldata = PrintService.make_zpl_from_label(
-            image_width_print_template=image_width,
-            image_height_print_template=image_height,
-            dpmm_print_template=dpmm,
-            image_ll_print_template=ll,
-            image_pw_print_template=pw,
-            image_x_print_template=x,
-            image_y_print_template=y,
-            path_to_img=path_to_img
-        )
-        self.print_ncl.put('zpldata', zpldata, True)
-        success, answer = PrintService.zpl_to_png_from_api(
-            zpldata, dpmm, width_template, height_template)
-        if not success:
-            return
-
-        path, ext = os.path.splitext(path_to_img)
-        preview_path = path + '_preview' + ext
-        with open(preview_path, 'wb') as out_file:
-            shutil.copyfileobj(answer, out_file)
-            self.print_ncl.put('preview_label_template_image_temp',
-                               preview_path, True)
-        self.hash_map.put('image_print', '~' + preview_path)
-        self.hash_map.put('width_print_template', str(width_template))
-        self.hash_map.put('height_print_template', str(height_template))
-        self.hash_map.put('image_width_print_template', str(image_width))
-        self.hash_map.put('image_height_print_template', str(image_height))
-        self.hash_map.put('dpmm_print_template', str(dpmm))
-        self.hash_map.put('image_ll_print_template', str(ll))
-        self.hash_map.put('image_pw_print_template', str(pw))
-        self.hash_map.put('image_x_print_template', str(x))
-        self.hash_map.put('image_y_print_template', str(y))
-        self.hash_map.refresh_screen()
-
-    def on_input(self):
-        listener = self.hash_map.get('listener')
-
-        if listener == 'ON_BACK_PRESSED':
-            self.hash_map.show_screen('Настройки печати Шаблоны')
-
-        elif listener == 'btn_save_template_sizes':
-            template = dict(
-                image_height_print_template=self.print_ncl.get('image_height_print_template'),
-                image_width_print_template=self.print_ncl.get('image_width_print_template'),
-                dpmm_print_template=self.print_ncl.get('dpmm_print_template'),
-                image_x_print_template=self.print_ncl.get('image_x_print_template'),
-                image_y_print_template=self.print_ncl.get('image_y_print_template'),
-                image_ll_print_template=self.print_ncl.get('image_ll_print_template'),
-                image_pw_print_template=self.print_ncl.get('image_pw_print_template'),
-            )
-            self.print_ncl.put('saved_print_template', json.dumps(template), True)
-            self.hash_map.toast('Шаблон сохранён')
-
-        elif listener == 'btn_delete_print_template':
-            self.print_ncl.delete('saved_print_template')
-            self.hash_map.toast('Шаблон удалён')
-
-        elif listener == 'btn_sent_to_print':
-            zpldata = self.print_ncl.get('zpldata')
-            PrintService.print_zpl(zpldata, self.hash_map)
-
-    def on_post_start(self):
-        pass
-
-    def show(self, args=None):
-        pass
-
-# ^^^^^^^^^^^^^^^^^^^^^ Printing screens ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
 
 class SimpleFileBrowser(Screen):
     screen_name = 'Список файлов'
@@ -1119,11 +334,11 @@ class SimpleFileBrowser(Screen):
             selected_card.pop('_layout', None)
             self.hash_map.toast(str(selected_card))
         elif listener == 'Шаблон печати':
-            print_ncl = noClass("print_ncl")
-            print_ncl.put('lable_file_name', selected_card.get('file_name'), True)
-            print_ncl.put('lable_full_path', selected_card.get('full_path'), True)
-            print_ncl.put('from_file_browser', True, True)
-            self.hash_map.show_process_result('Печать', 'Результат')
+            print_nosql = noClass("print_nosql")
+            print_nosql.put('lable_file_name', selected_card.get('file_name'), True)
+            print_nosql.put('lable_full_path', selected_card.get('full_path'), True)
+            print_nosql.put('from_file_browser', True, True)
+            self.hash_map.show_process_result('Print', 'PrintTemplates1CParameters')
 
     def _copy_file(self, file: Path):
         ip_host = self.hash_map.get('ip_host') or self.rs_settings.get('debug_host_ip') # '192.168.1.77'
@@ -2537,7 +1752,6 @@ class DocumentsDocDetailScreen(DocDetailsScreen):
     def __init__(self, hash_map, rs_settings):
         super().__init__(hash_map, rs_settings)
         self.db_service = db_services.BarcodeService()
-        self.articles_ocr_ncl = noClass('articles_ocr_ncl')
 
     def on_start(self) -> None:
         super()._on_start()
@@ -2552,12 +1766,12 @@ class DocumentsDocDetailScreen(DocDetailsScreen):
             selected_card_data = self.hash_map.get_json('selected_card_data')
             if not selected_card_data:
                 return
-            if (self.articles_ocr_ncl.get('finded_articles')
+            if (noClass('articles_ocr_ncl').get('finded_articles')
                     and not self.rs_settings.get('allow_fact_input')):
                 self.service.update_doc_table_row(
                     data={'sent': 0, 'd_qtty': float(selected_card_data['d_qtty']) + 1.0},
                     row_id=int(selected_card_data['key']))
-                self.articles_ocr_ncl.delete('finded_articles')
+                noClass('articles_ocr_ncl').delete('finded_articles')
                 self.hash_map.toast(
                     f'Артикул: {selected_card_data["art"]}\n'
                     f'{selected_card_data["good_name"]}\n'
@@ -2571,7 +1785,7 @@ class DocumentsDocDetailScreen(DocDetailsScreen):
             )
 
         elif listener == 'barcode' or self._is_result_positive('modal_dialog_input_barcode'):
-            self.articles_ocr_ncl.delete('finded_articles')
+            noClass('articles_ocr_ncl').delete('finded_articles')
             res = self._item_barcode_scanned()
             # TODO с результатом обработку
 
@@ -2581,19 +1795,19 @@ class DocumentsDocDetailScreen(DocDetailsScreen):
                 self.hash_map.toast('В документе отстутствуют артикулы')
                 return
             self._set_vision_settings(articles=articles)
-            self.hash_map.put('RunCV', 'Распознавание артикулов')
+            self.hash_map.put('RunCV', 'OcrArticleRecognition')
 
         elif listener == 'ActiveCV':
-            if not self.articles_ocr_ncl.get('button_manage_articles'):
+            if not noClass('articles_ocr_ncl').get('button_manage_articles'):
                 return
-            self.articles_ocr_ncl.delete('button_manage_articles')
-            finded_articles = self.articles_ocr_ncl.get('finded_articles')
+            noClass('articles_ocr_ncl').delete('button_manage_articles')
+            finded_articles = noClass('articles_ocr_ncl').get('finded_articles')
             if finded_articles is None:
                 self.hash_map.toast('Артикулы не найдены')
                 return
         elif listener in ['ON_BACK_PRESSED', 'BACK_BUTTON']:
-            if self.articles_ocr_ncl.get('finded_articles'):
-                self.articles_ocr_ncl.delete('finded_articles')
+            if noClass('articles_ocr_ncl').get('finded_articles'):
+                noClass('articles_ocr_ncl').delete('finded_articles')
                 return
             self.hash_map.remove('rows_filter')
             self.hash_map.put('current_first_element_number', '0')
@@ -2616,7 +1830,7 @@ class DocumentsDocDetailScreen(DocDetailsScreen):
             "min_length": len(min(articles, key=len)),
             "max_length": len(max(articles, key=len)),
         }
-        self.articles_ocr_ncl.put('articles_ocr_settings', json.dumps(settings), True)
+        noClass('articles_ocr_ncl').put('articles_ocr_settings', json.dumps(settings), True)
 
     def _open_series_screen(self, doc_row_key):
         screen_values = {
@@ -2656,7 +1870,7 @@ class DocumentsDocDetailScreen(DocDetailsScreen):
         screen.show()
 
     def _set_visibility_on_start(self):
-        finded_articles = '-1' if self.articles_ocr_ncl.get('finded_articles') else '1'
+        finded_articles = '-1' if noClass('articles_ocr_ncl').get('finded_articles') else '1'
         self.hash_map.put('Show_btn_doc_mark_verified', finded_articles)
         self.hash_map.put('Show_doc_date', finded_articles)
         self.hash_map.put('Show_warehouse', finded_articles)
@@ -2789,7 +2003,7 @@ class BaseGoodSelect(Screen):
         for key in data:
             data[key] = self.hash_map.get(data[key])
         data['barcode'] = barcode if barcode else '0000000000000'
-        PrintService.print(self.hash_map, data)
+        PrintService(self.hash_map).print(data)
 
     def _open_series_screen(self):
         screen = SeriesSelectScreen(
@@ -3578,15 +2792,13 @@ class ItemCard(Screen):
 
     def _print_ticket(self):
         current_card = self._get_selected_card_data()
-
-        data = {
+        data_dict = {
             'barcode': current_card.get('barcode', '0000000000000'),
             'Номенклатура': self.hash_map.get('good_name'),
             'Характеристика': current_card.get('properties', ''),
             'Упаковка': current_card.get('unit', '')
         }
-
-        PrintService.print(self.hash_map, data)
+        PrintService(self.hash_map).print(data_dict)
 
     def _get_selected_card_data(self) -> dict:
         result = {}
@@ -4515,7 +3727,7 @@ class SeriesSelectScreen(Screen):
             'btn_add_series': self._add_new_series,
             'barcode': self._barcode_listener,
             'vision': self._vision_listener,
-            'vision_cancel': lambda: SerialNumberOCRSettings.ocr_nosql_counter.destroy(),
+            'vision_cancel': lambda: noClass('ocr_nosql_counter').destroy(),
             'btn_print': self._print_ticket,
             'btn_series_add_barcode': self._btn_add_barcode,
             'btn_ocr_serial_template_settings': self._osr_settings,
@@ -4570,16 +3782,14 @@ class SeriesSelectScreen(Screen):
         self._add_series_item_on_scanning(barcode)
 
     def _vision_listener(self):
-        ocr_nosql = SerialNumberOCRSettings.ocr_nosql
-        number = ocr_nosql.get('ocr_result')
+        number = noClass('ocr_nosql').get('ocr_result')
         if number:
-            ocr_nosql.delete('ocr_result')
+            noClass('ocr_nosql').delete('ocr_result')
             self._add_series_item_on_scanning(number)
-            SerialNumberOCRSettings.ocr_nosql_counter.destroy()
+            noClass('ocr_nosql_counter').destroy()
 
     def _osr_settings(self):
-        ocr_nosql = SerialNumberOCRSettings.ocr_nosql
-        ocr_nosql.put('show_process_result', True, True)
+        noClass('ocr_nosql').put('show_process_result', True, True)
         self.hash_map.show_process_result('OcrTextRecognition',
                                           'SerialNumberOCRSettings')
 
@@ -4735,12 +3945,11 @@ class SeriesSelectScreen(Screen):
         self._update_total_qty()
 
     def _set_vision_settings(self) -> None:
-        ocr_nosql = SerialNumberOCRSettings.ocr_nosql
-        serial_ocr_settings = ocr_nosql.get('serial_ocr_settings')
+        serial_ocr_settings = noClass('ocr_nosql').get('serial_ocr_settings')
         if serial_ocr_settings:
             serial_ocr_settings = json.loads(serial_ocr_settings)
             self.hash_map.set_vision_settings(**serial_ocr_settings)
-            ocr_nosql.put('from_screen', 'SeriesSelectScreen', True)
+            noClass('ocr_nosql').put('from_screen', 'SeriesSelectScreen', True)
 
     def _print_ticket(self):
         # Получим первый баркод документа
@@ -4757,7 +3966,7 @@ class SeriesSelectScreen(Screen):
         for key in data:
             data[key] = self.hash_map.get(data[key])
         data['barcode'] = barcode if barcode else '0000000000000'
-        PrintService.print(self.hash_map, data)
+        PrintService(self.hash_map).print(data)
 
     def _btn_add_barcode(self):
         init_data = {
@@ -5220,8 +4429,8 @@ class SettingsScreen(Screen):
             'btn_size': lambda: self._show_screen('Настройки Шрифтов'),
             'btn_sound_settings': lambda: self._show_screen('Настройка звука'),
             'btn_documents_settings': lambda: self._show_screen('Настройки документов'),
-            'btn_ocr_recognition_settings': lambda: self.hash_map.put('StartProcess', 'OcrTextRecognition'),
-            'btn_print_settings': lambda: self.hash_map.put('StartProcess', 'Печать'),
+            'btn_ocr_recognition_settings': lambda: self.hash_map.switch_process_screen('OcrTextRecognition'),
+            'btn_print_settings': lambda: self.hash_map.switch_process_screen('Print'),
             'btn_test_barcode': lambda: self._show_screen('Тест сканера'),
             'btn_err_log': lambda: self._show_screen('Ошибки'),
             'btn_upload_docs': self._upload_docs,
@@ -5980,230 +5189,10 @@ class DebugSettingsScreen(Screen):
         self.hash_map.put('FinishProcess', '')
 
     def open_templates_screen(self):
-        self.hash_map.show_process_result('Печать', 'Список шаблонов')
+        self.hash_map.show_process_result('Print', 'TemplatesList')
 
 
 # ^^^^^^^^^^^^^^^^^^^^^ Debug settings ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-# ==================== ActiveCV =============================
-
-class ActiveCVArticleRecognition(Screen):
-    screen_name = 'Новый шаг ActiveCV'
-    process_name = 'Распознавание артикулов'
-
-    def __init__(self, hash_map: HashMap, rs_settings):
-        super().__init__(hash_map, rs_settings)
-        self.id_doc = self.hash_map['id_doc']
-        self.service = DocService(self.id_doc)
-        self.articles_ocr_ncl = noClass('articles_ocr_ncl')
-
-    def on_start(self):
-        self.articles_ocr_ncl.delete('finded_articles')
-        self._set_vision_settings()
-        self.hash_map.put('art_info', 'Найденные артикулы: ')
-
-    def on_input(self):
-        if self.listener == 'Обработать':
-            self.articles_ocr_ncl.put('button_manage_articles', True, True)
-            self.hash_map.finish_process()
-
-    def on_object_detected(self):
-        self.hash_map.beep()
-        current_object = self.hash_map.get('current_object')
-        finded_articles = self.articles_ocr_ncl.get('finded_articles')
-        finded_articles = json.loads(finded_articles) if finded_articles else []
-        if current_object not in finded_articles:
-            finded_articles.append(current_object)
-            self.hash_map.put(
-                'art_info', 'Найденные артикулы: ' + ';'.join(finded_articles))
-            self.articles_ocr_ncl.put('finded_articles', json.dumps(finded_articles), True)
-
-        good_name = self.get_good_info(current_object)
-        self.hash_map.add_to_cv_list(
-            {'object': str(current_object),
-             'info': f'Товар: <big>{good_name}</big>'},
-            'object_info_list', _dict=True)
-
-    def on_post_start(self):
-        pass
-
-    def show(self, args=None):
-        pass
-
-    def get_good_info(self, article: str) -> str:
-        query = ('SELECT RS_goods.name as name'
-                 ' FROM RS_docs_table'
-                 ' LEFT JOIN RS_goods ON RS_docs_table.id_good = RS_goods.id'
-                 ' WHERE RS_docs_table.id_doc = ? AND RS_goods.art = ?')
-        goods = self.service.provider.sql_query(query, f'{self.id_doc},{article}')
-        return goods[0]['name'] if goods else 'Не найдено'
-
-    def _set_vision_settings(self):
-        settings = self.articles_ocr_ncl.get('articles_ocr_settings')
-        self.hash_map.set_vision_settings(**json.loads(settings))
-
-# ^^^^^^^^^^^^^^^^^^^^^ ActiveCV ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-
-# ==================== OCR =============================
-
-class SerialNumberOCRSettings(Screen):
-    screen_name = 'SerialNumberOCRSettings'
-    process_name = 'OcrTextRecognition'
-    ocr_nosql = noClass("ocr_nosql")
-    ocr_nosql_counter = noClass("ocr_nosql_counter")
-
-    def __init__(self, hash_map: HashMap, rs_settings):
-        super().__init__(hash_map, rs_settings)
-        self.articles_ocr_ncl = noClass('articles_ocr_ncl')
-        self.ocr_nosql = noClass("ocr_nosql")
-        self.screen_title = 'Шаблон распознавания S/N'
-        self.screen_values = {
-            'ocr_serial_template_min_rec_amount': '5',
-            'ocr_serial_template_num_amount': '10',
-            'ocr_serial_template_prefix': 'SN',
-            'ocr_serial_template_continuous_recognition': 'false',
-            'ocr_serial_template_use_prefix': 'true',
-            'ocr_serial_current_template': ""
-        }
-
-    def on_start(self):
-        self.hash_map.set_title(self.screen_title)
-        self._set_screen_values()
-
-    def on_input(self):
-        if self.listener == 'btn_save_ocr_settings':
-            is_valid, error = self._validate_ocr_settings()
-            if not is_valid:
-                self.hash_map.toast(error)
-                return
-            self._save_template_patterns()
-            self._save_template_settings()
-            self._set_vision_settings()
-            self.hash_map.toast('Шаблон сохранён')
-            if self.ocr_nosql.get('show_process_result'):
-                self.ocr_nosql.delete('show_process_result')
-                self.hash_map.finish_process_result()
-        elif self.listener == 'ON_BACK_PRESSED':
-            if self.ocr_nosql.get('show_process_result'):
-                self.ocr_nosql.delete('show_process_result')
-                self.hash_map.finish_process_result()
-            else:
-                self.hash_map.finish_process()
-
-    def on_post_start(self):
-        pass
-
-    def show(self, args=None):
-        pass
-
-    def _set_screen_values(self):
-        for value_name, value in self.screen_values.items():
-            new_value = self.hash_map.get(value_name) or self.ocr_nosql.get(value_name) or value
-            self.hash_map.put(value_name, new_value)
-
-
-    def _save_template_settings(self):
-        for value_name in self.screen_values:
-            self.ocr_nosql.put(value_name, self.hash_map.get(value_name), True)
-
-    def _save_template_patterns(self):
-        num_amount = self.hash_map.get('ocr_serial_template_num_amount')
-        prefix = self.hash_map.get('ocr_serial_template_prefix')
-        use_prefix = self.hash_map.get('ocr_serial_template_use_prefix')
-        if use_prefix == 'true':
-            patterns = [rf'^{prefix}', rf'([^\doO])(\d{{{num_amount}}})$']
-        else:
-            patterns = [rf'\d{{{num_amount}}}']
-        current_template = (f'Текущий шаблон: {prefix if use_prefix == "true" else ""}'
-                            f'{"*" * int(num_amount)}')
-        self.hash_map.put('ocr_serial_current_template', current_template)
-        self.ocr_nosql.put('ocr_serial_template_patterns', json.dumps(patterns), True)
-
-    def _set_vision_settings(self) -> None:
-        """Устанавливает настройки для кнопки распознавания текста"""
-        num_amount = int(self.ocr_nosql.get('ocr_serial_template_num_amount') or '10')
-        use_prefix = self.ocr_nosql.get('ocr_serial_template_use_prefix')
-        if use_prefix == 'true':
-            prefix = self.ocr_nosql.get('ocr_serial_template_prefix')
-            min_length = num_amount + len(prefix)
-            max_length = min_length + 2
-        else:
-            min_length, max_length = num_amount, num_amount
-        values_list = ("~[{\"action\":\"run\",\"type\":\"python\","
-                       "\"method\":\"serial_key_recognition_ocr\"}]")
-        rec_settings = dict(
-            values_list=values_list,
-            max_length=max_length,
-            min_length=min_length,
-        )
-        SerialNumberOCRSettings.ocr_nosql.put('serial_ocr_settings', json.dumps(rec_settings), True)
-
-    def _validate_ocr_settings(self) -> Tuple[bool, str]:
-        """Валидация данных введенных в диалоге ШаблонРаспознавания"""
-        min_rec_amount = self.hash_map.get('ocr_serial_template_min_rec_amount')
-        num_amount = self.hash_map.get('ocr_serial_template_num_amount')
-        prefix: str = self.hash_map.get('ocr_serial_template_prefix')
-        use_prefix = self.hash_map.get('ocr_serial_template_use_prefix')
-        if not min_rec_amount.isdigit() or int(min_rec_amount) == 0:
-            error = ('Укажите корректное минимальное количество'
-                    ' обнаружений серийного номера')
-            return False, error
-        if not num_amount.isdigit():
-            error = 'Количество цифр в шаблоне не корректно'
-            return False, error
-        if not 1 < int(num_amount) < 21:
-            error = 'Количество цифр в шаблоне должно быть в интервале от 2 до 20'
-            return False, error
-        if prefix.isspace() and use_prefix == 'true':
-            error = 'Не указан префикс'
-            return False, error
-        if prefix != prefix.strip():
-            error = 'Пробелы в начале или в конце префикса'
-            return False, error
-        return True, ''
-
-    @staticmethod
-    def serial_key_recognition_ocr(hash_map: HashMap) -> None:
-        """Находит в переданной из OCR строке серийный номер, по заданному шаблону"""
-        ocr_nosql = noClass("ocr_nosql")
-        ocr_nosql_counter = noClass("ocr_nosql_counter")
-        ocr_text = hash_map.get("ocr_text")
-        use_prefix = ocr_nosql.get('ocr_serial_template_use_prefix')
-        num_amount = int(ocr_nosql.get('ocr_serial_template_num_amount')) or 10
-        patterns = ocr_nosql.get('ocr_serial_template_patterns')
-        patterns = json.loads(patterns) if patterns else [rf'\d{{{num_amount}}}']
-        for pattern in patterns:
-            match_num = re.search(pattern, ocr_text)
-            if not match_num:
-                return
-        result = match_num.group(2) if use_prefix == 'true' else match_num.group()
-        min_rec_amount = int(ocr_nosql.get('ocr_serial_template_min_rec_amount'))
-        result_in_memory = ocr_nosql_counter.get(result)
-        if result_in_memory is None:
-            ocr_nosql_counter.put(result, 1, True)
-        elif result_in_memory < min_rec_amount:
-            ocr_nosql_counter.put(result, result_in_memory + 1, True)
-        elif result_in_memory == min_rec_amount:
-            ocr_nosql_counter.put(result, result_in_memory + 1, True)
-            from_screen = ocr_nosql.get('from_screen')
-            if from_screen == 'FlowDocDetailsScreen':
-                db_services.FlowDocService(hash_map['id_doc']).add_barcode_to_database(result)
-            elif from_screen == 'SeriesSelectScreen':
-                hash_map.put("ocr_result", result)
-                ocr_nosql.put('ocr_result', result, True)
-                return
-            hash_map.beep()
-            hash_map.toast('Серийный номер: ' + result)
-            if ocr_nosql.get('ocr_serial_template_continuous_recognition') == 'false':
-                hash_map.put("ocr_result", result)
-                return
-            for serial in json.loads(ocr_nosql_counter.getallkeys()):
-                if ocr_nosql_counter.get(serial) < min_rec_amount:
-                    ocr_nosql_counter.put(serial, 0, True)
-
-# ^^^^^^^^^^^^^^^^^^^^^ OCR ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
 
 # ==================== Services =============================
 
@@ -6511,8 +5500,6 @@ class MainEvents:
 
 class ScreensFactory:
     screens = [GoodsSelectScreen,
-               HtmlView,
-               TemplatesList,
                GroupScanTiles,
                DocumentsTiles,
                GroupScanDocsListScreen,

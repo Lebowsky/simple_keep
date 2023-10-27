@@ -5,8 +5,9 @@ import ui_global
 import widgets
 from db_services import DocService
 from printing_factory import PrintService
-from ui_models import Tiles, DocsListScreen, DocDetailsScreen, SerialNumberOCRSettings
+from ui_models import Tiles, DocsListScreen, DocDetailsScreen
 from ui_utils import HashMap
+from sm_services import ocr_nosql, ocr_nosql_counter, SerialNumberOCRSettings
 
 
 class FlowTilesScreen(Tiles):
@@ -162,8 +163,8 @@ class FlowDocDetailsScreen(DocDetailsScreen):
             'confirm_verified': self._handle_confirm_verified,
             'btn_doc_mark_verified': lambda: self.hash_map.show_dialog('confirm_verified', 'Завершить документ?', ['Да', 'Нет']),
             'ON_BACK_PRESSED': lambda: self.hash_map.show_screen("Документы"),
-            'vision_cancel':  lambda: SerialNumberOCRSettings.ocr_nosql_counter.destroy(),
-            'vision': lambda: SerialNumberOCRSettings.ocr_nosql_counter.destroy(),
+            'vision_cancel':  lambda: ocr_nosql_counter.destroy(),
+            'vision': lambda: ocr_nosql_counter.destroy(),
             'ПечатьПревью': lambda: self.hash_map.put('RefreshScreen', ''),
             'btn_ocr_serial_template_settings': self._handle_ocr_serial_template_settings
         }
@@ -173,14 +174,14 @@ class FlowDocDetailsScreen(DocDetailsScreen):
             listener_func()
 
     def _handle_cards_click(self):
-        current_elem = self._get_selected_card_data() 
+        current_elem = self._get_selected_card_data()
         data = {
             'barcode': current_elem['barcode'],
             'Номенклатура': current_elem['name'],
-            'qtty': current_elem['qtty'], 
+            'qtty': current_elem['qtty'],
             'Характеристика': ''
         }
-        PrintService.print(self.hash_map, data)
+        PrintService(self.hash_map).print(data)
 
     def _handle_back_button(self):
         self.hash_map.remove('rows_filter')
@@ -200,11 +201,10 @@ class FlowDocDetailsScreen(DocDetailsScreen):
 
     def _handle_confirm_verified(self):
         self.service.mark_verified()
-        self.hash_map.show_screen("Документы")   
+        self.hash_map.show_screen("Документы")
 
     def _handle_ocr_serial_template_settings(self):
-        ocr_nosql = SerialNumberOCRSettings.ocr_nosql
-        ocr_nosql.put('show_process_result', True, True)
+        ocr_nosql.put('show_process_result', True)
         self.hash_map.show_process_result('OcrTextRecognition', 'SerialNumberOCRSettings')
         screen = SerialNumberOCRSettings(self.hash_map, None)
         screen.parent_screen = self
@@ -337,9 +337,9 @@ class FlowDocDetailsScreen(DocDetailsScreen):
         return table
 
     def _set_vision_settings(self) -> None:
-        ocr_nosql = SerialNumberOCRSettings.ocr_nosql
         serial_ocr_settings = ocr_nosql.get('serial_ocr_settings')
         if serial_ocr_settings:
             serial_ocr_settings = json.loads(serial_ocr_settings)
             self.hash_map.set_vision_settings(**serial_ocr_settings)
-            ocr_nosql.put('from_screen', 'FlowDocDetailsScreen', True)
+            ocr_nosql.put('from_screen', 'FlowDocDetailsScreen')
+            ocr_nosql.put('id_doc', self.id_doc)
