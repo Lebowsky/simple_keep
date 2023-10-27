@@ -256,11 +256,15 @@ class BarcodeService(DbService):
 
     def get_barcodes_by_data(self, data):
         q = '''
-            SELECT barcode, ratio
+            SELECT 
+                RS_barcodes.barcode, 
+                RS_barcodes.ratio, 
+                RS_properties.name as property, 
+                RS_units.name as unit
             FROM RS_barcodes
-            WHERE id_good='{item_id}'
-                AND id_property = '{property_id}'
-                AND id_unit = '{unit_id}'
+            LEFT JOIN RS_properties ON RS_barcodes.id_property = RS_properties.id
+            LEFT JOIN RS_units ON RS_barcodes.id_unit = RS_units.id
+            WHERE RS_barcodes.id_good = '{item_id}'
         '''.format(**data)
 
         return self._sql_query(q)

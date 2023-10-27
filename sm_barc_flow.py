@@ -104,8 +104,8 @@ class FlowDocScreen(DocsListScreen):
     screen_name = 'Документы'
     process_name = 'Сбор ШК'
 
-    def __init__(self, hash_map, rs_settings):
-        super().__init__(hash_map, rs_settings)
+    def __init__(self, hash_map, **kwargs):
+        super().__init__(hash_map, **kwargs)
         self.service = db_services.FlowDocService()
         self.service.docs_table_name = 'RS_docs'
         self.popup_menu_data = 'Удалить;Очистить данные пересчета'
@@ -161,7 +161,7 @@ class FlowDocDetailsScreen(DocDetailsScreen):
             'barcode': self._handle_barcode_camera,
             'modal_dialog_input_barcode': self._handle_dialog_input_barcode,
             'confirm_verified': self._handle_confirm_verified,
-            'btn_doc_mark_verified': lambda: self.hash_map.show_dialog('confirm_verified', 'Завершить документ?', ['Да', 'Нет']),
+            'btn_doc_mark_verified': self._show_dialog_mark_verified,
             'ON_BACK_PRESSED': lambda: self.hash_map.show_screen("Документы"),
             'vision_cancel':  lambda: ocr_nosql_counter.destroy(),
             'vision': lambda: ocr_nosql_counter.destroy(),
@@ -202,6 +202,22 @@ class FlowDocDetailsScreen(DocDetailsScreen):
     def _handle_confirm_verified(self):
         self.service.mark_verified()
         self.hash_map.show_screen("Документы")
+
+    def _show_dialog_mark_verified(self, title="Завершить документ?"):
+        layout = '''{
+            "type": "LinearLayout",
+            "Variable": "",
+            "orientation": "horizontal",
+            "height": "wrap_content",
+            "width": "match_parent",
+            "weight": "0",
+            "Elements": []
+                
+        }'''
+        self.hash_map.show_dialog('confirm_verified',
+                                  title=title,
+                                  buttons=['Да', 'Нет'],
+                                  dialog_layout=layout)    
 
     def _handle_ocr_serial_template_settings(self):
         ocr_nosql.put('show_process_result', True)
