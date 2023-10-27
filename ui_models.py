@@ -672,8 +672,8 @@ class DocsListScreen(Screen):
 
     def _resend_doc(self):
         id_doc = self.get_id_doc()
-        self.hash_map['debug_id_doc'] = id_doc
-        doc_data = self.service.get_data_to_send_by_doc_id(id_doc)
+        self.service.doc_id = id_doc
+        doc_data = self.service.get_doc_data_to_resend()
 
         if doc_data:
             http_service = hs_services.HsService(http_params=self.get_http_settings())

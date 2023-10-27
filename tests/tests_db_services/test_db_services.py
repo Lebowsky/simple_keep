@@ -1,6 +1,6 @@
 import unittest
 import json
-import os
+
 
 import db_services
 from db_services import DocService, DbCreator, TimerService, DbService, SqlQueryProvider, GoodsService, \
@@ -162,6 +162,12 @@ class TestDocService(unittest.TestCase):
             error_text="",
             error_info='Ошибка соединения при отправке'
         )
+    def test_must_return_doc_data_to_send(self):
+        self.data_creator.insert_data(
+            'RS_docs', 'RS_docs_table', 'RS_docs_barcodes', 'RS_barc_flow')
+        self.service.doc_id = '37c4c709-d22b-11e4-869d-0050568b35ac1'
+        self.assertTrue(self.service.get_doc_data_to_resend())
+
 class TestAdrDocService(unittest.TestCase):
     def setUp(self) -> None:
         self.service = AdrDocService()
@@ -182,6 +188,12 @@ class TestAdrDocService(unittest.TestCase):
 
         res = self.service.get_doc_view_data(doc_status='К выгрузке')
         self.assertTrue(res)
+
+    def test_must_return_doc_data_to_send(self):
+        self.data_creator.insert_data(
+            'RS_adr_docs', 'RS_adr_docs_table')
+        self.service.doc_id = '37c4c709-d22b-11e4-869d-0050568b35ac1'
+        self.assertTrue(self.service.get_doc_data_to_resend())
 
 
 class TestTimerService(unittest.TestCase):

@@ -297,12 +297,12 @@ class DocListService(DbService):
         self.is_barc_flow = is_barc_flow
         self.docs_table_name = 'RS_docs'
         self.details_table_name = 'RS_docs_table'
-        self.isAdr = False
         self.sql_text = ''
         self.sql_params = None
         self.debug = False
         self.provider = SqlQueryProvider(self.docs_table_name, sql_class=sqlClass())
         self.logger_service = LoggerService()
+
 
     def get_docs_view_data(self, doc_type='', doc_status='') -> list:
         query_text = f'''
@@ -585,10 +585,12 @@ class DocListService(DbService):
     def _get_query_result(query_text, args=None, return_dict=False):
         return get_query_result(query_text, args=args, return_dict=return_dict)
 
+
 class DocService(DocListService):
     def __init__(self, doc_id='', is_group_scan=False, is_barc_flow=False):
         super().__init__(is_group_scan, is_barc_flow)
         self.doc_id = doc_id
+        self.doc_tables = ['RS_docs_table', 'RS_docs_series', 'RS_docs_barcodes', 'RS_barc_flow']
 
     def get_all_articles_in_document(self) -> List[str]:
         query = ('SELECT DISTINCT RS_goods.art as art'
@@ -772,6 +774,16 @@ class DocService(DocListService):
 
     def get_data_to_send_by_doc_id(self, id_doc):
         return self.get_data_to_send(id_doc=id_doc)
+
+    def get_doc_data_to_resend(self) -> List[dict]:
+        _filter = {'id_doc': self.doc_id}
+        result = {**_filter}
+
+        for table_name in self.doc_tables:
+            self.provider.table_name = table_name
+            result[table_name] = self.provider.select(_filter=_filter)
+
+        return [result]
 
     def get_count_mark_codes(self, id_doc):
         q = '''
@@ -1134,12 +1146,12 @@ class AdrDocService(DocService):
         self.doc_id = id_doc
         self.docs_table_name = 'RS_Adr_docs'
         self.details_table_name = 'RS_adr_docs_table'
-        self.isAdr = True
         self.is_barc_flow = False
         self.current_cell = cur_cell
         self.table_type = table_type
         self.provider = SqlQueryProvider(self.docs_table_name, sql_class=sqlClass())
         self.is_group_scan = False
+        self.doc_tables = ['RS_adr_docs_table', 'RS_docs_series']
 
     def get_doc_details_data(
             self,
@@ -1386,7 +1398,6 @@ class FlowDocService(DocService):
     def __init__(self, doc_id=''):
         super().__init__(is_barc_flow=True)
         self.doc_id = doc_id
-        self.isAdr = False
         self.sql_text = ''
         self.sql_params = None
         self.debug = False
