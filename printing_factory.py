@@ -292,7 +292,6 @@ class PrintService:
         label_path = print_nosql.get('current_1c_template_path')
         matching_table = json.loads(print_nosql.get('matching_table'))
         data_for_printing = HTMLDocument.replase_params_names(data, matching_table)
-        self.hash_map.toast(data_for_printing)
         barcode_parameters = print_nosql.get('barcode_parameters', from_json=True)
         html = HTMLDocument.create_html(
             data_for_printing, barcode_parameters, label_path)

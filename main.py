@@ -422,13 +422,13 @@ def offline_good_card_on_input(hash_map):
 
 @HashMap()
 def balances_on_start(hash_map):
-    screen: ui_models.GoodsBalancesItemCard = create_screen(hash_map)
+    screen = create_screen(hash_map, sm_services.GoodsBalancesItemCard)
     screen.on_start()
 
 
 @HashMap()
 def balances_on_input(hash_map):
-    screen = ui_models.GoodsBalancesItemCard(hash_map, rs_settings)
+    screen = create_screen(hash_map, sm_services.GoodsBalancesItemCard)
     screen.on_input()
 
 
@@ -439,13 +439,13 @@ def balances_on_input(hash_map):
 
 @HashMap()
 def prices_on_start(hash_map):
-    screen = create_screen(hash_map, ui_models.GoodsPricesItemCard)
+    screen = create_screen(hash_map, sm_services.GoodsPricesItemCard)
     screen.on_start()
 
 
 @HashMap()
 def prices_on_input(hash_map):
-    screen = create_screen(hash_map, ui_models.GoodsPricesItemCard)
+    screen = create_screen(hash_map, sm_services.GoodsPricesItemCard)
     screen.on_input()
 
 
