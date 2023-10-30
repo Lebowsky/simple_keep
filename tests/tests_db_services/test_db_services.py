@@ -1,7 +1,8 @@
 import unittest
 import json
-import os
 
+
+import db_services
 from db_services import DocService, DbCreator, TimerService, DbService, SqlQueryProvider, GoodsService, \
     get_query_result, BarcodeService, FlowDocService, AdrDocService
 from ui_utils import BarcodeParser
@@ -18,64 +19,18 @@ class TestDocService(unittest.TestCase):
         service.drop_all_tables()
         service.create_tables()
 
-    def test_load_data(self):
-        nsi_data = self.get_data_from_file('get_nsi_data_example.json')
-        doc_data = self.get_data_from_file('get_doc_data_example.json')
-
-        self.service.update_data_from_json(nsi_data)
-        self.service.update_data_from_json(doc_data)
-
-    def test_json_to_sqlite_query_goods(self):
-        data = self.get_data_from_file('goods_data_example.json')
-        for item in data['RS_goods']:
-            actual = self.service.json_to_sqlite_query({'RS_goods': [item]})
-            expected = [
-                'REPLACE INTO RS_goods (id, code, name, art, unit, type_good) VALUES ("{}", "{}", "{}", "{}", "{}", "{}")'.format(
-                    item['id'], item['code'], item['name'], item['art'], item['unit'], item['type_good']
-                )
-            ]
-            self.assertEqual(expected, actual)
-
-    @unittest.skip
-    def test_json_to_sqlite_query_document(self):
-        data = self.get_data_from_file('get_doc_data_example.json')
-
-        values = ','.join(
-            ['("{}", "{}", "{}", "{}", "{}", "{}", "{}", {}, {}, {})'.format(*item.values()) for item in
-             data['RS_docs_table']])
-        expected = [
-            'REPLACE INTO RS_docs '
-            '(id_doc, doc_type, doc_n, doc_date, id_countragents, id_warehouse, control, verified) '
-            'VALUES ("{}", "{}", "{}", "{}", "{}", "{}", "{}", 0)'.format(
-                data['RS_docs'][0]['id_doc'],
-                data['RS_docs'][0]['doc_type'],
-                data['RS_docs'][0]['doc_n'],
-                data['RS_docs'][0]['doc_date'],
-                data['RS_docs'][0]['id_countragents'],
-                data['RS_docs'][0]['id_warehouse'],
-                data['RS_docs'][0]['control'],
-            ),
-
-            'DELETE FROM RS_docs_table WHERE id_doc in ("{}") '.format(data['RS_docs'][0]['id_doc']),
-            'REPLACE INTO RS_docs_table '
-            '(id_doc, id_good, id_properties, id_series, id_unit, id_cell, id_price, price, qtty, qtty_plan) '
-            f'VALUES {values}'
-        ]
-
-        actual = self.service.json_to_sqlite_query(data)
-        self.assertEqual(expected, actual)
-
     def get_data_from_file(self, file_name):
         with open(f'{self.http_results_path}/{file_name}', encoding='utf-8') as fp:
             return json.load(fp)
 
     def test_can_get_docs_stat_for_no_group_scan_docs(self):
         self.data_creator.insert_data('RS_docs', 'RS_docs_table')
+        self.service = db_services.DocListService()
         self.assertTrue(self.service.get_docs_stat())
 
     def test_get_only_docs_stat(self):
         self.data_creator.insert_data('RS_docs', 'RS_docs_table')
-
+        self.service = db_services.DocListService()
         result = self.service.get_docs_stat()
         for tile in result:
             docs_count = tile['count']
@@ -107,10 +62,12 @@ class TestDocService(unittest.TestCase):
 
     def test_can_get_doc_view_data_if_no_group_scan(self):
         self.data_creator.insert_data('RS_docs', 'RS_docs_table')
-        self.assertTrue(self.service.get_doc_view_data(doc_status='К выгрузке', doc_type='Заказ'))
+        self.service = db_services.DocListService()
+        self.assertTrue(self.service.get_docs_view_data(doc_status='К выгрузке', doc_type='Заказ'))
 
     def test_can_get_docs_stat_for_group_scan_docs(self):
         self.data_creator.insert_data('RS_docs', 'RS_docs_table')
+        self.service = db_services.DocListService()
         self.service.is_group_scan = True
 
         result = self.service.get_docs_stat()
@@ -119,8 +76,9 @@ class TestDocService(unittest.TestCase):
 
     def test_can_get_doc_view_data_if_group_scan(self):
         self.data_creator.insert_data('RS_docs', 'RS_docs_table')
+        self.service = db_services.DocListService()
         self.service.is_group_scan = True
-        self.assertTrue(self.service.get_doc_view_data(doc_status='К выгрузке', doc_type='Заказ'))
+        self.assertTrue(self.service.get_docs_view_data(doc_status='К выгрузке', doc_type='Заказ'))
 
     def test_get_correct_documents_doc_types(self):
         self.data_creator.insert_data('RS_docs', 'RS_docs_table')
@@ -166,7 +124,8 @@ class TestDocService(unittest.TestCase):
 
         id_doc = '37c4c709-d22b-11e4-869d-0050568b35ac2'
         self.service.clear_barcode_data(id_doc)
-        result_doc = [x for x in self.service.get_doc_view_data() if x['id_doc'] == id_doc][0]
+        service = db_services.DocListService()
+        result_doc = [x for x in service.get_docs_view_data() if x['id_doc'] == id_doc][0]
         self.assertEqual(expect, result_doc['is_group_scan'])
 
     def test_clear_barcode_data_nulify_is_barc_flow(self):
@@ -176,7 +135,8 @@ class TestDocService(unittest.TestCase):
 
         id_doc = '37c4c709-d22b-11e4-869d-0050568b35ac3'
         self.service.clear_barcode_data(id_doc)
-        result_doc = [x for x in self.service.get_doc_view_data() if x['id_doc'] == id_doc][0]
+        service = db_services.DocListService()
+        result_doc = [x for x in service.get_docs_view_data() if x['id_doc'] == id_doc][0]
         self.assertEqual(expect, result_doc['is_barc_flow'])
 
     def test_get_doc_details_rows_count(self):
@@ -202,6 +162,12 @@ class TestDocService(unittest.TestCase):
             error_text="",
             error_info='Ошибка соединения при отправке'
         )
+    def test_must_return_doc_data_to_send(self):
+        self.data_creator.insert_data(
+            'RS_docs', 'RS_docs_table', 'RS_docs_barcodes', 'RS_barc_flow')
+        self.service.doc_id = '37c4c709-d22b-11e4-869d-0050568b35ac1'
+        self.assertTrue(self.service.get_doc_data_to_resend())
+
 class TestAdrDocService(unittest.TestCase):
     def setUp(self) -> None:
         self.service = AdrDocService()
@@ -222,6 +188,12 @@ class TestAdrDocService(unittest.TestCase):
 
         res = self.service.get_doc_view_data(doc_status='К выгрузке')
         self.assertTrue(res)
+
+    def test_must_return_doc_data_to_send(self):
+        self.data_creator.insert_data(
+            'RS_adr_docs', 'RS_adr_docs_table')
+        self.service.doc_id = '37c4c709-d22b-11e4-869d-0050568b35ac1'
+        self.assertTrue(self.service.get_doc_data_to_resend())
 
 
 class TestTimerService(unittest.TestCase):
@@ -631,7 +603,8 @@ class TestFlowDocService(unittest.TestCase):
         self.data_creator.insert_data('RS_docs')
         self.service.doc_id = '37c4c709-d22b-11e4-869d-0050568b35ac1'
         self.service.set_barc_flow_status()
-        result = self.service.get_doc_view_data()
+        service = db_services.DocListService()
+        result = service.get_docs_view_data()
         self.assertEqual(result[0].get('is_barc_flow'), '1')
 
     def test_get_doc_view_data(self):
@@ -639,7 +612,8 @@ class TestFlowDocService(unittest.TestCase):
         self.service.doc_id = '37c4c709-d22b-11e4-869d-0050568b35ac1'
         expect = '"37c4c709-d22b-11e4-869d-0050568b35ac1"'
 
-        result_docs_list = self.service.get_doc_view_data(doc_type='Заказ')
+        service = db_services.DocListService()
+        result_docs_list = service.get_docs_view_data(doc_type='Заказ')
 
         result_flow_values = ['1' if not self.doc_has_lines(expect)
                               else x['is_barc_flow'] for x in result_docs_list]

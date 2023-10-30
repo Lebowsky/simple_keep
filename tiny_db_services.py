@@ -17,7 +17,7 @@ class TinyNoSQLProvider:
     def __init__(self, table_name, base_name='SimpleKeep', db_path=''):
         self.table_name = table_name
         self.base_name = base_name or rs_settings.get('sqlite_name')
-        self.db_path = db_path or rs_settings.get('path_to_databases')
+        self.db_path = db_path or rs_settings.get('path_to_databases') or './'
         self.db = TinyDB(os.path.join(self.db_path, f'{self.base_name}.json'))
         self.table = self.db.table(self.table_name)
         self.query = Query()
@@ -177,9 +177,11 @@ class NoSQLProvider:
             return result if not from_json else json.loads(result)
         return result if not default else default
 
-    def delete(self, key: str) -> None:
+    def delete(self, key: str, with_file: Optional[bool] = False) -> None:
         """Удаляет ключ"""
         self.nosql.delete(key)
+        if with_file and os.path.isfile(key):
+            os.remove(key)
 
     def destroy(self) -> None:
         """Уничтожает все ключи базы"""
