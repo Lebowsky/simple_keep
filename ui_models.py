@@ -4587,7 +4587,9 @@ class BarcodeTestScreen(Screen):
             'BACK_BUTTON': self._back_screen,
             'device_value': self._fill_scan_settings,
             'use_hardware_scanner': self._switch_scanner_settings_visibility,
-            'btn_save_handmade_settings': self.save_scan_settings
+            'btn_save_handmade_settings': self.save_scan_settings,
+            'btn_apply': self._show_dialog_restart_conf,
+            'confirm_restart': self._handler_restart_conf
         }
         if self.listener in listeners:
             listeners[self.listener]()
@@ -4686,6 +4688,25 @@ class BarcodeTestScreen(Screen):
     def save_scan_settings(self):
         self.rs_settings.put('handmade_hardware_scanner_options', json.dumps(self._form_scan_parameters()), True)
 
+    def _handler_restart_conf(self):
+        if self._is_result_positive('confirm_restart'):
+            self.hash_map.put('UpdateConfigurations','')
+
+    def _show_dialog_restart_conf(self):
+        layout = '''{
+            "type": "LinearLayout",
+            "Variable": "",
+            "orientation": "horizontal",
+            "height": "wrap_content",
+            "width": "match_parent",
+            "weight": "0",
+            "Elements": []
+                
+        }'''
+        self.hash_map.show_dialog('confirm_restart',
+                                  title="Приложение будет перезагружено",
+                                  buttons=['Ок', 'Отмена'],
+                                  dialog_layout=layout)
 
 class HttpSettingsScreen(Screen):
     screen_name = 'Настройки http соединения'
