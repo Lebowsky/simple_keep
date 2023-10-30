@@ -2678,17 +2678,17 @@ class ItemCard(Screen):
 
     def init_screen(self):
         super().init_screen()
-
-        item_data = self.service.get_item_data_by_id(item_id=self.screen_values['item_id'])
-        if item_data:
-            put_data = {
-                "good_name": item_data['name'],
-                "good_art": item_data['art'] if item_data['art'] else "—",
-                "good_code": item_data['code'],
-                "good_descr": item_data['description'] if item_data['description'] else "—",
-                "good_type": item_data['type_good'],
-            }
-            self.hash_map.put_data(put_data)
+        item_data = self.service.get_item_data_by_id(self.screen_values['item_id'])
+        if not item_data:
+            return
+        put_data = {
+            "good_name": item_data['name'],
+            "good_art": item_data['art'] if item_data['art'] else "—",
+            "good_code": item_data['code'],
+            "good_descr": item_data['description'] if item_data['description'] else "—",
+            "good_type": item_data['type_good'],
+        }
+        self.hash_map.put_data(put_data)
 
     def _back_screen(self):
         self._clear_screen_values()
@@ -2696,28 +2696,28 @@ class ItemCard(Screen):
         self.hash_map.show_screen(self.hash_map['parent_screen'])
 
     def _to_balances(self):
+        from sm_services import GoodsBalancesItemCard
         dict_data = {
             'input_item_id': self.hash_map.get('item_id'),
             'item_art_input': self.hash_map.get('good_art'),
             'selected_object_name': f'{self.hash_map.get("good_name")}, {self.hash_map.get("good_code")}',
             'object_name': self.hash_map.get('good_name'),
             "return_to_item_card": "true",
-            'ShowProcessResult': 'Остатки|Проверить остатки',
-            "noRefresh": ''
         }
-        self.hash_map.put_data(dict_data)
+        screen = GoodsBalancesItemCard(self.hash_map, parent=self, screen_data=dict_data)
+        screen.show_process_result()
 
     def _to_prices(self):
+        from sm_services import GoodsPricesItemCard
         dict_data = {
             'input_good_id': self.hash_map.get('item_id'),
             'input_good_art': self.hash_map.get('good_art'),
             'prices_object_name': f'{self.hash_map.get("good_name")}, {self.hash_map.get("good_code")}',
             "return_to_item_card": "true",
             'object_name': self.hash_map.get('good_name'),
-            'ShowProcessResult': 'Цены|Проверка цен',
-            "noRefresh": ''
         }
-        self.hash_map.put_data(dict_data)
+        screen = GoodsPricesItemCard(self.hash_map, parent=self, screen_data=dict_data)
+        screen.show_process_result()
 
     def _handle_barcode_register(self):
         init_data = {
@@ -2831,859 +2831,6 @@ class ItemCardOfflineScreen(ItemCard):
         self.hash_map.show_dialog('print_ticket_not_available_modal', title='В этом продукте печать недоступна')
 
 # ^^^^^^^^^^^^^^^^^^^^^ Goods(Process) ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-# ==================== GoodsBalances =============================
-
-class GoodsBalancesItemCard(Screen):
-    screen_name = 'Проверить остатки'
-    process_name = 'Остатки'
-
-    def __init__(self, hash_map, rs_settings):
-        super().__init__(hash_map, rs_settings)
-        self.service = GoodsService()
-        self.hs_service = hs_services.HsService(self.get_http_settings())
-        self.table_type = 'warehouses'
-
-    def on_start(self):
-        self._set_visibility_on_start(
-            [
-                'error_msg',
-                'selected_object_name',
-                'selected_cell_name',
-                'selected_wh_name',
-                'item_barcode'
-            ]
-        )
-        if not self.hash_map.get('balances_table'):
-            self.hash_map.put("Show_get_balances_controls", "1")
-            self.hash_map.put("Show_show_filters", "-1")
-
-        if self.hash_map.get_bool('new_art'):
-            self._check_item_variants()
-
-    def on_input(self):
-        listener = self.listener
-
-        if listener == 'wh_select':
-            self._select_wh()
-        elif listener == 'wh_select_success':
-            self._select_wh_result()
-        elif listener == 'get_balance_btn':
-            self._get_balances()
-        elif listener == 'barcode':
-            self._identify_barcode_balances()
-        elif listener == 'ON_BACK_PRESSED':
-            self._reset_balances_tables()
-            if self.hash_map.get('return_to_item_card'):
-                self.hash_map.put('noRefresh', '')
-                self.hash_map.put("FinishProcessResult", "")
-            else:
-                self.hash_map.put("FinishProcess", "")
-
-        elif listener == 'show_filters':
-            self.hash_map.put("Show_get_balances_controls", "1")
-            self.hash_map.put("Show_show_filters", "-1")
-        elif listener == "CardsClick":
-            card_data = self.hash_map.get('selected_card_data', from_json=True)
-            self.hash_map.put_data(
-                {
-                    'selected_object_name': f"{card_data['name']}, {card_data['code']}",
-                    "input_item_id": card_data['id'], 'item_code': card_data['code'],
-                    'variant_selected': True
-                }
-            )
-            self.hash_map.remove('new_art')
-        elif self._is_result_positive('Выберите вариант товара:'):
-            self.hash_map.put("Show_get_balances_controls", "1")
-
-    def _get_balances(self):
-        if (self.hash_map.get('item_art_input') != self.hash_map.get('good_art')
-            and not self.hash_map.get_bool('variant_selected')):
-
-            self.hash_map.put('new_art', True)
-            self.validate_input()
-
-        raw_balances_data = self._get_balances_data()
-        balances_data = self._prepare_table_data(raw_balances_data)
-        balances_table = self._get_balances_table_view(balances_data)
-
-        self.hash_map.put_data({
-                'balances_table': balances_table.to_json(),
-                'Show_get_balances_controls': '-1',
-                'Show_show_filters': '1',
-                'property_id': '',
-                'from_barcode': False,
-                'item_code': '',
-                'variant_selected': False
-            })
-
-    def _select_wh(self):
-        SelectItemScreen(
-            self.hash_map,
-            table_name='RS_warehouses',
-            result_listener='wh_select_success',
-            title='Выберите склад'
-        ).show()
-
-    def _select_wh_result(self):
-        selected_wh = self.hash_map.get_json('selected_card')
-        if selected_wh:
-            self.hash_map['wh_select'] = selected_wh.get('name')
-        else:
-            self.hash_map['wh_select'] = ''
-
-    def validate_input(self):
-        self._process_input_item_art()
-        self._process_input_cell()
-
-        if not (self.hash_map.get('item_art_input') or self.hash_map.get('cell_input') or self.hash_map.get('wh_select')
-                or self.hash_map.get('selected_cell_id')):
-
-            self.hash_map.put_data({
-                    'balances_tables': '',
-                    'object_name': '',
-                    'cell_name': '',
-                    'error_msg': "Должен быть выбран склад, товар или ячейка"
-                })
-
-    def _process_input_item_art(self):
-        item_art_input = self.hash_map.get('item_art_input')
-
-        if self.hash_map.get('item_art_input'):
-            item_values_result = self.service.get_values_by_field(
-                table_name='RS_goods', field='art',
-                field_value=item_art_input
-            )
-            if item_values_result:
-                self.hash_map.put_data(
-                    {
-                        'object_name': item_values_result[0]['name'],
-                        'input_item_id': item_values_result[0]['id'],
-                        'selected_object_name': f'{item_values_result[0]["name"]}, {item_values_result[0]["code"]}',
-                        'item_code': item_values_result[0]['code'],
-                        'error_msg': '',
-                        'item_art_input': self.hash_map.get('item_art_input'),
-                        'item_barcode': ''
-                    }
-                )
-
-            else:
-                if item_art_input != '—' and self.hash_map.get('return_to_item_card'):
-                    self.hash_map.put('error_msg', f" Товар с артикулом '{item_art_input}'  не найден")
-        else:
-            self.hash_map.put('input_item_id', '')
-            self.hash_map.put('object_name', '')
-            self.hash_map.put('selected_object_name', '')
-
-    def _process_input_cell(self):
-        if self.hash_map.get('cell_input'):
-            cell_values_result = self.service.get_values_by_field(
-                table_name='RS_cells',
-                field='name',
-                field_value=self.hash_map.get('cell_input')
-            )
-
-            if cell_values_result:
-                self.table_type = 'cells'
-                self.hash_map.put('selected_cell_id', cell_values_result[0]['id'])
-                self.hash_map.put('cell_name', self.hash_map.get('cell_input'))
-
-            else:
-                current_error = f"{self.hash_map['error_msg']}\n" if self.hash_map['error_msg'] else ''
-                error_text = '{}Ячейка c именем {} не найдена'.format(
-                    current_error, self.hash_map['cell_input']
-                )
-                self.hash_map['error_msg'] = error_text
-        else:
-            self.hash_map.put('selected_cell_id', '')
-            self.hash_map.put('cell_name', '')
-            self.hash_map.put('selected_cell_name', '')
-
-    def _identify_barcode_balances(self):
-        no_data = False
-        barcode_data = self.service.get_values_by_field(
-            table_name="RS_barcodes",
-            field='barcode',
-            field_value=self.hash_map.get('barcode')
-        )
-
-        if barcode_data:
-            self.hash_map.put('item_barcode', self.hash_map.get('barcode'))
-
-            if barcode_data[0].get('id_property'):
-                self.hash_map.put('property_id', barcode_data[0].get('id_property'))
-
-            if barcode_data[0].get('id_good'):
-                item_id = barcode_data[0]['id_good']
-
-                item_data = self.service.get_values_by_field(
-                    table_name="RS_goods",
-                    field='id',
-                    field_value=item_id
-                )
-
-                if item_data[0]:
-                    self.hash_map.put('input_item_id', item_id)
-                    if item_data[0]['art']:
-                        self.hash_map.put('item_art_input', item_data[0]['art'])
-                    else:
-                        self.hash_map.put('item_art_input', '—')
-                    self.hash_map.put('selected_object_name', f'{item_data[0]["name"]},  {item_data[0]["code"]}')
-                    self.hash_map.put('error_msg', "")
-            self.hash_map.put('from_barcode', True)
-
-        else:
-            self.hash_map.put('item_barcode', '')
-            cell_data = self.service.get_values_by_field(
-                table_name="RS_cells", field='barcode',
-                field_value=self.hash_map.get('barcode')
-            )
-
-            if cell_data:
-                self.hash_map.put('selected_cell_id', cell_data[0]['id'])
-                self.hash_map.put('selected_cell_name', cell_data[0]['name'])
-                self.hash_map.put('cell_input', cell_data[0]['name'])
-                self.hash_map.put('error_msg', "")
-            else:
-                no_data = True
-                self.hash_map.put('object_name', "")
-                self.hash_map.put('error_msg', "Штрихкод не распознан")
-        if not no_data:
-            self._get_balances()
-
-    def _reset_balances_tables(self):
-        vars_list = ['wh_select', 'input_item_id', 'cell_input', 'cell_name', 'object_name', 'error_msg',
-                     'balances_table', 'barcode', 'selected_cell_id', 'property_id', 'selected_object_name',
-                     'selected_wh_id', 'item_barcode', 'selected_wh_name', 'selected_cell_name']
-        dict_data = {var: "" for var in vars_list}
-        self.hash_map.put_data(dict_data)
-
-    def _set_visibility_on_start(self, elements):
-        for v in elements:
-            name = f'Show_{v}'
-            self.hash_map[name] = '1' if self.hash_map[v] else '-1'
-
-    def _get_balances_data(self):
-        data = self.hs_service.get_balances_goods(
-            id_good=self.hash_map.get('input_item_id'),
-            id_cell=self.hash_map.get('selected_cell_id'),
-            id_warehouse=self.hash_map.get('selected_wh_id')
-        ).data
-
-        return data
-
-    def _prepare_table_data(self, raw_balances_data):
-        table_data = [{}]
-        for el in raw_balances_data:
-            storage_name = str(el['name_warehouse']) if self.table_type == 'warehouses' else str(el['name_cell'])
-
-            item_layout = self._get_item_table_row_view({
-                'storage_name_len': len(storage_name),
-                'item_name_len': len(el['name_good'])
-            })
-
-            table_row = {
-                'key': str(el['id_good']),
-                'item_name': str(el['name_good']),
-                'storage_name': storage_name,
-                'qtty': str(el['qtty']),
-                'properties': str(el['name_property'] or '—'),
-                '_layout': item_layout
-            }
-
-            if self.hash_map.get('property_id'):
-                if self.hash_map.get('property_id') == str(el['id_property']):
-                    table_data.append(table_row)
-            else:
-                table_data.append(table_row)
-
-        return table_data
-
-    def _get_balances_table_view(self, data):
-        table_view = widgets.CustomTable(
-            widgets.LinearLayout(
-                self.LinearLayout(
-                    self.TextView('Склад') if self.table_type == 'warehouses' else self.TextView('Ячейка'),
-                    weight=1
-                ),
-                self.LinearLayout(
-                    self.TextView('Товар'),
-                    weight=1
-                ),
-                self.LinearLayout(
-                    self.TextView('Количество'),
-                    weight=1
-                ),
-                self.LinearLayout(
-                    self.TextView('Характеристики'),
-                    weight=1
-                ),
-                orientation='horizontal',
-                height="match_parent",
-                width="match_parent",
-                BackgroundColor='#F0F8FF'
-            ),
-
-            options=widgets.Options().options,
-            tabledata=data
-        )
-
-        return table_view
-
-    def _get_item_table_row_view(self, row_data):
-        row_view = widgets.LinearLayout(
-            widgets.LinearLayout(
-                widgets.LinearLayout(
-                    widgets.LinearLayout(
-                        widgets.TextView(
-                            Value='@storage_name',
-                            TextSize=15,
-                            width='match_parent'
-                        ),
-                        width='match_parent',
-                        height='wrap_content'
-
-                    ),
-                    width='match_parent',
-                    height='match_parent',
-                    orientation='horizontal',
-                    StrokeWidth=1
-                ),
-                width='match_parent',
-                height='match_parent' if row_data['storage_name_len'] < row_data['item_name_len'] else 'wrap_content',
-                weight=1,
-                StrokeWidth=1
-            ),
-            widgets.LinearLayout(
-                widgets.TextView(
-                    Value='@item_name',
-                    TextSize=15,
-                    width='match_parent',
-                ),
-                width='match_parent',
-                height='match_parent' if row_data['item_name_len'] < row_data['storage_name_len'] else 'wrap_content',
-                weight=1,
-                StrokeWidth=1
-            ),
-            widgets.LinearLayout(
-                widgets.TextView(
-                    Value='@qtty',
-                    TextSize=15,
-                    width='match_parent'
-                ),
-                width='match_parent',
-                height='match_parent',
-                weight=1,
-                StrokeWidth=1
-            ),
-            widgets.LinearLayout(
-                widgets.TextView(
-                    Value='@properties',
-                    TextSize=15,
-                    width='match_parent'
-                ),
-                width='match_parent',
-                height='match_parent',
-                weight=1,
-                StrokeWidth=1
-            ),
-            orientation='horizontal',
-            width='match_parent',
-            BackgroundColor='#F0F8FF',
-        )
-
-        return row_view
-
-    def _check_item_variants(self):
-        item_art_input = self.hash_map.get('item_art_input')
-        if item_art_input:
-            item_values_result = self.service.get_values_by_field(
-                table_name='RS_goods', field='art',
-                field_value=item_art_input
-            )
-
-            if item_values_result:
-                if len(item_values_result) > 1:
-                    self.hash_map.put('return_selected_data', '')
-                    card_title_text_size = self.rs_settings.get('CardTitleTextSize') if self.rs_settings.get(
-                        'CardTitleTextSize') else 18
-
-                    variants_cards = widgets.CustomCards(
-                        widgets.LinearLayout(
-                            widgets.LinearLayout(
-                                widgets.TextView(
-                                    Value='@name',
-                                    width='match_parent',
-                                    gravity_horizontal='center',
-                                    TextSize=card_title_text_size,
-                                    TextColor='#000000'
-                                ),
-                                orientation='horizontal',
-                                width='match_parent',
-                            )),
-                        options=widgets.Options().options,
-                        cardsdata=item_values_result
-                    )
-                    self.hash_map['item_variants'] = variants_cards.to_json()
-
-                    self.hash_map.show_dialog(
-                        listener='Выберите вариант товара:',
-                        buttons=['Выбрать', 'Отмена']
-                    )
-
-    class TextView(widgets.TextView):
-        def __init__(self, value):
-            super().__init__()
-            self.TextSize = '15'
-            self.TextBold = True
-            self.width = 'match_parent'
-            self.Value = value
-
-    class LinearLayout(widgets.LinearLayout):
-        def __init__(self, *args, **kwargs):
-            super().__init__(*args, **kwargs)
-            self.orientation = 'horizontal'
-            self.height = "match_parent"
-            self.width = "match_parent"
-            self.StrokeWidth = 1
-
-# ^^^^^^^^^^^^^^^^^^^^^ GoodsBalances ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-
-# ==================== GoodsPrices =============================
-
-class GoodsPricesItemCard(GoodsBalancesItemCard):
-    screen_name = 'Проверка цен'
-    process_name = 'Цены'
-
-    def __init__(self, hash_map, rs_settings):
-        super().__init__(hash_map, rs_settings)
-
-    def on_start(self):
-        self._set_visibility_on_start(
-            ['prices_error_msg', 'prices_object_name', 'selected_price_type_name',
-            'selected_property_name', 'selected_unit_name', 'barcode_info'])
-
-        if not self.hash_map.get('prices_table'):
-            self.hash_map.put("Show_get_prices_controls", "1")
-            self.hash_map.put("Show_show_filters", "-1")
-
-    def on_input(self):
-
-        listener = self.listener
-
-        if listener == 'price_type_select':
-            self._select_item()
-        elif listener == 'property_select':
-            self._select_item()
-        elif listener == 'unit_select':
-            self._select_item()
-        elif listener == 'price_type_select_success':
-            self._select_item_result('price_type_select')
-        elif listener == 'property_select_success':
-            self._select_item_result('property_select')
-        elif listener == 'unit_select_success':
-            self._select_item_result('unit_select')
-        elif listener == 'get_prices_btn':
-            self._get_prices()
-        elif listener == 'barcode':
-            self._identify_barcode_prices()
-        elif listener == 'ON_BACK_PRESSED':
-            self._reset_prices_tables()
-            if self.hash_map.get('return_to_item_card'):
-                self.hash_map.put('noRefresh', '')
-                self.hash_map.put("FinishProcessResult", "")
-            else:
-                self.hash_map.put("FinishProcess", "")
-        elif listener == 'show_filters':
-            self.hash_map.put("Show_get_prices_controls", "1")
-            self.hash_map.put("Show_show_filters", "-1")
-
-    def on_post_start(self):
-        pass
-
-    def show(self, args=None):
-        pass
-
-    def _select_item(self):
-        item_tables = {
-            'price_type_select': 'RS_price_types',
-            'property_select': 'RS_properties',
-            'unit_select': 'RS_units',
-        }
-        item_type = self.listener
-
-        SelectItemScreen(
-            self.hash_map,
-            table_name=item_tables[item_type],
-            result_listener=f'{item_type}_success'
-        ).show()
-
-    def _select_item_result(self, field_name):
-        selected_card = self.hash_map.get_json('selected_card')
-        if selected_card:
-            self.hash_map[field_name] = selected_card.get('name')
-        else:
-            self.hash_map[field_name] = ''
-
-    def _get_prices(self):
-        self._validate_input()
-        raw_prices_data = self._get_prices_data()
-        prices_data = self._prepare_table_data(raw_prices_data)
-        prices_table = self._get_prices_table_view(prices_data)
-        self.hash_map.put('prices_table', prices_table.to_json())
-        self.hash_map.put("Show_get_prices_controls", "-1")
-        self.hash_map.put("Show_show_filters", "1")
-
-    def _validate_input(self):
-        self._process_input_good_art()
-        if not (self.hash_map.get('input_good_art')):
-            self.hash_map.put('prices_tables', '')
-            self.hash_map.put('prices_object_name', '')
-            self.hash_map.put('prices_error_msg', "Должен быть выбран товар")
-
-    def _process_input_good_art(self):
-        item_art_input = self.hash_map.get('input_good_art')
-        put_data = {
-            'input_good_id': '',
-            'prices_object_name': '',
-            'error_msg': ''
-        }
-
-        if item_art_input:
-            item_values_result = self.service.get_values_by_field(
-                table_name='RS_goods', field='art', field_value=item_art_input)
-
-            if item_values_result:
-                put_data = {
-                    'input_good_id': item_values_result[0]['id'],
-                    'good_code': item_values_result[0]['code'],
-                    'prices_object_name': f'{item_values_result[0]["name"]}, 'f'{item_values_result[0]["code"]}'
-                }
-            else:
-                if item_art_input != '—' and self.hash_map.get('return_to_item_card'):
-                    self.hash_map.put('error_msg', f" Товар с артикулом '{item_art_input}' не найден")
-
-        self.hash_map.put_data(put_data)
-
-    def _identify_barcode_prices(self):
-        self.hash_map.put('barcode_info', str(self.hash_map.get('barcode')))
-        self.hash_map.put('prices_object_name', '')
-        no_data = False
-
-        barcode_data = self.service.get_values_by_field(table_name="RS_barcodes", field='barcode',
-                                                        field_value=self.hash_map.get('barcode'))
-        if barcode_data[0]:
-            if barcode_data[0].get('id_property'):
-                self.hash_map.put('selected_property_id', barcode_data[0].get('id_property'))
-                selected_property_name = self.service.get_values_by_field(table_name='RS_properties', field='id',
-                                                                          field_value=barcode_data[0].get(
-                                                                              'id_property'))
-                if selected_property_name[0].get('name'):
-                    self.hash_map.put('selected_property_name', selected_property_name[0].get('name'))
-            else:
-                self.hash_map.put('selected_property_id', '')
-                self.hash_map.put('selected_property_name', '')
-
-            if barcode_data[0].get('id_good'):
-                item_id = barcode_data[0]['id_good']
-
-                item_data = self.service.get_values_by_field(table_name="RS_goods", field='id', field_value=item_id)
-                if item_data[0]:
-                    self.hash_map.put('input_good_id', item_id)
-                    if item_data[0]['art']:
-                        self.hash_map.put('input_good_art', item_data[0]['art'])
-                    else:
-                        self.hash_map.put('input_good_art', '—')
-                    self.hash_map.put('prices_object_name', item_data[0]['name'])
-                    self.hash_map.put('error_msg', "")
-
-        else:
-            no_data = True
-            self.hash_map.put('object_name', "")
-            self.hash_map.put('error_msg', "Штрихкод не распознан")
-
-        if not no_data:
-            self._get_prices()
-
-    def _reset_prices_tables(self):
-        vars_list = ['input_good_art', 'prices_object_name', 'selected_price_type_id', 'selected_price_type_name',
-                     'price_type_select', 'selected_property_id', 'selected_property_name', 'property_select',
-                     'selected_unit_id', 'selected_unit_name', 'unit_select', 'prices_custom_table', 'input_good_id',
-                     'barcode', 'barcode_info', 'prices_table']
-        dict_data = {var: "" for var in vars_list}
-        self.hash_map.put_data(dict_data)
-
-    def _set_visibility_on_start(self, elements):
-        for v in elements:
-            name = f'Show_{v}'
-            self.hash_map[name] = '1' if self.hash_map[v] else '-1'
-
-    def _get_prices_data(self):
-        if not self.hash_map.get('property_select'):
-            self.hash_map.put('selected_property_id', '')
-            self.hash_map.put('selected_property_name', '')
-
-        data = self.hs_service.get_prices_goods(id_good=self.hash_map.get('input_good_id'),
-                                                id_property=self.hash_map.get('selected_property_id'),
-                                                id_unit=self.hash_map.get('selected_unit_id'),
-                                                id_price_type=self.hash_map.get('selected_price_type_id')).data
-        return data
-
-    def _prepare_table_data(self, raw_balances_data):
-
-        table_data = [{}]
-        for el in raw_balances_data:
-            table_row = {'key': str(el['id_good']),
-                         'price_type': str(el['name_price_type']),
-                         'price': str(el['price']),
-                         'unit': str(el['name_unit']) or '—',
-                         'properties': str(el['name_property'] or '—'),
-                         '_layout': self._get_item_table_row_view(el)}
-            table_data.append(table_row)
-
-        return table_data
-
-    def _get_prices_table_view(self, data):
-        table_view = widgets.CustomTable(
-            widgets.LinearLayout(
-                self.LinearLayout(
-                    self.TextView('Тип цены'),
-                    weight=1
-                ),
-                self.LinearLayout(
-                    self.TextView('Характеристики'),
-                    weight=1
-                ),
-                self.LinearLayout(
-                    self.TextView('Цена'),
-                    weight=1
-                ),
-                self.LinearLayout(
-                    self.TextView('Упаковка'),
-                    weight=1
-                ),
-                orientation='horizontal',
-                height="match_parent",
-                width="match_parent",
-                BackgroundColor='#F0F8FF'
-            ),
-
-            options=widgets.Options().options,
-            tabledata=data
-        )
-
-        return table_view
-
-    def _get_item_table_row_view(self, row_data):
-
-        row_view = widgets.LinearLayout(
-            widgets.LinearLayout(
-                widgets.TextView(
-                    Value='@price_type',
-                    TextSize=15,
-                    width='match_parent'
-                ),
-                width='match_parent',
-                height='match_parent',
-                weight=1,
-                StrokeWidth=1
-            ),
-            widgets.LinearLayout(
-                widgets.TextView(
-                    Value='@properties',
-                    TextSize=15,
-                    width='match_parent',
-                ),
-                width='match_parent',
-                height='match_parent',
-                weight=1,
-                StrokeWidth=1
-            ),
-            widgets.LinearLayout(
-                widgets.TextView(
-                    Value='@price',
-                    TextSize=15,
-                    width='match_parent'
-                ),
-                width='match_parent',
-                height='match_parent',
-                weight=1,
-                StrokeWidth=1
-            ),
-            widgets.LinearLayout(
-                widgets.TextView(
-                    Value='@unit',
-                    TextSize=15,
-                    width='match_parent'
-                ),
-                width='match_parent',
-                height='match_parent',
-                weight=1,
-                StrokeWidth=1
-            ),
-            orientation='horizontal',
-            width='match_parent',
-            BackgroundColor='#F0F8FF'
-        )
-
-        return row_view
-
-    class TextView(widgets.TextView):
-        def __init__(self, value):
-            super().__init__()
-            self.TextSize = '15'
-            self.TextBold = True
-            self.width = 'match_parent'
-            self.Value = value
-
-    class LinearLayout(widgets.LinearLayout):
-        def __init__(self, *args, **kwargs):
-            super().__init__(*args, **kwargs)
-            self.orientation = 'horizontal'
-            self.height = "match_parent"
-            self.width = "match_parent"
-            self.StrokeWidth = 1
-
-class SelectProperties(GoodsPricesItemCard):
-    screen_name = 'Выбор характеристик'
-    process_name = 'Цены'
-
-    def __init__(self, hash_map, rs_settings):
-        super().__init__(hash_map, rs_settings)
-        self.service = GoodsService()
-
-    def on_start(self):
-        self._validate_input()
-        cards_data = self._get_data()
-        properties_cards = self._get_cards(cards_data)
-        self.hash_map.put('property_cards', properties_cards.to_json())
-
-    def _get_data(self):
-        table_name = "RS_properties"
-        raw_data = self.service.get_values_by_field(table_name, field='id_owner',
-                                                    field_value=self.hash_map.get('input_good_id'))
-        cards_data = []
-        for element in raw_data:
-            card_data = {
-                'key': element['id'],
-                'name': element['name']
-            }
-            cards_data.append(card_data)
-        return cards_data
-
-    def _get_cards(self, cards_data):
-        card_title_text_size = self.rs_settings.get('CardTitleTextSize')
-        card_text_size = self.rs_settings.get('CardTextSize')
-
-        cards = widgets.CustomCards(
-            widgets.LinearLayout(
-                widgets.LinearLayout(
-                    widgets.TextView(
-                        Value='@name',
-                        width='match_parent',
-                        gravity_horizontal='center',
-                        TextSize=card_title_text_size,
-                        TextColor='#000000'
-                    ),
-                    orientation='horizontal',
-                    width='match_parent',
-                ))
-            ,
-            options=widgets.Options().options,
-            cardsdata=cards_data
-        )
-        return cards
-
-    def on_input(self):
-        listener = self.listener
-
-        if listener == "CardsClick":
-            selected_property_id = self.hash_map.get("selected_card_key")
-            selected_property_name = self.service.get_values_by_field(table_name='RS_properties', field='id',
-                                                                      field_value=selected_property_id)[0]['name']
-            self.hash_map.put('selected_property_id', selected_property_id)
-            self.hash_map['property_select'] = selected_property_name
-            self.hash_map['selected_property_name'] = selected_property_name
-            self.hash_map.show_screen('Проверка цен')
-
-        elif listener == "ON_BACK_PRESSED" or 'back_to_prices':
-            self.hash_map['selected_property_id'] = ''
-            self.hash_map['property_select'] = ''
-            self.hash_map['selected_property_name'] = ''
-            self.hash_map.show_screen('Проверка цен')
-
-class SelectUnit(GoodsPricesItemCard):
-    screen_name = 'Выбор упаковки'
-    process_name = 'Цены'
-
-    def __init__(self, hash_map, rs_settings):
-        super().__init__(hash_map, rs_settings)
-        self.service = GoodsService()
-
-    def on_start(self):
-        super().on_start()
-        self._validate_input()
-        cards_data = self._get_data()
-        properties_cards = self._get_cards(cards_data)
-        self.hash_map.put('unit_cards', properties_cards.to_json())
-
-    def _get_data(self):
-        table_name = "RS_units"
-        raw_data = self.service.get_values_by_field(table_name, field='id_owner',
-                                                    field_value=self.hash_map.get('input_good_id'))
-        cards_data = []
-        for element in raw_data:
-            card_data = {
-                'key': element['id'],
-                'name': element['name']
-            }
-            cards_data.append(card_data)
-        return cards_data
-
-    def _get_cards(self, cards_data):
-        card_title_text_size = self.rs_settings.get('CardTitleTextSize')
-        card_text_size = self.rs_settings.get('CardTextSize')
-
-        cards = widgets.CustomCards(
-            widgets.LinearLayout(
-                widgets.LinearLayout(
-                    widgets.TextView(
-                        Value='@name',
-                        width='match_parent',
-                        gravity_horizontal='center',
-                        TextSize=card_title_text_size,
-                        TextColor='#000000'
-                    ),
-                    orientation='horizontal',
-                    width='match_parent',
-                ))
-            ,
-            options=widgets.Options().options,
-            cardsdata=cards_data
-        )
-        return cards
-
-    def on_input(self):
-        listener = self.listener
-
-        if listener == "CardsClick":
-            selected_unit_id = self.hash_map.get("selected_card_key")
-            selected_unit_name = self.service.get_values_by_field(table_name='RS_units', field='id',
-                                                                  field_value=selected_unit_id)[0]['name']
-            self.hash_map.put('selected_unit_id', selected_unit_id)
-            self.hash_map['unit_select'] = selected_unit_name
-            self.hash_map.put('selected_unit_name', selected_unit_name)
-            self.hash_map.show_screen('Проверка цен')
-
-        elif listener == "ON_BACK_PRESSED" or 'back_to_prices':
-            self.hash_map['selected_unit_id'] = ''
-            self.hash_map['unit_select'] = ''
-            self.hash_map.put('selected_unit_name', '')
-
-            self.hash_map.show_screen('Проверка цен')
-
-# ^^^^^^^^^^^^^^^^^^^^^ GoodsPrices ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 # ==================== Series =============================
 
@@ -4171,7 +3318,7 @@ class SelectItemScreen(Screen):
         return cards
 
     def _cards_click(self):
-        self.selected_card_data = self._get_selected_card_data()
+        self.selected_card_data = self.hash_map.get('selected_card_data', from_json=True)
         self.hash_map.put(self.return_value_key, self.selected_card_data, to_json=True)
         self._finish_process()
 
@@ -4299,6 +3446,7 @@ class ShowItemsScreen(Screen):
 
     def _back_screen(self):
         self._finish_process()
+
 
 class ShowMarksScreen(ShowItemsScreen):
     process_name = 'SelectItemProcess'
@@ -4587,7 +3735,9 @@ class BarcodeTestScreen(Screen):
             'BACK_BUTTON': self._back_screen,
             'device_value': self._fill_scan_settings,
             'use_hardware_scanner': self._switch_scanner_settings_visibility,
-            'btn_save_handmade_settings': self.save_scan_settings
+            'btn_save_handmade_settings': self.save_scan_settings,
+            'btn_apply': self._show_dialog_restart_conf,
+            'confirm_restart': self._handler_restart_conf
         }
         if self.listener in listeners:
             listeners[self.listener]()
@@ -4686,6 +3836,25 @@ class BarcodeTestScreen(Screen):
     def save_scan_settings(self):
         self.rs_settings.put('handmade_hardware_scanner_options', json.dumps(self._form_scan_parameters()), True)
 
+    def _handler_restart_conf(self):
+        if self._is_result_positive('confirm_restart'):
+            self.hash_map.put('UpdateConfigurations','')
+
+    def _show_dialog_restart_conf(self):
+        layout = '''{
+            "type": "LinearLayout",
+            "Variable": "",
+            "orientation": "horizontal",
+            "height": "wrap_content",
+            "width": "match_parent",
+            "weight": "0",
+            "Elements": []
+                
+        }'''
+        self.hash_map.show_dialog('confirm_restart',
+                                  title="Приложение будет перезагружено",
+                                  buttons=['Ок', 'Отмена'],
+                                  dialog_layout=layout)
 
 class HttpSettingsScreen(Screen):
     screen_name = 'Настройки http соединения'
@@ -5525,8 +4694,6 @@ class ScreensFactory:
                FontSizeSettingsScreen,
                BarcodeTestScreen,
                SoundSettings,
-               GoodsBalancesItemCard,
-               GoodsPricesItemCard,
                ]
 
     @staticmethod
