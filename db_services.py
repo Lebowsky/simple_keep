@@ -257,10 +257,10 @@ class BarcodeService(DbService):
     def get_barcodes_by_data(self, data):
         q = '''
             SELECT 
-                RS_barcodes.barcode, 
-                RS_barcodes.ratio, 
-                RS_properties.name as property, 
-                RS_units.name as unit
+                IFNULL(RS_barcodes.barcode, '-') as barcode, 
+                IFNULL(RS_barcodes.ratio, '-') as ratio, 
+                IFNULL(RS_properties.name, '-') as property, 
+                IFNULL(RS_units.name, '-') as unit
             FROM RS_barcodes
             LEFT JOIN RS_properties ON RS_barcodes.id_property = RS_properties.id
             LEFT JOIN RS_units ON RS_barcodes.id_unit = RS_units.id
