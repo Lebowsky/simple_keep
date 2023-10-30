@@ -4589,7 +4589,7 @@ class BarcodeTestScreen(Screen):
             'use_hardware_scanner': self._switch_scanner_settings_visibility,
             'btn_save_handmade_settings': self.save_scan_settings,
             'btn_apply': self._show_dialog_restart_conf,
-            'confirm_restart': self._handler_restart_conf if self._is_result_positive('confirm_restart') else (lambda: None)
+            'confirm_restart': self._handler_restart_conf
         }
         if self.listener in listeners:
             listeners[self.listener]()
@@ -4689,7 +4689,8 @@ class BarcodeTestScreen(Screen):
         self.rs_settings.put('handmade_hardware_scanner_options', json.dumps(self._form_scan_parameters()), True)
 
     def _handler_restart_conf(self):
-        self.hash_map.put('UpdateConfigurations','')
+        if self._is_result_positive('confirm_restart'):
+            self.hash_map.put('UpdateConfigurations','')
 
     def _show_dialog_restart_conf(self):
         layout = '''{
