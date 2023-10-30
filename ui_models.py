@@ -1642,6 +1642,11 @@ class GroupScanDocDetailsScreen(DocDetailsScreen):
                             width='match_parent',
                             orientation='horizontal',
                         ),
+                        widgets.TextView(
+                            Value='@good_info',
+                            TextSize=15,
+                            width='match_parent'
+                        ),
                         width='match_parent',
                     ),
                     width='match_parent',
