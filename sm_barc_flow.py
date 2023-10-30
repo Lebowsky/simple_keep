@@ -200,8 +200,9 @@ class FlowDocDetailsScreen(DocDetailsScreen):
         self.service.set_doc_status_to_upload(self.id_doc)
 
     def _handle_confirm_verified(self):
-        self.service.mark_verified()
-        self.hash_map.show_screen("Документы")
+        if self._is_result_positive('confirm_verified'):
+            self.service.mark_verified()
+            self.hash_map.show_screen("Документы")
 
     def _show_dialog_mark_verified(self, title="Завершить документ?"):
         layout = '''{
