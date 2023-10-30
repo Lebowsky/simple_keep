@@ -160,7 +160,7 @@ class FlowDocDetailsScreen(DocDetailsScreen):
             'btn_barcodes': self._show_dialog_input_barcode,
             'barcode': self._handle_barcode_camera,
             'modal_dialog_input_barcode': self._handle_dialog_input_barcode,
-            'confirm_verified': self._handle_confirm_verified if self._is_result_positive('confirm_verified') else (lambda: None),
+            'confirm_verified': self._handle_confirm_verified,
             'btn_doc_mark_verified': self._show_dialog_mark_verified,
             'ON_BACK_PRESSED': lambda: self.hash_map.show_screen("Документы"),
             'vision_cancel':  lambda: ocr_nosql_counter.destroy(),
@@ -200,8 +200,9 @@ class FlowDocDetailsScreen(DocDetailsScreen):
         self.service.set_doc_status_to_upload(self.id_doc)
 
     def _handle_confirm_verified(self):
-        self.service.mark_verified()
-        self.hash_map.show_screen("Документы")
+        if self._is_result_positive('confirm_verified'):
+            self.service.mark_verified()
+            self.hash_map.show_screen("Документы")
 
     def _show_dialog_mark_verified(self, title="Завершить документ?"):
         layout = '''{
