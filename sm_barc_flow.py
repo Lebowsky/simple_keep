@@ -1,7 +1,6 @@
 import json
 
 import db_services
-import ui_global
 import widgets
 from db_services import DocService
 from printing_factory import PrintService
@@ -218,7 +217,7 @@ class FlowDocDetailsScreen(DocDetailsScreen):
         self.hash_map.show_dialog('confirm_verified',
                                   title=title,
                                   buttons=['Да', 'Нет'],
-                                  dialog_layout=layout)    
+                                  dialog_layout=layout)
 
     def _handle_ocr_serial_template_settings(self):
         ocr_nosql.put('show_process_result', True)
