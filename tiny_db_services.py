@@ -222,6 +222,7 @@ class NoSQLProvider:
 
 
 class LoggerService:
+    # test_changes
     def __init__(self, provider=None):
         self.table_name = "ErrorLog"
         self.provider = provider or TinyNoSQLProvider(table_name=self.table_name,
