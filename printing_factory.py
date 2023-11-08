@@ -56,6 +56,7 @@ class HTMLDocument:
         path_to_file = suClass.generateDataMatrix(barcode_data, width, height)
         with open(path_to_file, "rb") as image_file:
             data = base64.b64encode(image_file.read()).decode()
+        os.remove(path_to_file)
         return data
 
     @staticmethod
@@ -289,21 +290,32 @@ class PrintService:
         return available, error
 
     def print_1c_template(self, data: Dict):
+        html = self._get_html_for_print(data)
+        self._make_png_from_html(html)
+
+    def _get_html_for_print(self, data: dict):
         label_path = print_nosql.get('current_1c_template_path')
         matching_table = json.loads(print_nosql.get('matching_table'))
         data_for_printing = HTMLDocument.replase_params_names(data, matching_table)
         barcode_parameters = print_nosql.get('barcode_parameters', from_json=True)
         html = HTMLDocument.create_html(
             data_for_printing, barcode_parameters, label_path)
+        return html
+
+    def _make_png_from_html(self, html: str):
         post_handler = {'action': 'run', 'type': 'python',
                         'method': 'print_post_execute'}
-        self.hash_map.html2png(html, 'runasync', [post_handler])
+        img_path = create_file(ext='png', folder='temp')
+        self.hash_map.html2png(
+            html,
+            'runasync',
+            post_exec_handlers=[post_handler],
+            file_path=img_path,
+            width='300',
+            height='300'
+        )
         self.hash_map.toast('Отправлено на печать')
-
-        img_path = create_file(
-            ext='png', file_name=str(uuid.uuid4()), folder='temp')
         print_nosql.put('path_to_html2image_file', img_path)
-        self.hash_map.put("html2image_ToFile", img_path)
 
     def print_zpl_template(self, data: Dict, many: bool = False):
         if print_nosql.get('default_zpl_template_path'):

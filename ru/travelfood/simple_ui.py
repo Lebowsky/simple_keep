@@ -27,6 +27,11 @@ class SimpleUtilites:
         pass
 
     @staticmethod
+    def download_file(path: str) -> None:
+        """Cохраняет файл во внешнюю папку Downloads."""
+        pass
+
+    @staticmethod
     def deleteCache():
         pass
 

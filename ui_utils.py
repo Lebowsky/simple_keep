@@ -1,3 +1,4 @@
+import codecs
 import json
 import re
 import socket
@@ -342,6 +343,7 @@ class HashMap:
             action: Literal['runasync', 'runprogress'],
             post_exec_handlers: Optional[List] = None,
             width: Optional[str] = None,
+            height: Optional[str] = None,
             file_path: Optional[str] = None
     ):
         event = {
@@ -354,6 +356,8 @@ class HashMap:
         self.put("RunEvent", json.dumps([event]))
         if width:
             self.put("html2image_width", width)
+        if height:
+            self.put("html2image_height", height)
         if file_path:
             self.put('html2image_ToFile', file_path)
 
@@ -681,11 +685,15 @@ def resize_image(
     if ratio is None and (not isinstance(width, int) or not isinstance(height, int)):
         raise Exception('resize_image. width и height должны быть int')
     image = Image.open(path_to_image)
-    if ratio:
-        resized_image = image.resize((int(image.width * ratio), int(image.height * ratio)))
-    else:
-        resized_image = image.resize((width, height))
+    sizes = ((int(image.width * ratio), int(image.height * ratio))
+             if ratio else (width, height))
+    resized_image = image.resize(sizes, resample=Image.LANCZOS)
     resized_image.save(path_to_image)
+
+
+def scan_result_raw(data_from_scanner: str) -> Tuple[str, int]:
+    """Результат сканирования штрихкода, escape символы в формате HEX, для дебага"""
+    return codecs.escape_decode(data_from_scanner)
 
 
 def error_handler_decorator(func):
