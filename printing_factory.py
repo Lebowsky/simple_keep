@@ -1,3 +1,6 @@
+import math
+
+import PIL
 from barcode.errors import NumberOfDigitsError
 
 from ru.travelfood.simple_ui import SimpleUtilites as suClass
@@ -522,6 +525,18 @@ class PrintService:
     def valide_ip(ip: str):
         pattern = r'^(\d{1,3}\.){3}\d{1,3}$'
         return True if re.match(pattern, ip) else False
+
+    @staticmethod
+    def image_to_zpl_graphic_field(width: int, height: int, dpmm: int, path_to_image: str):
+        """Принимает путь к картинке и возвращает ZPL код Graphic field"""
+        img = Image.open(path_to_image)
+        totalbytes = math.ceil(width * dpmm / 8.0) * height * dpmm
+        bytesperrow = math.ceil(width * dpmm / 8.0)
+
+        img = img.resize((int(width * dpmm), int(height * dpmm)), Image.LANCZOS)
+        img = PIL.ImageOps.invert(img.convert('L')).convert('1')
+        data = img.tobytes().hex().upper()
+        return "^GFA,%i,%i,%i,%s" % (len(data), totalbytes, bytesperrow, data)
 
 
 class ZPLConstructor:
