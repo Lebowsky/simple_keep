@@ -1,4 +1,5 @@
 import math
+import random
 
 import PIL
 from barcode.errors import NumberOfDigitsError
@@ -258,12 +259,11 @@ class PrintService:
                 error += 'Не указаны размеры шаблона печати 1C \n'
 
         if print_template_type == 'ZPL':
-            zpl_template_path = print_nosql.get('default_zpl_template_path')
-            zpl_template_from_string = print_nosql.get('default_zpl_template_from_string')
-            if not (zpl_template_path or zpl_template_from_string):
+            zpl_template = print_nosql.get('default_zpl_template')
+            if not zpl_template:
                 available = False
                 error += 'Не выбран шаблон печати ZPL \n'
-            if zpl_template_path and not os.path.isfile(zpl_template_path):
+            if not os.path.isfile(zpl_template):
                 available = False
                 error += 'ZPL шаблон недоступен, укажите другой \n'
 
@@ -321,10 +321,12 @@ class PrintService:
         print_nosql.put('path_to_html2image_file', img_path)
 
     def print_zpl_template(self, data: Dict, many: bool = False):
-        if print_nosql.get('default_zpl_template_path'):
-            self.print_zpl_template_from_file(data, many)
-        elif print_nosql.get('default_zpl_template_from_string'):
-            self.print_zpl_template_from_string(data, many)
+        zpl_template = print_nosql.get('default_zpl_template')
+        template = ZPLConstructor.open_zpl_template(zpl_template)
+        if not template:
+            self.hash_map.toast('Не удалось открыть ZPL шаблон')
+        data_to_print = self._get_data_to_print_zpl(data, template, many)
+        self.print_zpl(data_to_print)
 
     def make_zpl_from_label(
             self,
@@ -383,40 +385,25 @@ class PrintService:
         response.raw.decode_content = True
         return True, response.raw
 
-    def print_zpl_template_from_file(self, data, many: bool = False):
-        """Печать ZPL кода созданного в конструкторе"""
-        zpl_template_path = print_nosql.get('default_zpl_template_path')
-        with open(zpl_template_path, 'r') as f:
-            zpl_template = json.loads(f.read())
+    def _get_data_to_print_zpl(self, data: Dict, template: Dict, many: bool = False):
+        """Печать ZPL кода по шаблону"""
         if many:
-            data_to_print = []
-            for item in data:
-                new_zpl = self.get_zpl_for_print_file(item, zpl_template)
-                data_to_print.append(new_zpl)
-            data_to_print = ''.join(data_to_print)
+            data_to_print = ''.join([self._handle_zpl_data(item, template) for item in data])
         else:
-            data_to_print = self.get_zpl_for_print_file(data, zpl_template)
-        self.print_zpl(data_to_print)
+            data_to_print = self._handle_zpl_data(data, template)
+        return data_to_print
 
-    def print_zpl_template_from_string(self, data, many: bool = False):
-        """Печать ZPL кода из строки ввода ZPL"""
-        template_from_string = print_nosql.get('default_zpl_template_from_string')
-        if many:
-            data_to_print = []
-            for item in data:
-                new_zpl = self.get_zpl_for_print_str(item, template_from_string)
-                data_to_print.append(new_zpl)
-            data_to_print = ''.join(data_to_print)
+    def _handle_zpl_data(self, data: Dict, template: Dict):
+        """Обработка кода ZPL перед печатью"""
+        from_constructor = template['from_constructor']
+        if from_constructor:
+            zpl = self._handle_zpl_data_from_constructor(data, template)
         else:
-            data_to_print = self.get_zpl_for_print_str(data, template_from_string)
-        self.print_zpl(data_to_print)
-
-    def get_zpl_for_print_str(self, data, template_from_string):
-        zpl = self.zpl_from_string_replace_values(template_from_string, data)
+            zpl = self._handle_zpl_data_from_string(data, template)
         zpl = self.add_ascii_zpl(zpl)
         return zpl
 
-    def get_zpl_for_print_file(self, data, zpl_template):
+    def _handle_zpl_data_from_constructor(self, data: Dict, zpl_template: Dict):
         for element in zpl_template['elements']:
             if element['type'] == 'variable':
                 default_value = element['params']['text']
@@ -440,12 +427,14 @@ class PrintService:
         ).get_zpl(zpl_template, to_print=True)
         return zpl_data
 
-    def zpl_from_string_replace_values(self, text, dictionary):
+    def _handle_zpl_data_from_string(self, data: Dict, zpl_template: Dict):
         pattern = r'\[(.*?)\]'
-        replaced_text = re.sub(pattern,
-                               lambda match: dictionary.get(match.group(1), ''),
-                               text)
-        return replaced_text
+        zpl_data = re.sub(
+            pattern=pattern,
+            repl=lambda match: data.get(match.group(1), ''),
+            string=zpl_template['template']
+        )
+        return zpl_data
 
     def print_post_execute(self):
         path_to_img = print_nosql.get('path_to_html2image_file')
@@ -697,5 +686,40 @@ class ZPLConstructor:
         }
         return functions[type]
 
+    @staticmethod
+    def create_zpl_template(
+            width: int,
+            height: int,
+            dpmm: int = 8,
+            template: Optional[str] = '',
+            name: Optional[str] = None,
+            contains_datamatrix: bool = False,
+            from_constructor: bool = False,
+            from_server: bool = False,
+    ) -> str:
+        """Создание шаблона ZPL в формате JSON. Возвращает путь к созданному файлу."""
+        file_path = create_file('json', 'templates_zpl', name)
+        zpl_template = {
+            "name": name or 'ZPL_template_' + str(random.randint(100000, 1000000)),
+            "file_path": file_path,
+            "dpmm": dpmm,
+            "width": width,
+            "height": height,
+            "template": template if not from_constructor else None,
+            "contains_datamatrix": contains_datamatrix,
+            "from_constructor": from_constructor,
+            "elements": [] if from_constructor else None,
+            "from_server": from_server,
+}
+        with open(file_path, 'w') as f:
+            json.dump(zpl_template, f, ensure_ascii=False)
+        return file_path
 
-
+    @staticmethod
+    def open_zpl_template(template_path: str) -> Optional[Dict]:
+        """Открывает шаблон ZPL и возвращает шаблон в виде словаря Python"""
+        with open(template_path, 'r') as f:
+            template_data = f.read()
+        template = json.loads(template_data)
+        if isinstance(template, dict):
+            return template

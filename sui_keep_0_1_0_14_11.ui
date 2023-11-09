@@ -8215,6 +8215,14 @@
                                 "weight": "0",
                                 "Elements": [
                                     {
+                                        "Value": "Получить шаблоны с сервера",
+                                        "Variable": "btn_get_zpl_templates",
+                                        "height": "wrap_content",
+                                        "width": "match_parent",
+                                        "weight": "0",
+                                        "type": "ProgressButton"
+                                    },
+                                    {
                                         "Value": "Конструктор ZPL",
                                         "Variable": "btn_zpl_constructor_redirect",
                                         "height": "wrap_content",
@@ -8719,6 +8727,38 @@
                 "PyFileData": ""
             },
             {
+                "PyFileKey": "printing_factory",
+                "PyFileData": ""
+            },
+            {
+                "PyFileKey": "rs_settings",
+                "PyFileData": ""
+            },
+            {
+                "PyFileKey": "sm_adr_docs",
+                "PyFileData": ""
+            },
+            {
+                "PyFileKey": "sm_barc_flow",
+                "PyFileData": ""
+            },
+            {
+                "PyFileKey": "sm_group_work",
+                "PyFileData": ""
+            },
+            {
+                "PyFileKey": "sm_services",
+                "PyFileData": ""
+            },
+            {
+                "PyFileKey": "static_data",
+                "PyFileData": ""
+            },
+            {
+                "PyFileKey": "tiny_db_services",
+                "PyFileData": ""
+            },
+            {
                 "PyFileKey": "ui_global",
                 "PyFileData": ""
             },
@@ -8731,43 +8771,11 @@
                 "PyFileData": ""
             },
             {
-                "PyFileKey": "widgets",
-                "PyFileData": ""
-            },
-            {
                 "PyFileKey": "version_control",
                 "PyFileData": ""
             },
             {
-                "PyFileKey": "printing_factory",
-                "PyFileData": ""
-            },
-            {
-                "PyFileKey": "tiny_db_services",
-                "PyFileData": ""
-            },
-            {
-                "PyFileKey": "static_data",
-                "PyFileData": ""
-            },
-            {
-                "PyFileKey": "sm_adr_docs",
-                "PyFileData": ""
-            },
-            {
-                "PyFileKey": "barcode_workers",
-                "PyFileData": ""
-            },
-            {
-                "PyFileKey": "db_models",
-                "PyFileData": ""
-            },
-            {
-                "PyFileKey": "sm_barc_flow",
-                "PyFileData": ""
-            },
-            {
-                "PyFileKey": "sm_services",
+                "PyFileKey": "widgets",
                 "PyFileData": ""
             }
         ],

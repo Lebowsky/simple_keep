@@ -98,6 +98,12 @@ class PrintScreenMixin(Screen):
         }
         return layout
 
+    def _correct_filename(self, filename):
+        illegal_chars = ['<', '>', ':', '"',"'", '/', '\\', '|', '?', '*', "<", ">", '\x00']
+        for char in illegal_chars:
+            filename = filename.replace(char, '')
+        return filename
+
     class TextView(widgets.TextView):
         def __init__(self, value):
             super().__init__()
@@ -457,12 +463,6 @@ class PrintTemplates1C(PrintScreenMixin):
             self.hash_map.toast('Шаблоны загружены')
         except Exception as e:
             self.hash_map.toast(str(e))
-
-    def _correct_filename(self, filename):
-        illegal_chars = ['<', '>', ':', '"',"'", '/', '\\', '|', '?', '*', "<", ">", '\x00']
-        for char in illegal_chars:
-            filename = filename.replace(char, '')
-        return filename
 
     def _select_label_template(self):
         self._delete_screen_values()
@@ -841,6 +841,7 @@ class PrintTemplatesZPL(PrintScreenMixin):
             'zpl_template_from_string_height': '50',
             'zpl_template_from_string': ''
         }
+        self.hs_service = HsService(self.get_http_settings())
 
     def on_start(self):
         super().on_start()
@@ -848,6 +849,7 @@ class PrintTemplatesZPL(PrintScreenMixin):
 
     def on_input(self):
         listeners = {
+            'btn_get_zpl_templates': self._get_zpl_templates,
             'btn_zpl_template_from_string_print': self._print_zpl_dialog,
             'btn_zpl_constructor_redirect': self._zpl_constructor_redirect,
             'btn_template_from_string_make_default': self._make_template_default,
@@ -857,6 +859,33 @@ class PrintTemplatesZPL(PrintScreenMixin):
 
         if self._is_result_positive('print_template_dialog'):
             self._print_template_dialog_on_result_positive()
+
+    def _get_zpl_templates(self):
+        try:
+            answer = self.hs_service.get_templates()
+            if answer.error:
+                raise Exception(f'Ошибка соединения с сервером: {answer.error_text}')
+            output_folder = os.path.join(suClass.get_temp_dir(), 'templates_zpl')
+            os.makedirs(output_folder, exist_ok=True)
+            for template in answer.json:
+                if not template['isZPL']:
+                    continue
+                try:
+                    ZPLConstructor.create_zpl_template(
+                        width=template['width'],
+                        height=template['height'],
+                        template=base64.b64decode(template['html']).decode('utf-8'),
+                        name=self._correct_filename(template['name']),
+                        contains_datamatrix=template['containsDM'],
+                        from_server=True,
+                    )
+                except Exception as e:
+                    raise Exception(f'Ошибка сохранения файла {template["name"]}: {str(e)}')
+            self.print_nosql.put('templates_zpl_dir', output_folder)
+            self.hash_map.toast('Шаблоны загружены')
+
+        except Exception as e:
+            self.hash_map.toast(str(e))
 
     def _refresh_image(self):
         zpl = self.hash_map.get('zpl_template_from_string')
@@ -870,7 +899,7 @@ class PrintTemplatesZPL(PrintScreenMixin):
         if not sended:
             return
         file_path = create_file(
-            'png', folder='zpl_templates', file_name='zpl_template_from_string')
+            'png', folder='templates_zpl', file_name='zpl_template_from_string')
         with open(file_path, 'wb') as f:
             shutil.copyfileobj(response, f)
         resize_image(path_to_image=file_path, ratio=2.2)
@@ -897,7 +926,11 @@ class PrintTemplatesZPL(PrintScreenMixin):
         if not zpl_template:
             self.hash_map.toast('Не указан ZPL')
             return
-        self.print_nosql.put('default_zpl_template_from_string', zpl_template)
+        width = int(self.hash_map.get('zpl_template_from_string_width'))
+        height = int(self.hash_map.get('zpl_template_from_string_height'))
+        dpmm = int(self.hash_map.get('zpl_template_from_string_dpmm'))
+        path = ZPLConstructor.create_zpl_template(width, height, dpmm, zpl_template)
+        self.print_nosql.put('default_zpl_template', path)
         self.print_nosql.delete('default_zpl_template_path')
         self._save_screen_values()
         self.hash_map.toast('Шаблон zpl установлен по умолчанию')
@@ -975,14 +1008,14 @@ class PrintTemplatesZPLConstructor(PrintScreenMixin):
             self.hash_map.put('SaveExternalFile', json.dumps({"path": path_to_tamplate, "default": template_name}))
 
         elif self.listener == 'btn_zpl_preview_make_default_zpl_template':
-            current_template = self.hash_map.get('current_zpl_template')
+            current_template = self.hash_map.get('current_zpl_template', from_json=True)
             if not current_template:
                 self.hash_map.toast('Не выбран шаблон')
                 return
-            current_template = json.loads(current_template)
             path_to_tamplate = current_template['file_path']
-            self.print_nosql.put('default_zpl_template_path', path_to_tamplate)
-            self.print_nosql.delete('default_zpl_template_from_string')
+            with open(path_to_tamplate, 'w') as f:
+                json.dump(current_template, f, ensure_ascii=False)
+            self.print_nosql.put('default_zpl_template', path_to_tamplate)
             self.hash_map.toast('Шаблон ' + current_template['name'] + ' сделан основным')
 
         elif self.listener == 'btn_zpl_preview_add_element':
@@ -1001,8 +1034,8 @@ class PrintTemplatesZPLConstructor(PrintScreenMixin):
                 return
             current_template = json.loads(self.hash_map.get('current_zpl_template'))
             zpl_data = ZPLConstructor(
-                width=current_template['label_width'],
-                height=current_template['label_height'],
+                width=current_template['width'],
+                height=current_template['height'],
                 dpmm=current_template['dpmm'],
                 hash_map=self.hash_map
             ).get_zpl(current_template)
@@ -1026,11 +1059,13 @@ class PrintTemplatesZPLConstructor(PrintScreenMixin):
         elif self._is_result_positive('create_template_dialog'):
             self.hash_map.delete('ShowDialogLayout')
             template_name = self.hash_map.get('zpl_preview_create_template_name')
-            file_path = create_file('json', 'zpl_templates', template_name)
-            empty_template = self._get_empty_template(template_name, file_path)
-            with open(file_path, 'w') as f:
-                json.dump(empty_template, f)
-            self.hash_map.put('current_zpl_template', json.dumps(empty_template, ensure_ascii=False))
+            dpmm = int(self.hash_map.get('zpl_preview_dpmm'))
+            width = int(self.hash_map.get('zpl_preview_label_width'))
+            height = int(self.hash_map.get('zpl_preview_label_height'))
+            path = ZPLConstructor.create_zpl_template(
+                width, height, dpmm, name=template_name, from_constructor=True)
+            template = ZPLConstructor.open_zpl_template(path)
+            self.hash_map.put('current_zpl_template', json.dumps(template, ensure_ascii=False))
             self.hash_map.toast('Шаблон создан')
             self.hash_map.delete("current_zpl_element")
             self.hash_map.delete('zpl_preview_current_element_x')
@@ -1053,8 +1088,8 @@ class PrintTemplatesZPLConstructor(PrintScreenMixin):
             current_template = json.loads(self.hash_map.get('current_zpl_template'))
             selected_element = self.hash_map.get('zpl_preview_selected_element')
             current_element = ZPLConstructor(
-                width=current_template['label_width'],
-                height=current_template['label_height'],
+                width=current_template['width'],
+                height=current_template['height'],
                 dpmm=current_template['dpmm'],
                 hash_map=self.hash_map
             ).get_element(selected_element)
@@ -1102,20 +1137,20 @@ class PrintTemplatesZPLConstructor(PrintScreenMixin):
 
     def _set_template_data(self):
         if not self.hash_map.get('current_zpl_template'):
-            template_path = self.print_nosql.get('default_zpl_template_path')
+            template_path = self.print_nosql.get('default_zpl_template')
             if template_path:
                 if os.path.isfile(template_path):
-                    with open(template_path, 'r') as f:
-                        template = f.read()
+                    template = ZPLConstructor.open_zpl_template(template_path)
+                    if template['from_constructor']:
+                        template = json.dumps(template, ensure_ascii=False)
                         self.hash_map.put('current_zpl_template', template)
                         self.hash_map.toast('Загружен zpl шаблон по умолчанию')
                 else:
-                    self.print_nosql.delete('default_zpl_template_path')
+                    self.print_nosql.delete('default_zpl_template')
                     self.hash_map.toast('Не удалось загрузить шаблон по умолчанию')
 
-        current_zpl_template = self.hash_map.get('current_zpl_template')
+        current_zpl_template = self.hash_map.get('current_zpl_template', from_json=True)
         if current_zpl_template:
-            current_zpl_template = json.loads(current_zpl_template)
             if self.hash_map.get('current_zpl_element'):
                 self._update_current_zpl_element()
             self._refresh_image()
@@ -1125,8 +1160,8 @@ class PrintTemplatesZPLConstructor(PrintScreenMixin):
     def _refresh_image(self):
         current_template = json.loads(self.hash_map.get('current_zpl_template'))
         zpl = ZPLConstructor(
-            width=current_template['label_width'],
-            height=current_template['label_height'],
+            width=current_template['width'],
+            height=current_template['height'],
             dpmm=current_template['dpmm'],
             hash_map=self.hash_map
         ).get_zpl(current_template)
@@ -1137,7 +1172,7 @@ class PrintTemplatesZPLConstructor(PrintScreenMixin):
             print_template_width=int(self.hash_map.get('zpl_preview_label_width')),
             print_template_height=int(self.hash_map.get('zpl_preview_label_height')),
         )
-        file_path = create_file('png', folder='zpl_templates', file_name='zpl_preview')
+        file_path = create_file('png', folder='templates_zpl', file_name='zpl_preview')
         if sended:
             with open(file_path, 'wb') as f:
                 shutil.copyfileobj(response, f)
@@ -1247,14 +1282,14 @@ class PrintTemplatesZPLConstructor(PrintScreenMixin):
 
     def save_template(self):
         if self._current_template_exists():
-            current_template = json.loads(self.hash_map.get('current_zpl_template'))
+            current_template = self.hash_map.get('current_zpl_template', from_json=True)
             with open(current_template['file_path'], 'w') as f:
                 json.dump(current_template, f)
             self.hash_map.toast('Шаблон сохранён')
 
     def delete_template_dialog(self):
         if self._current_template_exists():
-            current_template = json.loads(self.hash_map.get('current_zpl_template'))
+            current_template = self.hash_map.get('current_zpl_template', from_json=True)
             self.hash_map.show_dialog(
                 'delete_template_dialog',
                 title=f'Удаление шаблона {current_template["name"]}',
@@ -1276,8 +1311,14 @@ class PrintTemplatesZPLConstructor(PrintScreenMixin):
 
     def _get_existing_templates(self):
         import glob
-        zpl_templates_dir = os.path.join(suClass.get_temp_dir(), 'zpl_templates')
-        return glob.glob(f"{zpl_templates_dir}/*.json")
+        zpl_templates_dir = os.path.join(suClass.get_temp_dir(), 'templates_zpl')
+        list_of_templates = glob.glob(f"{zpl_templates_dir}/*.json")
+        result = []
+        for template_path in list_of_templates:
+            template = ZPLConstructor.open_zpl_template(template_path)
+            if template['from_constructor']:
+                result.append(template_path)
+        return result
 
     def select_template_dialog(self):
         layout = self._get_dialog_layout(
@@ -1309,17 +1350,6 @@ class PrintTemplatesZPLConstructor(PrintScreenMixin):
             buttons=['Выбрать', 'Отмена'],
             dialog_layout=json.dumps(layout)
         )
-
-    def _get_empty_template(self, template_name: str, file_path: str):
-        empty_template = {
-            'name': template_name,
-            'file_path': file_path,
-            'label_width': int(self.hash_map.get('zpl_preview_label_width')),
-            'label_height': int(self.hash_map.get('zpl_preview_label_height')),
-            'dpmm': int(self.hash_map.get('zpl_preview_dpmm')),
-            'elements': []
-        }
-        return empty_template
 
     def _layout_action(self):
         layout_listener = self.hash_map['layout_listener']

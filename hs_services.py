@@ -35,15 +35,7 @@ class HsService:
         self._hs = 'label_templates'
         self._method = requests.get
         answer = self._send_request(kwargs)
-        if answer['status_code'] == 200:
-            answer['data'] = json.loads(answer['text'])
-            #return json_data
-        elif answer['status_code'] == 401:
-            answer['error_pool'] = answer['reason']
-        else:
-            answer['error_pool'] = answer.get('text')
-
-        return answer
+        return self._create_http_answer(answer)
 
     def get_data(self, **kwargs) -> dict:
         self._hs = 'data'
